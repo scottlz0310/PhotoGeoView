@@ -2,23 +2,80 @@
     "window": {
         "width": 1200,
         "height": 800,
-        "x": 1917,
-        "y": -30,
+        "x": 100,
+        "y": 100,
         "maximized": false,
         "remember_position": true,
         "remember_size": true
     },
     "ui": {
-        "current_theme": "dark_blue.xml",
+        "current_theme": "light_blue.xml",
         "theme_manager_enabled": true,
         "selected_themes": [
             "dark_blue.xml",
             "light_blue.xml"
         ],
-        "theme_toggle_index": 0,
+        "theme_toggle_index": 1,
         "show_thumbnails": true,
         "thumbnail_size": 128,
         "thumbnail_cache_size": 1000,
         "show_toolbar": true,
         "show_status_bar": true,
-        "panel_splitter_state": 
+        "panel_splitter_state": null,
+        "image_panel_maximized": false,
+        "map_panel_maximized": false
+    },
+    "folders": {
+        "last_opened_folder": "",
+        "recent_folders": [],
+        "max_recent_folders": 10,
+        "show_hidden_files": false,
+        "supported_formats": [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".bmp",
+            ".tiff",
+            ".tif",
+            ".webp"
+        ]
+    },
+    "image_viewer": {
+        "fit_to_window": true,
+        "zoom_factor": 1.0,
+        "smooth_scaling": true,
+        "background_color": "#2b2b2b",
+        "show_exif_panel": true,
+        "auto_rotate": true
+    },
+    "map_viewer": {
+        "default_zoom": 15,
+        "tile_layer": "OpenStreetMap",
+        "show_satellite": false,
+        "marker_color": "red",
+        "marker_size": "medium",
+        "cluster_markers": true,
+        "show_photo_popup": true
+    },
+    "performance": {
+        "max_thumbnail_cache_mb": 100,
+        "preload_adjacent_images": true,
+        "lazy_load_thumbnails": true,
+        "max_concurrent_loads": 4,
+        "image_cache_size": 50
+    },
+    "logging": {
+        "level": "INFO",
+        "log_to_file": true,
+        "log_to_console": true,
+        "max_log_files": 5,
+        "max_log_size_mb": 10
+    },
+    "advanced": {
+        "use_hardware_acceleration": true,
+        "check_for_updates": true,
+        "auto_save_settings": true,
+        "save_interval_seconds": 30,
+        "backup_settings": true
+    }
+}

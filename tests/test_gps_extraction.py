@@ -2,30 +2,11 @@
 """
 GPS座標抽出のテストスクリプト
 ExifReadライブラリを使用してGPS座標を正常に抽出できるかテスト
-仕様に準拠してtests/ディレクトリに配置、Logger使用
 """
 
-import sys
-import os
-import logging
-from pathlib import Path
 import exifread
-from typing import Optional, Any
-
-# プロジェクトルートをPythonパスに追加
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
-
-# Logger設定（仕様準拠）
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# コンソールハンドラー設定
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
+import os
+from typing import Optional, Dict, Any
 
 def convert_gps_to_decimal(gps_coord: Any, gps_ref: Any) -> Optional[float]:
     """Convert GPS coordinates from DMS to decimal degrees"""
@@ -33,8 +14,6 @@ def convert_gps_to_decimal(gps_coord: Any, gps_ref: Any) -> Optional[float]:
         # Convert GPS coordinate to decimal
         coord_str = str(gps_coord)
         ref_str = str(gps_ref).upper()
-
-        logger.debug(f"Converting GPS coordinate: {coord_str}, ref: {ref_str}")
 
         # Parse the coordinate string [DD, MM, SS]
         if '[' in coord_str and ']' in coord_str:
@@ -52,11 +31,10 @@ def convert_gps_to_decimal(gps_coord: Any, gps_ref: Any) -> Optional[float]:
                     if ref_str in ['S', 'W']:
                         decimal = -decimal
 
-                    logger.debug(f"Converted to decimal: {decimal}")
                     return decimal
 
     except Exception as e:
-        logger.error(f"Error converting GPS coordinate to decimal: {e}")
+        print(f"Error converting GPS coordinate to decimal: {e}")
 
     return None
 
@@ -75,19 +53,19 @@ def parse_rational(rational_str: str) -> Optional[float]:
 def extract_gps_from_file(file_path: str) -> Optional[tuple[float, float]]:
     """Extract GPS coordinates from image file using ExifRead"""
     try:
-        logger.info(f"Processing: {file_path}")
+        print(f"Processing: {file_path}")
 
         with open(file_path, 'rb') as f:
             tags = exifread.process_file(f, details=False)
 
-        logger.info(f"Found {len(tags)} EXIF tags")
+        print(f"Found {len(tags)} EXIF tags")
 
         # Show GPS related tags
         gps_tags = {k: v for k, v in tags.items() if k.startswith('GPS')}
-        logger.info(f"GPS tags found: {len(gps_tags)}")
+        print(f"GPS tags found: {len(gps_tags)}")
 
         for tag_name, tag_value in gps_tags.items():
-            logger.debug(f"  {tag_name}: {tag_value}")
+            print(f"  {tag_name}: {tag_value}")
 
         # Check if GPS data exists
         gps_latitude = tags.get('GPS GPSLatitude')
@@ -96,74 +74,77 @@ def extract_gps_from_file(file_path: str) -> Optional[tuple[float, float]]:
         gps_longitude_ref = tags.get('GPS GPSLongitudeRef')
 
         if gps_latitude and gps_latitude_ref and gps_longitude and gps_longitude_ref:
-            logger.info("GPS data found! Converting to decimal...")
+            print("GPS data found! Converting to decimal...")
 
             # Convert GPS coordinates to decimal format
             lat_decimal = convert_gps_to_decimal(gps_latitude, gps_latitude_ref)
             lon_decimal = convert_gps_to_decimal(gps_longitude, gps_longitude_ref)
 
             if lat_decimal is not None and lon_decimal is not None:
-                logger.info(f"✓ GPS Coordinates: {lat_decimal:.8f}, {lon_decimal:.8f}")
+                print(f"GPS Coordinates: {lat_decimal:.8f}, {lon_decimal:.8f}")
                 return (lat_decimal, lon_decimal)
             else:
-                logger.warning("Failed to convert GPS coordinates to decimal")
+                print("Failed to convert GPS coordinates to decimal")
         else:
-            logger.info("No GPS coordinates found in this image")
+            print("No GPS coordinates found in this image")
 
     except Exception as e:
-        logger.error(f"Error processing file: {e}")
+        print(f"Error processing file: {e}")
         return None
 
     return None
 
 def main():
     """テストメイン関数"""
-    logger.info("GPS座標抽出テスト開始")
+    print("GPS座標抽出テスト開始\n")
 
     # テスト用の画像ファイルパスを指定
-    pictures_dir = os.path.expanduser("~/Pictures")
-
-    if not os.path.exists(pictures_dir):
-        logger.error(f"Pictures directory not found: {pictures_dir}")
-        return
-
-    logger.info(f"Searching for images in: {pictures_dir}")
+    # ユーザーがGPS付き画像を持っている場合のテスト
+    test_image_paths = [
+        # 一般的なGPS付き画像の場所
+        "/home/hiro/Pictures",
+        "/home/hiro/Downloads",
+        "/home/hiro/Desktop"
+    ]
 
     found_images = []
 
     # GPS付き画像を探す
-    for root, _, files in os.walk(pictures_dir):
-        for file in files:
-            if file.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif')):
-                full_path = os.path.join(root, file)
-                found_images.append(full_path)
-                if len(found_images) >= 10:  # 最大10個までテスト
+    for search_dir in test_image_paths:
+        if os.path.exists(search_dir):
+            print(f"Searching in: {search_dir}")
+            for root, dirs, files in os.walk(search_dir):
+                for file in files:
+                    if file.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif')):
+                        full_path = os.path.join(root, file)
+                        found_images.append(full_path)
+                        if len(found_images) >= 5:  # 最大5つまでテスト
+                            break
+                if len(found_images) >= 5:
                     break
-        if len(found_images) >= 10:
+        if len(found_images) >= 5:
             break
 
     if found_images:
-        logger.info(f"Found {len(found_images)} image files to test")
+        print(f"Found {len(found_images)} image files to test\n")
 
         gps_found_count = 0
         for image_path in found_images:
-            logger.info("="*50)
+            print(f"\n{'='*50}")
             result = extract_gps_from_file(image_path)
             if result:
                 gps_found_count += 1
-                logger.info("✓ GPS座標が正常に抽出されました！")
+                print("✓ GPS座標が正常に抽出されました！")
             else:
-                logger.info("- GPS座標なし")
+                print("- GPS座標なし")
 
-        logger.info("="*50)
-        logger.info(f"テスト完了: {gps_found_count}/{len(found_images)} 個の画像からGPS座標を抽出")
-
-        if gps_found_count > 0:
-            logger.info("✅ ExifReadによるGPS座標抽出が正常に動作しています")
-        else:
-            logger.warning("⚠️  GPS付き画像が見つかりませんでした")
+        print(f"\n{'='*50}")
+        print(f"テスト完了: {gps_found_count}/{len(found_images)} 個の画像からGPS座標を抽出")
     else:
-        logger.error("テスト用の画像ファイルが見つかりませんでした")
+        print("テスト用の画像ファイルが見つかりませんでした")
+        print("GPS付きの.jpg/.jpeg画像を以下のディレクトリに置いてください:")
+        for path in test_image_paths:
+            print(f"  - {path}")
 
 if __name__ == "__main__":
     main()

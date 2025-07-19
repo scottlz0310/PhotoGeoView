@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional, Any
 
 from src.core.logger import get_logger
+from src.core.settings import SettingsManager
 
 logger = get_logger(__name__)
 
@@ -35,6 +36,9 @@ class FileBrowser(QWidget):
         super().__init__(parent)
         self.logger = logger
 
+        # Settings manager
+        self.settings_manager = SettingsManager()
+
         # File system model
         self.model: Optional[QFileSystemModel] = None
         self.tree_view: Optional[QTreeView] = None
@@ -53,7 +57,11 @@ class FileBrowser(QWidget):
 
         # Create tree view
         self.tree_view = QTreeView()
-        self.tree_view.setAlternatingRowColors(True)
+
+        # Get alternating row colors setting - for now, disable it
+        alternating_colors = False  # Disable alternating row colors
+        self.tree_view.setAlternatingRowColors(alternating_colors)
+
         self.tree_view.setSelectionMode(QTreeView.SelectionMode.SingleSelection)
         self.tree_view.setSortingEnabled(True)
 
@@ -62,7 +70,7 @@ class FileBrowser(QWidget):
 
         layout.addWidget(self.tree_view)
 
-        self.logger.debug("FileBrowser UI setup complete")
+        self.logger.debug(f"FileBrowser UI setup complete (alternating colors: {alternating_colors})")
 
     def setup_model(self) -> None:
         """Setup the file system model"""
