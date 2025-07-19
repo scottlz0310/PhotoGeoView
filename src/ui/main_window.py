@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         self.settings = get_settings()
 
         # Initialize theme manager first
-        self.theme_manager = ThemeManager()
+        self.theme_manager = ThemeManager(self.settings)
 
         # Initialize controllers
         self.theme_controller = ThemeController(self.settings, self.theme_manager, self)

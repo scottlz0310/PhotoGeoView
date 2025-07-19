@@ -29,7 +29,7 @@ class WindowSettings:
 @dataclass
 class UISettings:
     """User interface appearance settings"""
-    current_theme: str = "dark_blue.xml"
+    current_theme: str = "dark_blue"
     theme_manager_enabled: bool = True
     selected_themes: List[str] = field(default_factory=lambda: ["dark_blue.xml", "light_blue.xml"])
     theme_toggle_index: int = 0
