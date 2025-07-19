@@ -149,33 +149,37 @@ class ExifInfoPanel(QWidget):
     def display_exif_data(self, data: Dict[str, Any]) -> None:
         """Display EXIF data in organized groups"""
         try:
-            # Clear previous content
+            # Clear previous content safely
             if self.content_widget:
-                # Remove old layout
-                old_layout = self.content_widget.layout()
-                if old_layout:
-                    while old_layout.count():
-                        old_layout.takeAt(0)
+                # Clear existing content without removing layout
+                layout = self.content_widget.layout()
+                if layout:
+                    # Remove all widgets from layout
+                    while layout.count():
+                        child = layout.takeAt(0)
+                        if child and child.widget():
+                            child.widget().deleteLater()
+                else:
+                    # Create new layout if none exists
+                    layout = QVBoxLayout(self.content_widget)
 
-            # Create new layout
-            layout = QVBoxLayout(self.content_widget)
-            layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+                layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-            if not data:
-                no_data_label = QLabel("No EXIF data available")
-                no_data_label.setStyleSheet("color: gray; font-style: italic;")
-                layout.addWidget(no_data_label)
-                return
+                if not data:
+                    no_data_label = QLabel("No EXIF data available")
+                    no_data_label.setStyleSheet("color: gray; font-style: italic;")
+                    layout.addWidget(no_data_label)
+                    return
 
-            # Categorize and display data
-            categories = self.categorize_data(data)
+                # Categorize and display data
+                categories = self.categorize_data(data)
 
-            for category, items in categories.items():
-                if items:
-                    group = self.create_info_group(category, items)
-                    layout.addWidget(group)
+                for category, items in categories.items():
+                    if items:
+                        group = self.create_info_group(category, items)
+                        layout.addWidget(group)
 
-            layout.addStretch()
+                layout.addStretch()
 
         except Exception as e:
             self.logger.error(f"Error displaying EXIF data: {e}")
@@ -272,22 +276,24 @@ class ExifInfoPanel(QWidget):
         """Clear all displayed information"""
         try:
             if self.content_widget:
-                # Clear layout
+                # Clear existing content without removing layout
                 layout = self.content_widget.layout()
                 if layout:
+                    # Remove all widgets from layout
                     while layout.count():
                         child = layout.takeAt(0)
                         if child and child.widget():
                             child.widget().deleteLater()
+                else:
+                    # Create new layout if none exists
+                    layout = QVBoxLayout(self.content_widget)
 
-                # Create new empty layout
-                new_layout = QVBoxLayout(self.content_widget)
-                new_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+                layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
                 empty_label = QLabel("Select an image to view EXIF information")
                 empty_label.setStyleSheet("color: gray; font-style: italic; padding: 20px;")
                 empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                new_layout.addWidget(empty_label)
+                layout.addWidget(empty_label)
 
             self.current_file = ""
             self.current_data = {}
@@ -299,20 +305,24 @@ class ExifInfoPanel(QWidget):
         """Show loading state"""
         try:
             if self.content_widget:
-                # Clear layout
+                # Clear existing content without removing layout
                 layout = self.content_widget.layout()
                 if layout:
+                    # Remove all widgets from layout
                     while layout.count():
-                        layout.takeAt(0)
+                        child = layout.takeAt(0)
+                        if child and child.widget():
+                            child.widget().deleteLater()
+                else:
+                    # Create new layout if none exists
+                    layout = QVBoxLayout(self.content_widget)
 
-                # Create loading layout
-                loading_layout = QVBoxLayout(self.content_widget)
-                loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
                 loading_label = QLabel("Loading EXIF data...")
                 loading_label.setStyleSheet("color: #666; font-style: italic;")
                 loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                loading_layout.addWidget(loading_label)
+                layout.addWidget(loading_label)
 
         except Exception as e:
             self.logger.error(f"Error showing loading state: {e}")

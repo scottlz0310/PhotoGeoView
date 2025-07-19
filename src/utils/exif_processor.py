@@ -111,29 +111,60 @@ class ExifProcessor:
             'Image Model': 'Camera Model',
             'Image DateTime': 'Date Taken',
             'Image Orientation': 'Orientation',
+            'Image ImageDescription': 'Description',
+            'Image XResolution': 'X Resolution',
+            'Image YResolution': 'Y Resolution',
+            'Image ResolutionUnit': 'Resolution Unit',
             'EXIF DateTimeOriginal': 'Date Original',
             'EXIF ExifImageWidth': 'Image Width',
             'EXIF ExifImageLength': 'Image Height',
             'EXIF ISO': 'ISO Speed',
+            'EXIF ISOSpeedRatings': 'ISO Speed',
             'EXIF FNumber': 'F-Number',
             'EXIF ExposureTime': 'Exposure Time',
             'EXIF FocalLength': 'Focal Length',
+            'EXIF FocalLengthIn35mmFilm': 'Focal Length (35mm)',
             'EXIF Flash': 'Flash',
             'EXIF WhiteBalance': 'White Balance',
-            'EXIF LensModel': 'Lens Model'
+            'EXIF LensModel': 'Lens Model',
+            'EXIF ExposureMode': 'Exposure Mode',
+            'EXIF DigitalZoomRatio': 'Digital Zoom Ratio',
+            'EXIF SceneCaptureType': 'Scene Capture Type',
+            'EXIF Contrast': 'Contrast',
+            'EXIF Saturation': 'Saturation',
+            'EXIF Sharpness': 'Sharpness',
+            'EXIF CustomRendered': 'Custom Rendered',
+            'EXIF SubjectDistanceRange': 'Subject Distance Range'
+        }
+
+        # 除外するタグのリスト（バイナリデータやあまり重要でないもの）
+        excluded_tags = {
+            'JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote',
+            'EXIF UserComment', 'EXIF ColorSpace', 'EXIF ComponentsConfiguration',
+            'Image Tag 0x001B'  # バイナリデータ
         }
 
         for tag_key, tag_value in tags.items():
             try:
-                if tag_key in tag_mapping:
-                    readable_key = tag_mapping[tag_key]
+                tag_str = str(tag_key)
+
+                # 除外タグをスキップ
+                if tag_str in excluded_tags:
+                    continue
+
+                # マップされたタグを使用
+                if tag_str in tag_mapping:
+                    readable_key = tag_mapping[tag_str]
                     parsed[readable_key] = str(tag_value)
                 else:
-                    # Include other important tags
-                    tag_str = str(tag_key)
-                    if any(keyword in tag_str.lower() for keyword in
-                           ['camera', 'lens', 'exposure', 'iso', 'flash', 'focus']):
-                        parsed[tag_str] = str(tag_value)
+                    # その他の重要なタグを含める
+                    if any(keyword in tag_str.lower() for keyword in [
+                        'image', 'exif', 'camera', 'lens', 'exposure', 'iso', 'flash',
+                        'focus', 'white', 'resolution', 'date', 'time', 'gps'
+                    ]):
+                        # タグ名をクリーンアップ
+                        clean_key = tag_str.replace('Image ', '').replace('EXIF ', '')
+                        parsed[clean_key] = str(tag_value)
 
             except Exception as e:
                 self.logger.debug(f"Error parsing tag {tag_key}: {e}")
