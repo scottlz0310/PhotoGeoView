@@ -1,0 +1,63 @@
+{
+    "app": {
+        "name": "PhotoGeoView",
+        "version": "1.0.0",
+        "theme": "dark",
+        "language": "ja"
+    },
+    "ui": {
+        "window": {
+            "width": 1200,
+            "height": 800,
+            "x": 100,
+            "y": 100,
+            "maximized": false
+        },
+        "panels": {
+            "left_panel_width": 300,
+            "right_panel_width": 400,
+            "thumbnail_size": 120
+        },
+        "theme_manager": {
+            "current_theme": "dark",
+            "available_themes": [
+                "dark",
+                "light",
+                "blue",
+                "green",
+                "purple",
+                "orange",
+                "red",
+                "pink",
+                "yellow",
+                "brown",
+                "gray",
+                "cyan",
+                "teal",
+                "indigo",
+                "lime",
+                "amber"
+            ]
+        }
+    },
+    "paths": {
+        "last_directory": "",
+        "thumbnail_cache": "cache/thumbnails",
+        "logs": "logs"
+    },
+    "map": {
+        "default_zoom": 10,
+        "default_center": [
+            35.6762,
+            139.6503
+        ],
+        "tile_layer": "OpenStreetMap"
+    },
+    "logging": {
+        "level": "INFO",
+        "file_output": true,
+        "console_output": true,
+        "max_file_size": 10485760,
+        "backup_count": 5
+    }
+}
