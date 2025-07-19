@@ -6,7 +6,7 @@ Main application window with UI layout and theme integration
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QPushButton, QToolBar, QStatusBar, QLabel,
-    QFileDialog, QMessageBox, QFrame, QSizePolicy, QMenu
+    QFrame
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPoint
 from PyQt6.QtGui import QAction, QCloseEvent
@@ -16,6 +16,11 @@ from typing import Dict, Optional
 from src.core.logger import get_logger
 from src.core.settings import get_settings
 from src.ui.theme_manager import ThemeManager
+from src.ui.controllers.theme_controller import ThemeController
+from src.ui.controllers.folder_controller import FolderController
+from src.ui.controllers.panel_controller import PanelController
+from src.ui.controllers.debug_controller import DebugController
+from src.ui.controllers.toolbar_manager import ToolbarManager
 from src.modules.file_browser import FileBrowser
 from src.modules.thumbnail_view import ThumbnailView
 from src.modules.exif_info import ExifInfoPanel
@@ -44,6 +49,13 @@ class MainWindow(QMainWindow):
 
         # Initialize theme manager first
         self.theme_manager = ThemeManager()
+
+        # Initialize controllers
+        self.theme_controller = ThemeController(self.settings, self.theme_manager, self)
+        self.folder_controller = FolderController(self.settings, self)
+        self.panel_controller = PanelController(self)
+        self.debug_controller = DebugController(self.settings, self)
+        self.toolbar_manager = ToolbarManager(self)
 
         # UI components will be created in setup_ui()
         self.central_widget: Optional[QWidget] = None
@@ -76,7 +88,8 @@ class MainWindow(QMainWindow):
             interval = self.settings.advanced.save_interval_seconds * 1000
             self.auto_save_timer.start(interval)
 
-        self.setup_connections()
+        # Setup controller connections
+        self.setup_controller_connections()
         self.setup_widget_connections()
 
         self.logger.info("Main window initialized successfully")
@@ -98,8 +111,17 @@ class MainWindow(QMainWindow):
         main_layout.setContentsMargins(4, 4, 4, 4)
         main_layout.setSpacing(2)
 
-        # Create toolbar
-        self.setup_toolbar()
+        # Create toolbar via toolbar manager
+        self.toolbar = self.toolbar_manager.setup_toolbar(self)
+        self.addToolBar(self.toolbar)
+
+        # Get references from toolbar manager
+        self.current_folder_label = self.toolbar_manager.current_folder_label
+        self.folder_action = self.toolbar_manager.folder_action
+        self.back_action = self.toolbar_manager.back_action
+        self.forward_action = self.toolbar_manager.forward_action
+        self.up_action = self.toolbar_manager.up_action
+        self.theme_action = self.toolbar_manager.theme_action
 
         # Create main content area with splitters
         self.setup_content_area()
@@ -110,79 +132,10 @@ class MainWindow(QMainWindow):
         # Create status bar
         self.setup_status_bar()
 
-        # Setup debug shortcuts
-        self.setup_debug_shortcuts()
+        # Setup debug shortcuts via controller
+        self.debug_controller.setup_debug_shortcuts(self)
 
         self.logger.debug("Main UI layout setup complete")
-
-    def setup_toolbar(self) -> None:
-        """Setup the main toolbar"""
-        self.toolbar = QToolBar("Main Toolbar")
-        self.toolbar.setMovable(False)
-        self.toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.addToolBar(self.toolbar)
-
-        # Folder selection button
-        folder_action = QAction("📁 Open Folder", self)
-        folder_action.setToolTip("Select folder to browse images")
-        folder_action.triggered.connect(self.open_folder_dialog)
-        self.toolbar.addAction(folder_action)
-
-        # Current folder display (between Open Folder and Back)
-        self.current_folder_label = QLabel("No folder selected")
-        self.current_folder_label.setStyleSheet("""
-            QLabel {
-                padding: 4px 8px;
-                margin: 2px;
-                background-color: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 3px;
-                color: white;
-                font-size: 11px;
-                min-width: 150px;
-            }
-        """)
-        self.current_folder_label.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Fixed
-        )
-        self.toolbar.addWidget(self.current_folder_label)
-
-        self.toolbar.addSeparator()
-
-        # Navigation buttons
-        back_action = QAction("← Back", self)
-        back_action.setToolTip("Go back to previous folder")
-        back_action.setEnabled(False)  # Initially disabled
-        self.toolbar.addAction(back_action)
-
-        forward_action = QAction("→ Forward", self)
-        forward_action.setToolTip("Go forward to next folder")
-        forward_action.setEnabled(False)  # Initially disabled
-        self.toolbar.addAction(forward_action)
-
-        up_action = QAction("↑ Up", self)
-        up_action.setToolTip("Go to parent folder")
-        up_action.setEnabled(False)  # Initially disabled
-        self.toolbar.addAction(up_action)
-
-        self.toolbar.addSeparator()
-
-        # Theme toggle button
-        self.theme_action = QAction("🎨 Theme", self)
-        self.theme_action.setToolTip("Toggle between selected themes (right-click to select multiple themes)")
-        self.theme_action.triggered.connect(self.toggle_theme)
-        self.toolbar.addAction(self.theme_action)
-
-        # Set up context menu policy for the toolbar itself
-        self.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.toolbar.customContextMenuRequested.connect(self.on_toolbar_context_menu)
-
-        # Store actions for later reference
-        self.folder_action = folder_action
-        self.back_action = back_action
-        self.forward_action = forward_action
-        self.up_action = up_action
 
     def setup_content_area(self) -> None:
         """Setup the main content area with panels"""
@@ -372,6 +325,45 @@ class MainWindow(QMainWindow):
         # Connect internal signals
         self.folder_changed.connect(self.on_folder_changed)
 
+    def setup_controller_connections(self) -> None:
+        """Setup connections between controllers and main window"""
+        # Theme controller connections
+        self.theme_controller.theme_applied.connect(self.on_theme_changed)
+        self.theme_controller.status_message.connect(self.show_status_message)
+
+        # Folder controller connections
+        self.folder_controller.folder_opened.connect(self.on_folder_opened)
+        self.folder_controller.status_message.connect(self.update_status)
+
+        # Panel controller connections
+        self.panel_controller.status_message.connect(self.update_status)
+
+        # Debug controller connections
+        self.debug_controller.status_message.connect(self.show_status_message)
+
+        # Toolbar manager connections
+        self.toolbar_manager.open_folder_requested.connect(self.open_folder_dialog)
+        self.toolbar_manager.theme_toggle_requested.connect(self.theme_controller.toggle_theme)
+        self.toolbar_manager.theme_menu_requested.connect(self.on_toolbar_context_menu)
+
+    def on_folder_opened(self, folder_path: str) -> None:
+        """Handle folder opened from controller"""
+        # Update UI elements with folder info
+        if self.current_folder_label:
+            self.current_folder_label.setText(f"📁 {folder_path}")
+            self.current_folder_label.setToolTip(f"Current folder: {folder_path}")
+
+        # Update file browser to show selected folder
+        if hasattr(self, 'file_browser') and self.file_browser:
+            self.file_browser.set_root_path(folder_path)
+
+        # Enable navigation buttons
+        if self.up_action:
+            self.up_action.setEnabled(True)
+
+        # Emit signal
+        self.folder_changed.emit(folder_path)
+
     def restore_window_state(self) -> None:
         """Restore window position and size from settings"""
         window_settings = self.settings.window
@@ -408,360 +400,23 @@ class MainWindow(QMainWindow):
         self.settings.save()
         self.logger.debug("Window state saved to settings")
 
+    # Folder operations delegated to folder_controller
     def open_folder_dialog(self) -> None:
         """Open folder selection dialog"""
-        try:
-            folder = QFileDialog.getExistingDirectory(
-                self,
-                "Select Image Folder",
-                self.settings.folders.last_opened_folder
-            )
-
-            if folder:
-                self.open_folder(folder)
-        except Exception as e:
-            self.logger.error(f"Error opening folder dialog: {e}")
-            QMessageBox.warning(self, "Error", f"Failed to open folder dialog: {e}")
+        self.folder_controller.open_folder_dialog(self)
 
     def open_folder(self, folder_path: str) -> None:
         """Open a specific folder"""
-        try:
-            folder_path = Path(folder_path).resolve().as_posix()
+        self.folder_controller.open_folder(folder_path, self)
 
-            # Update settings
-            self.settings.folders.last_opened_folder = folder_path
-            self.settings.add_recent_folder(folder_path)
-
-            # Update toolbar current folder display (show full path)
-            self.current_folder_label.setText(f"📁 {folder_path}")
-            self.current_folder_label.setToolTip(f"Current folder: {folder_path}")
-
-            # Update file browser to show selected folder
-            if hasattr(self, 'file_browser') and self.file_browser:
-                self.file_browser.set_root_path(folder_path)
-
-            # Enable navigation buttons
-            self.up_action.setEnabled(True)
-
-            # Emit signal
-            self.folder_changed.emit(folder_path)
-
-            # Update status
-            self.update_status(f"Opened folder: {folder_path}")
-
-            self.logger.info(f"Opened folder: {folder_path}")
-
-        except Exception as e:
-            self.logger.error(f"Error opening folder {folder_path}: {e}")
-            QMessageBox.warning(self, "Error", f"Failed to open folder: {e}")
-
+    # Theme operations delegated to theme_controller
     def toggle_theme(self) -> None:
         """Toggle between selected themes in order"""
-        try:
-            selected_themes = self.settings.ui.selected_themes
-
-            # If no themes selected or only one theme, fall back to simple dark/light toggle
-            if len(selected_themes) <= 1:
-                current_theme = self.settings.ui.current_theme
-                if 'dark' in current_theme.lower():
-                    new_theme = "light_blue.xml"
-                else:
-                    new_theme = "dark_blue.xml"
-
-                # Update selection to include both themes for future toggling
-                self.settings.ui.selected_themes = [current_theme, new_theme]
-                self.settings.ui.theme_toggle_index = 1
-            else:
-                # Cycle through selected themes
-                current_index = self.settings.ui.theme_toggle_index
-                next_index = (current_index + 1) % len(selected_themes)
-                new_theme = selected_themes[next_index]
-                self.settings.ui.theme_toggle_index = next_index
-
-            # Apply the theme
-            if self.theme_manager.apply_theme(new_theme):
-                self.settings.ui.current_theme = new_theme
-                self.settings.save()
-
-                # Show which theme we're on in multi-theme mode
-                if len(selected_themes) > 1:
-                    theme_position = f" ({self.settings.ui.theme_toggle_index + 1}/{len(selected_themes)})"
-                    display_name = new_theme.replace('.xml', '').replace('_', ' ').title()
-                    self.update_status(f"Theme: {display_name}{theme_position}")
-
-                self.logger.info(f"Theme toggled to: {new_theme} (index {self.settings.ui.theme_toggle_index})")
-            else:
-                self.logger.error(f"Failed to apply theme: {new_theme}")
-
-        except Exception as e:
-            self.logger.error(f"Error toggling theme: {e}")
+        self.theme_controller.toggle_theme()
 
     def on_toolbar_context_menu(self, position: QPoint) -> None:
         """Handle toolbar context menu request"""
-        # Check if the click was near the theme action
-        self.show_theme_menu(position)
-
-    def show_theme_menu(self, position: QPoint) -> None:
-        """Show theme selection context menu with multiple selection support"""
-        try:
-            # Create persistent context menu that doesn't auto-close
-            menu = QMenu(self)
-            menu.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
-            current_theme = self.settings.ui.current_theme
-            selected_themes = self.settings.ui.selected_themes
-
-            # Add header with instructions
-            info_action = QAction("🎨 Multi-Theme Selector", self)
-            info_action.setEnabled(False)
-            font = info_action.font()
-            font.setBold(True)
-            info_action.setFont(font)
-            menu.addAction(info_action)
-
-            instruction_action = QAction("   → Click themes to add/remove from selection", self)
-            instruction_action.setEnabled(False)
-            menu.addAction(instruction_action)
-            menu.addSeparator()
-
-            # Store theme actions for updating display
-            self.theme_actions = {}
-
-            # Add available themes to menu with visual indicators
-            for theme in self.theme_manager.available_themes:
-                display_name = theme.replace('.xml', '').replace('_', ' ').title()
-
-                # Add status indicators
-                if theme == current_theme:
-                    display_name = f"● {display_name} (Active)"
-                elif theme in selected_themes:
-                    display_name = f"✓ {display_name}"
-                else:
-                    display_name = f"   {display_name}"
-
-                action = QAction(display_name, self)
-                action.setCheckable(False)
-
-                # Connect with a closure to avoid lambda issues
-                def make_toggle_handler(theme_name: str, menu_ref: QMenu):
-                    return lambda: self.toggle_theme_in_persistent_menu(theme_name, menu_ref)
-
-                action.triggered.connect(make_toggle_handler(theme, menu))
-                menu.addAction(action)
-                self.theme_actions[theme] = action
-
-            menu.addSeparator()
-
-            # Add status and control buttons
-            selection_count = len(selected_themes)
-            status_text = f"📊 Selected: {selection_count} theme{'s' if selection_count != 1 else ''}"
-
-            status_action = QAction(status_text, self)
-            status_action.setEnabled(False)
-            menu.addAction(status_action)
-            self.status_action = status_action  # Store reference for updates
-
-            menu.addSeparator()
-
-            # Utility buttons
-            clear_action = QAction("🗑️ Clear All", self)
-            clear_action.triggered.connect(lambda: self.clear_and_update_menu(menu))
-            menu.addAction(clear_action)
-
-            select_all_action = QAction("✓ Select All", self)
-            select_all_action.triggered.connect(lambda: self.select_all_and_update_menu(menu))
-            menu.addAction(select_all_action)
-
-            menu.addSeparator()
-
-            # Close button
-            close_action = QAction("✅ Done", self)
-            close_action.triggered.connect(menu.close)
-            font.setBold(True)
-            close_action.setFont(font)
-            menu.addAction(close_action)
-
-            # Show menu at cursor position (better UX than toolbar position)
-            global_pos = self.mapToGlobal(position)
-            menu.popup(global_pos)
-
-        except Exception as e:
-            self.logger.error(f"Error showing theme menu: {e}")
-
-    def toggle_theme_selection(self, theme_name: str) -> None:
-        """Toggle theme selection for multi-theme cycling"""
-        try:
-            selected_themes = self.settings.ui.selected_themes.copy()
-
-            if theme_name in selected_themes:
-                # Remove from selection
-                selected_themes.remove(theme_name)
-                self.logger.info(f"Removed theme from selection: {theme_name}")
-            else:
-                # Add to selection
-                selected_themes.append(theme_name)
-                self.logger.info(f"Added theme to selection: {theme_name}")
-
-            # Update settings
-            self.settings.ui.selected_themes = selected_themes
-
-            # Reset toggle index if selection changed
-            if len(selected_themes) > 0:
-                # Find current theme index in new selection, or reset to 0
-                try:
-                    current_index = selected_themes.index(self.settings.ui.current_theme)
-                    self.settings.ui.theme_toggle_index = current_index
-                except ValueError:
-                    self.settings.ui.theme_toggle_index = 0
-
-            self.settings.save()
-
-        except Exception as e:
-            self.logger.error(f"Error toggling theme selection {theme_name}: {e}")
-
-    def toggle_theme_in_persistent_menu(self, theme_name: str, menu: QMenu) -> None:
-        """Toggle theme selection and update the menu without closing it"""
-        try:
-            selected_themes = self.settings.ui.selected_themes.copy()
-            current_theme = self.settings.ui.current_theme
-
-            if theme_name in selected_themes:
-                # Remove from selection (but don't allow removing the current theme if it's the only one)
-                if len(selected_themes) > 1 or theme_name != current_theme:
-                    selected_themes.remove(theme_name)
-                    self.logger.info(f"Removed theme from selection: {theme_name}")
-            else:
-                # Add to selection
-                selected_themes.append(theme_name)
-                self.logger.info(f"Added theme to selection: {theme_name}")
-
-            # Update settings
-            self.settings.ui.selected_themes = selected_themes
-
-            # Update toggle index if current theme is still in selection
-            if current_theme in selected_themes:
-                self.settings.ui.theme_toggle_index = selected_themes.index(current_theme)
-            else:
-                self.settings.ui.theme_toggle_index = 0
-
-            self.settings.save()
-
-            # Update menu display immediately
-            self.refresh_menu_display(menu)
-
-        except Exception as e:
-            self.logger.error(f"Error toggling theme selection {theme_name}: {e}")
-
-    def refresh_menu_display(self, menu: QMenu) -> None:
-        """Refresh the menu display to show current selection state"""
-        try:
-            current_theme = self.settings.ui.current_theme
-            selected_themes = self.settings.ui.selected_themes
-
-            # Update theme action texts
-            if hasattr(self, 'theme_actions'):
-                for theme, action in self.theme_actions.items():
-                    display_name = theme.replace('.xml', '').replace('_', ' ').title()
-
-                    if theme == current_theme:
-                        display_name = f"● {display_name} (Active)"
-                    elif theme in selected_themes:
-                        display_name = f"✓ {display_name}"
-                    else:
-                        display_name = f"   {display_name}"
-
-                    action.setText(display_name)
-
-            # Update status text
-            if hasattr(self, 'status_action'):
-                selection_count = len(selected_themes)
-                status_text = f"📊 Selected: {selection_count} theme{'s' if selection_count != 1 else ''}"
-                self.status_action.setText(status_text)
-
-        except Exception as e:
-            self.logger.error(f"Error refreshing menu display: {e}")
-
-    def clear_and_update_menu(self, menu: QMenu) -> None:
-        """Clear all selections except current theme and update menu"""
-        try:
-            current_theme = self.settings.ui.current_theme
-            self.settings.ui.selected_themes = [current_theme]
-            self.settings.ui.theme_toggle_index = 0
-            self.settings.save()
-            self.logger.info("Cleared all theme selections")
-
-            # Refresh menu
-            self.refresh_menu_display(menu)
-
-        except Exception as e:
-            self.logger.error(f"Error clearing selections: {e}")
-
-    def select_all_and_update_menu(self, menu: QMenu) -> None:
-        """Select all themes and update menu"""
-        try:
-            # Select all available themes
-            self.settings.ui.selected_themes = self.theme_manager.available_themes.copy()
-
-            # Set current theme index
-            current_theme = self.settings.ui.current_theme
-            if current_theme in self.settings.ui.selected_themes:
-                self.settings.ui.theme_toggle_index = self.settings.ui.selected_themes.index(current_theme)
-
-            self.settings.save()
-            self.logger.info("Selected all themes")
-
-            # Refresh menu
-            self.refresh_menu_display(menu)
-
-        except Exception as e:
-            self.logger.error(f"Error selecting all themes: {e}")
-
-    def clear_theme_selection(self) -> None:
-        """Clear all theme selections"""
-        try:
-            self.settings.ui.selected_themes = [self.settings.ui.current_theme]
-            self.settings.ui.theme_toggle_index = 0
-            self.settings.save()
-            self.logger.info("Cleared all theme selections")
-
-        except Exception as e:
-            self.logger.error(f"Error clearing theme selection: {e}")
-
-    def apply_selected_themes(self) -> None:
-        """Apply the currently selected themes for cycling"""
-        try:
-            selected_themes = self.settings.ui.selected_themes
-            if not selected_themes:
-                return
-
-            # Ensure current theme is in the selection
-            if self.settings.ui.current_theme not in selected_themes:
-                selected_themes.insert(0, self.settings.ui.current_theme)
-                self.settings.ui.selected_themes = selected_themes
-
-            self.settings.save()
-            self.logger.info(f"Applied theme selection: {selected_themes}")
-
-        except Exception as e:
-            self.logger.error(f"Error applying selected themes: {e}")
-
-    def select_theme(self, theme_name: str) -> None:
-        """Select and apply a specific theme directly"""
-        try:
-            if self.theme_manager.apply_theme(theme_name):
-                self.settings.ui.current_theme = theme_name
-
-                # Update toggle index to match current theme if it's in selection
-                selected_themes = self.settings.ui.selected_themes
-                if theme_name in selected_themes:
-                    self.settings.ui.theme_toggle_index = selected_themes.index(theme_name)
-
-                self.settings.save()
-                self.logger.info(f"Theme selected: {theme_name}")
-            else:
-                self.logger.error(f"Failed to apply theme: {theme_name}")
-
-        except Exception as e:
-            self.logger.error(f"Error selecting theme {theme_name}: {e}")
+        self.theme_controller.show_theme_menu(position, self)
 
     def toggle_panel_maximize(self, panel_type: str) -> None:
         """Toggle panel maximization"""
@@ -1116,70 +771,5 @@ class MainWindow(QMainWindow):
         except Exception:
             return False
 
-    def setup_debug_shortcuts(self) -> None:
-        """Setup debug keyboard shortcuts"""
-        from PyQt6.QtGui import QShortcut, QKeySequence
-
-        # Ctrl+Shift+D: Toggle DEBUG/INFO logging
-        debug_shortcut = QShortcut(QKeySequence("Ctrl+Shift+D"), self)
-        debug_shortcut.activated.connect(self.toggle_debug_mode)
-
-        # Ctrl+Shift+L: Show current log level in status bar
-        log_info_shortcut = QShortcut(QKeySequence("Ctrl+Shift+L"), self)
-        log_info_shortcut.activated.connect(self.show_log_level_info)
-
-        self.logger.debug("Debug shortcuts initialized")
-
-    def toggle_debug_mode(self) -> None:
-        """Cycle through all log levels: DEBUG → INFO → WARNING → ERROR → CRITICAL → DEBUG..."""
-        current_level = self.settings.logging.level
-
-        # Define log levels in order
-        log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-
-        try:
-            current_index = log_levels.index(current_level)
-            # Move to next level (cycle back to DEBUG after CRITICAL)
-            next_index = (current_index + 1) % len(log_levels)
-            new_level = log_levels[next_index]
-        except ValueError:
-            # If current level is not in our list, default to DEBUG
-            new_level = "DEBUG"
-
-        success = self.settings.set_log_level(new_level)
-
-        if success:
-            # Show level with description
-            level_descriptions = {
-                "DEBUG": "DEBUG (All messages)",
-                "INFO": "INFO (General information)",
-                "WARNING": "WARNING (Warnings and above)",
-                "ERROR": "ERROR (Errors and critical)",
-                "CRITICAL": "CRITICAL (Critical errors only)"
-            }
-
-            message = f"Log level: {level_descriptions.get(new_level, new_level)}"
-            self.logger.info(f"Log level changed to {new_level}")
-            self.show_status_message(message, 4000)  # Show for 4 seconds
-        else:
-            message = "Failed to change log level"
-            self.logger.error(message)
-            self.show_status_message(message, 3000)
-
-    def show_log_level_info(self) -> None:
-        """Show current log level and available levels in status bar"""
-        current_level = self.settings.logging.level
-
-        level_info = {
-            "DEBUG": "Shows all messages (most verbose)",
-            "INFO": "Shows general information and above",
-            "WARNING": "Shows warnings, errors and critical",
-            "ERROR": "Shows errors and critical only",
-            "CRITICAL": "Shows only critical errors (least verbose)"
-        }
-
-        current_description = level_info.get(current_level, "Unknown level")
-        message = f"Log Level: {current_level} - {current_description} | Press Ctrl+Shift+D to cycle"
-
-        self.show_status_message(message, 7000)  # Show for 7 seconds
-        self.logger.info(f"Log level info displayed: {current_level} - {current_description}")
+    # Debug operations delegated to debug_controller
+    # (No methods needed here - controller handles shortcuts directly)
