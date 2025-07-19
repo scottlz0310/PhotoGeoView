@@ -98,5 +98,19 @@
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingTypeStubs": "none",
         "reportUnknownMemberType": "none"
-    }
+    },
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.diagnosticMode": "workspace",
+    "cursorpyright.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none",
+        "reportUnknownMemberType": "none"
+    },
+    "cursorpyright.analysis.extraPaths": [
+        "./src",
+        "./venv/lib/python*/site-packages"
+    ],
+    "cursorpyright.analysis.stubPath": "./typings",
+    "cursorpyright.analysis.typeCheckingMode": "strict",
+    "cursorpyright.analysis.useLibraryCodeForTypes": true
 }
