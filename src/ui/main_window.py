@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPoint
 from PyQt6.QtGui import QAction, QCloseEvent
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any, Tuple
 
 from src.core.logger import get_logger
 from src.core.settings import get_settings
@@ -90,6 +90,16 @@ class MainWindow(QMainWindow):
 
         # Setup controller connections
         self.setup_controller_connections()
+
+        # Configure panel controller with widgets
+        self.panel_controller.setup_widgets(
+            self.file_browser,
+            self.thumbnail_view,
+            self.exif_panel,
+            self.image_viewer,
+            self.map_viewer
+        )
+
         self.setup_widget_connections()
 
         self.logger.info("Main window initialized successfully")
@@ -518,129 +528,17 @@ class MainWindow(QMainWindow):
                 a0.accept()  # Close anyway
 
     def setup_widget_connections(self) -> None:
-        """Setup signal connections between widgets"""
+        """Setup signal connections between widgets - delegated to panel controller"""
         try:
-            # File browser connections
-            self.file_browser.folder_changed.connect(self.on_folder_changed_handler)
-            self.file_browser.file_selected.connect(self.on_file_selected_handler)
-
-            # Thumbnail view connections
-            self.thumbnail_view.image_selected.connect(self.on_image_selected_handler)
-            self.thumbnail_view.image_double_clicked.connect(self.on_image_double_clicked_handler)
-
-            # Image viewer connections
-            self.image_viewer.fullscreen_requested.connect(self.on_fullscreen_requested)
-            self.image_viewer.image_changed.connect(self.on_image_viewer_changed)
-
-            # Map viewer connections
-            self.map_viewer.fullscreen_requested.connect(self.on_map_fullscreen_requested)
-            self.map_viewer.marker_clicked.connect(self.on_map_marker_clicked)
-
-            self.logger.debug("Widget connections established")
+            # Panel controller handles all widget connections
+            # This avoids duplication and ensures proper coordination
+            self.logger.debug("Widget connections delegated to panel controller")
 
         except Exception as e:
             self.logger.error(f"Error setting up widget connections: {e}")
 
-    def on_folder_changed_handler(self, folder_path: str) -> None:
-        """Handle folder change from file browser"""
-        try:
-            # Get image files in the folder
-            image_files = self.file_browser.get_image_files_in_current_path()
-
-            # Update thumbnail view
-            self.thumbnail_view.load_images(image_files)
-
-            # Clear EXIF panel
-            self.exif_panel.clear_info()
-
-            self.logger.info(f"Folder changed to: {folder_path}, found {len(image_files)} images")
-
-        except Exception as e:
-            self.logger.error(f"Error handling folder change: {e}")
-
-    def on_file_selected_handler(self, file_path: str) -> None:
-        """Handle file selection from file browser"""
-        try:
-            # Update EXIF panel
-            self.exif_panel.load_file_info(file_path)
-
-            # If it's an image file, load it in the image viewer
-            if self.is_image_file(file_path):
-                # Get all images in current folder for navigation
-                image_files = self.file_browser.get_image_files_in_current_path()
-
-                # Find the index of the selected file
-                try:
-                    current_index = image_files.index(file_path)
-                except ValueError:
-                    current_index = 0
-
-                # Set the image list with correct index
-                self.image_viewer.set_image_list(image_files, current_index)
-
-                # Update map with GPS location if available
-                self.update_map_for_image(file_path)
-
-            # Update status
-            self.update_status(f"Selected: {Path(file_path).name}")
-
-            self.logger.debug(f"File selected: {file_path}")
-
-        except Exception as e:
-            self.logger.error(f"Error handling file selection: {e}")
-
-    def on_image_selected_handler(self, file_path: str) -> None:
-        """Handle image selection from thumbnail view"""
-        try:
-            # Update EXIF panel
-            self.exif_panel.load_file_info(file_path)
-
-            # Load image in viewer
-            image_files = self.file_browser.get_image_files_in_current_path()
-
-            # Find the index of the selected file
-            try:
-                current_index = image_files.index(file_path)
-            except ValueError:
-                current_index = 0
-
-            # Set the image list with correct index
-            self.image_viewer.set_image_list(image_files, current_index)
-
-            # Update map with GPS location if available
-            self.update_map_for_image(file_path)
-
-            # Update status
-            self.update_status(f"Selected: {Path(file_path).name}")
-
-            self.logger.debug(f"Image selected from thumbnails: {file_path}")
-
-        except Exception as e:
-            self.logger.error(f"Error handling image selection: {e}")
-
-    def on_image_double_clicked_handler(self, file_path: str) -> None:
-        """Handle image double-click from thumbnail view"""
-        try:
-            # Open image in viewer with fullscreen
-            image_files = self.file_browser.get_image_files_in_current_path()
-
-            # Find the index of the selected file
-            try:
-                current_index = image_files.index(file_path)
-            except ValueError:
-                current_index = 0
-
-            # Set the image list with correct index
-            self.image_viewer.set_image_list(image_files, current_index)
-
-            # Trigger fullscreen mode
-            self.on_fullscreen_requested()
-
-            self.update_status(f"Opening: {Path(file_path).name}")
-            self.logger.info(f"Image double-clicked: {file_path}")
-
-        except Exception as e:
-            self.logger.error(f"Error handling image double-click: {e}")
+    # Panel coordination methods delegated to panel_controller
+    # Individual handler methods removed to avoid duplication
 
     def on_fullscreen_requested(self) -> None:
         """Handle fullscreen request from image viewer"""
@@ -650,19 +548,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.logger.error(f"Error handling fullscreen request: {e}")
 
-    def on_image_viewer_changed(self, image_path: str) -> None:
-        """Handle image change in viewer (from navigation)"""
-        try:
-            # Update EXIF panel
-            self.exif_panel.load_file_info(image_path)
-
-            # Update status
-            self.update_status(f"Viewing: {Path(image_path).name}")
-
-            self.logger.debug(f"Image viewer changed to: {image_path}")
-        except Exception as e:
-            self.logger.error(f"Error handling image viewer change: {e}")
-
     def on_map_fullscreen_requested(self) -> None:
         """Handle fullscreen request from map viewer"""
         try:
@@ -671,59 +556,15 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.logger.error(f"Error handling map fullscreen request: {e}")
 
-    def on_map_marker_clicked(self, photo_path: str) -> None:
-        """Handle marker click from map viewer"""
-        try:
-            # Load the clicked photo in image viewer
-            image_files = self.file_browser.get_image_files_in_current_path()
-
-            if photo_path in image_files:
-                try:
-                    current_index = image_files.index(photo_path)
-                    self.image_viewer.set_image_list(image_files, current_index)
-
-                    # Update EXIF panel
-                    self.exif_panel.load_file_info(photo_path)
-
-                    # Update thumbnail selection (if method exists)
-                    # self.thumbnail_view.select_image(photo_path)
-
-                    self.update_status(f"Viewing: {Path(photo_path).name}")
-                    self.logger.info(f"Map marker clicked for: {photo_path}")
-                except ValueError:
-                    self.logger.warning(f"Photo not found in current folder: {photo_path}")
-
-        except Exception as e:
-            self.logger.error(f"Error handling map marker click: {e}")
-
-    def update_map_for_image(self, image_path: str) -> None:
-        """Update map display for the selected image"""
-        try:
-            # Get GPS coordinates from EXIF panel
-            if hasattr(self.exif_panel, 'get_gps_coordinates'):
-                coordinates = self.exif_panel.get_gps_coordinates()
-                if coordinates:
-                    lat, lon = coordinates
-                    self.map_viewer.set_current_photo(image_path, lat, lon)
-                    self.logger.debug(f"Updated map for {image_path} at ({lat}, {lon})")
-                else:
-                    # No GPS data available
-                    self.map_viewer.set_current_photo(image_path)
-                    self.logger.debug(f"No GPS data for {image_path}")
-            else:
-                self.logger.warning("EXIF panel doesn't support GPS coordinate extraction")
-
-        except Exception as e:
-            self.logger.error(f"Error updating map for image: {e}")
-
-    def on_exif_data_loaded(self, file_path: str, exif_data: dict) -> None:
+    def on_exif_data_loaded(self, file_path: str, exif_data: Dict[str, Any]) -> None:
         """Handle EXIF data loaded signal and update map if GPS coordinates are available"""
         try:
             # GPS座標が含まれている場合のみ地図を更新
             if 'gps_coordinates' in exif_data:
                 coordinates = exif_data['gps_coordinates']
-                if coordinates and isinstance(coordinates, tuple) and len(coordinates) == 2:
-                    lat, lon = coordinates
+                if coordinates and isinstance(coordinates, tuple) and len(coordinates) >= 2:
+                    lat: float = float(coordinates[0])
+                    lon: float = float(coordinates[1])
                     self.map_viewer.set_current_photo(file_path, lat, lon)
                     self.logger.debug(f"Map updated via EXIF signal for {file_path} at ({lat}, {lon})")
 
@@ -734,7 +575,7 @@ class MainWindow(QMainWindow):
         """Update map with all images in current folder that have GPS data"""
         try:
             image_files = self.file_browser.get_image_files_in_current_path()
-            photo_locations = {}
+            photo_locations: Dict[str, Tuple[float, float]] = {}
 
             for image_file in image_files:
                 try:
