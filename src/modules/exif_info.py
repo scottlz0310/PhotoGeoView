@@ -1,7 +1,19 @@
 """
-EXIF Info Module for PhotoGeoView
-Displays image metadata and EXIF information
+EXIF情報表示パネル
+画像のEXIF情報を抽出・表示し、GPS座標も含めて整理
 """
+
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QScrollArea,
+    QGroupBox, QGridLayout
+)
+from PyQt6.QtCore import pyqtSignal, QThread, QTimer, Qt
+from PyQt6.QtGui import QFont
+
+import logging
+import exifread
+from PIL import Image
+from typing import Optional, Dict, Any, List
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea,
@@ -15,8 +27,13 @@ import os
 from datetime import datetime
 
 try:
+    import exifread
+    exifread_available = True
+except ImportError:
+    exifread_available = False
+
+try:
     from PIL import Image
-    from PIL.ExifTags import TAGS, GPSTAGS
     pil_available = True
 except ImportError:
     pil_available = False
@@ -46,68 +63,253 @@ class ExifLoader(QThread):
         self._stop_requested = True
 
     def run(self) -> None:
-        """Load EXIF data in background"""
+        """Load EXIF data in background using ExifRead"""
         try:
             if self._stop_requested:
                 return
 
-            exif_data = self.extract_exif_data(self.file_path)
+            if not self.file_path or not Path(self.file_path).exists():
+                return
+
+            path_obj = Path(self.file_path)
+            exif_data = {}
+
+            # Basic file information
+            try:
+                stat_info = path_obj.stat()
+                exif_data.update({
+                    'File Name': path_obj.name,
+                    'File Size': self.format_file_size(stat_info.st_size),
+                    'Modified': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                    'Full Path': str(path_obj.absolute())
+                })
+            except Exception as e:
+                logger.warning(f"Error getting file stats: {e}")
+
+            # Use ExifRead for EXIF data
+            if exifread_available:
+                try:
+                    with open(self.file_path, 'rb') as f:
+                        tags = exifread.process_file(f, details=False)
+
+                        if tags:
+                            # Parse basic EXIF data
+                            exif_data.update(self.parse_exifread_tags(tags))
+
+                            # Extract GPS data
+                            gps_data = self.extract_gps_from_exifread(tags)
+                            if gps_data:
+                                logger.debug(f"ExifRead GPS data extracted: {gps_data}")
+                                exif_data.update(gps_data)
+                            else:
+                                logger.debug(f"No GPS data found in ExifRead tags for {self.file_path}")
+
+                except Exception as e:
+                    logger.warning(f"Error reading EXIF with ExifRead: {e}")
+
+            # Use PIL only for image dimensions and format (not EXIF)
+            if pil_available:
+                try:
+                    with Image.open(self.file_path) as img:
+                        exif_data.update({
+                            'Dimensions': f"{img.width} × {img.height}",
+                            'Format': img.format or 'Unknown',
+                            'Mode': img.mode
+                        })
+                except Exception as e:
+                    logger.warning(f"Error getting image info with PIL: {e}")
+                    # Fallback using QPixmap for dimensions
+                    try:
+                        pixmap = QPixmap(self.file_path)
+                        if not pixmap.isNull():
+                            exif_data.update({
+                                'Dimensions': f"{pixmap.width()} × {pixmap.height()}",
+                                'Format': path_obj.suffix.upper().lstrip('.') if path_obj.suffix else 'Unknown'
+                            })
+                    except Exception as e2:
+                        logger.warning(f"Error getting image info with QPixmap: {e2}")
 
             if not self._stop_requested:
+                # Debug GPS coordinates
+                if 'gps_coordinates' in exif_data:
+                    logger.info(f"GPS coordinates found: {exif_data['gps_coordinates']}")
+                else:
+                    logger.warning(f"No GPS coordinates in EXIF data for {self.file_path}")
+                    # Log available GPS-related keys
+                    gps_keys = [key for key in exif_data.keys() if 'GPS' in key.upper()]
+                    if gps_keys:
+                        logger.debug(f"Available GPS keys: {gps_keys}")
+
                 self.exif_loaded.emit(self.file_path, exif_data)
 
         except Exception as e:
-            logger.error(f"Error in EXIF loader thread: {e}")
+            logger.error(f"Error in ExifLoader.run(): {e}")
+            if not self._stop_requested:
+                self.exif_loaded.emit(self.file_path, {'Error': str(e)})
 
-    def extract_exif_data(self, file_path: str) -> Dict[str, Any]:
-        """Extract EXIF data from image file"""
-        exif_data = {}
+    def parse_exifread_tags(self, tags: Dict[str, Any]) -> Dict[str, str]:
+        """Parse ExifRead tags into readable format"""
+        parsed_data = {}
 
         try:
-            # Basic file info
-            path_obj = Path(file_path)
-            stat_info = path_obj.stat()
+            # Common EXIF tags mapping
+            tag_mapping = {
+                'Image Make': 'Camera Make',
+                'Image Model': 'Camera Model',
+                'Image DateTime': 'Date Taken',
+                'EXIF DateTimeOriginal': 'Date Original',
+                'EXIF ExposureTime': 'Exposure Time',
+                'EXIF FNumber': 'F-Number',
+                'EXIF ISOSpeedRatings': 'ISO Speed',
+                'EXIF FocalLength': 'Focal Length',
+                'EXIF Flash': 'Flash',
+                'EXIF WhiteBalance': 'White Balance',
+                'Image Orientation': 'Orientation',
+                'Image XResolution': 'X Resolution',
+                'Image YResolution': 'Y Resolution',
+                'EXIF ColorSpace': 'Color Space',
+                'EXIF ExifImageWidth': 'EXIF Width',
+                'EXIF ExifImageLength': 'EXIF Height'
+            }
 
-            exif_data.update({
-                'File Name': path_obj.name,
-                'File Size': self.format_file_size(stat_info.st_size),
-                'Modified': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
-                'Full Path': str(path_obj.absolute())
-            })
-
-            if pil_available:
-                # Load image with PIL
-                with Image.open(file_path) as img:
-                    # Image dimensions
-                    exif_data.update({
-                        'Dimensions': f"{img.width} × {img.height}",
-                        'Format': img.format or 'Unknown',
-                        'Mode': img.mode
-                    })
-
-                    # Extract EXIF data
-                    exif_dict = img.getexif()
-                    if exif_dict:
-                        exif_data.update(self.parse_exif_dict(exif_dict))
-
-                        # GPS data
-                        gps_data = self.extract_gps_data(exif_dict)
-                        if gps_data:
-                            exif_data.update(gps_data)
-            else:
-                # Fallback using QPixmap
-                pixmap = QPixmap(file_path)
-                if not pixmap.isNull():
-                    exif_data.update({
-                        'Dimensions': f"{pixmap.width()} × {pixmap.height()}",
-                        'Format': path_obj.suffix.upper().lstrip('.') if path_obj.suffix else 'Unknown'
-                    })
+            for tag_key, tag_value in tags.items():
+                if tag_key in tag_mapping:
+                    display_name = tag_mapping[tag_key]
+                    parsed_data[display_name] = str(tag_value)
+                elif tag_key.startswith('EXIF') or tag_key.startswith('Image'):
+                    # Include other important EXIF tags
+                    if len(str(tag_value)) < 100:  # Skip very long values
+                        parsed_data[tag_key.replace('EXIF ', '').replace('Image ', '')] = str(tag_value)
 
         except Exception as e:
-            logger.error(f"Error extracting EXIF data from {file_path}: {e}")
-            exif_data['Error'] = str(e)
+            logger.error(f"Error parsing ExifRead tags: {e}")
 
-        return exif_data
+        return parsed_data
+
+    def extract_gps_from_exifread(self, tags: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Extract GPS data from ExifRead tags"""
+        try:
+            gps_data = {}
+
+            # GPS coordinates
+            lat_tag = tags.get('GPS GPSLatitude')
+            lat_ref_tag = tags.get('GPS GPSLatitudeRef')
+            lon_tag = tags.get('GPS GPSLongitude')
+            lon_ref_tag = tags.get('GPS GPSLongitudeRef')
+
+            logger.debug(f"GPS tags found - Lat: {lat_tag}, LatRef: {lat_ref_tag}, Lon: {lon_tag}, LonRef: {lon_ref_tag}")
+
+            if lat_tag and lat_ref_tag and lon_tag and lon_ref_tag:
+                # Convert GPS coordinates
+                try:
+                    lat_decimal = self.convert_gps_to_decimal(lat_tag, lat_ref_tag)
+                    lon_decimal = self.convert_gps_to_decimal(lon_tag, lon_ref_tag)
+
+                    if lat_decimal is not None and lon_decimal is not None:
+                        gps_data.update({
+                            'GPS Latitude': f"{lat_decimal:.8f}°",
+                            'GPS Longitude': f"{lon_decimal:.8f}°",
+                            'GPS Coordinates': f"{lat_decimal:.8f}, {lon_decimal:.8f}",
+                            'gps_coordinates': (lat_decimal, lon_decimal)  # For map use
+                        })
+                        logger.debug(f"GPS coordinates extracted: ({lat_decimal}, {lon_decimal})")
+                    else:
+                        logger.debug("Failed to convert GPS coordinates to decimal")
+                except Exception as e:
+                    logger.error(f"Error converting GPS coordinates: {e}")
+            else:
+                logger.debug("GPS coordinate tags not found or incomplete")
+
+            # Other GPS info
+            altitude_tag = tags.get('GPS GPSAltitude')
+            if altitude_tag:
+                gps_data['GPS Altitude'] = str(altitude_tag)
+
+            timestamp_tag = tags.get('GPS GPSTimeStamp')
+            datestamp_tag = tags.get('GPS GPSDateStamp')
+            if timestamp_tag:
+                gps_data['GPS Time'] = str(timestamp_tag)
+            if datestamp_tag:
+                gps_data['GPS Date'] = str(datestamp_tag)
+
+            # Add all other GPS tags
+            for tag_key, tag_value in tags.items():
+                if tag_key.startswith('GPS ') and tag_key not in ['GPS GPSLatitude', 'GPS GPSLongitude']:
+                    if len(str(tag_value)) < 100:
+                        gps_data[tag_key] = str(tag_value)
+
+            return gps_data if gps_data else None
+
+        except Exception as e:
+            logger.error(f"Error extracting GPS data: {e}")
+            return None
+
+    def convert_gps_to_decimal(self, gps_coord: Any, gps_ref: Any) -> Optional[float]:
+        """Convert GPS coordinates from DMS to decimal degrees"""
+        try:
+            # Convert GPS coordinate to decimal
+            coord_str = str(gps_coord)
+            ref_str = str(gps_ref).upper()
+
+            logger.debug(f"Converting GPS coordinate: {coord_str}, ref: {ref_str}")
+
+            # Parse the coordinate string [DD, MM, SS]
+            if '[' in coord_str and ']' in coord_str:
+                coord_parts = coord_str.strip('[]').split(', ')
+                if len(coord_parts) >= 3:
+                    # Parse degrees, minutes, seconds
+                    degrees = self._parse_rational(coord_parts[0])
+                    minutes = self._parse_rational(coord_parts[1])
+                    seconds = self._parse_rational(coord_parts[2])
+
+                    if degrees is not None and minutes is not None and seconds is not None:
+                        decimal = degrees + minutes / 60 + seconds / 3600
+
+                        # Apply hemisphere correction
+                        if ref_str in ['S', 'W']:
+                            decimal = -decimal
+
+                        logger.debug(f"Converted to decimal: {decimal}")
+                        return decimal
+
+        except Exception as e:
+            logger.error(f"Error converting GPS coordinate to decimal: {e}")
+
+        return None
+        """Convert GPS coordinate string to decimal degrees"""
+        try:
+            # Parse coordinate string like "[45, 26, 123/10]"
+            coord_str = gps_coord.strip('[]').replace(' ', '')
+            parts = coord_str.split(',')
+
+            if len(parts) >= 3:
+                # Parse degrees
+                degrees = float(parts[0])
+
+                # Parse minutes
+                minutes = float(parts[1])
+
+                # Parse seconds (might be a fraction)
+                seconds_str = parts[2]
+                if '/' in seconds_str:
+                    num, den = seconds_str.split('/')
+                    seconds = float(num) / float(den)
+                else:
+                    seconds = float(seconds_str)
+
+                # Convert to decimal
+                decimal = degrees + minutes / 60 + seconds / 3600
+
+                # Apply hemisphere
+                if gps_ref.upper() in ['S', 'W']:
+                    decimal = -decimal
+
+                return decimal
+
+        except Exception as e:
+            logger.debug(f"Error parsing GPS coordinate '{gps_coord}': {e}")
+
+        return None
 
     def parse_exif_dict(self, exif_dict: Any) -> Dict[str, str]:
         """Parse EXIF dictionary into readable format"""
@@ -156,65 +358,70 @@ class ExifLoader(QThread):
 
         return parsed_data
 
-    def extract_gps_data(self, exif_dict: Any) -> Dict[str, str]:
-        """Extract GPS data from EXIF"""
-        gps_data = {}
-
+    def _parse_rational(self, rational_str: str) -> Optional[float]:
+        """Parse a rational number string (e.g., '123/456' or '123')"""
         try:
-            if pil_available and 34853 in exif_dict:  # GPS IFD
-                gps_info = exif_dict[34853]
+            rational_str = rational_str.strip()
+            if '/' in rational_str:
+                numerator, denominator = rational_str.split('/')
+                return float(numerator) / float(denominator)
+            else:
+                return float(rational_str)
+        except Exception:
+            return None
 
-                if isinstance(gps_info, dict):
-                    # Parse GPS coordinates
-                    lat = self.get_gps_coordinates(gps_info, 'Latitude')
-                    lon = self.get_gps_coordinates(gps_info, 'Longitude')
+    def format_file_size(self, size_bytes: int) -> str:
+        """Format file size in human readable format"""
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        elif size_bytes < 1024 * 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
-                    if lat and lon:
-                        gps_data['GPS Latitude'] = lat
-                        gps_data['GPS Longitude'] = lon
-                        gps_data['GPS Coordinates'] = f"{lat}, {lon}"
+    def convert_gps_to_decimal(self, gps_coord: Any, gps_ref: Any) -> Optional[float]:
+        """Convert GPS coordinates from DMS to decimal degrees"""
+        try:
+            # Convert GPS coordinate to decimal
+            coord_str = str(gps_coord)
+            ref_str = str(gps_ref).upper()
 
-                    # Other GPS data
-                    for key, value in gps_info.items():
-                        gps_tag = GPSTAGS.get(key, f"GPS_{key}")
-                        if gps_tag not in ['GPSLatitude', 'GPSLongitude'] and len(str(value)) < 100:
-                            gps_data[f"GPS {gps_tag}"] = str(value)
+            # Parse the coordinate string [DD, MM, SS]
+            if '[' in coord_str and ']' in coord_str:
+                coord_parts = coord_str.strip('[]').split(', ')
+                if len(coord_parts) >= 3:
+                    # Parse degrees, minutes, seconds
+                    degrees = self._parse_rational(coord_parts[0])
+                    minutes = self._parse_rational(coord_parts[1])
+                    seconds = self._parse_rational(coord_parts[2])
+
+                    if degrees is not None and minutes is not None and seconds is not None:
+                        decimal = degrees + minutes / 60 + seconds / 3600
+
+                        # Apply hemisphere correction
+                        if ref_str in ['S', 'W']:
+                            decimal = -decimal
+
+                        return decimal
 
         except Exception as e:
-            logger.error(f"Error extracting GPS data: {e}")
-
-        return gps_data
-
-    def get_gps_coordinates(self, gps_info: Dict[Any, Any], coord_type: str) -> Optional[str]:
-        """Extract GPS coordinates in decimal degrees"""
-        try:
-            if coord_type == 'Latitude':
-                coord_key = 2  # GPSLatitude
-                ref_key = 1    # GPSLatitudeRef
-            else:  # Longitude
-                coord_key = 4  # GPSLongitude
-                ref_key = 3    # GPSLongitudeRef
-
-            if coord_key in gps_info and ref_key in gps_info:
-                coords = gps_info[coord_key]
-                ref = gps_info[ref_key]
-
-                if len(coords) == 3:
-                    degrees = float(coords[0])
-                    minutes = float(coords[1])
-                    seconds = float(coords[2])
-
-                    decimal_degrees = degrees + minutes/60.0 + seconds/3600.0
-
-                    if ref in ['S', 'W']:
-                        decimal_degrees = -decimal_degrees
-
-                    return f"{decimal_degrees:.6f}°{ref}"
-
-        except Exception as e:
-            logger.error(f"Error getting GPS coordinates: {e}")
+            self.logger.debug(f"Error converting GPS coordinate to decimal: {e}")
 
         return None
+
+    def _parse_rational(self, rational_str: str) -> Optional[float]:
+        """Parse a rational number string (e.g., '123/456' or '123')"""
+        try:
+            rational_str = rational_str.strip()
+            if '/' in rational_str:
+                numerator, denominator = rational_str.split('/')
+                return float(numerator) / float(denominator)
+            else:
+                return float(rational_str)
+        except Exception:
+            return None
 
     def format_file_size(self, size_bytes: int) -> str:
         """Format file size in human readable format"""
@@ -232,6 +439,9 @@ class ExifInfoPanel(QWidget):
     """
     EXIF information display panel
     """
+
+    # シグナル定義
+    data_loaded = pyqtSignal(str, dict)  # file_path, exif_data
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -327,6 +537,9 @@ class ExifInfoPanel(QWidget):
 
             self.current_data = exif_data
             self.display_exif_data(exif_data)
+
+            # GPS座標データが読み込まれたことを通知
+            self.data_loaded.emit(file_path, exif_data)
 
         except Exception as e:
             self.logger.error(f"Error handling loaded EXIF data: {e}")
@@ -441,6 +654,80 @@ class ExifInfoPanel(QWidget):
     def get_current_data(self) -> Dict[str, Any]:
         """Get current EXIF data"""
         return self.current_data.copy()
+
+    def get_gps_coordinates(self) -> Optional[tuple[float, float]]:
+        """Extract GPS coordinates from current EXIF data"""
+        try:
+            if not self.current_data:
+                return None
+
+            # First try to get directly stored coordinates from ExifRead processing
+            if 'gps_coordinates' in self.current_data:
+                coords = self.current_data['gps_coordinates']
+                if isinstance(coords, tuple) and len(coords) == 2:
+                    return coords
+
+            # Fallback: Look for GPS data in EXIF format
+            gps_data = self.current_data.get('gps', {})
+            if not gps_data:
+                return None
+
+            # Extract latitude
+            lat_data = gps_data.get('GPS GPSLatitude')
+            lat_ref = gps_data.get('GPS GPSLatitudeRef')
+
+            # Extract longitude
+            lon_data = gps_data.get('GPS GPSLongitude')
+            lon_ref = gps_data.get('GPS GPSLongitudeRef')
+
+            if not all([lat_data, lat_ref, lon_data, lon_ref]):
+                return None
+
+            # Convert DMS to decimal degrees
+            lat_decimal = self._dms_to_decimal(lat_data, lat_ref)
+            lon_decimal = self._dms_to_decimal(lon_data, lon_ref)
+
+            if lat_decimal is None or lon_decimal is None:
+                return None
+
+            return (lat_decimal, lon_decimal)
+
+        except Exception as e:
+            self.logger.error(f"Error extracting GPS coordinates: {e}")
+            return None
+
+    def _dms_to_decimal(self, dms_data: Any, ref: str) -> Optional[float]:
+        """Convert DMS (Degrees, Minutes, Seconds) to decimal degrees"""
+        try:
+            if isinstance(dms_data, (list, tuple)) and len(dms_data) >= 3:
+                # Handle rational numbers or floats
+                degrees = float(dms_data[0]) if hasattr(dms_data[0], 'real') else float(dms_data[0])
+                minutes = float(dms_data[1]) if hasattr(dms_data[1], 'real') else float(dms_data[1])
+                seconds = float(dms_data[2]) if hasattr(dms_data[2], 'real') else float(dms_data[2])
+
+                decimal = degrees + minutes / 60 + seconds / 3600
+
+                # Apply hemisphere correction
+                if ref.upper() in ['S', 'W']:
+                    decimal = -decimal
+
+                return decimal
+
+            elif isinstance(dms_data, (int, float)):
+                # Already in decimal format
+                decimal = float(dms_data)
+                if ref.upper() in ['S', 'W']:
+                    decimal = -decimal
+                return decimal
+
+        except Exception as e:
+            self.logger.debug(f"Error converting DMS to decimal: {e}")
+
+        return None
+
+    def has_gps_data(self) -> bool:
+        """Check if current image has GPS data"""
+        return self.get_gps_coordinates() is not None
 
     def __del__(self) -> None:
         """Handle widget destruction"""

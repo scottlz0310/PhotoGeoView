@@ -20,6 +20,7 @@ from src.modules.file_browser import FileBrowser
 from src.modules.thumbnail_view import ThumbnailView
 from src.modules.exif_info import ExifInfoPanel
 from src.modules.image_viewer import ImageViewer
+from src.modules.map_viewer import MapViewer
 
 logger = get_logger(__name__)
 
@@ -272,6 +273,8 @@ class MainWindow(QMainWindow):
         # Create actual EXIF info panel widget
         self.exif_panel = ExifInfoPanel()
         self.exif_panel.setMinimumHeight(100)
+        # EXIF データ読み込み完了時の地図更新を接続
+        self.exif_panel.data_loaded.connect(self.on_exif_data_loaded)
         exif_layout.addWidget(self.exif_panel)
 
         left_splitter.addWidget(exif_widget)
@@ -324,16 +327,13 @@ class MainWindow(QMainWindow):
         header.addWidget(maximize_btn)
         layout.addLayout(header)
 
-        # Map display area placeholder
-        map_area = QLabel("🗺️ Map Display\n\n(GPS location will appear here)")
-        map_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        map_area.setMinimumHeight(200)
-        map_area.setStyleSheet("border: 2px dashed gray; color: gray; background-color: #fafafa;")
-        layout.addWidget(map_area)
+        # Map viewer widget
+        self.map_viewer = MapViewer()
+        self.map_viewer.setMinimumHeight(200)
+        layout.addWidget(self.map_viewer)
 
         # Store references
         self.map_maximize_btn = maximize_btn
-        self.map_area = map_area
 
         return panel
 
@@ -868,6 +868,10 @@ class MainWindow(QMainWindow):
             self.image_viewer.fullscreen_requested.connect(self.on_fullscreen_requested)
             self.image_viewer.image_changed.connect(self.on_image_viewer_changed)
 
+            # Map viewer connections
+            self.map_viewer.fullscreen_requested.connect(self.on_map_fullscreen_requested)
+            self.map_viewer.marker_clicked.connect(self.on_map_marker_clicked)
+
             self.logger.debug("Widget connections established")
 
         except Exception as e:
@@ -910,6 +914,9 @@ class MainWindow(QMainWindow):
                 # Set the image list with correct index
                 self.image_viewer.set_image_list(image_files, current_index)
 
+                # Update map with GPS location if available
+                self.update_map_for_image(file_path)
+
             # Update status
             self.update_status(f"Selected: {Path(file_path).name}")
 
@@ -935,6 +942,9 @@ class MainWindow(QMainWindow):
 
             # Set the image list with correct index
             self.image_viewer.set_image_list(image_files, current_index)
+
+            # Update map with GPS location if available
+            self.update_map_for_image(file_path)
 
             # Update status
             self.update_status(f"Selected: {Path(file_path).name}")
@@ -988,6 +998,106 @@ class MainWindow(QMainWindow):
             self.logger.debug(f"Image viewer changed to: {image_path}")
         except Exception as e:
             self.logger.error(f"Error handling image viewer change: {e}")
+
+    def on_map_fullscreen_requested(self) -> None:
+        """Handle fullscreen request from map viewer"""
+        try:
+            self.toggle_panel_maximize('map')
+            self.logger.debug("Map fullscreen requested")
+        except Exception as e:
+            self.logger.error(f"Error handling map fullscreen request: {e}")
+
+    def on_map_marker_clicked(self, photo_path: str) -> None:
+        """Handle marker click from map viewer"""
+        try:
+            # Load the clicked photo in image viewer
+            image_files = self.file_browser.get_image_files_in_current_path()
+
+            if photo_path in image_files:
+                try:
+                    current_index = image_files.index(photo_path)
+                    self.image_viewer.set_image_list(image_files, current_index)
+
+                    # Update EXIF panel
+                    self.exif_panel.load_file_info(photo_path)
+
+                    # Update thumbnail selection (if method exists)
+                    # self.thumbnail_view.select_image(photo_path)
+
+                    self.update_status(f"Viewing: {Path(photo_path).name}")
+                    self.logger.info(f"Map marker clicked for: {photo_path}")
+                except ValueError:
+                    self.logger.warning(f"Photo not found in current folder: {photo_path}")
+
+        except Exception as e:
+            self.logger.error(f"Error handling map marker click: {e}")
+
+    def update_map_for_image(self, image_path: str) -> None:
+        """Update map display for the selected image"""
+        try:
+            # Get GPS coordinates from EXIF panel
+            if hasattr(self.exif_panel, 'get_gps_coordinates'):
+                coordinates = self.exif_panel.get_gps_coordinates()
+                if coordinates:
+                    lat, lon = coordinates
+                    self.map_viewer.set_current_photo(image_path, lat, lon)
+                    self.logger.debug(f"Updated map for {image_path} at ({lat}, {lon})")
+                else:
+                    # No GPS data available
+                    self.map_viewer.set_current_photo(image_path)
+                    self.logger.debug(f"No GPS data for {image_path}")
+            else:
+                self.logger.warning("EXIF panel doesn't support GPS coordinate extraction")
+
+        except Exception as e:
+            self.logger.error(f"Error updating map for image: {e}")
+
+    def on_exif_data_loaded(self, file_path: str, exif_data: dict) -> None:
+        """Handle EXIF data loaded signal and update map if GPS coordinates are available"""
+        try:
+            # GPS座標が含まれている場合のみ地図を更新
+            if 'gps_coordinates' in exif_data:
+                coordinates = exif_data['gps_coordinates']
+                if coordinates and isinstance(coordinates, tuple) and len(coordinates) == 2:
+                    lat, lon = coordinates
+                    self.map_viewer.set_current_photo(file_path, lat, lon)
+                    self.logger.debug(f"Map updated via EXIF signal for {file_path} at ({lat}, {lon})")
+
+        except Exception as e:
+            self.logger.error(f"Error handling EXIF data loaded signal: {e}")
+
+    def update_map_with_folder_images(self) -> None:
+        """Update map with all images in current folder that have GPS data"""
+        try:
+            image_files = self.file_browser.get_image_files_in_current_path()
+            photo_locations = {}
+
+            for image_file in image_files:
+                try:
+                    # Temporarily load EXIF to check for GPS
+                    from src.modules.exif_info import ExifInfoPanel
+                    temp_exif = ExifInfoPanel()
+                    temp_exif.load_file_info(image_file)
+
+                    if hasattr(temp_exif, 'get_gps_coordinates'):
+                        coordinates = temp_exif.get_gps_coordinates()
+                        if coordinates:
+                            photo_locations[image_file] = coordinates
+
+                except Exception as e:
+                    self.logger.debug(f"No GPS data for {image_file}: {e}")
+                    continue
+
+            # Update map with all photo locations
+            if photo_locations:
+                self.map_viewer.set_photo_locations(photo_locations)
+                self.logger.info(f"Updated map with {len(photo_locations)} photo locations")
+            else:
+                self.map_viewer.clear_map()
+                self.logger.debug("No photos with GPS data found")
+
+        except Exception as e:
+            self.logger.error(f"Error updating map with folder images: {e}")
 
     def is_image_file(self, file_path: str) -> bool:
         """Check if the file is a supported image file"""
