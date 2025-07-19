@@ -6,7 +6,7 @@ Main application window with UI layout and theme integration
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QPushButton, QToolBar, QStatusBar, QLabel,
-    QFileDialog, QMessageBox, QFrame
+    QFileDialog, QMessageBox, QFrame, QSizePolicy
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent
@@ -114,6 +114,26 @@ class MainWindow(QMainWindow):
         folder_action.triggered.connect(self.open_folder_dialog)
         self.toolbar.addAction(folder_action)
 
+        # Current folder display (between Open Folder and Back)
+        self.current_folder_label = QLabel("No folder selected")
+        self.current_folder_label.setStyleSheet("""
+            QLabel {
+                padding: 4px 8px;
+                margin: 2px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+                color: white;
+                font-size: 11px;
+                min-width: 150px;
+            }
+        """)
+        self.current_folder_label.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed
+        )
+        self.toolbar.addWidget(self.current_folder_label)
+
         self.toolbar.addSeparator()
 
         # Navigation buttons
@@ -175,45 +195,85 @@ class MainWindow(QMainWindow):
         self.right_splitter.setSizes([450, 450])  # Even split for image/map
 
     def create_left_panel(self) -> QFrame:
-        """Create the left panel for file browsing"""
+        """Create the left panel for file browsing with resizable sections"""
         panel = QFrame()
         panel.setFrameStyle(QFrame.Shape.StyledPanel)
         panel.setMinimumWidth(250)
 
+        # Create vertical layout for the panel
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(0)  # No spacing since we use splitters
 
-        # Address bar placeholder
-        address_label = QLabel("📁 Current Folder: (No folder selected)")
-        address_label.setStyleSheet("padding: 4px; border: 1px solid gray; background-color: #f0f0f0;")
-        layout.addWidget(address_label)
+        # Create vertical splitter for resizable sections
+        left_splitter = QSplitter(Qt.Orientation.Vertical)
+        layout.addWidget(left_splitter)
 
-        # File browser placeholder
-        browser_label = QLabel("🗂️ File Browser\n\n(Select a folder to browse images)")
-        browser_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        browser_label.setMinimumHeight(200)
-        browser_label.setStyleSheet("border: 1px dashed gray; color: gray;")
-        layout.addWidget(browser_label)
+        # File browser section
+        browser_widget = QFrame()
+        browser_widget.setFrameStyle(QFrame.Shape.StyledPanel)
+        browser_layout = QVBoxLayout(browser_widget)
+        browser_layout.setContentsMargins(4, 4, 4, 4)
 
-        # Thumbnail area placeholder
-        thumbnail_label = QLabel("🖼️ Thumbnails\n\n(Images will appear here)")
-        thumbnail_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        thumbnail_label.setMinimumHeight(150)
-        thumbnail_label.setStyleSheet("border: 1px dashed gray; color: gray;")
-        layout.addWidget(thumbnail_label)
+        browser_title = QLabel("🗂️ File Browser")
+        browser_title.setStyleSheet("font-weight: bold; padding: 2px;")
+        browser_title.setFixedHeight(24)  # Fixed height for title
+        browser_layout.addWidget(browser_title)
 
-        # EXIF info placeholder
-        exif_label = QLabel("ℹ️ EXIF Information\n\n(Select an image to view details)")
-        exif_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        exif_label.setMinimumHeight(100)
-        exif_label.setStyleSheet("border: 1px dashed gray; color: gray;")
-        layout.addWidget(exif_label)
+        browser_content = QLabel("(Select a folder to browse images)")
+        browser_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        browser_content.setMinimumHeight(150)
+        browser_content.setStyleSheet("border: 1px dashed gray; color: gray; background-color: rgba(255,255,255,0.05);")
+        browser_layout.addWidget(browser_content)
+
+        left_splitter.addWidget(browser_widget)
+
+        # Thumbnail section
+        thumbnail_widget = QFrame()
+        thumbnail_widget.setFrameStyle(QFrame.Shape.StyledPanel)
+        thumbnail_layout = QVBoxLayout(thumbnail_widget)
+        thumbnail_layout.setContentsMargins(4, 4, 4, 4)
+
+        thumbnail_title = QLabel("🖼️ Thumbnails")
+        thumbnail_title.setStyleSheet("font-weight: bold; padding: 2px;")
+        thumbnail_title.setFixedHeight(24)  # Fixed height for title
+        thumbnail_layout.addWidget(thumbnail_title)
+
+        thumbnail_content = QLabel("(Images will appear here)")
+        thumbnail_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        thumbnail_content.setMinimumHeight(120)
+        thumbnail_content.setStyleSheet("border: 1px dashed gray; color: gray; background-color: rgba(255,255,255,0.05);")
+        thumbnail_layout.addWidget(thumbnail_content)
+
+        left_splitter.addWidget(thumbnail_widget)
+
+        # EXIF info section
+        exif_widget = QFrame()
+        exif_widget.setFrameStyle(QFrame.Shape.StyledPanel)
+        exif_layout = QVBoxLayout(exif_widget)
+        exif_layout.setContentsMargins(4, 4, 4, 4)
+
+        exif_title = QLabel("ℹ️ EXIF Information")
+        exif_title.setStyleSheet("font-weight: bold; padding: 2px;")
+        exif_title.setFixedHeight(24)  # Fixed height for title
+        exif_layout.addWidget(exif_title)
+
+        exif_content = QLabel("(Select an image to view details)")
+        exif_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        exif_content.setMinimumHeight(100)
+        exif_content.setStyleSheet("border: 1px dashed gray; color: gray; background-color: rgba(255,255,255,0.05);")
+        exif_layout.addWidget(exif_content)
+
+        left_splitter.addWidget(exif_widget)
+
+        # Set initial splitter proportions (Browser: 40%, Thumbnails: 35%, EXIF: 25%)
+        left_splitter.setSizes([200, 175, 125])
 
         # Store references for later access
-        self.address_label = address_label
-        self.browser_label = browser_label
-        self.thumbnail_label = thumbnail_label
-        self.exif_label = exif_label
+        self.left_splitter = left_splitter
+        self.browser_content = browser_content
+        self.thumbnail_content = thumbnail_content
+        self.exif_content = exif_content
 
         return panel
 
@@ -383,9 +443,12 @@ class MainWindow(QMainWindow):
             self.settings.folders.last_opened_folder = folder_path
             self.settings.add_recent_folder(folder_path)
 
-            # Update UI
-            self.address_label.setText(f"📁 Current Folder: {folder_path}")
-            self.browser_label.setText(f"🗂️ File Browser\n\nLoading files from:\n{folder_path}")
+            # Update toolbar current folder display (show full path)
+            self.current_folder_label.setText(f"📁 {folder_path}")
+            self.current_folder_label.setToolTip(f"Current folder: {folder_path}")
+
+            # Update browser content
+            self.browser_content.setText(f"Loading files from:\n{Path(folder_path).name}")
 
             # Enable navigation buttons
             self.up_action.setEnabled(True)

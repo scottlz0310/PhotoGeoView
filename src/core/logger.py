@@ -18,7 +18,7 @@ class LoggerManager:
     """
 
     _initialized = False
-    _config_path = Path(__file__).parent.parent / "config" / "logging.json"
+    _config_path = Path(__file__).parent.parent.parent / "config" / "logging.json"
 
     @classmethod
     def initialize(cls, config_path: Optional[Path] = None) -> None:
@@ -35,7 +35,7 @@ class LoggerManager:
             cls._config_path = config_path
 
         # Ensure logs directory exists
-        logs_dir = Path(__file__).parent.parent / "logs"
+        logs_dir = Path(__file__).parent.parent.parent / "logs"
         logs_dir.mkdir(exist_ok=True)
 
         try:
@@ -43,7 +43,7 @@ class LoggerManager:
                 config = json.load(f)
 
             # Update file paths to be absolute
-            base_path = Path(__file__).parent.parent
+            base_path = Path(__file__).parent.parent.parent
             for handler_config in config.get('handlers', {}).values():
                 if 'filename' in handler_config:
                     filename = handler_config['filename']

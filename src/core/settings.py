@@ -120,7 +120,7 @@ class SettingsManager:
             config_path: Optional path to config file
         """
         self.logger = logger
-        self._config_path = config_path or Path(__file__).parent.parent / "config" / "config.json"
+        self._config_path = config_path or Path(__file__).parent.parent.parent / "config" / "config.json"
         self._backup_path = self._config_path.with_suffix('.json.backup')
 
         # Initialize setting categories
