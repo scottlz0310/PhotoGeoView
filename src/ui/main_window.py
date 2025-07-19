@@ -11,11 +11,14 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPoint
 from PyQt6.QtGui import QAction, QCloseEvent
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from src.core.logger import get_logger
 from src.core.settings import get_settings
 from src.ui.theme_manager import ThemeManager
+from src.modules.file_browser import FileBrowser
+from src.modules.thumbnail_view import ThumbnailView
+from src.modules.exif_info import ExifInfoPanel
 
 logger = get_logger(__name__)
 
@@ -70,6 +73,9 @@ class MainWindow(QMainWindow):
         if self.settings.advanced.auto_save_settings:
             interval = self.settings.advanced.save_interval_seconds * 1000
             self.auto_save_timer.start(interval)
+
+        self.setup_connections()
+        self.setup_widget_connections()
 
         self.logger.info("Main window initialized successfully")
 
@@ -226,11 +232,10 @@ class MainWindow(QMainWindow):
         browser_title.setFixedHeight(24)  # Fixed height for title
         browser_layout.addWidget(browser_title)
 
-        browser_content = QLabel("(Select a folder to browse images)")
-        browser_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        browser_content.setMinimumHeight(150)
-        browser_content.setStyleSheet("border: 1px dashed gray; color: gray; background-color: rgba(255,255,255,0.05);")
-        browser_layout.addWidget(browser_content)
+        # Create actual file browser widget
+        self.file_browser = FileBrowser()
+        self.file_browser.setMinimumHeight(150)
+        browser_layout.addWidget(self.file_browser)
 
         left_splitter.addWidget(browser_widget)
 
@@ -245,11 +250,10 @@ class MainWindow(QMainWindow):
         thumbnail_title.setFixedHeight(24)  # Fixed height for title
         thumbnail_layout.addWidget(thumbnail_title)
 
-        thumbnail_content = QLabel("(Images will appear here)")
-        thumbnail_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        thumbnail_content.setMinimumHeight(120)
-        thumbnail_content.setStyleSheet("border: 1px dashed gray; color: gray; background-color: rgba(255,255,255,0.05);")
-        thumbnail_layout.addWidget(thumbnail_content)
+        # Create actual thumbnail view widget
+        self.thumbnail_view = ThumbnailView()
+        self.thumbnail_view.setMinimumHeight(120)
+        thumbnail_layout.addWidget(self.thumbnail_view)
 
         left_splitter.addWidget(thumbnail_widget)
 
@@ -264,11 +268,10 @@ class MainWindow(QMainWindow):
         exif_title.setFixedHeight(24)  # Fixed height for title
         exif_layout.addWidget(exif_title)
 
-        exif_content = QLabel("(Select an image to view details)")
-        exif_content.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        exif_content.setMinimumHeight(100)
-        exif_content.setStyleSheet("border: 1px dashed gray; color: gray; background-color: rgba(255,255,255,0.05);")
-        exif_layout.addWidget(exif_content)
+        # Create actual EXIF info panel widget
+        self.exif_panel = ExifInfoPanel()
+        self.exif_panel.setMinimumHeight(100)
+        exif_layout.addWidget(self.exif_panel)
 
         left_splitter.addWidget(exif_widget)
 
@@ -277,9 +280,7 @@ class MainWindow(QMainWindow):
 
         # Store references for later access
         self.left_splitter = left_splitter
-        self.browser_content = browser_content
-        self.thumbnail_content = thumbnail_content
-        self.exif_content = exif_content
+        self.file_browser = self.file_browser  # Already stored above
 
         return panel
 
@@ -453,8 +454,9 @@ class MainWindow(QMainWindow):
             self.current_folder_label.setText(f"📁 {folder_path}")
             self.current_folder_label.setToolTip(f"Current folder: {folder_path}")
 
-            # Update browser content
-            self.browser_content.setText(f"Loading files from:\n{Path(folder_path).name}")
+            # Update file browser to show selected folder
+            if hasattr(self, 'file_browser') and self.file_browser:
+                self.file_browser.set_root_path(folder_path)
 
             # Enable navigation buttons
             self.up_action.setEnabled(True)
@@ -558,7 +560,7 @@ class MainWindow(QMainWindow):
                 action.setCheckable(False)
 
                 # Connect with a closure to avoid lambda issues
-                def make_toggle_handler(theme_name, menu_ref):
+                def make_toggle_handler(theme_name: str, menu_ref: QMenu):
                     return lambda: self.toggle_theme_in_persistent_menu(theme_name, menu_ref)
 
                 action.triggered.connect(make_toggle_handler(theme, menu))
@@ -875,3 +877,75 @@ class MainWindow(QMainWindow):
             self.logger.error(f"Error during window close: {e}")
             if a0:
                 a0.accept()  # Close anyway
+
+    def setup_widget_connections(self) -> None:
+        """Setup signal connections between widgets"""
+        try:
+            # File browser connections
+            self.file_browser.folder_changed.connect(self.on_folder_changed_handler)
+            self.file_browser.file_selected.connect(self.on_file_selected_handler)
+
+            # Thumbnail view connections
+            self.thumbnail_view.image_selected.connect(self.on_image_selected_handler)
+            self.thumbnail_view.image_double_clicked.connect(self.on_image_double_clicked_handler)
+
+            self.logger.debug("Widget connections established")
+
+        except Exception as e:
+            self.logger.error(f"Error setting up widget connections: {e}")
+
+    def on_folder_changed_handler(self, folder_path: str) -> None:
+        """Handle folder change from file browser"""
+        try:
+            # Get image files in the folder
+            image_files = self.file_browser.get_image_files_in_current_path()
+
+            # Update thumbnail view
+            self.thumbnail_view.load_images(image_files)
+
+            # Clear EXIF panel
+            self.exif_panel.clear_info()
+
+            self.logger.info(f"Folder changed to: {folder_path}, found {len(image_files)} images")
+
+        except Exception as e:
+            self.logger.error(f"Error handling folder change: {e}")
+
+    def on_file_selected_handler(self, file_path: str) -> None:
+        """Handle file selection from file browser"""
+        try:
+            # Update EXIF panel
+            self.exif_panel.load_file_info(file_path)
+
+            # Update status
+            self.update_status(f"Selected: {Path(file_path).name}")
+
+            self.logger.debug(f"File selected: {file_path}")
+
+        except Exception as e:
+            self.logger.error(f"Error handling file selection: {e}")
+
+    def on_image_selected_handler(self, file_path: str) -> None:
+        """Handle image selection from thumbnail view"""
+        try:
+            # Update EXIF panel
+            self.exif_panel.load_file_info(file_path)
+
+            # Update status
+            self.update_status(f"Selected: {Path(file_path).name}")
+
+            self.logger.debug(f"Image selected from thumbnails: {file_path}")
+
+        except Exception as e:
+            self.logger.error(f"Error handling image selection: {e}")
+
+    def on_image_double_clicked_handler(self, file_path: str) -> None:
+        """Handle image double-click from thumbnail view"""
+        try:
+            # TODO: Open image in main viewer
+            self.update_status(f"Opening: {Path(file_path).name}")
+
+            self.logger.info(f"Image double-clicked: {file_path}")
+
+        except Exception as e:
+            self.logger.error(f"Error handling image double-click: {e}")
