@@ -1,0 +1,61 @@
+{
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        },
+        "detailed": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "standard",
+            "stream": "ext://sys.stdout"
+        },
+        "file_debug": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "detailed",
+            "filename": "logs/debug.log",
+            "mode": "a"
+        },
+        "file_info": {
+            "class": "logging.FileHandler",
+            "level": "INFO",
+            "formatter": "standard",
+            "filename": "logs/info.log",
+            "mode": "a"
+        },
+        "file_error": {
+            "class": "logging.FileHandler",
+            "level": "ERROR",
+            "formatter": "detailed",
+            "filename": "logs/error.log",
+            "mode": "a"
+        }
+    },
+    "loggers": {
+        "PhotoGeoView": {
+            "level": "DEBUG",
+            "handlers": [
+                "console",
+                "file_debug",
+                "file_info",
+                "file_error"
+            ],
+            "propagate": false
+        }
+    },
+    "root": {
+        "level": "INFO",
+        "handlers": [
+            "console"
+        ]
+    }
+}
