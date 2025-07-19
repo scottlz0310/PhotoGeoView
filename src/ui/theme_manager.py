@@ -1,11 +1,11 @@
 """
 PhotoGeoView Theme Manager
-Qt-Theme-Manager integration for 16 theme support
+Qt-Theme-Manager integration for 16 theme support with configuration file
 """
 
-import os
+import json
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
@@ -13,6 +13,7 @@ try:
     from qt_theme_manager import QtThemeManager
     QT_THEME_MANAGER_AVAILABLE = True
 except ImportError:
+    QtThemeManager = None
     QT_THEME_MANAGER_AVAILABLE = False
 
 from src.core.logger import get_logger
@@ -22,76 +23,64 @@ logger = get_logger(__name__)
 
 class ThemeManager(QObject):
     """
-    Theme management class for PhotoGeoView
-    Integrates with Qt-Theme-Manager for 16 theme support
+    Theme Manager for PhotoGeoView
+    Enhanced with Qt-Theme-Manager integration for full 16 theme support
     """
 
-    # Signals
-    theme_changed = pyqtSignal(str)  # Emitted when theme changes
+    # Signal emitted when theme changes
+    theme_changed = pyqtSignal(str)
 
-    def __init__(self):
-        """Initialize theme manager"""
+    def __init__(self, settings_manager):
         super().__init__()
 
-        self.logger = logger
-        self.qt_theme_manager: Optional[QtThemeManager] = None
-        self.current_theme = "dark_blue.xml"
+        self.settings_manager = settings_manager
+        self.fallback_active = False
 
-        # Available themes (16 themes from qt-theme-manager)
+        # Set up logger first
+        self.logger = get_logger(__name__)
+
+        # Configuration file integration (Phase 4 enhancement)
+        self.theme_config_path = Path(__file__).parent.parent.parent / "config" / "qt_themes.json"
+        self.theme_configs: dict = {}
+
+        # Current theme tracking
+        self.current_theme = self.settings_manager.get_setting('ui', 'current_theme', 'dark_blue')
+
+        # Load theme configurations
+        self._load_theme_configurations()
+
+        # 16 themes available (matching config file)
         self.available_themes = [
-            # Dark themes
-            "dark_blue.xml",
-            "dark_cyan.xml",
-            "dark_lightgreen.xml",
-            "dark_orange.xml",
-            "dark_pink.xml",
-            "dark_purple.xml",
-            "dark_red.xml",
-            "dark_teal.xml",
-            # Light themes
-            "light_blue.xml",
-            "light_cyan.xml",
-            "light_cyan_500.xml",
-            "light_lightgreen.xml",
-            "light_orange.xml",
-            "light_pink.xml",
-            "light_purple.xml",
-            "light_red.xml"
+            'dark_blue', 'dark_cyan', 'dark_lightgreen', 'dark_orange',
+            'dark_pink', 'dark_purple', 'dark_red', 'dark_teal',
+            'light_blue', 'light_cyan', 'light_cyan_500', 'light_lightgreen',
+            'light_orange', 'light_pink', 'light_purple', 'light_red'
         ]
-
-        # Theme categories for better organization
-        self.theme_categories = {
-            'dark': [t for t in self.available_themes if t.startswith('dark_')],
-            'light': [t for t in self.available_themes if t.startswith('light_')]
-        }
 
         # Theme display names for UI
         self.theme_display_names = {
-            "dark_blue.xml": "Dark Blue",
-            "dark_cyan.xml": "Dark Cyan",
-            "dark_lightgreen.xml": "Dark Light Green",
-            "dark_orange.xml": "Dark Orange",
-            "dark_pink.xml": "Dark Pink",
-            "dark_purple.xml": "Dark Purple",
-            "dark_red.xml": "Dark Red",
-            "dark_teal.xml": "Dark Teal",
-            "light_blue.xml": "Light Blue",
-            "light_cyan.xml": "Light Cyan",
-            "light_cyan_500.xml": "Light Cyan 500",
-            "light_lightgreen.xml": "Light Light Green",
-            "light_orange.xml": "Light Orange",
-            "light_pink.xml": "Light Pink",
-            "light_purple.xml": "Light Purple",
-            "light_red.xml": "Light Red"
+            'dark_blue': 'Dark Blue', 'dark_cyan': 'Dark Cyan',
+            'dark_lightgreen': 'Dark Light Green', 'dark_orange': 'Dark Orange',
+            'dark_pink': 'Dark Pink', 'dark_purple': 'Dark Purple',
+            'dark_red': 'Dark Red', 'dark_teal': 'Dark Teal',
+            'light_blue': 'Light Blue', 'light_cyan': 'Light Cyan',
+            'light_cyan_500': 'Light Cyan 500', 'light_lightgreen': 'Light Light Green',
+            'light_orange': 'Light Orange', 'light_pink': 'Light Pink',
+            'light_purple': 'Light Purple', 'light_red': 'Light Red'
         }
 
-        # Initialize theme manager
-        self._initialize_theme_manager()
-
-        # Validate all themes are available
+        # Theme categories
+        self.theme_categories = {
+            'dark': ['dark_blue', 'dark_cyan', 'dark_lightgreen', 'dark_orange',
+                    'dark_pink', 'dark_purple', 'dark_red', 'dark_teal'],
+            'light': ['light_blue', 'light_cyan', 'light_cyan_500', 'light_lightgreen',
+                     'light_orange', 'light_pink', 'light_purple', 'light_red']
+        }        # Validate theme setup
         self._validate_themes()
 
-        self.logger.info(f"Theme manager initialized with {len(self.available_themes)} themes")
+        # Initialize Qt Theme Manager
+        self.qt_theme_manager = None
+        self._initialize_qt_theme_manager()
 
     def _validate_themes(self) -> None:
         """Validate that all 16 themes are properly configured"""
@@ -108,6 +97,44 @@ class ThemeManager(QObject):
 
         self.logger.debug(f"Dark themes: {len(self.theme_categories['dark'])}")
         self.logger.debug(f"Light themes: {len(self.theme_categories['light'])}")
+
+    def _initialize_qt_theme_manager(self):
+        """Initialize Qt Theme Manager if available"""
+        try:
+            if not QT_THEME_MANAGER_AVAILABLE:
+                self.logger.warning("Qt-Theme-Manager package not available, using fallback themes")
+                return
+
+            app = QApplication.instance()
+            if not app:
+                self.logger.warning("No Qt application instance found for theme manager")
+                return
+
+            try:
+                from qt_theme_manager import QtThemeManager
+                self.qt_theme_manager = QtThemeManager(app)
+                self.logger.info("Qt Theme Manager initialized successfully")
+
+                # Register themes from config file
+                for theme_name, config in self.theme_configs.items():
+                    self._register_theme_from_config(theme_name, config)
+
+            except Exception as e:
+                self.logger.error(f"Failed to initialize Qt Theme Manager: {e}")
+                self.qt_theme_manager = None
+
+        except Exception as e:
+            self.logger.error(f"Error initializing Qt Theme Manager: {e}")
+            self.qt_theme_manager = None
+
+    def _register_theme_from_config(self, theme_name: str, config: dict):
+        """Register a theme with Qt Theme Manager from config"""
+        try:
+            # This would be implementation-specific to qt-theme-manager
+            # For now, we'll use our config-based approach
+            pass
+        except Exception as e:
+            self.logger.error(f"Failed to register theme {theme_name}: {e}")
 
     def _initialize_theme_manager(self) -> None:
         """Initialize Qt Theme Manager"""
@@ -140,6 +167,7 @@ class ThemeManager(QObject):
     def apply_theme(self, theme_name: str) -> bool:
         """
         Apply a theme to the application
+        Phase 4 Enhancement: Uses configuration file themes first
 
         Args:
             theme_name: Name of the theme to apply
@@ -150,19 +178,32 @@ class ThemeManager(QObject):
         try:
             if theme_name not in self.available_themes:
                 self.logger.warning(f"Unknown theme: {theme_name}, using fallback")
-                theme_name = "dark_blue.xml"
+                theme_name = "dark_blue"
 
-            if self.qt_theme_manager:
-                # Use Qt Theme Manager
-                success = self._apply_qt_theme(theme_name)
-            else:
-                # Use fallback theme system
-                success = self._apply_fallback_theme(theme_name)
-
-            if success:
+            # Phase 4: Try configuration file theme first
+            if self._apply_config_theme(theme_name):
                 self.current_theme = theme_name
+                self.settings_manager.set_setting('ui', 'current_theme', theme_name)
                 self.theme_changed.emit(theme_name)
-                self.logger.info(f"Applied theme: {theme_name}")
+                self.fallback_active = False
+                self.logger.info(f"Applied config theme: {theme_name}")
+                return True
+
+            # Fallback to Qt Theme Manager if available
+            if self.qt_theme_manager and self._apply_qt_theme(theme_name):
+                self.current_theme = theme_name
+                self.settings_manager.set_setting('ui', 'current_theme', theme_name)
+                self.theme_changed.emit(theme_name)
+                self.fallback_active = False
+                return True
+
+            # Final fallback to CSS themes
+            if self._apply_fallback_theme(theme_name):
+                self.current_theme = theme_name
+                self.settings_manager.set_setting('ui', 'current_theme', theme_name)
+                self.theme_changed.emit(theme_name)
+                self.fallback_active = True
+                self.logger.info(f"Applied fallback theme: {theme_name}")
                 return True
             else:
                 self.logger.error(f"Failed to apply theme: {theme_name}")
@@ -171,6 +212,94 @@ class ThemeManager(QObject):
         except Exception as e:
             self.logger.error(f"Error applying theme {theme_name}: {e}")
             return False
+
+    def _load_theme_configurations(self):
+        """Load theme configurations from JSON file"""
+        try:
+            if self.theme_config_path.exists():
+                with open(self.theme_config_path, 'r', encoding='utf-8') as f:
+                    config_data = json.load(f)
+                    # The config file structure has 'available_themes' not 'themes'
+                    self.theme_configs = config_data.get('available_themes', {})
+                    self.logger.info(f"Loaded {len(self.theme_configs)} theme configurations")
+            else:
+                self.logger.warning(f"Theme config file not found: {self.theme_config_path}")
+                self.theme_configs = {}
+        except Exception as e:
+            self.logger.error(f"Failed to load theme configurations: {e}")
+            self.theme_configs = {}
+
+    def _apply_config_theme(self, theme_name: str) -> bool:
+        """Apply theme using configuration file settings"""
+        if theme_name not in self.theme_configs:
+            return False
+
+        try:
+            config = self.theme_configs[theme_name]
+
+            # Generate stylesheet from configuration
+            stylesheet = self._generate_stylesheet_from_config(config)
+
+            # Apply to application
+            app = QApplication.instance()
+            if app:
+                app.setStyleSheet(stylesheet)
+                self.logger.info(f"Applied config theme: {theme_name}")
+                return True
+            else:
+                self.logger.warning("No Qt application instance found")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply config theme {theme_name}: {e}")
+            return False
+
+    def _generate_stylesheet_from_config(self, config: dict) -> str:
+        """Generate Qt stylesheet from theme configuration"""
+        primary_color = config.get('primaryColor', '#2196F3')
+        bg_color = config.get('backgroundColor', '#FFFFFF')
+        text_color = config.get('textColor', '#000000')
+        accent_color = config.get('accentColor', primary_color)
+
+        return f"""
+        QMainWindow, QWidget {{
+            background-color: {bg_color};
+            color: {text_color};
+        }}
+
+        QPushButton {{
+            background-color: {primary_color};
+            color: white;
+            border: 1px solid {accent_color};
+            border-radius: 4px;
+            padding: 5px 10px;
+        }}
+
+        QPushButton:hover {{
+            background-color: {accent_color};
+        }}
+
+        QMenuBar {{
+            background-color: {bg_color};
+            color: {text_color};
+        }}
+
+        QMenuBar::item:selected {{
+            background-color: {primary_color};
+            color: white;
+        }}
+
+        QTreeWidget, QListWidget {{
+            background-color: {bg_color};
+            color: {text_color};
+            border: 1px solid {accent_color};
+        }}
+
+        QTreeWidget::item:selected, QListWidget::item:selected {{
+            background-color: {primary_color};
+            color: white;
+        }}
+        """
 
     def _apply_qt_theme(self, theme_name: str) -> bool:
         """Apply theme using Qt Theme Manager"""

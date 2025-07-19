@@ -1,0 +1,185 @@
+{
+    "current_theme": "dark_blue",
+    "last_selected_theme": "dark_blue",
+    "theme_switching_enabled": true,
+    "remember_theme_choice": true,
+    "version": "0.1.0",
+    "available_themes": {
+        "dark_blue": {
+            "name": "dark_blue",
+            "display_name": "Dark Blue",
+            "description": "Deep blue dark theme",
+            "primaryColor": "#3f7cac",
+            "accentColor": "#5a9bd4",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_cyan": {
+            "name": "dark_cyan",
+            "display_name": "Dark Cyan",
+            "description": "Cyan accented dark theme",
+            "primaryColor": "#17a2b8",
+            "accentColor": "#20c997",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_lightgreen": {
+            "name": "dark_lightgreen",
+            "display_name": "Dark Light Green",
+            "description": "Green accented dark theme",
+            "primaryColor": "#28a745",
+            "accentColor": "#34ce57",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_orange": {
+            "name": "dark_orange",
+            "display_name": "Dark Orange",
+            "description": "Orange accented dark theme",
+            "primaryColor": "#fd7e14",
+            "accentColor": "#fd9644",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_pink": {
+            "name": "dark_pink",
+            "display_name": "Dark Pink",
+            "description": "Pink accented dark theme",
+            "primaryColor": "#e83e8c",
+            "accentColor": "#ed5aa3",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_purple": {
+            "name": "dark_purple",
+            "display_name": "Dark Purple",
+            "description": "Purple accented dark theme",
+            "primaryColor": "#6f42c1",
+            "accentColor": "#8b5ad6",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_red": {
+            "name": "dark_red",
+            "display_name": "Dark Red",
+            "description": "Red accented dark theme",
+            "primaryColor": "#dc3545",
+            "accentColor": "#e2556b",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "dark_teal": {
+            "name": "dark_teal",
+            "display_name": "Dark Teal",
+            "description": "Teal accented dark theme",
+            "primaryColor": "#20c997",
+            "accentColor": "#40d3a8",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "secondaryColor": "#404040",
+            "borderColor": "#555555"
+        },
+        "light_blue": {
+            "name": "light_blue",
+            "display_name": "Light Blue",
+            "description": "Blue accented light theme",
+            "primaryColor": "#3f7cac",
+            "accentColor": "#2c5f8a",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_cyan": {
+            "name": "light_cyan",
+            "display_name": "Light Cyan",
+            "description": "Cyan accented light theme",
+            "primaryColor": "#17a2b8",
+            "accentColor": "#138496",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_cyan_500": {
+            "name": "light_cyan_500",
+            "display_name": "Light Cyan 500",
+            "description": "Cyan 500 variant light theme",
+            "primaryColor": "#00bcd4",
+            "accentColor": "#0097a7",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_lightgreen": {
+            "name": "light_lightgreen",
+            "display_name": "Light Light Green",
+            "description": "Light green accented theme",
+            "primaryColor": "#28a745",
+            "accentColor": "#1e7e34",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_orange": {
+            "name": "light_orange",
+            "display_name": "Light Orange",
+            "description": "Orange accented light theme",
+            "primaryColor": "#fd7e14",
+            "accentColor": "#e36209",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_pink": {
+            "name": "light_pink",
+            "display_name": "Light Pink",
+            "description": "Pink accented light theme",
+            "primaryColor": "#e83e8c",
+            "accentColor": "#d91a72",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_purple": {
+            "name": "light_purple",
+            "display_name": "Light Purple",
+            "description": "Purple accented light theme",
+            "primaryColor": "#6f42c1",
+            "accentColor": "#59359a",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        },
+        "light_red": {
+            "name": "light_red",
+            "display_name": "Light Red",
+            "description": "Red accented light theme",
+            "primaryColor": "#dc3545",
+            "accentColor": "#c82333",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "secondaryColor": "#e6e6e6",
+            "borderColor": "#cccccc"
+        }
+    }
+}
