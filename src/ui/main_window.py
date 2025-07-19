@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
     QProgressBar,
 )
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
-from PyQt6.QtGui import QIcon, QAction, QKeySequence
+from PyQt6.QtGui import QIcon, QAction, QKeySequence, QFont
 
 from src.core.logger import get_logger
 from src.core.settings import get_settings
@@ -434,12 +434,57 @@ class MainWindow(QMainWindow):
             if hasattr(self, "theme_manager"):
                 menu = QMenu(self)
 
-                for theme_name in self.theme_manager.get_available_themes():
-                    action = QAction(theme_name, self)
-                    action.triggered.connect(
-                        lambda checked, tn=theme_name: self._select_theme(tn)
-                    )
-                    menu.addAction(action)
+                # カテゴリ別にテーマをグループ化
+                categories = {
+                    "基本": ["dark", "light"],
+                    "カラー": [
+                        "blue",
+                        "green",
+                        "purple",
+                        "orange",
+                        "red",
+                        "pink",
+                        "yellow",
+                        "cyan",
+                        "teal",
+                        "indigo",
+                        "lime",
+                        "amber",
+                    ],
+                    "ニュートラル": ["brown", "gray"],
+                }
+
+                for category_name, theme_names in categories.items():
+                    if (
+                        category_name != "基本"
+                    ):  # 基本以外のカテゴリにはセパレータを追加
+                        menu.addSeparator()
+
+                    # カテゴリヘッダー
+                    category_action = QAction(category_name, self)
+                    category_action.setEnabled(False)
+                    category_action.setFont(QFont("Arial", 9, QFont.Weight.Bold))
+                    menu.addAction(category_action)
+
+                    # テーマアクション
+                    for theme_name in theme_names:
+                        theme_info = self.theme_manager.get_theme_info(theme_name)
+                        display_name = theme_info.get(
+                            "display_name", theme_name.title()
+                        )
+
+                        action = QAction(display_name, self)
+                        action.setData(theme_name)
+
+                        # 現在のテーマにチェックマーク
+                        if theme_name == self.theme_manager.get_current_theme():
+                            action.setCheckable(True)
+                            action.setChecked(True)
+
+                        action.triggered.connect(
+                            lambda checked, tn=theme_name: self._select_theme(tn)
+                        )
+                        menu.addAction(action)
 
                 menu.exec(self.theme_button.mapToGlobal(position))
         except Exception as e:
@@ -461,13 +506,185 @@ class MainWindow(QMainWindow):
 
     def _toggle_image_fullscreen(self) -> None:
         """画像パネルの全画面切り替え"""
-        self.logger.debug("画像パネルの全画面切り替え")
-        # TODO: 全画面表示機能の実装
+        try:
+            if hasattr(self, "_image_fullscreen") and self._image_fullscreen:
+                # 全画面モードを解除
+                self._image_fullscreen = False
+                self._restore_normal_layout()
+                self.image_fullscreen_button.setText("全画面")
+                self.image_fullscreen_button.setToolTip("画像を全画面表示")
+                self.logger.debug("画像パネルの全画面モードを解除しました")
+            else:
+                # 全画面モードを有効化
+                self._image_fullscreen = True
+                self._save_current_layout()
+                self._show_image_fullscreen()
+                self.image_fullscreen_button.setText("戻る")
+                self.image_fullscreen_button.setToolTip("通常表示に戻る")
+                self.logger.debug("画像パネルを全画面表示しました")
+        except Exception as e:
+            self.logger.error(f"画像パネルの全画面切り替えに失敗しました: {e}")
 
     def _toggle_map_fullscreen(self) -> None:
         """地図パネルの全画面切り替え"""
-        self.logger.debug("地図パネルの全画面切り替え")
-        # TODO: 全画面表示機能の実装
+        try:
+            if hasattr(self, "_map_fullscreen") and self._map_fullscreen:
+                # 全画面モードを解除
+                self._map_fullscreen = False
+                self._restore_normal_layout()
+                self.map_fullscreen_button.setText("全画面")
+                self.map_fullscreen_button.setToolTip("地図を全画面表示")
+                self.logger.debug("地図パネルの全画面モードを解除しました")
+            else:
+                # 全画面モードを有効化
+                self._map_fullscreen = True
+                self._save_current_layout()
+                self._show_map_fullscreen()
+                self.map_fullscreen_button.setText("戻る")
+                self.map_fullscreen_button.setToolTip("通常表示に戻る")
+                self.logger.debug("地図パネルを全画面表示しました")
+        except Exception as e:
+            self.logger.error(f"地図パネルの全画面切り替えに失敗しました: {e}")
+
+    def _save_current_layout(self) -> None:
+        """現在のレイアウトを保存"""
+        self._saved_central_widget = self.centralWidget()
+        self._saved_main_splitter = self.main_splitter
+
+    def _show_image_fullscreen(self) -> None:
+        """画像パネルを全画面表示"""
+        # 左パネルを非表示
+        self.left_panel.setVisible(False)
+        # 地図パネルを非表示
+        self.map_panel.setVisible(False)
+        # 画像パネルを中央に配置
+        self.image_panel.setParent(None)
+        self.setCentralWidget(self.image_panel)
+
+    def _show_map_fullscreen(self) -> None:
+        """地図パネルを全画面表示"""
+        # 左パネルを非表示
+        self.left_panel.setVisible(False)
+        # 画像パネルを非表示
+        self.image_panel.setVisible(False)
+        # 地図パネルを中央に配置
+        self.map_panel.setParent(None)
+        self.setCentralWidget(self.map_panel)
+
+    def _restore_normal_layout(self) -> None:
+        """通常レイアウトに復元"""
+        # 中央ウィジェットを復元
+        if hasattr(self, "_saved_central_widget"):
+            self.setCentralWidget(self._saved_central_widget)
+
+        # パネルを元の位置に戻す
+        if hasattr(self, "_saved_main_splitter"):
+            self.main_splitter = self._saved_main_splitter
+
+        # すべてのパネルを表示
+        self.left_panel.setVisible(True)
+        self.image_panel.setVisible(True)
+        self.map_panel.setVisible(True)
+
+        # 右スプリッターに画像と地図パネルを追加
+        self.right_splitter.addWidget(self.image_panel)
+        self.right_splitter.addWidget(self.map_panel)
+
+    def _animate_panel_transition(self, panel, show: bool) -> None:
+        """
+        パネルの表示/非表示アニメーション
+
+        Args:
+            panel: アニメーション対象のパネル
+            show: 表示するかどうか
+        """
+        try:
+            # 簡単なフェード効果
+            if show:
+                panel.setVisible(True)
+                panel.setStyleSheet("QWidget { opacity: 0; }")
+                # フェードイン効果（簡易版）
+                panel.setStyleSheet("QWidget { opacity: 1; }")
+            else:
+                panel.setVisible(False)
+
+        except Exception as e:
+            self.logger.error(f"パネルアニメーションに失敗しました: {e}")
+
+    def _optimize_performance(self) -> None:
+        """パフォーマンス最適化"""
+        try:
+            # ウィジェットの更新を一時停止
+            self.setUpdatesEnabled(False)
+
+            # メモリ使用量の最適化
+            self._clear_unused_resources()
+
+            # ウィジェットの更新を再開
+            self.setUpdatesEnabled(True)
+
+        except Exception as e:
+            self.logger.error(f"パフォーマンス最適化に失敗しました: {e}")
+
+    def _clear_unused_resources(self) -> None:
+        """未使用リソースのクリア"""
+        try:
+            # ガベージコレクションを実行
+            import gc
+
+            gc.collect()
+
+            # キャッシュのクリア（必要に応じて）
+            if hasattr(self, "controller"):
+                self.controller.clear_cache()
+
+        except Exception as e:
+            self.logger.error(f"リソースクリアに失敗しました: {e}")
+
+    def _show_loading_indicator(self, show: bool) -> None:
+        """
+        ローディングインジケーターの表示/非表示
+
+        Args:
+            show: 表示するかどうか
+        """
+        try:
+            if show:
+                self.progress_bar.setVisible(True)
+                self.status_bar.showMessage("読み込み中...")
+            else:
+                self.progress_bar.setVisible(False)
+                self.status_bar.clearMessage()
+
+        except Exception as e:
+            self.logger.error(f"ローディングインジケーターの制御に失敗しました: {e}")
+
+    def _show_success_message(self, message: str) -> None:
+        """
+        成功メッセージの表示
+
+        Args:
+            message: 表示するメッセージ
+        """
+        try:
+            self.status_bar.showMessage(f"✓ {message}", 3000)  # 3秒間表示
+
+        except Exception as e:
+            self.logger.error(f"成功メッセージの表示に失敗しました: {e}")
+
+    def _show_error_message(self, message: str) -> None:
+        """
+        エラーメッセージの表示
+
+        Args:
+            message: 表示するエラーメッセージ
+        """
+        try:
+            self.status_bar.showMessage(f"✗ {message}", 5000)  # 5秒間表示
+            QMessageBox.warning(self, "エラー", message)
+
+        except Exception as e:
+            self.logger.error(f"エラーメッセージの表示に失敗しました: {e}")
 
     def _update_address_bar(self, directory: str) -> None:
         """アドレスバーの更新"""
