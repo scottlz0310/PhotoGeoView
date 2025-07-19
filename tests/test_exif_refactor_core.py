@@ -5,7 +5,10 @@ EXIF リファクタリング コア機能テスト（Qt依存無し）
 
 import sys
 import os
-sys.path.append('/home/hiro/Projects/PhotoGeoView')
+
+# プロジェクトルートディレクトリを追加
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 from src.utils.exif_processor import ExifProcessor
 from src.utils.gps_utils import GPSUtils

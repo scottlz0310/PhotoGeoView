@@ -5,7 +5,10 @@ EXIF リファクタリングモジュールのテストスクリプト
 
 import sys
 import os
-sys.path.append('/home/hiro/Projects/PhotoGeoView')
+
+# プロジェクトルートディレクトリを追加
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 from src.utils.exif_processor import ExifProcessor
 from src.utils.gps_utils import GPSUtils
@@ -68,9 +71,8 @@ def test_exif_processor():
 
     # Test with sample image files (if they exist)
     test_files = [
-        "/home/hiro/Projects/PhotoGeoView/sample_image.jpg",  # Hypothetical
-        "/tmp/test.jpg",  # Non-existent
-        "/usr/share/pixmaps/python3.11.xpm"  # Might exist
+        os.path.join(project_root, "test_images", "test_image.jpg"),  # Project test image
+        os.path.join(project_root, "sample_image.jpg"),  # Sample image if exists
     ]
 
     for file_path in test_files:

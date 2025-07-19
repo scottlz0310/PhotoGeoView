@@ -10,7 +10,8 @@ import sys
 from typing import Optional, Dict, Any
 
 # プロジェクトのsrcディレクトリを追加
-sys.path.append('/home/hiro/Projects/PhotoGeoView')
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 from src.core.logger import get_logger
 
 # テスト用ロガー設定
@@ -107,12 +108,12 @@ def main():
     logger.info("GPS座標抽出テスト開始\n")
 
     # テスト用の画像ファイルパスを指定
-    # ユーザーがGPS付き画像を持っている場合のテスト
+    # プロジェクト内のテスト画像を使用
     test_image_paths = [
-        # 一般的なGPS付き画像の場所
-        "/home/hiro/Pictures",
-        "/home/hiro/Downloads",
-        "/home/hiro/Desktop"
+        os.path.join(project_root, "test_images"),  # プロジェクトのテスト画像
+        os.path.expanduser("~/Pictures"),  # ユーザーのピクチャフォルダ
+        os.path.expanduser("~/Downloads"),  # ユーザーのダウンロードフォルダ
+        os.path.expanduser("~/Desktop")  # ユーザーのデスクトップ
     ]
 
     found_images = []
