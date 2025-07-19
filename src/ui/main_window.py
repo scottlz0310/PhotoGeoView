@@ -102,6 +102,9 @@ class MainWindow(QMainWindow):
 
         self.setup_widget_connections()
 
+        # Auto-open last folder if available
+        self.auto_open_last_folder()
+
         self.logger.info("Main window initialized successfully")
 
     def setup_ui(self) -> None:
@@ -434,6 +437,7 @@ class MainWindow(QMainWindow):
         # Folder controller connections
         self.folder_controller.folder_opened.connect(self.on_folder_opened)
         self.folder_controller.status_message.connect(self.update_status)
+        self.folder_controller.navigation_state_changed.connect(self.update_navigation_state)
 
         # Panel controller connections
         self.panel_controller.status_message.connect(self.update_status)
@@ -446,6 +450,11 @@ class MainWindow(QMainWindow):
         self.toolbar_manager.theme_toggle_requested.connect(self.theme_controller.toggle_theme)
         self.toolbar_manager.theme_menu_requested.connect(self.on_toolbar_context_menu)
 
+        # Navigation button connections
+        self.toolbar_manager.back_requested.connect(self.folder_controller.go_back)
+        self.toolbar_manager.forward_requested.connect(self.folder_controller.go_forward)
+        self.toolbar_manager.up_requested.connect(self.folder_controller.go_up)
+
     def on_folder_opened(self, folder_path: str) -> None:
         """Handle folder opened from controller"""
         # Update UI elements with folder info
@@ -457,12 +466,20 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'file_browser') and self.file_browser:
             self.file_browser.set_root_path(folder_path)
 
-        # Enable navigation buttons
-        if self.up_action:
-            self.up_action.setEnabled(True)
-
         # Emit signal
         self.folder_changed.emit(folder_path)
+
+    def update_navigation_state(self, back_enabled: bool, forward_enabled: bool, up_enabled: bool) -> None:
+        """Update navigation button states"""
+        if self.back_action:
+            self.back_action.setEnabled(back_enabled)
+        if self.forward_action:
+            self.forward_action.setEnabled(forward_enabled)
+        if self.up_action:
+            self.up_action.setEnabled(up_enabled)
+
+        # Also update toolbar manager state
+        self.toolbar_manager.set_navigation_enabled(back_enabled, forward_enabled, up_enabled)
 
     def restore_window_state(self) -> None:
         """Restore window position and size from settings"""
@@ -508,6 +525,15 @@ class MainWindow(QMainWindow):
     def open_folder(self, folder_path: str) -> None:
         """Open a specific folder"""
         self.folder_controller.open_folder(folder_path, self)
+
+    def auto_open_last_folder(self) -> None:
+        """Automatically open the last opened folder on startup"""
+        last_folder = self.settings.folders.last_opened_folder
+        if last_folder and Path(last_folder).exists():
+            self.logger.info(f"Auto-opening last folder: {last_folder}")
+            self.folder_controller.open_folder(last_folder)
+        else:
+            self.logger.debug("No valid last folder to auto-open")
 
     # Theme operations delegated to theme_controller
     def toggle_theme(self) -> None:
