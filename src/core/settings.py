@@ -31,6 +31,8 @@ class UISettings:
     """User interface appearance settings"""
     current_theme: str = "dark_blue.xml"
     theme_manager_enabled: bool = True
+    selected_themes: List[str] = field(default_factory=lambda: ["dark_blue.xml", "light_blue.xml"])
+    theme_toggle_index: int = 0
     show_thumbnails: bool = True
     thumbnail_size: int = 128
     thumbnail_cache_size: int = 1000

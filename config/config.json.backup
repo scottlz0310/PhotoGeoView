@@ -1,7 +1,7 @@
 {
     "window": {
-        "width": 1108,
-        "height": 955,
+        "width": 1200,
+        "height": 800,
         "x": 1917,
         "y": -30,
         "maximized": false,
@@ -9,8 +9,17 @@
         "remember_size": true
     },
     "ui": {
-        "current_theme": "dark_blue.xml",
+        "current_theme": "dark_lightgreen.xml",
         "theme_manager_enabled": true,
+        "selected_themes": [
+            "dark_blue.xml",
+            "light_blue.xml",
+            "dark_cyan.xml",
+            "dark_lightgreen.xml",
+            "dark_orange.xml",
+            "dark_pink.xml"
+        ],
+        "theme_toggle_index": 3,
         "show_thumbnails": true,
         "thumbnail_size": 128,
         "thumbnail_cache_size": 1000,
