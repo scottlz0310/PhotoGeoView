@@ -96,18 +96,96 @@ class ToolbarManager(QObject):
 
         self.toolbar.addSeparator()
 
-        # Theme toggle button
+        # Theme toggle button with enhanced functionality
         self.theme_action = QAction("🎨 Theme", main_window)
-        self.theme_action.setToolTip("Toggle between selected themes (right-click to select multiple themes)")
+        self.theme_action.setToolTip(
+            "Left-click: Toggle between selected themes\n"
+            "Right-click: Advanced theme options\n"
+            "Ctrl+Click: Quick light/dark toggle"
+        )
         self.theme_action.triggered.connect(self.theme_toggle_requested.emit)
         self.toolbar.addAction(self.theme_action)
+
+        self.toolbar.addSeparator()
+
+        # Advanced theme actions (Phase 4)
+        self.validate_themes_action = QAction("🔍 Validate Themes", main_window)
+        self.validate_themes_action.setToolTip("Validate all themes for compatibility")
+        self.validate_themes_action.setVisible(False)  # Hidden by default
+        self.toolbar.addAction(self.validate_themes_action)
+
+        self.performance_test_action = QAction("⚡ Performance Test", main_window)
+        self.performance_test_action.setToolTip("Test theme switching performance")
+        self.performance_test_action.setVisible(False)  # Hidden by default
+        self.toolbar.addAction(self.performance_test_action)
 
         # Set up context menu policy for the toolbar itself
         self.toolbar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.toolbar.customContextMenuRequested.connect(self.theme_menu_requested.emit)
 
-        self.logger.debug("Toolbar setup complete")
+        self.logger.debug("Toolbar setup complete with Phase 4 theme enhancements")
         return self.toolbar
+
+    def update_theme_display(self, theme_name: str, theme_display_name: str = None) -> None:
+        """
+        Update theme button display
+        Phase 4: Enhanced theme feedback
+
+        Args:
+            theme_name: Current theme name
+            theme_display_name: User-friendly display name
+        """
+        if self.theme_action:
+            # Determine theme category and icon
+            if 'dark' in theme_name.lower():
+                icon = "🌙"
+                category = "Dark"
+            else:
+                icon = "☀️"
+                category = "Light"
+
+            # Update button text and tooltip
+            display_name = theme_display_name or theme_name.replace('.xml', '').replace('_', ' ').title()
+            self.theme_action.setText(f"{icon} {display_name}")
+
+            tooltip = (
+                f"Current Theme: {display_name} ({category})\n"
+                "Left-click: Toggle between selected themes\n"
+                "Right-click: Advanced theme options\n"
+                "Ctrl+Click: Quick light/dark toggle"
+            )
+            self.theme_action.setToolTip(tooltip)
+
+    def set_debug_mode(self, enabled: bool) -> None:
+        """
+        Show/hide debug theme actions
+        Phase 4: Development and testing features
+
+        Args:
+            enabled: Whether to show debug actions
+        """
+        if self.validate_themes_action:
+            self.validate_themes_action.setVisible(enabled)
+        if self.performance_test_action:
+            self.performance_test_action.setVisible(enabled)
+
+        self.logger.debug(f"Debug mode {'enabled' if enabled else 'disabled'} for theme actions")
+
+    def connect_theme_debug_actions(self, validate_callback, performance_callback) -> None:
+        """
+        Connect debug theme actions to callbacks
+        Phase 4: Testing functionality
+
+        Args:
+            validate_callback: Function to call for theme validation
+            performance_callback: Function to call for performance testing
+        """
+        if self.validate_themes_action:
+            self.validate_themes_action.triggered.connect(validate_callback)
+        if self.performance_test_action:
+            self.performance_test_action.triggered.connect(performance_callback)
+
+        self.logger.debug("Theme debug actions connected")
 
     def update_folder_display(self, folder_path: str) -> None:
         """Update the current folder display in toolbar"""

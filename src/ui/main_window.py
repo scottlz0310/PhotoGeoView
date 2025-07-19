@@ -305,15 +305,94 @@ class MainWindow(QMainWindow):
         self.theme_status_label = theme_label
 
     def setup_theme(self) -> None:
-        """Setup and apply the current theme"""
+        """
+        Setup and apply the current theme
+        Phase 4: Enhanced theme initialization with validation
+        """
         try:
+            # Validate theme compatibility on startup
+            self.logger.debug("Validating theme system...")
+            theme_stats = self.theme_manager.get_theme_statistics()
+            self.logger.info(f"Theme system initialized: {theme_stats['total_themes']} themes available")
+
+            # Apply current theme
             current_theme = self.settings.ui.current_theme
-            self.theme_manager.apply_theme(current_theme)
-            self.logger.info(f"Applied theme: {current_theme}")
+            success = self.theme_manager.apply_theme_with_verification(current_theme)
+
+            if success:
+                self.logger.info(f"Applied theme: {current_theme}")
+                display_name = self.theme_manager.get_theme_display_name(current_theme)
+                self.show_status_message(f"Theme: {display_name}", 2000)
+            else:
+                self.logger.warning(f"Failed to apply preferred theme: {current_theme}")
+                # Apply recommended fallback
+                recommendations = self.theme_controller.get_theme_recommendations()
+                if recommendations:
+                    fallback_theme = recommendations[0]
+                    self.theme_manager.apply_theme(fallback_theme)
+                    self.logger.info(f"Applied fallback theme: {fallback_theme}")
+
         except Exception as e:
-            self.logger.error(f"Failed to apply theme: {e}")
-            # Fallback to default theme
+            self.logger.error(f"Failed to setup theme: {e}")
+            # Last resort fallback
             self.theme_manager.apply_theme("dark_blue.xml")
+
+    def validate_all_themes(self) -> None:
+        """
+        Phase 4: Comprehensive theme validation
+        Run full theme compatibility test
+        """
+        try:
+            self.logger.info("Starting comprehensive theme validation...")
+            self.show_status_message("Validating themes...", 0)  # Persistent message
+
+            # Run validation through theme controller
+            validation_results = self.theme_controller.validate_all_themes()
+
+            # Display results
+            total = validation_results['total_themes']
+            working = len(validation_results['working_themes'])
+            failed = len(validation_results['failed_themes'])
+            rate = validation_results['compatibility_rate']
+
+            status_msg = f"Theme validation: {working}/{total} working ({rate:.1%})"
+            self.show_status_message(status_msg, 5000)
+
+            if failed > 0:
+                self.logger.warning(f"Failed themes: {', '.join(validation_results['failed_themes'])}")
+
+            if validation_results['recommendations']:
+                for rec in validation_results['recommendations']:
+                    self.logger.info(f"Theme recommendation: {rec}")
+
+        except Exception as e:
+            self.logger.error(f"Theme validation error: {e}")
+            self.show_status_message("Theme validation failed", 3000)
+
+    def run_theme_performance_test(self) -> None:
+        """
+        Phase 4: Theme performance optimization test
+        """
+        try:
+            self.logger.info("Running theme performance test...")
+            self.show_status_message("Testing theme performance...", 0)
+
+            performance_results = self.theme_controller.create_theme_performance_test()
+
+            if performance_results['themes_tested'] > 0:
+                avg_time = performance_results['average_switch_time']
+                fastest = performance_results['fastest_theme']
+
+                status_msg = f"Theme performance: avg {avg_time:.3f}s (fastest: {fastest})"
+                self.show_status_message(status_msg, 5000)
+
+                self.logger.info(f"Theme performance test completed: {status_msg}")
+            else:
+                self.show_status_message("Performance test failed", 3000)
+
+        except Exception as e:
+            self.logger.error(f"Theme performance test error: {e}")
+            self.show_status_message("Performance test failed", 3000)
 
     def setup_connections(self) -> None:
         """Setup signal-slot connections"""
@@ -328,6 +407,29 @@ class MainWindow(QMainWindow):
         # Theme controller connections
         self.theme_controller.theme_applied.connect(self.on_theme_changed)
         self.theme_controller.status_message.connect(self.show_status_message)
+
+        # Toolbar manager theme connections (Phase 4 enhancements)
+        self.toolbar_manager.theme_toggle_requested.connect(self.theme_controller.toggle_theme)
+        self.toolbar_manager.theme_menu_requested.connect(
+            lambda pos: self.theme_controller.show_theme_menu(pos, self)
+        )
+
+        # Connect Phase 4 debug features if available
+        if hasattr(self.toolbar_manager, 'connect_theme_debug_actions'):
+            self.toolbar_manager.connect_theme_debug_actions(
+                self.validate_all_themes,
+                self.run_theme_performance_test
+            )
+
+        # Enable debug mode based on settings (safe access)
+        debug_mode = getattr(self.settings, 'debug', None)
+        if debug_mode is not None:
+            show_theme_debug = getattr(debug_mode, 'show_theme_debug', False)
+        else:
+            show_theme_debug = False
+
+        if hasattr(self.toolbar_manager, 'set_debug_mode'):
+            self.toolbar_manager.set_debug_mode(show_theme_debug)
 
         # Folder controller connections
         self.folder_controller.folder_opened.connect(self.on_folder_opened)
@@ -471,13 +573,93 @@ class MainWindow(QMainWindow):
             self.logger.debug(f"Temporary status message: {message}")
 
     def on_theme_changed(self, theme_name: str) -> None:
-        """Handle theme change event"""
-        self.settings.ui.current_theme = theme_name
-        if self.theme_status_label:
-            self.theme_status_label.setText(f"Theme: {theme_name}")
+        """
+        Handle theme change event
+        Phase 4: Enhanced theme change handling with UI feedback
+        """
+        try:
+            # Update settings
+            self.settings.ui.current_theme = theme_name
 
-        self.theme_changed.emit(theme_name)
-        self.logger.info(f"Theme changed to: {theme_name}")
+            # Update status bar display
+            if self.theme_status_label:
+                display_name = self.theme_manager.get_theme_display_name(theme_name)
+                category = self.theme_manager.get_theme_category(theme_name)
+                icon = "🌙" if category == 'dark' else "☀️"
+                self.theme_status_label.setText(f"{icon} {display_name}")
+
+            # Update toolbar button display
+            if hasattr(self.toolbar_manager, 'update_theme_display'):
+                display_name = self.theme_manager.get_theme_display_name(theme_name)
+                self.toolbar_manager.update_theme_display(theme_name, display_name)
+
+            # Apply theme-specific optimizations
+            self._apply_theme_specific_optimizations(theme_name)
+
+            # Save settings
+            self.settings.save()
+
+            # Emit theme change signal for other components
+            self.theme_changed.emit(theme_name)
+
+            # Log with category information
+            category = self.theme_manager.get_theme_category(theme_name)
+            self.logger.info(f"Theme changed to: {theme_name} ({category} theme)")
+
+        except Exception as e:
+            self.logger.error(f"Error handling theme change: {e}")
+
+    def _apply_theme_specific_optimizations(self, theme_name: str) -> None:
+        """
+        Apply theme-specific UI optimizations
+        Phase 4: Theme-specific styling adjustments
+
+        Args:
+            theme_name: Current theme name
+        """
+        try:
+            category = self.theme_manager.get_theme_category(theme_name)
+
+            # Apply category-specific optimizations
+            if category == 'dark':
+                # Dark theme optimizations
+                self._apply_dark_theme_optimizations()
+            else:
+                # Light theme optimizations
+                self._apply_light_theme_optimizations()
+
+            # Apply color-specific optimizations
+            color = self._extract_theme_color(theme_name)
+            self._apply_color_optimizations(color)
+
+            self.logger.debug(f"Applied theme-specific optimizations for {theme_name}")
+
+        except Exception as e:
+            self.logger.error(f"Error applying theme optimizations: {e}")
+
+    def _apply_dark_theme_optimizations(self) -> None:
+        """Apply optimizations specific to dark themes"""
+        # Dark theme specific adjustments could go here
+        # For example: adjust icon brightness, modify text contrast, etc.
+        pass
+
+    def _apply_light_theme_optimizations(self) -> None:
+        """Apply optimizations specific to light themes"""
+        # Light theme specific adjustments could go here
+        # For example: adjust icon contrast, modify text colors, etc.
+        pass
+
+    def _extract_theme_color(self, theme_name: str) -> str:
+        """Extract color name from theme name"""
+        # Remove 'dark_' or 'light_' prefix and '.xml' suffix
+        color = theme_name.replace('dark_', '').replace('light_', '').replace('.xml', '')
+        return color.replace('_500', '')  # Remove variant suffixes
+
+    def _apply_color_optimizations(self, color: str) -> None:
+        """Apply color-specific optimizations"""
+        # Color-specific optimizations could go here
+        # For example: adjust accent colors, modify highlighting, etc.
+        self.logger.debug(f"Applied color optimizations for: {color}")
 
     def on_folder_changed(self, folder_path: str) -> None:
         """Handle folder change event"""

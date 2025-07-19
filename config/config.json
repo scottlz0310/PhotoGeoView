@@ -9,11 +9,11 @@
         "remember_size": true
     },
     "ui": {
-        "current_theme": "light_blue.xml",
+        "current_theme": "dark_blue.xml",
         "theme_manager_enabled": true,
         "selected_themes": [
-            "dark_blue.xml",
-            "light_blue.xml"
+            "light_blue.xml",
+            "dark_blue.xml"
         ],
         "theme_toggle_index": 1,
         "show_thumbnails": true,

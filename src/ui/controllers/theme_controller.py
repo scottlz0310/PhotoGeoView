@@ -6,7 +6,7 @@ Manages theme selection, cycling, and context menu operations
 from PyQt6.QtWidgets import QMenu, QWidget
 from PyQt6.QtCore import QObject, pyqtSignal, QPoint, Qt
 from PyQt6.QtGui import QAction
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from src.core.logger import get_logger
 from src.core.settings import SettingsManager
@@ -348,3 +348,209 @@ class ThemeController(QObject):
         self.settings.ui.current_theme = theme_name
         self.theme_applied.emit(theme_name)
         self.logger.info(f"Theme changed to: {theme_name}")
+
+    def validate_all_themes(self) -> dict:
+        """
+        Validate all 16 themes work properly with current system
+        Phase 4: Complete theme validation
+
+        Returns:
+            Dictionary with validation results
+        """
+        validation_results = {
+            'total_themes': 0,
+            'working_themes': [],
+            'failed_themes': [],
+            'compatibility_rate': 0.0,
+            'recommendations': []
+        }
+
+        try:
+            available_themes = self.theme_manager.get_available_themes()
+            validation_results['total_themes'] = len(available_themes)
+
+            # Store current theme to restore later
+            original_theme = self.theme_manager.get_current_theme()
+
+            for theme in available_themes:
+                try:
+                    self.logger.debug(f"Testing theme: {theme}")
+                    success = self.theme_manager.apply_theme_with_verification(theme)
+
+                    if success:
+                        validation_results['working_themes'].append(theme)
+                        self.logger.debug(f"Theme {theme} - OK")
+                    else:
+                        validation_results['failed_themes'].append(theme)
+                        self.logger.warning(f"Theme {theme} - FAILED")
+
+                except Exception as e:
+                    validation_results['failed_themes'].append(theme)
+                    self.logger.error(f"Theme {theme} validation error: {e}")
+
+            # Calculate compatibility rate
+            working_count = len(validation_results['working_themes'])
+            total_count = validation_results['total_themes']
+            validation_results['compatibility_rate'] = working_count / total_count if total_count > 0 else 0
+
+            # Generate recommendations
+            if validation_results['compatibility_rate'] < 0.8:
+                validation_results['recommendations'].append("Low theme compatibility detected")
+                validation_results['recommendations'].append("Consider updating Qt Theme Manager")
+
+            if validation_results['failed_themes']:
+                validation_results['recommendations'].append(f"Avoid using: {', '.join(validation_results['failed_themes'])}")
+
+            # Restore original theme
+            self.theme_manager.apply_theme(original_theme)
+
+            self.logger.info(f"Theme validation complete: {working_count}/{total_count} themes working ({validation_results['compatibility_rate']:.1%})")
+
+        except Exception as e:
+            self.logger.error(f"Theme validation error: {e}")
+            validation_results['recommendations'].append(f"Validation failed: {str(e)}")
+
+        return validation_results
+
+    def create_theme_performance_test(self) -> dict:
+        """
+        Test theme switching performance
+        Phase 4: UI/UX optimization
+
+        Returns:
+            Performance test results
+        """
+        import time
+
+        performance_results = {
+            'average_switch_time': 0.0,
+            'fastest_theme': '',
+            'slowest_theme': '',
+            'total_test_time': 0.0,
+            'themes_tested': 0
+        }
+
+        try:
+            themes_to_test = self.theme_manager.get_available_themes()[:5]  # Test first 5 themes
+            original_theme = self.theme_manager.get_current_theme()
+
+            switch_times = {}
+            total_start_time = time.time()
+
+            for theme in themes_to_test:
+                start_time = time.time()
+                success = self.theme_manager.apply_theme(theme)
+                end_time = time.time()
+
+                if success:
+                    switch_time = end_time - start_time
+                    switch_times[theme] = switch_time
+                    self.logger.debug(f"Theme {theme} switch time: {switch_time:.3f}s")
+
+            total_end_time = time.time()
+
+            if switch_times:
+                performance_results['average_switch_time'] = sum(switch_times.values()) / len(switch_times)
+                performance_results['fastest_theme'] = min(switch_times, key=switch_times.get)
+                performance_results['slowest_theme'] = max(switch_times, key=switch_times.get)
+                performance_results['total_test_time'] = total_end_time - total_start_time
+                performance_results['themes_tested'] = len(switch_times)
+
+            # Restore original theme
+            self.theme_manager.apply_theme(original_theme)
+
+            self.logger.info(f"Theme performance test complete: avg {performance_results['average_switch_time']:.3f}s")
+
+        except Exception as e:
+            self.logger.error(f"Theme performance test error: {e}")
+
+        return performance_results
+
+    def apply_theme_with_animation_effect(self, theme_name: str) -> bool:
+        """
+        Apply theme with smooth transition effect
+        Phase 4: Animation effects
+
+        Args:
+            theme_name: Theme to apply
+
+        Returns:
+            True if successful
+        """
+        try:
+            # Future: Add fade transition effect here
+            # For now, apply theme normally
+            success = self.theme_manager.apply_theme_with_verification(theme_name)
+
+            if success:
+                # Emit status with visual feedback
+                display_name = self.theme_manager.get_theme_display_name(theme_name)
+                category = self.theme_manager.get_theme_category(theme_name)
+
+                icon = "🌙" if category == 'dark' else "☀️"
+                self.status_message.emit(f"{icon} {display_name}", 3000)
+
+                # Update settings
+                self.settings.ui.current_theme = theme_name
+                self.settings.save()
+
+            return success
+
+        except Exception as e:
+            self.logger.error(f"Error applying theme with animation: {e}")
+            return False
+
+    def get_theme_recommendations(self) -> List[str]:
+        """
+        Get theme recommendations based on current system and usage
+        Phase 4: UI/UX optimization
+
+        Returns:
+            List of recommended theme names
+        """
+        try:
+            recommendations = []
+
+            # Get theme statistics
+            stats = self.theme_manager.get_theme_statistics()
+
+            # Basic recommendations
+            if stats['qt_theme_manager_available']:
+                recommendations.extend(['dark_blue.xml', 'light_blue.xml'])  # Safe defaults
+
+                # Add variety recommendations
+                recommendations.extend(['dark_purple.xml', 'light_orange.xml'])
+            else:
+                # Fallback theme recommendations
+                recommendations = ['dark_blue.xml', 'light_blue.xml']
+
+            self.logger.debug(f"Generated {len(recommendations)} theme recommendations")
+            return recommendations
+
+        except Exception as e:
+            self.logger.error(f"Error generating theme recommendations: {e}")
+            return ['dark_blue.xml']  # Safe fallback
+
+    def toggle_between_theme_categories(self) -> None:
+        """
+        Smart toggle between light and dark theme variants
+        Phase 4: Enhanced theme switching
+        """
+        try:
+            new_theme = self.theme_manager.toggle_theme_type()
+
+            if new_theme != self.theme_manager.get_current_theme():
+                # Update settings
+                self.settings.ui.current_theme = new_theme
+                self.settings.save()
+
+                # Provide user feedback
+                category = self.theme_manager.get_theme_category(new_theme)
+                icon = "🌙" if category == 'dark' else "☀️"
+                display_name = self.theme_manager.get_theme_display_name(new_theme)
+
+                self.status_message.emit(f"{icon} Switched to {display_name}", 2500)
+                self.logger.info(f"Theme category toggled to: {new_theme}")
+
+        except Exception as e:
+            self.logger.error(f"Error toggling theme categories: {e}")
