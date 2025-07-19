@@ -10,28 +10,32 @@ sys.path.append('/home/hiro/Projects/PhotoGeoView')
 from src.utils.exif_processor import ExifProcessor
 from src.utils.gps_utils import GPSUtils
 from src.utils.file_utils import FileUtils
+from src.core.logger import get_logger
+
+# テスト用ロガー設定
+logger = get_logger(__name__)
 
 def test_file_utils():
     """ファイルユーティリティのテスト"""
-    print("=== File Utils Test ===")
+    logger.info("=== File Utils Test ===")
 
     # Test file size formatting
     test_sizes = [0, 500, 1536, 1048576, 1073741824]
     for size in test_sizes:
         formatted = FileUtils.format_file_size(size)
-        print(f"Size {size} bytes -> {formatted}")
+        logger.info(f"Size {size} bytes -> {formatted}")
 
     # Test image file detection
     test_files = ["test.jpg", "test.png", "test.txt", "test.JPEG", "test.tiff"]
     for file in test_files:
         is_image = FileUtils.is_image_file(file)
-        print(f"File {file} is image: {is_image}")
+        logger.info(f"File {file} is image: {is_image}")
 
-    print()
+    logger.info()
 
 def test_gps_utils():
     """GPSユーティリティのテスト"""
-    print("=== GPS Utils Test ===")
+    logger.info("=== GPS Utils Test ===")
 
     # Test coordinate validation
     test_coords = [
@@ -45,19 +49,19 @@ def test_gps_utils():
     for lat, lon in test_coords:
         is_valid = GPSUtils.validate_coordinates(lat, lon)
         formatted = GPSUtils.format_coordinates(lat, lon) if is_valid else "Invalid"
-        print(f"Coordinates ({lat}, {lon}) -> Valid: {is_valid}, Formatted: {formatted}")
+        logger.info(f"Coordinates ({lat}, {lon}) -> Valid: {is_valid}, Formatted: {formatted}")
 
     # Test rational parsing
     test_rationals = ["123/456", "42", "0/1", "invalid", "1/0"]
     for rational in test_rationals:
         result = GPSUtils._parse_rational(rational)
-        print(f"Rational '{rational}' -> {result}")
+        logger.info(f"Rational '{rational}' -> {result}")
 
-    print()
+    logger.info()
 
 def test_exif_processor():
     """EXIFプロセッサのテスト"""
-    print("=== EXIF Processor Test ===")
+    logger.info("=== EXIF Processor Test ===")
 
     # Create a test EXIF processor
     processor = ExifProcessor()
@@ -71,33 +75,33 @@ def test_exif_processor():
 
     for file_path in test_files:
         if os.path.exists(file_path):
-            print(f"\nTesting with file: {file_path}")
+            logger.info(f"\nTesting with file: {file_path}")
             exif_data = processor.extract_exif_data(file_path)
-            print(f"EXIF data keys: {list(exif_data.keys())}")
+            logger.info(f"EXIF data keys: {list(exif_data.keys())}")
 
             # Check for GPS data
             if 'gps_coordinates' in exif_data:
                 coords = exif_data['gps_coordinates']
-                print(f"GPS coordinates found: {coords}")
+                logger.info(f"GPS coordinates found: {coords}")
             else:
-                print("No GPS coordinates found")
+                logger.info("No GPS coordinates found")
         else:
-            print(f"File not found: {file_path}")
+            logger.info(f"File not found: {file_path}")
 
-    print()
+    logger.info()
 
 def test_integration():
     """統合テスト"""
-    print("=== Integration Test ===")
+    logger.info("=== Integration Test ===")
 
     # Test that all imports work
     try:
         from src.modules.exif_info import ExifInfoPanel, ExifLoader
-        print("✓ EXIF module imports successfully")
+        logger.info("✓ EXIF module imports successfully")
 
         # Test creating instances
         processor = ExifProcessor()
-        print("✓ ExifProcessor created successfully")
+        logger.info("✓ ExifProcessor created successfully")
 
         # Test basic functionality without Qt widgets
         test_data = {
@@ -112,28 +116,28 @@ def test_integration():
         # Test data categorization logic (without UI)
         panel = ExifInfoPanel()
         categories = panel.categorize_data(test_data)
-        print("✓ Data categorization works")
-        print(f"Categories: {list(categories.keys())}")
+        logger.info("✓ Data categorization works")
+        logger.info(f"Categories: {list(categories.keys())}")
 
         for cat, items in categories.items():
             if items:
-                print(f"  {cat}: {len(items)} items")
+                logger.info(f"  {cat}: {len(items)} items")
 
         # Test GPS coordinate extraction
         coords = panel.current_data.get('gps_coordinates') if hasattr(panel, 'current_data') else None
-        print(f"GPS coordinates: {coords}")
+        logger.info(f"GPS coordinates: {coords}")
 
     except Exception as e:
-        print(f"✗ Integration test failed: {e}")
+        logger.error(f"✗ Integration test failed: {e}")
         import traceback
         traceback.print_exc()
 
-    print()
+    logger.info()
 
 def main():
     """メインテスト関数"""
-    print("EXIF Refactoring Module Test Suite")
-    print("=" * 50)
+    logger.info("EXIF Refactoring Module Test Suite")
+    logger.info("=" * 50)
 
     try:
         test_file_utils()
@@ -141,11 +145,11 @@ def main():
         test_exif_processor()
         test_integration()
 
-        print("=" * 50)
-        print("✓ All tests completed!")
+        logger.info("=" * 50)
+        logger.info("✓ All tests completed!")
 
     except Exception as e:
-        print(f"✗ Test suite failed: {e}")
+        logger.error(f"✗ Test suite failed: {e}")
         import traceback
         traceback.print_exc()
         return 1

@@ -10,34 +10,38 @@ sys.path.append('/home/hiro/Projects/PhotoGeoView')
 from src.utils.exif_processor import ExifProcessor
 from src.utils.gps_utils import GPSUtils
 from src.utils.file_utils import FileUtils
+from src.core.logger import get_logger
+
+# テスト用ロガー設定
+logger = get_logger(__name__)
 
 def test_core_functionality():
     """コア機能のテスト（Qt無し）"""
-    print("=== Core Functionality Test ===")
+    logger.info("=== Core Functionality Test ===")
 
     # Test utility functions
-    print("\n1. File Utils Test:")
+    logger.info("1. File Utils Test:")
     sizes = [0, 1024, 1048576, 1073741824]
     for size in sizes:
         formatted = FileUtils.format_file_size(size)
-        print(f"  {size} bytes -> {formatted}")
+        logger.info(f"  {size} bytes -> {formatted}")
 
-    print("\n2. GPS Utils Test:")
+    logger.info("2. GPS Utils Test:")
     # Test coordinate validation and formatting
     coords = [(35.6762, 139.6503), (40.7128, -74.0060), (51.5074, -0.1278)]
     for lat, lon in coords:
         is_valid = GPSUtils.validate_coordinates(lat, lon)
         formatted = GPSUtils.format_coordinates(lat, lon)
-        print(f"  ({lat}, {lon}) -> Valid: {is_valid}, Formatted: {formatted}")
+        logger.info(f"  ({lat}, {lon}) -> Valid: {is_valid}, Formatted: {formatted}")
 
-    print("\n3. EXIF Processor Test:")
+    logger.info("3. EXIF Processor Test:")
     processor = ExifProcessor()
 
     # Test with non-existent file (should handle gracefully)
     result = processor.extract_exif_data("nonexistent.jpg")
-    print(f"  Non-existent file result: {type(result)} with {len(result)} keys")
+    logger.info(f"  Non-existent file result: {type(result)} with {len(result)} keys")
 
-    print("\n4. Data Categorization Test:")
+    logger.info("4. Data Categorization Test:")
     # Test categorization logic without Qt widgets
     test_data = {
         'File Name': 'test.jpg',
@@ -92,18 +96,18 @@ def test_core_functionality():
         if not categorized:
             categories["Other EXIF Data"][key] = str(value)
 
-    print("  Categorization results:")
+    logger.info("  Categorization results:")
     for category, items in categories.items():
         if items:
-            print(f"    {category}: {len(items)} items")
+            logger.info(f"    {category}: {len(items)} items")
             for key, value in items.items():
-                print(f"      {key}: {value}")
+                logger.info(f"      {key}: {value}")
 
     return True
 
 def create_sample_image():
     """サンプル画像を作成してテスト"""
-    print("\n=== Sample Image Test ===")
+    logger.info("=== Sample Image Test ===")
 
     try:
         from PIL import Image, ImageDraw
@@ -126,15 +130,15 @@ def create_sample_image():
             # Save image
             img.save(temp_file.name, "JPEG")
 
-            print(f"  Created test image: {temp_file.name}")
+            logger.info(f"  Created test image: {temp_file.name}")
 
             # Test EXIF extraction
             processor = ExifProcessor()
             exif_data = processor.extract_exif_data(temp_file.name)
 
-            print(f"  Extracted EXIF data: {len(exif_data)} keys")
+            logger.info(f"  Extracted EXIF data: {len(exif_data)} keys")
             for key, value in exif_data.items():
-                print(f"    {key}: {value}")
+                logger.info(f"    {key}: {value}")
 
             # Clean up
             os.unlink(temp_file.name)
@@ -142,15 +146,15 @@ def create_sample_image():
             return True
 
     except ImportError:
-        print("  PIL not available for image creation test")
+        logger.warning("  PIL not available for image creation test")
         return False
     except Exception as e:
-        print(f"  Sample image test failed: {e}")
+        logger.error(f"  Sample image test failed: {e}")
         return False
 
 def test_performance():
     """パフォーマンステスト"""
-    print("\n=== Performance Test ===")
+    logger.info("=== Performance Test ===")
 
     import time
 
@@ -159,7 +163,7 @@ def test_performance():
     for i in range(10000):
         FileUtils.format_file_size(i * 1024)
     end_time = time.time()
-    print(f"  File size formatting (10k iterations): {end_time - start_time:.4f} seconds")
+    logger.info(f"  File size formatting (10k iterations): {end_time - start_time:.4f} seconds")
 
     # Test GPS coordinate validation performance
     start_time = time.time()
@@ -168,7 +172,7 @@ def test_performance():
         lon = (i % 360) - 180
         GPSUtils.validate_coordinates(lat, lon)
     end_time = time.time()
-    print(f"  GPS validation (10k iterations): {end_time - start_time:.4f} seconds")
+    logger.info(f"  GPS validation (10k iterations): {end_time - start_time:.4f} seconds")
 
     # Test GPS formatting performance
     start_time = time.time()
@@ -177,18 +181,18 @@ def test_performance():
         lon = 139.6503 + (i * 0.001)
         GPSUtils.format_coordinates(lat, lon)
     end_time = time.time()
-    print(f"  GPS formatting (1k iterations): {end_time - start_time:.4f} seconds")
+    logger.info(f"  GPS formatting (1k iterations): {end_time - start_time:.4f} seconds")
 
 def main():
     """メインテスト"""
-    print("EXIF Refactoring Core Test Suite")
-    print("=" * 50)
+    logger.info("EXIF Refactoring Core Test Suite")
+    logger.info("=" * 50)
 
     try:
         # Test core functionality
         success = test_core_functionality()
         if not success:
-            print("✗ Core functionality test failed")
+            logger.error("✗ Core functionality test failed")
             return 1
 
         # Test with sample image
@@ -197,19 +201,19 @@ def main():
         # Test performance
         test_performance()
 
-        print("\n" + "=" * 50)
-        print("✓ All core tests completed successfully!")
-        print("\nRefactoring Summary:")
-        print("- ✓ File utilities working")
-        print("- ✓ GPS utilities working")
-        print("- ✓ EXIF processor working")
-        print("- ✓ Data categorization working")
-        print("- ✓ Performance acceptable")
+        logger.info("=" * 50)
+        logger.info("✓ All core tests completed successfully!")
+        logger.info("Refactoring Summary:")
+        logger.info("- ✓ File utilities working")
+        logger.info("- ✓ GPS utilities working")
+        logger.info("- ✓ EXIF processor working")
+        logger.info("- ✓ Data categorization working")
+        logger.info("- ✓ Performance acceptable")
 
         return 0
 
     except Exception as e:
-        print(f"✗ Test failed: {e}")
+        logger.error(f"✗ Test failed: {e}")
         import traceback
         traceback.print_exc()
         return 1

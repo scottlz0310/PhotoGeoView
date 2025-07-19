@@ -163,9 +163,9 @@ def check_dependencies() -> bool:
         missing_deps.append("folium")
 
     if missing_deps:
-        print(f"Error: Missing required dependencies: {', '.join(missing_deps)}")
-        print("Please install missing dependencies using:")
-        print("pip install -r requirements.txt")
+        logger.error(f"Missing required dependencies: {', '.join(missing_deps)}")
+        logger.error("Please install missing dependencies using:")
+        logger.error("pip install -r requirements.txt")
         return False
 
     return True
@@ -211,11 +211,11 @@ def main() -> int:
         return app.run()
 
     except KeyboardInterrupt:
-        print("\nApplication interrupted by user")
+        logger.info("Application interrupted by user")
         return 0
 
     except Exception as e:
-        print(f"Fatal error: {e}")
+        logger.critical(f"Fatal error: {e}")
         return 1
 
 

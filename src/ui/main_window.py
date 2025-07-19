@@ -4,8 +4,8 @@ Main application window with UI layout and theme integration
 """
 
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QSplitter, QPushButton, QToolBar, QStatusBar, QLabel,
+    QMainWindow, QWidget, QVBoxLayout,
+    QSplitter, QToolBar, QStatusBar, QLabel,
     QFrame
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPoint
@@ -267,6 +267,9 @@ class MainWindow(QMainWindow):
         self.image_viewer = ImageViewer()
         layout.addWidget(self.image_viewer)
 
+        # Connect ImageViewer's fullscreen signal to panel maximize
+        self.image_viewer.fullscreen_requested.connect(self.on_fullscreen_requested)
+
         return panel
 
     def create_map_panel(self) -> QFrame:
@@ -276,30 +279,15 @@ class MainWindow(QMainWindow):
         panel.setMinimumHeight(200)
 
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setContentsMargins(2, 2, 2, 2)  # Minimal margins since MapViewer has its own
 
-        # Panel header with maximize button
-        header = QHBoxLayout()
-        title_label = QLabel("🗺️ Map Viewer")
-        title_label.setStyleSheet("font-weight: bold;")
-
-        maximize_btn = QPushButton("⛶")
-        maximize_btn.setMaximumSize(30, 30)
-        maximize_btn.setToolTip("Maximize map panel")
-        maximize_btn.clicked.connect(lambda: self.toggle_panel_maximize('map'))
-
-        header.addWidget(title_label)
-        header.addStretch()
-        header.addWidget(maximize_btn)
-        layout.addLayout(header)
-
-        # Map viewer widget
+        # Map viewer widget (already contains title and controls)
         self.map_viewer = MapViewer()
         self.map_viewer.setMinimumHeight(200)
         layout.addWidget(self.map_viewer)
 
-        # Store references
-        self.map_maximize_btn = maximize_btn
+        # Connect MapViewer's fullscreen signal to panel maximize
+        self.map_viewer.fullscreen_requested.connect(self.on_map_fullscreen_requested)
 
         return panel
 
@@ -458,16 +446,12 @@ class MainWindow(QMainWindow):
                         self.left_panel.hide()
                     if self.image_panel:
                         self.image_panel.hide()
-                    self.map_maximize_btn.setText("⛷")
-                    self.map_maximize_btn.setToolTip("Restore map panel")
                 else:
                     # Restore normal view
                     if self.left_panel:
                         self.left_panel.show()
                     if self.image_panel:
                         self.image_panel.show()
-                    self.map_maximize_btn.setText("⛶")
-                    self.map_maximize_btn.setToolTip("Maximize map panel")
 
             self.logger.debug(f"Toggled {panel_type} panel maximization")
 
