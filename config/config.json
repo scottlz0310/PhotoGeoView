@@ -12,22 +12,38 @@
         "current_theme": "dark_blue.xml",
         "theme_manager_enabled": true,
         "selected_themes": [
+            "dark_blue.xml",
+            "dark_cyan.xml",
+            "dark_lightgreen.xml",
+            "dark_orange.xml",
+            "dark_pink.xml",
+            "dark_purple.xml",
+            "dark_red.xml",
+            "dark_teal.xml",
             "light_blue.xml",
-            "dark_blue.xml"
+            "light_cyan.xml",
+            "light_cyan_500.xml",
+            "light_lightgreen.xml",
+            "light_orange.xml",
+            "light_pink.xml",
+            "light_purple.xml",
+            "light_red.xml"
         ],
-        "theme_toggle_index": 1,
+        "theme_toggle_index": 0,
         "show_thumbnails": true,
         "thumbnail_size": 128,
         "thumbnail_cache_size": 1000,
         "show_toolbar": true,
         "show_status_bar": true,
-        "panel_splitter_state": "AAAA/wAAAAEAAAACAAABLAAAA4QB/////wEAAAABAA==",
+        "panel_splitter_state": "AAAA/wAAAAEAAAACAAADWwAABBEB/////wEAAAABAA==",
         "image_panel_maximized": false,
         "map_panel_maximized": false
     },
     "folders": {
-        "last_opened_folder": "",
-        "recent_folders": [],
+        "last_opened_folder": "/mnt/c/Users/菅原浩恭/OneDrive - 菅原建設有限会社/Documents/アラタ工業/2024年度/町道維持Local/撮影写真/101_0418",
+        "recent_folders": [
+            "/mnt/c/Users/菅原浩恭/OneDrive - 菅原建設有限会社/Documents/アラタ工業/2024年度/町道維持Local/撮影写真/101_0418"
+        ],
         "max_recent_folders": 10,
         "show_hidden_files": false,
         "supported_formats": [
