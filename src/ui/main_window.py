@@ -110,6 +110,9 @@ class MainWindow(QMainWindow):
         # Create status bar
         self.setup_status_bar()
 
+        # Setup debug shortcuts
+        self.setup_debug_shortcuts()
+
         self.logger.debug("Main UI layout setup complete")
 
     def setup_toolbar(self) -> None:
@@ -812,6 +815,12 @@ class MainWindow(QMainWindow):
             self.status_label.setText(message)
             self.logger.debug(f"Status updated: {message}")
 
+    def show_status_message(self, message: str, timeout: int = 2000) -> None:
+        """Show a temporary message in the status bar"""
+        if self.status_bar:
+            self.status_bar.showMessage(message, timeout)
+            self.logger.debug(f"Temporary status message: {message}")
+
     def on_theme_changed(self, theme_name: str) -> None:
         """Handle theme change event"""
         self.settings.ui.current_theme = theme_name
@@ -1106,3 +1115,71 @@ class MainWindow(QMainWindow):
             return Path(file_path).suffix.lower() in image_extensions
         except Exception:
             return False
+
+    def setup_debug_shortcuts(self) -> None:
+        """Setup debug keyboard shortcuts"""
+        from PyQt6.QtGui import QShortcut, QKeySequence
+
+        # Ctrl+Shift+D: Toggle DEBUG/INFO logging
+        debug_shortcut = QShortcut(QKeySequence("Ctrl+Shift+D"), self)
+        debug_shortcut.activated.connect(self.toggle_debug_mode)
+
+        # Ctrl+Shift+L: Show current log level in status bar
+        log_info_shortcut = QShortcut(QKeySequence("Ctrl+Shift+L"), self)
+        log_info_shortcut.activated.connect(self.show_log_level_info)
+
+        self.logger.debug("Debug shortcuts initialized")
+
+    def toggle_debug_mode(self) -> None:
+        """Cycle through all log levels: DEBUG → INFO → WARNING → ERROR → CRITICAL → DEBUG..."""
+        current_level = self.settings.logging.level
+
+        # Define log levels in order
+        log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+        try:
+            current_index = log_levels.index(current_level)
+            # Move to next level (cycle back to DEBUG after CRITICAL)
+            next_index = (current_index + 1) % len(log_levels)
+            new_level = log_levels[next_index]
+        except ValueError:
+            # If current level is not in our list, default to DEBUG
+            new_level = "DEBUG"
+
+        success = self.settings.set_log_level(new_level)
+
+        if success:
+            # Show level with description
+            level_descriptions = {
+                "DEBUG": "DEBUG (All messages)",
+                "INFO": "INFO (General information)",
+                "WARNING": "WARNING (Warnings and above)",
+                "ERROR": "ERROR (Errors and critical)",
+                "CRITICAL": "CRITICAL (Critical errors only)"
+            }
+
+            message = f"Log level: {level_descriptions.get(new_level, new_level)}"
+            self.logger.info(f"Log level changed to {new_level}")
+            self.show_status_message(message, 4000)  # Show for 4 seconds
+        else:
+            message = "Failed to change log level"
+            self.logger.error(message)
+            self.show_status_message(message, 3000)
+
+    def show_log_level_info(self) -> None:
+        """Show current log level and available levels in status bar"""
+        current_level = self.settings.logging.level
+
+        level_info = {
+            "DEBUG": "Shows all messages (most verbose)",
+            "INFO": "Shows general information and above",
+            "WARNING": "Shows warnings, errors and critical",
+            "ERROR": "Shows errors and critical only",
+            "CRITICAL": "Shows only critical errors (least verbose)"
+        }
+
+        current_description = level_info.get(current_level, "Unknown level")
+        message = f"Log Level: {current_level} - {current_description} | Press Ctrl+Shift+D to cycle"
+
+        self.show_status_message(message, 7000)  # Show for 7 seconds
+        self.logger.info(f"Log level info displayed: {current_level} - {current_description}")

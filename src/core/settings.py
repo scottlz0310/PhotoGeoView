@@ -191,6 +191,9 @@ class SettingsManager:
             self._load_category(config_data.get('logging', {}), self.logging)
             self._load_category(config_data.get('advanced', {}), self.advanced)
 
+            # Apply log level from settings
+            self._apply_log_level()
+
             self.logger.info("Settings loaded successfully")
             return True
 
@@ -392,6 +395,35 @@ class SettingsManager:
 
         self.logger.debug(f"Added recent folder: {folder_path}")
 
+    def set_log_level(self, level: str) -> bool:
+        """
+        Set application log level dynamically
+
+        Args:
+            level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
+        Returns:
+            True if successfully set, False otherwise
+        """
+        try:
+            # Update the setting
+            self.logging.level = level.upper()
+
+            # Apply to all PhotoGeoView loggers immediately
+            from src.core.logger import LoggerManager
+            LoggerManager.set_level('PhotoGeoView', level.upper())
+
+            # Save the setting
+            if self.advanced.auto_save_settings:
+                self.save()
+
+            self.logger.info(f"Changed application log level to {level.upper()}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to set log level: {e}")
+            return False
+
     def get_recent_folders(self) -> List[str]:
         """
         Get list of recent folders (existing ones only)
@@ -426,6 +458,15 @@ class SettingsManager:
                         value = None
 
                 setattr(category_obj, key, value)
+
+    def _apply_log_level(self) -> None:
+        """Apply the current log level from settings to the logger"""
+        try:
+            from src.core.logger import LoggerManager
+            LoggerManager.set_level('PhotoGeoView', self.logging.level)
+            self.logger.debug(f"Applied log level: {self.logging.level}")
+        except Exception as e:
+            self.logger.warning(f"Failed to apply log level: {e}")
 
     def _create_backup(self) -> None:
         """Create a backup of the current config file"""

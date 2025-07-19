@@ -2,26 +2,26 @@
     "window": {
         "width": 1200,
         "height": 800,
-        "x": 100,
-        "y": 100,
+        "x": 1917,
+        "y": -30,
         "maximized": false,
         "remember_position": true,
         "remember_size": true
     },
     "ui": {
-        "current_theme": "light_blue.xml",
+        "current_theme": "dark_blue.xml",
         "theme_manager_enabled": true,
         "selected_themes": [
             "dark_blue.xml",
             "light_blue.xml"
         ],
-        "theme_toggle_index": 1,
+        "theme_toggle_index": 0,
         "show_thumbnails": true,
         "thumbnail_size": 128,
         "thumbnail_cache_size": 1000,
         "show_toolbar": true,
         "show_status_bar": true,
-        "panel_splitter_state": null,
+        "panel_splitter_state": "AAAA/wAAAAEAAAACAAABLAAAA4QB/////wEAAAABAA==",
         "image_panel_maximized": false,
         "map_panel_maximized": false
     },
