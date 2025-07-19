@@ -1,0 +1,102 @@
+{
+    // Python環境設定
+    "python.analysis.autoImportCompletions": true,
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "python.venvPath": "./venv",
+    "python.terminal.activateEnvironment": true,
+    // Python解析設定（PyQt6最適化）
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.indexing": true,
+    "python.analysis.useLibraryCodeForTypes": true,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.stubPath": "./typings",
+    "python.analysis.packageIndexDepths": [
+        {
+            "name": "PyQt6",
+            "depth": 2
+        }
+    ],
+    // リンター・フォーマッター設定
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": false,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length=88"
+    ],
+    // テスト設定
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests",
+        "--verbose"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    // ファイル監視除外（PhotoGeoView特化）
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/.hg/store/**": true,
+        "**/__pycache__/**": true,
+        "**/.pytest_cache/**": true,
+        "**/logs/**": true,
+        "**/cache/**": true,
+        "**/temp/**": true,
+        "**/thumbnails/**": true,
+        "**/*.pyc": true
+    },
+    // ファイル除外設定
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    },
+    // エディター設定
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "files.hotExit": "onExit",
+    "files.associations": {
+        "*.py": "python",
+        "*.ui": "xml",
+        "*.qrc": "xml"
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    // コード品質設定
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit",
+        "source.fixAll": "explicit"
+    },
+    "editor.rulers": [
+        88,
+        120
+    ],
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 88,
+    // Git設定
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "git.autofetchPeriod": 180,
+    // IntelliSense設定（PyQt6特化）
+    "python.analysis.extraPaths": [
+        "./src",
+        "./venv/lib/python*/site-packages"
+    ],
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none",
+        "reportUnknownMemberType": "none"
+    }
+}
