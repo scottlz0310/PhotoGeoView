@@ -1,0 +1,277 @@
+#!/usr/bin/env python3
+"""
+画像ローダーモジュールの単体テスト
+"""
+
+import unittest
+import tempfile
+import os
+from pathlib import Path
+from unittest.mock import Mock, patch, MagicMock
+
+# プロジェクトルートをPythonパスに追加
+import sys
+
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from src.modules.image_loader import ImageLoader
+from src.core.logger import get_logger
+
+
+class TestImageLoader(unittest.TestCase):
+    """ImageLoaderのテストクラス"""
+
+    def setUp(self):
+        """テスト前の準備"""
+        self.logger = get_logger(__name__)
+
+        # QApplicationのモック
+        with patch("PyQt6.QtWidgets.QApplication") as mock_qapp:
+            mock_qapp.instance.return_value = MagicMock()
+            self.image_loader = ImageLoader()
+
+        # テスト用の一時ディレクトリ
+        self.test_dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        """テスト後のクリーンアップ"""
+        # 一時ディレクトリを削除
+        import shutil
+
+        shutil.rmtree(self.test_dir, ignore_errors=True)
+
+    def test_initialization(self):
+        """初期化テスト"""
+        self.assertIsNotNone(self.image_loader)
+        self.assertIsNotNone(self.image_loader.logger)
+        self.assertIsNotNone(self.image_loader.supported_formats)
+
+    def test_is_supported_format_valid(self):
+        """有効な画像形式のテスト"""
+        # サポートされている形式
+        valid_formats = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff"]
+
+        for format_ext in valid_formats:
+            result = self.image_loader.is_supported_format(f"test_image{format_ext}")
+            self.assertTrue(result, f"Format {format_ext} should be supported")
+
+    def test_is_supported_format_invalid(self):
+        """無効な画像形式のテスト"""
+        # サポートされていない形式
+        invalid_formats = [".txt", ".pdf", ".doc", ".exe", ".mp4"]
+
+        for format_ext in invalid_formats:
+            result = self.image_loader.is_supported_format(f"test_file{format_ext}")
+            self.assertFalse(result, f"Format {format_ext} should not be supported")
+
+    def test_load_image_with_valid_file(self):
+        """有効な画像ファイルの読み込みテスト"""
+        # テスト用の画像ファイルパス
+        test_image_path = os.path.join(self.test_dir, "test_image.jpg")
+
+        # モックのPIL Image
+        mock_image = MagicMock()
+        mock_image.size = (800, 600)
+        mock_image.mode = "RGB"
+
+        with patch("PIL.Image.open") as mock_pil_open:
+            mock_pil_open.return_value = mock_image
+
+            # 画像を読み込み
+            result = self.image_loader.load_image(test_image_path)
+
+            # 結果を検証
+            self.assertIsNotNone(result)
+            mock_pil_open.assert_called_once_with(test_image_path)
+
+    def test_load_image_with_invalid_file(self):
+        """無効な画像ファイルの読み込みテスト"""
+        # 存在しないファイルパス
+        invalid_path = os.path.join(self.test_dir, "nonexistent.jpg")
+
+        with patch("PIL.Image.open") as mock_pil_open:
+            mock_pil_open.side_effect = FileNotFoundError("File not found")
+
+            # 画像を読み込み
+            result = self.image_loader.load_image(invalid_path)
+
+            # 結果を検証
+            self.assertIsNone(result)
+
+    def test_load_image_with_corrupted_file(self):
+        """破損した画像ファイルの読み込みテスト"""
+        # テスト用の画像ファイルパス
+        test_image_path = os.path.join(self.test_dir, "corrupted_image.jpg")
+
+        with patch("PIL.Image.open") as mock_pil_open:
+            mock_pil_open.side_effect = Exception("Corrupted image file")
+
+            # 画像を読み込み
+            result = self.image_loader.load_image(test_image_path)
+
+            # 結果を検証
+            self.assertIsNone(result)
+
+    def test_resize_image(self):
+        """画像リサイズテスト"""
+        # モックのPIL Image
+        mock_image = MagicMock()
+        mock_image.size = (800, 600)
+
+        # リサイズ後のモック画像
+        mock_resized_image = MagicMock()
+        mock_resized_image.size = (400, 300)
+
+        with patch.object(mock_image, "resize") as mock_resize:
+            mock_resize.return_value = mock_resized_image
+
+            # 画像をリサイズ
+            result = self.image_loader.resize_image(mock_image, (400, 300))
+
+            # 結果を検証
+            self.assertIsNotNone(result)
+            mock_resize.assert_called_once_with((400, 300))
+
+    def test_convert_to_qpixmap(self):
+        """QPixmap変換テスト"""
+        # モックのPIL Image
+        mock_image = MagicMock()
+        mock_image.size = (800, 600)
+        mock_image.mode = "RGB"
+
+        # モックのQPixmap
+        mock_qpixmap = MagicMock()
+
+        with patch("PyQt6.QtGui.QPixmap.fromImage") as mock_from_image:
+            mock_from_image.return_value = mock_qpixmap
+
+            with patch("PyQt6.QtGui.QImage") as mock_qimage:
+                mock_qimage_instance = MagicMock()
+                mock_qimage.return_value = mock_qimage_instance
+
+                # QPixmapに変換
+                result = self.image_loader.convert_to_qpixmap(mock_image)
+
+                # 結果を検証
+                self.assertIsNotNone(result)
+                mock_qimage.assert_called_once()
+
+    def test_get_image_info(self):
+        """画像情報取得テスト"""
+        # モックのPIL Image
+        mock_image = MagicMock()
+        mock_image.size = (800, 600)
+        mock_image.mode = "RGB"
+        mock_image.format = "JPEG"
+
+        # 画像情報を取得
+        result = self.image_loader.get_image_info(mock_image)
+
+        # 結果を検証
+        self.assertIsNotNone(result)
+        self.assertEqual(result["width"], 800)
+        self.assertEqual(result["height"], 600)
+        self.assertEqual(result["mode"], "RGB")
+        self.assertEqual(result["format"], "JPEG")
+
+    def test_load_images_from_directory(self):
+        """ディレクトリからの画像読み込みテスト"""
+        # テスト用の画像ファイルを作成
+        test_files = [
+            "image1.jpg",
+            "image2.png",
+            "image3.bmp",
+            "document.txt",  # 画像以外のファイル
+            "image4.gif",
+        ]
+
+        for filename in test_files:
+            file_path = os.path.join(self.test_dir, filename)
+            with open(file_path, "w") as f:
+                f.write("test content")
+
+        # モックのPIL Image
+        mock_image = MagicMock()
+        mock_image.size = (800, 600)
+        mock_image.mode = "RGB"
+
+        with patch("PIL.Image.open") as mock_pil_open:
+            mock_pil_open.return_value = mock_image
+
+            # ディレクトリから画像を読み込み
+            result = self.image_loader.load_images_from_directory(self.test_dir)
+
+            # 結果を検証（画像ファイルのみが読み込まれる）
+            self.assertIsNotNone(result)
+            self.assertEqual(len(result), 4)  # 画像ファイル4つ
+
+            # 画像ファイル名を確認
+            image_names = [os.path.basename(path) for path in result]
+            self.assertIn("image1.jpg", image_names)
+            self.assertIn("image2.png", image_names)
+            self.assertIn("image3.bmp", image_names)
+            self.assertIn("image4.gif", image_names)
+            self.assertNotIn("document.txt", image_names)
+
+    def test_load_images_from_empty_directory(self):
+        """空のディレクトリからの画像読み込みテスト"""
+        # 空のディレクトリ
+        empty_dir = os.path.join(self.test_dir, "empty")
+        os.makedirs(empty_dir, exist_ok=True)
+
+        # ディレクトリから画像を読み込み
+        result = self.image_loader.load_images_from_directory(empty_dir)
+
+        # 結果を検証
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result), 0)
+
+    def test_load_images_from_nonexistent_directory(self):
+        """存在しないディレクトリからの画像読み込みテスト"""
+        # 存在しないディレクトリ
+        nonexistent_dir = os.path.join(self.test_dir, "nonexistent")
+
+        # ディレクトリから画像を読み込み
+        result = self.image_loader.load_images_from_directory(nonexistent_dir)
+
+        # 結果を検証
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result), 0)
+
+    def test_validate_image_file(self):
+        """画像ファイル検証テスト"""
+        # 有効な画像ファイルパス
+        valid_path = os.path.join(self.test_dir, "valid_image.jpg")
+
+        # モックのPIL Image
+        mock_image = MagicMock()
+        mock_image.size = (800, 600)
+        mock_image.mode = "RGB"
+
+        with patch("PIL.Image.open") as mock_pil_open:
+            mock_pil_open.return_value = mock_image
+
+            # 画像ファイルを検証
+            result = self.image_loader.validate_image_file(valid_path)
+
+            # 結果を検証
+            self.assertTrue(result)
+
+    def test_validate_image_file_invalid(self):
+        """無効な画像ファイル検証テスト"""
+        # 無効なファイルパス
+        invalid_path = os.path.join(self.test_dir, "invalid_image.jpg")
+
+        with patch("PIL.Image.open") as mock_pil_open:
+            mock_pil_open.side_effect = Exception("Invalid image")
+
+            # 画像ファイルを検証
+            result = self.image_loader.validate_image_file(invalid_path)
+
+            # 結果を検証
+            self.assertFalse(result)
+
+
+if __name__ == "__main__":
+    unittest.main()

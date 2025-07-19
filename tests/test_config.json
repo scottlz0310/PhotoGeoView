@@ -1,0 +1,44 @@
+{
+    "logging": {
+        "level": "DEBUG",
+        "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "level": "INFO",
+                "formatter": "default"
+            },
+            "file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "level": "DEBUG",
+                "filename": "logs/test.log",
+                "maxBytes": 10485760,
+                "backupCount": 5,
+                "formatter": "default"
+            }
+        },
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+            }
+        }
+    },
+    "ui": {
+        "theme_manager": {
+            "current_theme": "dark"
+        },
+        "window": {
+            "width": 1200,
+            "height": 800,
+            "x": 100,
+            "y": 100
+        }
+    },
+    "cache": {
+        "thumbnail_dir": "cache/thumbnails",
+        "max_size": 104857600
+    },
+    "paths": {
+        "last_directory": "/tmp"
+    }
+}
