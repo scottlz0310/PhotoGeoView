@@ -19,6 +19,7 @@ from src.ui.theme_manager import ThemeManager
 from src.modules.file_browser import FileBrowser
 from src.modules.thumbnail_view import ThumbnailView
 from src.modules.exif_info import ExifInfoPanel
+from src.modules.image_viewer import ImageViewer
 
 logger = get_logger(__name__)
 
@@ -285,39 +286,17 @@ class MainWindow(QMainWindow):
         return panel
 
     def create_image_panel(self) -> QFrame:
-        """Create the image display panel"""
+        """Create the image display panel with ImageViewer"""
         panel = QFrame()
         panel.setFrameStyle(QFrame.Shape.StyledPanel)
         panel.setMinimumHeight(200)
 
         layout = QVBoxLayout(panel)
-        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setContentsMargins(0, 0, 0, 0)  # No margins for full widget usage
 
-        # Panel header with maximize button
-        header = QHBoxLayout()
-        title_label = QLabel("🖼️ Image Viewer")
-        title_label.setStyleSheet("font-weight: bold;")
-
-        maximize_btn = QPushButton("⛶")
-        maximize_btn.setMaximumSize(30, 30)
-        maximize_btn.setToolTip("Maximize image panel")
-        maximize_btn.clicked.connect(lambda: self.toggle_panel_maximize('image'))
-
-        header.addWidget(title_label)
-        header.addStretch()
-        header.addWidget(maximize_btn)
-        layout.addLayout(header)
-
-        # Image display area placeholder
-        image_area = QLabel("🖼️ Image Preview\n\n(Select an image to display)")
-        image_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        image_area.setMinimumHeight(200)
-        image_area.setStyleSheet("border: 2px dashed gray; color: gray; background-color: #fafafa;")
-        layout.addWidget(image_area)
-
-        # Store references
-        self.image_maximize_btn = maximize_btn
-        self.image_area = image_area
+        # Create the image viewer
+        self.image_viewer = ImageViewer()
+        layout.addWidget(self.image_viewer)
 
         return panel
 
@@ -794,16 +773,12 @@ class MainWindow(QMainWindow):
                         self.left_panel.hide()
                     if self.map_panel:
                         self.map_panel.hide()
-                    self.image_maximize_btn.setText("⛷")
-                    self.image_maximize_btn.setToolTip("Restore image panel")
                 else:
                     # Restore normal view
                     if self.left_panel:
                         self.left_panel.show()
                     if self.map_panel:
                         self.map_panel.show()
-                    self.image_maximize_btn.setText("⛶")
-                    self.image_maximize_btn.setToolTip("Maximize image panel")
 
             elif panel_type == 'map':
                 is_maximized = self.settings.ui.map_panel_maximized
@@ -889,6 +864,10 @@ class MainWindow(QMainWindow):
             self.thumbnail_view.image_selected.connect(self.on_image_selected_handler)
             self.thumbnail_view.image_double_clicked.connect(self.on_image_double_clicked_handler)
 
+            # Image viewer connections
+            self.image_viewer.fullscreen_requested.connect(self.on_fullscreen_requested)
+            self.image_viewer.image_changed.connect(self.on_image_viewer_changed)
+
             self.logger.debug("Widget connections established")
 
         except Exception as e:
@@ -917,6 +896,20 @@ class MainWindow(QMainWindow):
             # Update EXIF panel
             self.exif_panel.load_file_info(file_path)
 
+            # If it's an image file, load it in the image viewer
+            if self.is_image_file(file_path):
+                # Get all images in current folder for navigation
+                image_files = self.file_browser.get_image_files_in_current_path()
+
+                # Find the index of the selected file
+                try:
+                    current_index = image_files.index(file_path)
+                except ValueError:
+                    current_index = 0
+
+                # Set the image list with correct index
+                self.image_viewer.set_image_list(image_files, current_index)
+
             # Update status
             self.update_status(f"Selected: {Path(file_path).name}")
 
@@ -931,6 +924,18 @@ class MainWindow(QMainWindow):
             # Update EXIF panel
             self.exif_panel.load_file_info(file_path)
 
+            # Load image in viewer
+            image_files = self.file_browser.get_image_files_in_current_path()
+
+            # Find the index of the selected file
+            try:
+                current_index = image_files.index(file_path)
+            except ValueError:
+                current_index = 0
+
+            # Set the image list with correct index
+            self.image_viewer.set_image_list(image_files, current_index)
+
             # Update status
             self.update_status(f"Selected: {Path(file_path).name}")
 
@@ -942,10 +947,52 @@ class MainWindow(QMainWindow):
     def on_image_double_clicked_handler(self, file_path: str) -> None:
         """Handle image double-click from thumbnail view"""
         try:
-            # TODO: Open image in main viewer
-            self.update_status(f"Opening: {Path(file_path).name}")
+            # Open image in viewer with fullscreen
+            image_files = self.file_browser.get_image_files_in_current_path()
 
+            # Find the index of the selected file
+            try:
+                current_index = image_files.index(file_path)
+            except ValueError:
+                current_index = 0
+
+            # Set the image list with correct index
+            self.image_viewer.set_image_list(image_files, current_index)
+
+            # Trigger fullscreen mode
+            self.on_fullscreen_requested()
+
+            self.update_status(f"Opening: {Path(file_path).name}")
             self.logger.info(f"Image double-clicked: {file_path}")
 
         except Exception as e:
             self.logger.error(f"Error handling image double-click: {e}")
+
+    def on_fullscreen_requested(self) -> None:
+        """Handle fullscreen request from image viewer"""
+        try:
+            self.toggle_panel_maximize('image')
+            self.logger.debug("Fullscreen requested")
+        except Exception as e:
+            self.logger.error(f"Error handling fullscreen request: {e}")
+
+    def on_image_viewer_changed(self, image_path: str) -> None:
+        """Handle image change in viewer (from navigation)"""
+        try:
+            # Update EXIF panel
+            self.exif_panel.load_file_info(image_path)
+
+            # Update status
+            self.update_status(f"Viewing: {Path(image_path).name}")
+
+            self.logger.debug(f"Image viewer changed to: {image_path}")
+        except Exception as e:
+            self.logger.error(f"Error handling image viewer change: {e}")
+
+    def is_image_file(self, file_path: str) -> bool:
+        """Check if the file is a supported image file"""
+        try:
+            image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.gif'}
+            return Path(file_path).suffix.lower() in image_extensions
+        except Exception:
+            return False

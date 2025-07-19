@@ -13,21 +13,7 @@
         "theme_manager_enabled": true,
         "selected_themes": [
             "dark_blue.xml",
-            "dark_cyan.xml",
-            "dark_lightgreen.xml",
-            "dark_orange.xml",
-            "dark_pink.xml",
-            "dark_purple.xml",
-            "dark_red.xml",
-            "dark_teal.xml",
-            "light_blue.xml",
-            "light_cyan.xml",
-            "light_cyan_500.xml",
-            "light_lightgreen.xml",
-            "light_orange.xml",
-            "light_pink.xml",
-            "light_purple.xml",
-            "light_red.xml"
+            "light_blue.xml"
         ],
         "theme_toggle_index": 0,
         "show_thumbnails": true,
