@@ -12,8 +12,8 @@
             "x": 1917,
             "y": -30,
             "maximized": false,
-            "left_panel_width": 478,
-            "right_panel_width": 700
+            "left_panel_width": 477,
+            "right_panel_width": 699
         },
         "panels": {
             "left_panel_width": 300,
@@ -21,7 +21,7 @@
             "thumbnail_size": 101
         },
         "theme_manager": {
-            "current_theme": "light",
+            "current_theme": "dark",
             "available_themes": [
                 "dark",
                 "light",
@@ -43,7 +43,7 @@
         }
     },
     "paths": {
-        "last_directory": "/home/hiro/Projects/photomap-explorer/assets",
+        "last_directory": "/home/hiro/Projects/photomap-explorer/test_images",
         "thumbnail_cache": "cache/thumbnails",
         "logs": "logs"
     },

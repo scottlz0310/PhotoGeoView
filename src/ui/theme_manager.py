@@ -149,11 +149,8 @@ class ThemeManager(QObject):
             # qt-theme-managerのインポート
             from theme_manager.qt.controller import ThemeController
 
-            # カスタム設定ファイルのパス
-            config_path = "config/theme_config.json"
-
-            # Qt-Theme-Managerを初期化（カスタム設定ファイルを使用）
-            self.qt_theme_manager = ThemeController(config_path)
+            # テストスクリプトと同じ方法で初期化（デフォルト設定を使用）
+            self.qt_theme_manager = ThemeController()
             self.logger.info("Qt-Theme-Managerを初期化しました")
 
         except ImportError as e:
@@ -198,10 +195,19 @@ class ThemeManager(QObject):
         try:
             if self.qt_theme_manager is not None:
                 # Qt-Theme-Managerを使用してテーマを適用
-                self.qt_theme_manager.set_theme(theme_name)
-                self.logger.info(
-                    f"Qt-Theme-Managerでテーマを適用しました: {theme_name}"
-                )
+                success = self.qt_theme_manager.set_theme(theme_name)
+                if success:
+                    # アプリケーション全体にテーマを適用
+                    self.qt_theme_manager.apply_theme_to_application()
+                    self.logger.info(
+                        f"Qt-Theme-Managerでテーマを適用しました: {theme_name}"
+                    )
+                else:
+                    # テーマ適用に失敗した場合はフォールバックを使用
+                    self._apply_fallback_theme(theme_name)
+                    self.logger.warning(
+                        f"Qt-Theme-Managerでのテーマ適用に失敗、フォールバックを使用: {theme_name}"
+                    )
             else:
                 # フォールバック: スタイルシートでテーマを適用
                 self._apply_fallback_theme(theme_name)
@@ -695,6 +701,8 @@ class ThemeManager(QObject):
             self.logger.error(f"テーマの循環切り替えに失敗しました: {e}")
             return self.current_theme
 
+
+
     def set_theme_for_widget(self, widget: QWidget, theme_name: str) -> bool:
         """
         特定のウィジェットにテーマを適用
@@ -708,11 +716,16 @@ class ThemeManager(QObject):
         """
         try:
             if self.qt_theme_manager is not None:
-                # Qt-Theme-Managerを使用してウィジェットにテーマを適用
-                self.qt_theme_manager.set_theme_for_widget(widget, theme_name)
-                return True
+                # 正しいメソッド名を使用
+                success = self.qt_theme_manager.apply_theme_to_widget(widget)
+                if not success:
+                    # テーマを一時的に設定してからウィジェットに適用
+                    self.qt_theme_manager.set_theme(theme_name, save_settings=False)
+                    success = self.qt_theme_manager.apply_theme_to_widget(widget)
+                return success
             else:
-                # フォールバック: スタイルシートでテーマを適用
+                # フォールバック: 現在のアプリケーションスタイルを適用
+                # (個別ウィジェットへの適用は制限的)
                 self._apply_fallback_theme(theme_name)
                 return True
 

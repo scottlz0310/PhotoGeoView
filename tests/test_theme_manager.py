@@ -18,6 +18,9 @@ sys.path.insert(0, str(project_root))
 from src.ui.theme_manager import ThemeManager
 from src.core.logger import get_logger
 
+from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from theme_manager.qt.controller import ThemeController
+
 
 class TestThemeManager(unittest.TestCase):
     """ThemeManagerのテストクラス"""
@@ -322,5 +325,37 @@ class TestThemeManager(unittest.TestCase):
                 )
 
 
+def main():
+    app = QApplication(sys.argv)
+    window = QMainWindow()
+    window.setWindowTitle("Qt-Theme-Manager テスト")
+
+    # テーマコントローラー初期化
+    controller = ThemeController()
+    themes = controller.get_available_themes()
+    print("利用可能なテーマ一覧:", list(themes.keys()))
+
+    # テーマを順番に適用して表示
+    central = QWidget()
+    layout = QVBoxLayout(central)
+    label = QLabel(
+        "テーマ切替テスト\n（ターミナルでtheme_nameを書き換えて再実行してください）"
+    )
+    layout.addWidget(label)
+    window.setCentralWidget(central)
+
+    # 例: "dark"テーマを適用
+    theme_name = "dark"
+    if theme_name in themes:
+        controller.set_theme(theme_name)
+        controller.apply_theme_to_application(app)
+        print(f"テーマ '{theme_name}' を適用しました")
+    else:
+        print(f"テーマ '{theme_name}' は利用できません")
+
+    window.show()
+    sys.exit(app.exec())
+
+
 if __name__ == "__main__":
-    unittest.main()
+    main()

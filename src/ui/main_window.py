@@ -263,8 +263,9 @@ class MainWindow(QMainWindow):
         # 表示メニュー
         view_menu = menubar.addMenu("表示(&V)")
 
+        # テーマメニュー（Pending - 将来の実装予定）
         theme_menu = view_menu.addMenu("テーマ(&T)")
-        # テーマメニューは後で動的に追加
+        # TODO: テーマ設定機能は将来の実装予定
 
         # ヘルプメニュー
         help_menu = menubar.addMenu("ヘルプ(&H)")
@@ -306,8 +307,6 @@ class MainWindow(QMainWindow):
         self.theme_button.setChecked(True)  # デフォルトでダークテーマ
         self.theme_button.setToolTip("テーマ切り替え（ダーク/ライト）")
         self.theme_button.clicked.connect(self._toggle_theme)
-        self.theme_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.theme_button.customContextMenuRequested.connect(self._show_theme_menu)
         toolbar.addWidget(self.theme_button)
 
     def _init_layout(self) -> None:
@@ -478,77 +477,6 @@ class MainWindow(QMainWindow):
                 self.logger.info(f"テーマを切り替えました: {new_theme}")
         except Exception as e:
             self.logger.error(f"テーマの切り替えに失敗しました: {e}")
-
-    def _show_theme_menu(self, position) -> None:
-        """テーマ選択メニューを表示"""
-        try:
-            if hasattr(self, "theme_manager"):
-                menu = QMenu(self)
-
-                # カテゴリ別にテーマをグループ化
-                categories = {
-                    "基本": ["dark", "light"],
-                    "カラー": [
-                        "blue",
-                        "green",
-                        "purple",
-                        "orange",
-                        "red",
-                        "pink",
-                        "yellow",
-                        "cyan",
-                        "teal",
-                        "indigo",
-                        "lime",
-                        "amber",
-                    ],
-                    "ニュートラル": ["brown", "gray"],
-                }
-
-                for category_name, theme_names in categories.items():
-                    if (
-                        category_name != "基本"
-                    ):  # 基本以外のカテゴリにはセパレータを追加
-                        menu.addSeparator()
-
-                    # カテゴリヘッダー
-                    category_action = QAction(category_name, self)
-                    category_action.setEnabled(False)
-                    category_action.setFont(QFont("Arial", 9, QFont.Weight.Bold))
-                    menu.addAction(category_action)
-
-                    # テーマアクション
-                    for theme_name in theme_names:
-                        theme_info = self.theme_manager.get_theme_info(theme_name)
-                        display_name = theme_info.get(
-                            "display_name", theme_name.title()
-                        )
-
-                        action = QAction(display_name, self)
-                        action.setData(theme_name)
-
-                        # 現在のテーマにチェックマーク
-                        if theme_name == self.theme_manager.get_current_theme():
-                            action.setCheckable(True)
-                            action.setChecked(True)
-
-                        action.triggered.connect(
-                            lambda checked, tn=theme_name: self._select_theme(tn)
-                        )
-                        menu.addAction(action)
-
-                menu.exec(self.theme_button.mapToGlobal(position))
-        except Exception as e:
-            self.logger.error(f"テーマメニューの表示に失敗しました: {e}")
-
-    def _select_theme(self, theme_name: str) -> None:
-        """テーマを選択"""
-        try:
-            if hasattr(self, "theme_manager"):
-                self.theme_manager.apply_theme(theme_name)
-                self.logger.info(f"テーマを選択しました: {theme_name}")
-        except Exception as e:
-            self.logger.error(f"テーマの選択に失敗しました: {e}")
 
     def _on_theme_changed(self, theme_name: str) -> None:
         """テーマ変更時の処理"""
