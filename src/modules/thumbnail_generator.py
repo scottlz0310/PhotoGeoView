@@ -255,8 +255,11 @@ class ThumbnailGenerator(QObject):
             )
 
             # 生成中のファイルリストを更新
-            with self.mutex:
+            self.mutex.lock()
+            try:
                 self._generating_files = file_paths.copy()
+            finally:
+                self.mutex.unlock()
 
             total_files = len(file_paths)
             generated_count = 0
@@ -286,8 +289,11 @@ class ThumbnailGenerator(QObject):
                     self.error_occurred.emit(file_path, str(e))
 
             # 生成完了
-            with self.mutex:
+            self.mutex.lock()
+            try:
                 self._generating_files.clear()
+            finally:
+                self.mutex.unlock()
 
             self.generation_finished.emit()
             self.logger.info("非同期サムネイル生成が完了しました")

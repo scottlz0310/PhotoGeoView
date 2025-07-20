@@ -231,6 +231,7 @@ class FolderNavigator(QWidget):
 
             # シグナルを発信
             self.directory_changed.emit(normalized_path)
+            self.directory_selected.emit(normalized_path)
 
             return True
 

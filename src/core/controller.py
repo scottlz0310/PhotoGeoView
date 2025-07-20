@@ -41,6 +41,7 @@ class PhotoGeoViewController(QObject):
         """PhotoGeoViewControllerの初期化"""
         super().__init__()
         self.logger = get_logger(__name__)
+        self.logger.info("controller.py 実行確認")
         self.settings = get_settings()
         self.mutex = QMutex()
 
@@ -109,6 +110,7 @@ class PhotoGeoViewController(QObject):
             self.logger.error(f"シグナル・スロット接続の初期化に失敗しました: {e}")
 
     def load_directory(self, directory_path: str) -> bool:
+        self.logger.info(f"load_directory呼び出し: {directory_path}")
         """
         ディレクトリを読み込み
 
@@ -167,6 +169,7 @@ class PhotoGeoViewController(QObject):
             return False
 
     def _find_image_files(self, directory_path: str) -> List[str]:
+        self.logger.info(f"_find_image_files呼び出し: {directory_path}")
         """
         ディレクトリ内の画像ファイルを検索
 
@@ -192,7 +195,9 @@ class PhotoGeoViewController(QObject):
             # 重複を除去してソート
             image_files = sorted(list(set(image_files)))
 
-            self.logger.debug(f"画像ファイルを {len(image_files)} 個見つけました")
+            self.logger.info(
+                f"画像ファイルを {len(image_files)} 個見つけました: {image_files}"
+            )
             return image_files
 
         except Exception as e:
@@ -200,6 +205,7 @@ class PhotoGeoViewController(QObject):
             return []
 
     def _generate_thumbnails(self, image_files: List[str]) -> None:
+        self.logger.info(f"_generate_thumbnails呼び出し: {len(image_files)}ファイル")
         """
         サムネイルを生成
 

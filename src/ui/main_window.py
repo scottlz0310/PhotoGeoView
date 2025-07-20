@@ -681,7 +681,7 @@ class MainWindow(QMainWindow):
 
     def _update_address_bar(self, directory: str) -> None:
         """アドレスバーの更新"""
-        self.folder_navigator.set_current_directory(directory)
+        self.folder_navigator.set_directory(directory)
 
     def _update_info_panel(self, data: dict) -> None:
         """詳細情報パネルの更新"""

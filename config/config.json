@@ -43,7 +43,7 @@
         }
     },
     "paths": {
-        "last_directory": "/home/hiro/Projects/photomap-explorer/test_images",
+        "last_directory": "/home/hiro/Samples",
         "thumbnail_cache": "cache/thumbnails",
         "logs": "logs"
     },
