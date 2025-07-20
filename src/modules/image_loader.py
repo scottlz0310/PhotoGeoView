@@ -182,8 +182,11 @@ class ImageLoader(QObject):
             self.logger.info(f"非同期で画像を読み込み開始: {len(file_paths)} ファイル")
 
             # 読み込み中のファイルリストを更新
-            with self.mutex:
+            self.mutex.lock()
+            try:
                 self._loading_files = file_paths.copy()
+            finally:
+                self.mutex.unlock()
 
             total_files = len(file_paths)
             loaded_count = 0
@@ -211,8 +214,11 @@ class ImageLoader(QObject):
                     self.error_occurred.emit(file_path, str(e))
 
             # 読み込み完了
-            with self.mutex:
+            self.mutex.lock()
+            try:
                 self._loading_files.clear()
+            finally:
+                self.mutex.unlock()
 
             self.loading_finished.emit()
             self.logger.info("非同期画像読み込みが完了しました")
@@ -302,9 +308,12 @@ class ImageLoader(QObject):
 
     def clear_cache(self) -> None:
         """キャッシュをクリア"""
-        with self.mutex:
+        self.mutex.lock()
+        try:
             self._loaded_images.clear()
             self._loaded_thumbnails.clear()
+        finally:
+            self.mutex.unlock()
         self.logger.info("画像キャッシュをクリアしました")
 
     def get_cache_size(self) -> int:
@@ -323,13 +332,19 @@ class ImageLoader(QObject):
         Returns:
             読み込み中の場合はTrue
         """
-        with self.mutex:
+        self.mutex.lock()
+        try:
             return len(self._loading_files) > 0
+        finally:
+            self.mutex.unlock()
 
     def cancel_loading(self) -> None:
         """読み込みをキャンセル"""
-        with self.mutex:
+        self.mutex.lock()
+        try:
             self._loading_files.clear()
+        finally:
+            self.mutex.unlock()
         self.logger.info("画像読み込みをキャンセルしました")
 
     def __del__(self):

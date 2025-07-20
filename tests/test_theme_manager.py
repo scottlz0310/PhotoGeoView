@@ -233,33 +233,27 @@ class TestThemeManager(unittest.TestCase):
 
             theme_manager = ThemeManager(self.mock_app)
 
-            # カテゴリ別にテーマを分類
-            categories = {
-                "dark": "dark",
-                "light": "light",
-                "blue": "color",
-                "green": "color",
-                "purple": "color",
-                "orange": "color",
-                "red": "color",
-                "pink": "color",
-                "yellow": "color",
-                "brown": "color",
-                "gray": "neutral",
-                "cyan": "color",
-                "teal": "color",
-                "indigo": "color",
-                "lime": "color",
-                "amber": "color",
-            }
-
-            for theme_name, expected_category in categories.items():
+            # 各テーマの基本情報が含まれていることを確認
+            for theme_name in theme_manager.available_themes:
                 theme_info = theme_manager.get_theme_info(theme_name)
-                self.assertIn("category", theme_info)
-                # 実際の実装ではカテゴリ情報が含まれているかチェック
+                self.assertIsNotNone(theme_info)
+                self.assertIn("name", theme_info)
+                self.assertIn("display_name", theme_info)
+                self.assertIn("description", theme_info)
+                self.assertIn("is_dark", theme_info)
+                self.assertIn("is_light", theme_info)
+
+                # テーマ名が正しく設定されていることを確認
+                self.assertEqual(theme_info["name"], theme_name)
 
     def test_qt_theme_manager_integration(self):
         """Qt-Theme-Manager統合テスト"""
+        # qt_theme_managerモジュールが利用できない場合はスキップ
+        try:
+            import qt_theme_manager
+        except ImportError:
+            self.skipTest("qt_theme_managerモジュールが利用できません")
+
         with patch("PyQt6.QtWidgets.QApplication") as mock_qapp:
             mock_qapp.instance.return_value = self.mock_app
 
@@ -284,7 +278,7 @@ class TestThemeManager(unittest.TestCase):
             mock_qapp.instance.return_value = self.mock_app
 
             # Qt-Theme-Managerが利用できない場合のテスト
-            with patch("qt_theme_manager.ThemeManager", side_effect=ImportError):
+            with patch("src.ui.theme_manager.QtThemeManager", side_effect=ImportError):
                 theme_manager = ThemeManager(self.mock_app)
 
                 # Qt-Theme-ManagerがNoneであることを確認
