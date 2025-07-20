@@ -3,7 +3,8 @@
 Qt-Theme-Managerを使用した16種類のテーマ対応
 """
 
-from typing import List, Dict
+import sys
+from typing import List, Optional, Dict, Any
 
 from PyQt6.QtWidgets import QWidget, QApplication
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -198,7 +199,7 @@ class ThemeManager(QObject):
         try:
             if self.qt_theme_manager is not None:
                 # Qt-Theme-Managerを使用してテーマを適用
-                self.qt_theme_manager.set_theme(theme_name)
+                self.qt_theme_manager.apply_theme(theme_name)
                 self.logger.info(
                     f"Qt-Theme-Managerでテーマを適用しました: {theme_name}"
                 )
@@ -673,27 +674,22 @@ class ThemeManager(QObject):
         if theme_name in theme_styles:
             self.app.setStyleSheet(theme_styles[theme_name])
         else:
-            # デフォルトはライトテーマ
-            self.app.setStyleSheet(theme_styles["light"])
+            # デフォルトはダークテーマ
+            self.app.setStyleSheet(theme_styles["dark"])
 
     def cycle_theme(self) -> str:
         """
-        テーマを循環切り替え
+        次のテーマに切り替え
 
         Returns:
             新しいテーマ名
         """
-        try:
-            current_index = self.available_themes.index(self.current_theme)
-            next_index = (current_index + 1) % len(self.available_themes)
-            new_theme = self.available_themes[next_index]
+        current_index = self.available_themes.index(self.current_theme)
+        next_index = (current_index + 1) % len(self.available_themes)
+        next_theme = self.available_themes[next_index]
 
-            self.apply_theme(new_theme)
-            return new_theme
-
-        except Exception as e:
-            self.logger.error(f"テーマの循環切り替えに失敗しました: {e}")
-            return self.current_theme
+        self.apply_theme(next_theme)
+        return next_theme
 
     def set_theme_for_widget(self, widget: QWidget, theme_name: str) -> bool:
         """
@@ -708,19 +704,21 @@ class ThemeManager(QObject):
         """
         try:
             if self.qt_theme_manager is not None:
-                # Qt-Theme-Managerを使用してウィジェットにテーマを適用
-                self.qt_theme_manager.set_theme_for_widget(widget, theme_name)
+                # Qt-Theme-Managerを使用してウィジェット固有のテーマを適用
+                self.qt_theme_manager.apply_theme_to_widget(widget, theme_name)
+                self.logger.debug(f"ウィジェットにテーマを適用しました: {theme_name}")
                 return True
             else:
-                # フォールバック: スタイルシートでテーマを適用
-                self._apply_fallback_theme(theme_name)
-                return True
+                self.logger.warning(
+                    "Qt-Theme-Managerが利用できないため、ウィジェット固有のテーマ適用をスキップしました"
+                )
+                return False
 
         except Exception as e:
             self.logger.error(f"ウィジェットへのテーマ適用に失敗しました: {e}")
             return False
 
-    def get_theme_info(self, theme_name: str) -> Dict[str, str]:
+    def get_theme_info(self, theme_name: str) -> dict:
         """
         テーマ情報を取得
 
@@ -730,14 +728,32 @@ class ThemeManager(QObject):
         Returns:
             テーマ情報辞書
         """
-        if theme_name in self.theme_info:
-            return self.theme_info[theme_name].copy()
-        else:
-            return {
-                "display_name": theme_name.title(),
-                "description": f"{theme_name}テーマ",
-                "category": "unknown",
-            }
+        if theme_name not in self.available_themes:
+            return {}
+
+        # テーマの基本情報
+        theme_info = {
+            "name": theme_name,
+            "display_name": self._get_theme_display_name(theme_name),
+            "description": self._get_theme_description(theme_name),
+            "is_dark": theme_name
+            in [
+                "dark",
+                "blue",
+                "green",
+                "purple",
+                "red",
+                "pink",
+                "brown",
+                "gray",
+                "cyan",
+                "teal",
+                "indigo",
+            ],
+            "is_light": theme_name in ["light", "yellow", "lime", "amber"],
+        }
+
+        return theme_info
 
     def _get_theme_display_name(self, theme_name: str) -> str:
         """
@@ -749,10 +765,25 @@ class ThemeManager(QObject):
         Returns:
             表示名
         """
-        if theme_name in self.theme_info:
-            return self.theme_info[theme_name]["display_name"]
-        else:
-            return theme_name.title()
+        display_names = {
+            "dark": "ダーク",
+            "light": "ライト",
+            "blue": "ブルー",
+            "green": "グリーン",
+            "purple": "パープル",
+            "orange": "オレンジ",
+            "red": "レッド",
+            "pink": "ピンク",
+            "yellow": "イエロー",
+            "brown": "ブラウン",
+            "gray": "グレー",
+            "cyan": "シアン",
+            "teal": "ティール",
+            "indigo": "インディゴ",
+            "lime": "ライム",
+            "amber": "アンバー",
+        }
+        return display_names.get(theme_name, theme_name.title())
 
     def _get_theme_description(self, theme_name: str) -> str:
         """
@@ -764,7 +795,22 @@ class ThemeManager(QObject):
         Returns:
             説明文
         """
-        if theme_name in self.theme_info:
-            return self.theme_info[theme_name]["description"]
-        else:
-            return f"{theme_name}テーマ"
+        descriptions = {
+            "dark": "ダークテーマ - 目に優しい暗い背景",
+            "light": "ライトテーマ - 明るく清潔な背景",
+            "blue": "ブルーテーマ - 落ち着いた青系の配色",
+            "green": "グリーンテーマ - 自然を感じる緑系の配色",
+            "purple": "パープルテーマ - 高級感のある紫系の配色",
+            "orange": "オレンジテーマ - 温かみのあるオレンジ系の配色",
+            "red": "レッドテーマ - 情熱的な赤系の配色",
+            "pink": "ピンクテーマ - 可愛らしいピンク系の配色",
+            "yellow": "イエローテーマ - 明るい黄色系の配色",
+            "brown": "ブラウンテーマ - 落ち着いた茶色系の配色",
+            "gray": "グレーテーマ - モノトーンのグレー系の配色",
+            "cyan": "シアンテーマ - 爽やかな水色系の配色",
+            "teal": "ティールテーマ - 深みのある青緑系の配色",
+            "indigo": "インディゴテーマ - 神秘的な藍色系の配色",
+            "lime": "ライムテーマ - 鮮やかな黄緑系の配色",
+            "amber": "アンバーテーマ - 温かみのある琥珀色系の配色",
+        }
+        return descriptions.get(theme_name, f"{theme_name.title()}テーマ")

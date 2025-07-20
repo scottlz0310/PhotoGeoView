@@ -130,9 +130,14 @@ class MainWindow(QMainWindow):
         self.up_button = QPushButton("↑")
         self.up_button.setToolTip("上位フォルダ")
 
-        # テーマ切り替えボタン
-        self.theme_button = QPushButton("テーマ")
-        self.theme_button.setToolTip("テーマ切り替え（右クリックで選択）")
+        # テーマ切り替えボタン（トグルボタン）
+        self.theme_button = QPushButton("ダーク")
+        self.theme_button.setCheckable(True)
+        self.theme_button.setChecked(True)  # デフォルトでダークテーマ
+        self.theme_button.setToolTip("テーマ切り替え（ダーク/ライト）")
+        self.theme_button.clicked.connect(self._toggle_theme)
+        self.theme_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.theme_button.customContextMenuRequested.connect(self._show_theme_menu)
 
         # ヘッダーレイアウトに追加
         self.header_layout.addWidget(self.address_label)
@@ -293,6 +298,18 @@ class MainWindow(QMainWindow):
         up_action.triggered.connect(self._go_up)
         toolbar.addAction(up_action)
 
+        toolbar.addSeparator()
+
+        # テーマ切り替えボタン（トグルボタン）
+        self.theme_button = QPushButton("ダーク")
+        self.theme_button.setCheckable(True)
+        self.theme_button.setChecked(True)  # デフォルトでダークテーマ
+        self.theme_button.setToolTip("テーマ切り替え（ダーク/ライト）")
+        self.theme_button.clicked.connect(self._toggle_theme)
+        self.theme_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.theme_button.customContextMenuRequested.connect(self._show_theme_menu)
+        toolbar.addWidget(self.theme_button)
+
     def _init_layout(self) -> None:
         """レイアウトの初期化"""
         # メインレイアウトにスプリッターを追加
@@ -310,10 +327,11 @@ class MainWindow(QMainWindow):
 
         # サムネイルグリッドとコントローラーの接続
         self.thumbnail_grid.image_selected.connect(self.controller.select_image)
-        self.thumbnail_grid.image_double_clicked.connect(self._show_image_fullscreen)
+        self.thumbnail_grid.image_double_clicked.connect(self._toggle_image_fullscreen)
 
         # コントローラーとUIコンポーネントの接続
         self.controller.images_loaded.connect(self.thumbnail_grid.load_images)
+        self.controller.thumbnail_loaded.connect(self.thumbnail_grid.add_thumbnail)
         self.controller.image_selected.connect(self._update_info_panel)
         self.controller.exif_parsed.connect(self._update_info_panel)
         self.controller.map_marker_added.connect(self._update_status)
@@ -396,7 +414,7 @@ class MainWindow(QMainWindow):
 
             if folder_path:
                 self.settings.set_last_directory(folder_path)
-                self.folder_navigator.set_current_directory(folder_path)
+                self.folder_navigator.set_directory(folder_path)
                 self.directory_changed.emit(folder_path)
                 self.logger.info(f"フォルダを開きました: {folder_path}")
 
@@ -430,6 +448,27 @@ class MainWindow(QMainWindow):
                 self.folder_navigator._go_up()
         except Exception as e:
             self.logger.error(f"上位フォルダ移動に失敗しました: {e}")
+
+    def _toggle_theme(self) -> None:
+        """テーマをトグル切り替え（ダーク/ライト）"""
+        try:
+            if hasattr(self, "theme_manager"):
+                current_theme = self.theme_manager.get_current_theme()
+                new_theme = "light" if current_theme == "dark" else "dark"
+
+                # テーマを適用
+                self.theme_manager.apply_theme(new_theme)
+
+                # ボタンテキストを更新
+                self.theme_button.setText(
+                    "ライト" if new_theme == "light" else "ダーク"
+                )
+
+                self.logger.info(
+                    f"テーマを切り替えました: {current_theme} → {new_theme}"
+                )
+        except Exception as e:
+            self.logger.error(f"テーマの切り替えに失敗しました: {e}")
 
     def _cycle_theme(self) -> None:
         """テーマを切り替え"""
@@ -765,10 +804,6 @@ class MainWindow(QMainWindow):
         """エラーメッセージの表示"""
         self.status_bar.showMessage(f"エラー: {error_message}")
         QMessageBox.warning(self, "エラー", error_message)
-
-    def _show_image_fullscreen(self, image_path: str) -> None:
-        """画像の全画面表示"""
-        self._toggle_image_fullscreen()
 
     def _show_about(self) -> None:
         """バージョン情報を表示"""
