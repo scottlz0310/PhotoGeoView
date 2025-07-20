@@ -18,7 +18,7 @@
         "panels": {
             "left_panel_width": 300,
             "right_panel_width": 400,
-            "thumbnail_size": 120
+            "thumbnail_size": 101
         },
         "theme_manager": {
             "current_theme": "light",

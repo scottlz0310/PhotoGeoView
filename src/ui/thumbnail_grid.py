@@ -76,6 +76,9 @@ class ThumbnailGrid(QWidget):
         self._init_scroll_area()
         layout.addWidget(self.scroll_area, 1)
 
+        # コンテキストメニューを有効化
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+
     def _init_toolbar(self) -> None:
         """ツールバーの初期化"""
         self.toolbar_layout = QHBoxLayout()
@@ -134,6 +137,9 @@ class ThumbnailGrid(QWidget):
 
         # ボタン接続
         self.clear_button.clicked.connect(self.clear_selection)
+
+        # コンテキストメニュー接続
+        self.customContextMenuRequested.connect(self._show_context_menu)
 
     def set_image_files(self, image_files: List[str]) -> None:
         """
@@ -513,6 +519,71 @@ class ThumbnailGrid(QWidget):
 
         except Exception as e:
             self.logger.error(f"サイズ変更の処理に失敗しました: {e}")
+
+    def _show_context_menu(self, position) -> None:
+        """
+        コンテキストメニューを表示
+
+        Args:
+            position: メニュー表示位置
+        """
+        try:
+            from PyQt6.QtWidgets import QMenu, QAction
+
+            menu = QMenu(self)
+
+            # サムネイルサイズ変更サブメニュー
+            size_menu = QMenu("サムネイルサイズ", menu)
+            menu.addMenu(size_menu)
+
+            # サイズオプション
+            size_options = [60, 80, 100, 120, 140, 160, 180, 200]
+            for size in size_options:
+                action = QAction(f"{size}px", self)
+                action.setCheckable(True)
+                action.setChecked(size == self._thumbnail_size)
+                action.triggered.connect(
+                    lambda checked, s=size: self._set_thumbnail_size(s)
+                )
+                size_menu.addAction(action)
+
+            menu.addSeparator()
+
+            # その他のオプション
+            refresh_action = QAction("更新", self)
+            refresh_action.triggered.connect(self._update_grid)
+            menu.addAction(refresh_action)
+
+            clear_action = QAction("選択をクリア", self)
+            clear_action.triggered.connect(self.clear_selection)
+            menu.addAction(clear_action)
+
+            # メニューを表示
+            menu.exec(self.mapToGlobal(position))
+
+        except Exception as e:
+            self.logger.error(f"コンテキストメニューの表示に失敗しました: {e}")
+
+    def _set_thumbnail_size(self, size: int) -> None:
+        """
+        サムネイルサイズを設定
+
+        Args:
+            size: 新しいサイズ
+        """
+        try:
+            self._thumbnail_size = size
+            self.size_slider.setValue(size)
+            self.size_value_label.setText(f"{size}px")
+
+            # グリッドを再構築
+            self._update_grid()
+
+            # 設定を保存
+            self.settings.set("ui.panels.thumbnail_size", size)
+
+        except Exception as e:
+            self.logger.error(f"サムネイルサイズの設定に失敗しました: {e}")
 
     def resizeEvent(self, event) -> None:
         """リサイズイベント"""

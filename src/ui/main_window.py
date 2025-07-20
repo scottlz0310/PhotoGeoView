@@ -407,17 +407,29 @@ class MainWindow(QMainWindow):
     def _go_back(self) -> None:
         """戻る"""
         self.logger.debug("戻るボタンがクリックされました")
-        # TODO: 履歴機能の実装
+        try:
+            if hasattr(self, "folder_navigator"):
+                self.folder_navigator._go_back()
+        except Exception as e:
+            self.logger.error(f"戻る操作に失敗しました: {e}")
 
     def _go_forward(self) -> None:
         """進む"""
         self.logger.debug("進むボタンがクリックされました")
-        # TODO: 履歴機能の実装
+        try:
+            if hasattr(self, "folder_navigator"):
+                self.folder_navigator._go_forward()
+        except Exception as e:
+            self.logger.error(f"進む操作に失敗しました: {e}")
 
     def _go_up(self) -> None:
         """上位フォルダ"""
         self.logger.debug("上位フォルダボタンがクリックされました")
-        # TODO: 上位フォルダ移動機能の実装
+        try:
+            if hasattr(self, "folder_navigator"):
+                self.folder_navigator._go_up()
+        except Exception as e:
+            self.logger.error(f"上位フォルダ移動に失敗しました: {e}")
 
     def _cycle_theme(self) -> None:
         """テーマを切り替え"""
@@ -502,7 +514,21 @@ class MainWindow(QMainWindow):
     def _on_theme_changed(self, theme_name: str) -> None:
         """テーマ変更時の処理"""
         self.logger.debug(f"テーマが変更されました: {theme_name}")
-        # TODO: テーマ変更時の追加処理
+        try:
+            # ウィンドウタイトルを更新
+            self.setWindowTitle(f"PhotoGeoView - {theme_name.title()}")
+
+            # ステータスバーにメッセージを表示
+            self.status_bar.showMessage(
+                f"テーマを {theme_name.title()} に変更しました", 2000
+            )
+
+            # 設定を保存
+            if hasattr(self, "settings"):
+                self.settings.set("ui.theme_manager.current_theme", theme_name)
+
+        except Exception as e:
+            self.logger.error(f"テーマ変更時の処理に失敗しました: {e}")
 
     def _toggle_image_fullscreen(self) -> None:
         """画像パネルの全画面切り替え"""
