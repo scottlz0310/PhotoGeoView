@@ -278,7 +278,14 @@ class TestThemeManager(unittest.TestCase):
             mock_qapp.instance.return_value = self.mock_app
 
             # Qt-Theme-Managerが利用できない場合のテスト
-            with patch("src.ui.theme_manager.QtThemeManager", side_effect=ImportError):
+            with patch("builtins.__import__") as mock_import:
+                # qt_theme_managerのインポート時にImportErrorを発生させる
+                def side_effect(name, *args, **kwargs):
+                    if name == "qt_theme_manager":
+                        raise ImportError("No module named 'qt_theme_manager'")
+                    return __import__(name, *args, **kwargs)
+
+                mock_import.side_effect = side_effect
                 theme_manager = ThemeManager(self.mock_app)
 
                 # Qt-Theme-ManagerがNoneであることを確認
