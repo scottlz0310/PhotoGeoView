@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, QMutex
-from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtGui import QPixmap, QImage, QImageReader
 
 from src.core.logger import get_logger
 from src.core.utils import is_image_file, get_supported_image_extensions
@@ -280,19 +280,27 @@ class ImageLoader(QObject):
             if not is_image_file(file_path):
                 return {}
 
-            with Image.open(file_path) as img:
-                info = {
-                    "file_path": file_path,
-                    "file_name": Path(file_path).name,
-                    "file_size": os.path.getsize(file_path),
-                    "width": img.width,
-                    "height": img.height,
-                    "format": img.format,
-                    "mode": img.mode,
-                    "dpi": img.info.get("dpi", (None, None)),
-                }
+            # QImageReaderを使用して画像情報を取得
+            reader = QImageReader(file_path)
+            if not reader.canRead():
+                self.logger.error(f"画像ファイルを読み込めません: {file_path}")
+                return {}
 
-                return info
+            size = reader.size()
+            format_name = reader.format().data().decode('utf-8')
+            
+            info = {
+                "file_path": file_path,
+                "file_name": Path(file_path).name,
+                "file_size": os.path.getsize(file_path),
+                "width": size.width(),
+                "height": size.height(),
+                "format": format_name.upper(),
+                "mode": "RGB",  # PyQt6では詳細なカラーモードは取得できないためデフォルト
+                "dpi": (None, None),  # PyQt6では簡単にDPI情報は取得できない
+            }
+
+            return info
 
         except Exception as e:
             self.logger.error(f"画像情報の取得に失敗しました: {file_path}, エラー: {e}")

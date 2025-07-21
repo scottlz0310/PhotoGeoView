@@ -10,7 +10,7 @@ from typing import Optional, Dict, List
 from concurrent.futures import ThreadPoolExecutor
 
 from PyQt6.QtCore import QObject, pyqtSignal, QMutex, Qt
-from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtGui import QPixmap
 
 from src.core.logger import get_logger
 from src.core.utils import is_image_file, ensure_directory_exists, get_cache_directory
@@ -175,20 +175,15 @@ class ThumbnailGenerator(QObject):
             保存成功の場合True
         """
         try:
-            # QPixmapをQImageに変換
-            qimage = pixmap.toImage()
-
-            # QImageをPIL Imageに変換
-            buffer = qimage.bits().asstring(qimage.sizeInBytes())
-            pil_image = Image.frombytes(
-                "RGB", (qimage.width(), qimage.height()), buffer
-            )
-
-            # キャッシュに保存
-            pil_image.save(cache_path, quality=quality, optimize=True)
-
-            self.logger.debug(f"サムネイルをキャッシュに保存しました: {cache_path}")
-            return True
+            # QPixmapを直接JPEGファイルとして保存
+            success = pixmap.save(cache_path, "JPEG", quality)
+            
+            if success:
+                self.logger.debug(f"サムネイルをキャッシュに保存しました: {cache_path}")
+                return True
+            else:
+                self.logger.error(f"サムネイルの保存に失敗しました: {cache_path}")
+                return False
 
         except Exception as e:
             self.logger.error(
@@ -207,20 +202,14 @@ class ThumbnailGenerator(QObject):
             読み込まれたサムネイルのQPixmap
         """
         try:
-            with Image.open(cache_path) as img:
-                # QImageに変換
-                qimage = QImage(
-                    img.tobytes(),
-                    img.width,
-                    img.height,
-                    img.width * 3,
-                    QImage.Format.Format_RGB888,
-                )
-
-                # QPixmapに変換
-                pixmap = QPixmap.fromImage(qimage)
-
-                return pixmap
+            # QPixmapを直接ファイルから読み込み
+            pixmap = QPixmap(cache_path)
+            
+            if pixmap.isNull():
+                self.logger.error(f"キャッシュファイルの読み込みに失敗しました: {cache_path}")
+                return None
+            
+            return pixmap
 
         except Exception as e:
             self.logger.error(

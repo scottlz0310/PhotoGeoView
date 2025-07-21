@@ -83,19 +83,32 @@ class SystemTest(unittest.TestCase):
                 shutil.copy2(sample_path, dest_path)
                 cls.logger.info(f"テスト画像を作成: {dest_path}")
             else:
-                # 実際のJPEG画像を作成（PILを使用）
+                # PyQt6を使用してテスト画像を作成
                 try:
-                    from PIL import Image
-                    import numpy as np
+                    from PyQt6.QtGui import QImage, QPixmap, QPainter, QColor
+                    from PyQt6.QtCore import QSize
 
                     # 100x100のテスト画像を作成
-                    img_array = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-                    img = Image.fromarray(img_array)
+                    image = QImage(QSize(100, 100), QImage.Format.Format_RGB888)
+                    image.fill(QColor(128, 128, 128))  # グレーで塗りつぶし
+                    
                     dest_path = test_images_dir / f"test_image_{i+1}.jpg"
-                    img.save(dest_path, "JPEG", quality=90)
-                    cls.logger.info(f"テスト画像を作成: {dest_path}")
+                    success = image.save(str(dest_path), "JPEG", 90)
+                    
+                    if success:
+                        cls.logger.info(f"テスト画像を作成: {dest_path}")
+                    else:
+                        cls.logger.warning(f"テスト画像の作成に失敗: {dest_path}")
+                        # フォールバック: ダミーファイルを作成
+                        dest_path = test_images_dir / f"test_image_{i+1}.jpg"
+                        with open(dest_path, "wb") as f:
+                            # 最小限のJPEGヘッダーを作成
+                            f.write(b'\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00')
+                            f.write(b'\x00' * 1000)  # パディング
+                        cls.logger.info(f"ダミーテスト画像を作成: {dest_path}")
+                        
                 except ImportError:
-                    # PILが利用できない場合はダミーファイルを作成
+                    # PyQt6が利用できない場合はダミーファイルを作成
                     dest_path = test_images_dir / f"test_image_{i+1}.jpg"
                     with open(dest_path, "wb") as f:
                         f.write(b"\xff\xd8\xff\xe0")  # JPEGヘッダー

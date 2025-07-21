@@ -132,28 +132,26 @@ class TestImageLoader(unittest.TestCase):
         # 存在しないファイルパス
         invalid_path = os.path.join(self.test_dir, "nonexistent.jpg")
 
-        with patch("PIL.Image.open") as mock_pil_open:
-            mock_pil_open.side_effect = FileNotFoundError("File not found")
+        # 画像を読み込み
+        result = self.image_loader.load_image(invalid_path)
 
-            # 画像を読み込み
-            result = self.image_loader.load_image(invalid_path)
-
-            # 結果を検証
-            self.assertIsNone(result)
+        # 結果を検証（ファイルが存在しないのでNone）
+        self.assertIsNone(result)
 
     def test_load_image_with_corrupted_file(self):
         """破損した画像ファイルの読み込みテスト"""
         # テスト用の画像ファイルパス
         test_image_path = os.path.join(self.test_dir, "corrupted_image.jpg")
+        
+        # 破損したファイル（実際にはテキスト）を作成
+        with open(test_image_path, "w") as f:
+            f.write("これは画像ファイルではありません")
 
-        with patch("PIL.Image.open") as mock_pil_open:
-            mock_pil_open.side_effect = Exception("Corrupted image file")
+        # 画像を読み込み
+        result = self.image_loader.load_image(test_image_path)
 
-            # 画像を読み込み
-            result = self.image_loader.load_image(test_image_path)
-
-            # 結果を検証
-            self.assertIsNone(result)
+        # 結果を検証（破損ファイルなのでNone）
+        self.assertIsNone(result)
 
     def test_load_image_with_size(self):
         """サイズ指定での画像読み込みテスト"""
@@ -210,16 +208,16 @@ class TestImageLoader(unittest.TestCase):
         with open(test_image_path, "w") as f:
             f.write("test content")
 
-        # モックのPIL Image
-        mock_image = MagicMock()
-        mock_image.width = 800
-        mock_image.height = 600
-        mock_image.format = "JPEG"
-        mock_image.mode = "RGB"
-        mock_image.info = {"dpi": (72, 72)}
+        # モックのQImageReaderとQSize
+        from PyQt6.QtCore import QSize
+        
+        mock_reader = MagicMock()
+        mock_reader.canRead.return_value = True
+        mock_reader.size.return_value = QSize(800, 600)
+        mock_reader.format.return_value.data.return_value.decode.return_value = "jpeg"
 
-        with patch("PIL.Image.open") as mock_pil_open:
-            mock_pil_open.return_value.__enter__.return_value = mock_image
+        with patch("src.modules.image_loader.QImageReader") as mock_reader_class:
+            mock_reader_class.return_value = mock_reader
 
             # 画像情報を取得
             result = self.image_loader.get_image_info(test_image_path)
