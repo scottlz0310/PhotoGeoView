@@ -241,8 +241,15 @@ class PyQt6ImageDebugger(QMainWindow):
 
             # オリジナル画像を表示
             pixmap = QPixmap.fromImage(image)
+
+            # ラベルのサイズからマージンを引く
+            label_size = self.original_label.size()
+            margins = self.original_label.contentsMargins()
+            available_width = label_size.width() - margins.left() - margins.right()
+            available_height = label_size.height() - margins.top() - margins.bottom()
+
             scaled = pixmap.scaled(
-                self.original_label.size() - self.original_label.contentsMargins(),
+                available_width, available_height,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
             )
