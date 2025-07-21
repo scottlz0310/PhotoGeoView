@@ -8,12 +8,10 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
     QPushButton,
     QSlider,
-    QFrame,
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import Qt, pyqtSignal, QRect
 from PyQt6.QtGui import (
     QPixmap,
     QPainter,
@@ -22,9 +20,82 @@ from PyQt6.QtGui import (
     QMouseEvent,
     QWheelEvent,
     QKeyEvent,
+    QPaintEvent,
+    QResizeEvent,
 )
 
 from src.core.logger import get_logger
+
+
+# --- 新規: 画像表示専用ウィジェット ---
+class ImageCanvas(QWidget):
+    """画像表示・操作専用キャンバス"""
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self._pixmap: Optional[QPixmap] = None
+        self._zoom_factor: float = 1.0
+        self._pan_offset: Tuple[int, int] = (0, 0)
+        self._show_grid: bool = False
+        self.setMinimumSize(200, 200)
+        self.setStyleSheet("border: 1px solid #ccc; background: #f0f0f0;")
+        self.logger = get_logger(__name__)
+
+    def set_image(self, pixmap: Optional[QPixmap]):
+        self.logger.debug(
+            f"[ImageCanvas.set_image] pixmap is None: {pixmap is None}, isNull: {getattr(pixmap, 'isNull', lambda: 'N/A')() if pixmap is not None else 'N/A'}"
+        )
+        self._pixmap = pixmap
+        self.update()
+
+    def set_zoom(self, factor: float):
+        self._zoom_factor = factor
+        self.update()
+
+    def set_pan(self, offset: Tuple[int, int]):
+        self._pan_offset = offset
+        self.update()
+
+    def set_show_grid(self, enabled: bool):
+        self._show_grid = enabled
+        self.update()
+
+    def paintEvent(self, event: QPaintEvent | None) -> None:
+        self.logger.debug(
+            f"[ImageCanvas.paintEvent] called. pixmap is None: {self._pixmap is None}, isNull: {getattr(self._pixmap, 'isNull', lambda: 'N/A')() if self._pixmap is not None else 'N/A'}"
+        )
+        painter = QPainter(self)
+        rect: QRect = self.rect()
+        if self._pixmap is None or self._pixmap.isNull():
+            painter.setPen(Qt.GlobalColor.gray)
+            painter.setFont(self.font())
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, "No Image")
+            return
+        # ズーム・パンを適用して画像を描画
+        pixmap = self._pixmap
+        w = int(pixmap.width() * self._zoom_factor)
+        h = int(pixmap.height() * self._zoom_factor)
+        scaled = pixmap.scaled(
+            w,
+            h,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        x = (rect.width() - scaled.width()) // 2 + self._pan_offset[0]
+        y = (rect.height() - scaled.height()) // 2 + self._pan_offset[1]
+        painter.drawPixmap(x, y, scaled)
+        # グリッド描画
+        if self._show_grid:
+            self._draw_grid(painter, rect)
+        painter.end()
+
+    def _draw_grid(self, painter: QPainter, rect: QRect):
+        painter.setPen(QPen(QColor(180, 180, 180), 1, Qt.PenStyle.DotLine))
+        step = 50
+        for x in range(rect.left(), rect.right(), step):
+            painter.drawLine(x, rect.top(), x, rect.bottom())
+        for y in range(rect.top(), rect.bottom(), step):
+            painter.drawLine(rect.left(), y, rect.right(), y)
 
 
 class ImageViewer(QWidget):
@@ -34,7 +105,7 @@ class ImageViewer(QWidget):
     image_changed = pyqtSignal(str)  # 画像変更時に発信
     zoom_changed = pyqtSignal(float)  # ズーム変更時に発信
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: Optional[QWidget] = None):
         """
         ImageViewerの初期化
 
@@ -43,6 +114,9 @@ class ImageViewer(QWidget):
         """
         super().__init__(parent)
         self.logger = get_logger(__name__)
+
+        # ImageCanvasを生成
+        self.canvas = ImageCanvas(self)
 
         # 画像データ
         self._original_pixmap: Optional[QPixmap] = None
@@ -79,10 +153,8 @@ class ImageViewer(QWidget):
         # ツールバー
         self._init_toolbar()
         layout.addLayout(self.toolbar_layout)
-
         # 画像表示エリア
-        self._init_image_area()
-        layout.addWidget(self.image_frame, 1)
+        layout.addWidget(self.canvas, 1)
 
     def _init_toolbar(self) -> None:
         """ツールバーの初期化"""
@@ -130,26 +202,6 @@ class ImageViewer(QWidget):
         self.toolbar_layout.addWidget(self.grid_button)
         self.toolbar_layout.addWidget(self.reset_button)
 
-    def _init_image_area(self) -> None:
-        """画像表示エリアの初期化"""
-        self.image_frame = QFrame()
-        self.image_frame.setFrameStyle(QFrame.Shape.StyledPanel)
-        self.image_frame.setStyleSheet("background-color: #f0f0f0;")
-
-        # 画像ラベル
-        self.image_label = QLabel("画像を選択してください")
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setMinimumSize(200, 200)
-        self.image_label.setStyleSheet("border: 1px solid #ccc;")
-
-        # マウスイベントを有効化
-        self.image_label.setMouseTracking(True)
-        self.image_label.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-
-        # レイアウト
-        image_layout = QVBoxLayout(self.image_frame)
-        image_layout.addWidget(self.image_label)
-
     def _init_connections(self) -> None:
         """シグナル・スロット接続の初期化"""
         # ボタン接続
@@ -178,12 +230,13 @@ class ImageViewer(QWidget):
                 self.logger.warning("画像データが提供されていません")
                 return False
 
+            self.logger.debug(
+                f"[ImageViewer.load_image] file_path={file_path}, pixmap is None: {pixmap is None}, isNull: {getattr(pixmap, 'isNull', lambda: 'N/A')() if pixmap is not None else 'N/A'}"
+            )
             self._original_pixmap = pixmap
             self._current_file_path = file_path
-
-            # 表示をリセット
+            self.canvas.set_image(pixmap)
             self.reset_view()
-
             self.logger.debug(f"画像を読み込みました: {file_path}")
             self.image_changed.emit(file_path)
             return True
@@ -200,12 +253,10 @@ class ImageViewer(QWidget):
             factor: ズーム率
         """
         factor = max(self._min_zoom, min(self._max_zoom, factor))
-
         if abs(self._zoom_factor - factor) > 0.01:
             self._zoom_factor = factor
-            self._update_display()
+            self.canvas.set_zoom(factor)
             self.zoom_changed.emit(factor)
-
             # スライダーを更新
             self.zoom_slider.blockSignals(True)
             self.zoom_slider.setValue(int(factor * 100))
@@ -240,15 +291,17 @@ class ImageViewer(QWidget):
             enabled: 有効にする場合True
         """
         self._show_grid = enabled
-        self._update_display()
+        self.canvas.set_show_grid(enabled)
 
     def reset_view(self) -> None:
         """表示をリセット"""
+        self.logger.debug(f"[ImageViewer.reset_view] set_image(None)")
         self._zoom_factor = 1.0
         self._pan_offset = (0, 0)
         self._fit_to_window = True
         self.fit_button.setChecked(True)
-        self._update_display()
+        self.canvas.set_zoom(self._zoom_factor)
+        self.canvas.set_pan(self._pan_offset)
 
     def _on_zoom_slider_changed(self, value: int) -> None:
         """
@@ -266,7 +319,7 @@ class ImageViewer(QWidget):
             return
 
         # ウィンドウサイズを取得
-        window_size = self.image_label.size()
+        window_size = self.size()
 
         # 画像サイズを取得
         image_size = self._original_pixmap.size()
@@ -299,7 +352,7 @@ class ImageViewer(QWidget):
             # パンオフセットを適用
             if self._current_pixmap:
                 # パンオフセットを計算
-                label_size = self.image_label.size()
+                label_size = self.size()
                 image_size = self._current_pixmap.size()
 
                 # 画像がラベルより小さい場合は中央に配置
@@ -319,35 +372,43 @@ class ImageViewer(QWidget):
                 )
 
             # 表示を更新
-            self.image_label.update()
+            self.update()
 
         except Exception as e:
             self.logger.error(f"表示の更新に失敗しました: {e}")
 
-    def paintEvent(self, event) -> None:
-        """描画イベント"""
-        super().paintEvent(event)
+    def paintEvent(self, a0: QPaintEvent | None) -> None:
+        """
+        描画イベント
+        """
+        super().paintEvent(a0)
+        painter = QPainter(self)
+        rect: QRect = self.rect()
 
-        if not self._current_pixmap:
+        if self._original_pixmap is None:
+            # 画像がない場合は中央に『No Image』と表示
+            painter.setPen(Qt.GlobalColor.gray)
+            painter.setFont(self.font())
+            text = "No Image"
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
             return
 
         # ペインターを作成
-        painter = QPainter(self.image_label)
+        painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
 
-        # 画像を描画
-        label_rect = self.image_label.rect()
-        image_rect = self._current_pixmap.rect()
-
-        # パンオフセットを適用
-        draw_x = (label_rect.width() - image_rect.width()) // 2 + self._pan_offset[0]
-        draw_y = (label_rect.height() - image_rect.height()) // 2 + self._pan_offset[1]
-
-        painter.drawPixmap(draw_x, draw_y, self._current_pixmap)
+        # 画像がある場合のみ描画（安全性強化）
+        if (
+            self._current_pixmap is not None
+            and not self._current_pixmap.isNull()
+            and rect.width() > 0
+            and rect.height() > 0
+        ):
+            painter.drawPixmap(rect, self._current_pixmap)
 
         # グリッドを描画
         if self._show_grid:
-            self._draw_grid(painter, label_rect)
+            self._draw_grid(painter, rect)
 
         painter.end()
 
@@ -369,64 +430,64 @@ class ImageViewer(QWidget):
         for y in range(0, rect.height(), 50):
             painter.drawLine(0, y, rect.width(), y)
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:
+    def mousePressEvent(self, a0: QMouseEvent | None) -> None:
         """マウスプレスイベント"""
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._pan_start = (int(event.position().x()), int(event.position().y()))
+        if a0 and a0.button() == Qt.MouseButton.LeftButton:
+            self._pan_start = (int(a0.position().x()), int(a0.position().y()))
             self._is_panning = True
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
 
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+    def mouseReleaseEvent(self, a0: QMouseEvent | None) -> None:
         """マウスリリースイベント"""
-        if event.button() == Qt.MouseButton.LeftButton:
+        if a0 and a0.button() == Qt.MouseButton.LeftButton:
             self._pan_start = None
             self._is_panning = False
             self.setCursor(Qt.CursorShape.ArrowCursor)
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    def mouseMoveEvent(self, a0: QMouseEvent | None) -> None:
         """マウス移動イベント"""
-        if self._is_panning and self._pan_start:
-            dx = int(event.position().x()) - self._pan_start[0]
-            dy = int(event.position().y()) - self._pan_start[1]
+        if self._is_panning and self._pan_start and a0:
+            dx = int(a0.position().x()) - self._pan_start[0]
+            dy = int(a0.position().y()) - self._pan_start[1]
 
             self._pan_offset = (self._pan_offset[0] + dx, self._pan_offset[1] + dy)
 
-            self._pan_start = (int(event.position().x()), int(event.position().y()))
+            self._pan_start = (int(a0.position().x()), int(a0.position().y()))
             self._update_display()
 
-    def wheelEvent(self, event: QWheelEvent) -> None:
+    def wheelEvent(self, a0: QWheelEvent | None) -> None:
         """ホイールイベント"""
         # Ctrlキーを押しながらホイールでズーム
-        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
-            delta = event.angleDelta().y()
+        if a0 and a0.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            delta = a0.angleDelta().y()
             if delta > 0:
                 self.zoom_in()
             else:
                 self.zoom_out()
-        else:
+        elif a0:
             # 通常のホイールでパン
-            delta = event.angleDelta().y()
+            delta = a0.angleDelta().y()
             self._pan_offset = (self._pan_offset[0], self._pan_offset[1] - delta // 8)
             self._update_display()
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
+    def keyPressEvent(self, a0: QKeyEvent | None) -> None:
         """キープレスイベント"""
-        if event.key() == Qt.Key.Key_Plus or event.key() == Qt.Key.Key_Equal:
+        if a0 and (a0.key() == Qt.Key.Key_Plus or a0.key() == Qt.Key.Key_Equal):
             self.zoom_in()
-        elif event.key() == Qt.Key.Key_Minus:
+        elif a0 and a0.key() == Qt.Key.Key_Minus:
             self.zoom_out()
-        elif event.key() == Qt.Key.Key_0:
+        elif a0 and a0.key() == Qt.Key.Key_0:
             self.reset_view()
-        elif event.key() == Qt.Key.Key_F:
+        elif a0 and a0.key() == Qt.Key.Key_F:
             self.fit_button.toggle()
-        elif event.key() == Qt.Key.Key_G:
+        elif a0 and a0.key() == Qt.Key.Key_G:
             self.grid_button.toggle()
         else:
-            super().keyPressEvent(event)
+            super().keyPressEvent(a0)
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, a0: QResizeEvent | None) -> None:
         """リサイズイベント"""
-        super().resizeEvent(event)
+        super().resizeEvent(a0)
         if self._fit_to_window:
             self._fit_image_to_window()
 

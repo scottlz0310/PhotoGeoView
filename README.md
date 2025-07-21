@@ -64,7 +64,6 @@ python main.py
 ```
 PyQt6>=6.4.0
 PyQt6-WebEngine>=6.4.0
-Pillow>=9.0.0
 exifread>=3.0.0
 folium>=0.14.0
 qt-theme-manager>=0.1.0
@@ -168,7 +167,6 @@ python -m pytest tests/
 
 - [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUIフレームワーク
 - [Folium](https://python-visualization.github.io/folium/) - 地図表示ライブラリ
-- [Pillow](https://python-pillow.org/) - 画像処理ライブラリ
 - [exifread](https://github.com/ianare/exif-py) - EXIF情報読み込みライブラリ
 
 ## 📞 サポート

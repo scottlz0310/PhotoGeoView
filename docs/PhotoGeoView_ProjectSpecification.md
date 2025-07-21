@@ -33,7 +33,7 @@
 ### 技術スタック
 - **PyQt6**: GUIフレームワーク
 - **PyQtWebEngine + Folium**: Leaflet.jsベースの地図表示
-- **exifread + Pillow**: EXIF情報取得・画像メタデータ処理
+- **exifread** : EXIF情報取得
 - **Qt-Theme-Manager**: 16種類のテーマ管理
 
 ### アーキテクチャ設計
@@ -183,7 +183,6 @@ PhotoGeoView のメインウィンドウは以下の4つの主要エリアで構
 # requirements.txt
 PyQt6>=6.4.0
 PyQt6-WebEngine>=6.4.0
-Pillow>=9.0.0
 exifread>=3.0.0
 folium>=0.14.0
 qt-theme-manager>=0.1.0

@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from PIL import Image, UnidentifiedImageError
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, QMutex
 from PyQt6.QtGui import QPixmap, QImage
 
@@ -95,37 +94,30 @@ class ImageLoader(QObject):
                 self.logger.debug(f"キャッシュから画像を取得: {file_path}")
                 return self._loaded_images[cache_key]
 
-            # PILで画像を読み込み
-            with Image.open(file_path) as img:
-                # 画像をRGBに変換
-                if img.mode in ("RGBA", "LA", "P"):
-                    img = img.convert("RGB")
+            pixmap = QPixmap(file_path)
+            if pixmap.isNull():
+                # 読み込み失敗時の処理
+                self.logger.error(f"画像の読み込みに失敗しました: {file_path}")
+                self.error_occurred.emit(file_path, "画像の読み込みに失敗しました")
+                return None
 
-                # リサイズ
-                if size:
-                    img.thumbnail(size, Image.Resampling.LANCZOS)
+            # 画像をRGBに変換
+            if pixmap.format() in ("RGBA", "LA", "P"):
+                pixmap = pixmap.convert("RGB")
 
-                # QImageに変換
-                qimage = QImage(
-                    img.tobytes(),
-                    img.width,
-                    img.height,
-                    img.width * 3,
-                    QImage.Format.Format_RGB888,
-                )
+            # リサイズ
+            if size:
+                pixmap = pixmap.scaled(size, Qt.AspectRatioMode.KeepAspectRatio)
 
-                # QPixmapに変換
-                pixmap = QPixmap.fromImage(qimage)
+            # QImageに変換
+            qimage = pixmap.toImage()
 
-                # キャッシュに保存
-                self._loaded_images[cache_key] = pixmap
+            # キャッシュに保存
+            self._loaded_images[cache_key] = pixmap
 
-                self.logger.debug(f"画像を読み込みました: {file_path}")
-                return pixmap
+            self.logger.debug(f"画像を読み込みました: {file_path}")
+            return pixmap
 
-        except UnidentifiedImageError:
-            self.logger.error(f"画像形式が認識できません: {file_path}")
-            self.error_occurred.emit(file_path, "画像形式が認識できません")
         except Exception as e:
             self.logger.error(f"画像の読み込みに失敗しました: {file_path}, エラー: {e}")
             self.error_occurred.emit(file_path, str(e))

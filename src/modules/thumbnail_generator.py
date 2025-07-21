@@ -9,8 +9,7 @@ from pathlib import Path
 from typing import Optional, Dict, List
 from concurrent.futures import ThreadPoolExecutor
 
-from PIL import Image, ImageOps
-from PyQt6.QtCore import QObject, pyqtSignal, QMutex
+from PyQt6.QtCore import QObject, pyqtSignal, QMutex, Qt
 from PyQt6.QtGui import QPixmap, QImage
 
 from src.core.logger import get_logger
@@ -76,11 +75,17 @@ class ThumbnailGenerator(QObject):
 
             # サムネイルを生成
             thumbnail = self._create_thumbnail(file_path, size, quality)
-            if thumbnail:
+            if thumbnail is not None and not thumbnail.isNull():
                 # キャッシュに保存
                 self._save_thumbnail_cache(thumbnail, cache_path, quality)
+                self.logger.debug(
+                    f"[generate_thumbnail] emit: file_path={file_path}, isNull={thumbnail.isNull()}"
+                )
                 self.thumbnail_generated.emit(file_path, thumbnail)
-
+            else:
+                self.logger.error(
+                    f"[generate_thumbnail] サムネイル生成失敗または不正: file_path={file_path}, thumbnail is None or isNull"
+                )
             return thumbnail
 
         except Exception as e:
@@ -136,33 +141,18 @@ class ThumbnailGenerator(QObject):
             生成されたサムネイルのQPixmap
         """
         try:
-            with Image.open(file_path) as img:
-                # 画像をRGBに変換
-                if img.mode in ("RGBA", "LA", "P"):
-                    img = img.convert("RGB")
-
-                # アスペクト比を保持してリサイズ
-                img.thumbnail(size, Image.Resampling.LANCZOS)
-
-                # 背景を白で埋める（正方形にする）
-                background = Image.new("RGB", size, (255, 255, 255))
-                offset = ((size[0] - img.width) // 2, (size[1] - img.height) // 2)
-                background.paste(img, offset)
-
-                # QImageに変換
-                qimage = QImage(
-                    background.tobytes(),
-                    background.width,
-                    background.height,
-                    background.width * 3,
-                    QImage.Format.Format_RGB888,
-                )
-
-                # QPixmapに変換
-                pixmap = QPixmap.fromImage(qimage)
-
-                self.logger.debug(f"サムネイルを生成しました: {file_path}")
-                return pixmap
+            pixmap = QPixmap(file_path)
+            if pixmap.isNull():
+                self.logger.error(f"[_create_thumbnail] QPixmap isNull: {file_path}")
+                return None
+            # アスペクト比を維持してリサイズ
+            scaled = pixmap.scaled(
+                size[0],
+                size[1],
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            return scaled
 
         except Exception as e:
             self.logger.error(

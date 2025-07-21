@@ -685,6 +685,26 @@ class MainWindow(QMainWindow):
 
     def _update_info_panel(self, data: dict) -> None:
         """詳細情報パネルの更新"""
+        # デバッグ用: 画像パネルとビューアの状態をログ出力
+        try:
+            panel_visible = (
+                self.image_panel.isVisible() if hasattr(self, "image_panel") else "N/A"
+            )
+            viewer_visible = (
+                self.image_viewer.isVisible()
+                if hasattr(self, "image_viewer")
+                else "N/A"
+            )
+            has_image = (
+                self.image_viewer.has_image()
+                if hasattr(self.image_viewer, "has_image")
+                else "N/A"
+            )
+            self.logger.debug(
+                f"[DEBUG] image_panel.isVisible={panel_visible}, image_viewer.isVisible={viewer_visible}, image_viewer.has_image={has_image}"
+            )
+        except Exception as e:
+            self.logger.error(f"[DEBUG] 画像パネル状態ログ出力失敗: {e}")
         if not data:
             self.info_panel.setText("画像を選択してください")
             return

@@ -18,7 +18,7 @@
         "panels": {
             "left_panel_width": 300,
             "right_panel_width": 400,
-            "thumbnail_size": 101
+            "thumbnail_size": 60
         },
         "theme_manager": {
             "current_theme": "dark",
@@ -43,7 +43,7 @@
         }
     },
     "paths": {
-        "last_directory": "/home/hiro/Samples",
+        "last_directory": "/home/hiro/Projects/photomap-explorer/assets",
         "thumbnail_cache": "cache/thumbnails",
         "logs": "logs"
     },
