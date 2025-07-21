@@ -1,6 +1,25 @@
 # Python キャッシュ
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# キャッシュディレクトリ
+.cache/
+cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# サムネイルキャッシュ
+thumbs.db
+Thumbs.db
+ehthumbs.db
+.thumbnails/
+.thumb/
 
 # 仮想環境
 .vscode/
