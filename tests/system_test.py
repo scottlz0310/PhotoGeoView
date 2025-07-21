@@ -91,10 +91,10 @@ class SystemTest(unittest.TestCase):
                     # 100x100のテスト画像を作成
                     image = QImage(QSize(100, 100), QImage.Format.Format_RGB888)
                     image.fill(QColor(128, 128, 128))  # グレーで塗りつぶし
-                    
+
                     dest_path = test_images_dir / f"test_image_{i+1}.jpg"
                     success = image.save(str(dest_path), "JPEG", 90)
-                    
+
                     if success:
                         cls.logger.info(f"テスト画像を作成: {dest_path}")
                     else:
@@ -106,7 +106,7 @@ class SystemTest(unittest.TestCase):
                             f.write(b'\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00')
                             f.write(b'\x00' * 1000)  # パディング
                         cls.logger.info(f"ダミーテスト画像を作成: {dest_path}")
-                        
+
                 except ImportError:
                     # PyQt6が利用できない場合はダミーファイルを作成
                     dest_path = test_images_dir / f"test_image_{i+1}.jpg"

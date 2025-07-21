@@ -177,7 +177,7 @@ class ThumbnailGenerator(QObject):
         try:
             # QPixmapを直接JPEGファイルとして保存
             success = pixmap.save(cache_path, "JPEG", quality)
-            
+
             if success:
                 self.logger.debug(f"サムネイルをキャッシュに保存しました: {cache_path}")
                 return True
@@ -204,11 +204,11 @@ class ThumbnailGenerator(QObject):
         try:
             # QPixmapを直接ファイルから読み込み
             pixmap = QPixmap(cache_path)
-            
+
             if pixmap.isNull():
                 self.logger.error(f"キャッシュファイルの読み込みに失敗しました: {cache_path}")
                 return None
-            
+
             return pixmap
 
         except Exception as e:

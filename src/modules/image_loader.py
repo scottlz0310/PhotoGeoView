@@ -288,7 +288,7 @@ class ImageLoader(QObject):
 
             size = reader.size()
             format_name = reader.format().data().decode('utf-8')
-            
+
             info = {
                 "file_path": file_path,
                 "file_name": Path(file_path).name,

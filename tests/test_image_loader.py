@@ -142,7 +142,7 @@ class TestImageLoader(unittest.TestCase):
         """破損した画像ファイルの読み込みテスト"""
         # テスト用の画像ファイルパス
         test_image_path = os.path.join(self.test_dir, "corrupted_image.jpg")
-        
+
         # 破損したファイル（実際にはテキスト）を作成
         with open(test_image_path, "w") as f:
             f.write("これは画像ファイルではありません")
@@ -210,7 +210,7 @@ class TestImageLoader(unittest.TestCase):
 
         # モックのQImageReaderとQSize
         from PyQt6.QtCore import QSize
-        
+
         mock_reader = MagicMock()
         mock_reader.canRead.return_value = True
         mock_reader.size.return_value = QSize(800, 600)
