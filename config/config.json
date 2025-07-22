@@ -15,15 +15,15 @@
             "left_panel_width": 610,
             "right_panel_width": 1276,
             "left_splitter_sizes": [
-                336,
-                206,
-                302
+                333,
+                202,
+                300
             ]
         },
         "panels": {
             "left_panel_width": 300,
             "right_panel_width": 400,
-            "thumbnail_size": 200
+            "thumbnail_size": 120
         },
         "theme_manager": {
             "current_theme": "dark",
@@ -48,7 +48,7 @@
         }
     },
     "paths": {
-        "last_directory": "/home/hiro/Repository/PhotoGeoView/tests/test_data/images/with_gps",
+        "last_directory": "/home/hiro/",
         "thumbnail_cache": "cache/thumbnails",
         "logs": "logs"
     },

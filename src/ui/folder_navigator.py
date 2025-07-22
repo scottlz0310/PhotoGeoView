@@ -47,8 +47,11 @@ class FolderNavigator(QWidget):
 
         # 現在のディレクトリ
         self._current_directory: str = ""
+
+        # 履歴管理
         self._directory_history: List[str] = []
         self._history_index: int = -1
+        self._max_history: int = 50  # 履歴の最大保存数
 
         # ナビゲーション状態
         self._is_navigating: bool = False
@@ -68,15 +71,7 @@ class FolderNavigator(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # アドレスバー
-        self._init_address_bar()
-        layout.addWidget(self.address_frame)
-
-        # ナビゲーションボタン
-        self._init_navigation_buttons()
-        layout.addLayout(self.nav_layout)
-
-        # フォルダツリー
+        # フォルダツリーのみを追加（アドレスバーとナビゲーションボタンは削除）
         self._init_folder_tree()
         layout.addWidget(self.folder_tree, 1)
 
@@ -162,13 +157,7 @@ class FolderNavigator(QWidget):
 
     def _init_connections(self) -> None:
         """シグナル・スロット接続の初期化"""
-        # ボタン接続
-        self.folder_button.clicked.connect(self._select_folder)
-        self.back_button.clicked.connect(self._go_back)
-        self.forward_button.clicked.connect(self._go_forward)
-        self.up_button.clicked.connect(self._go_up)
-
-        # フォルダツリー接続
+        # フォルダツリー接続のみ（ボタンは削除済み）
         self.folder_tree.itemClicked.connect(self._on_tree_item_clicked)
         self.folder_tree.itemDoubleClicked.connect(self._on_tree_item_double_clicked)
 
@@ -218,11 +207,13 @@ class FolderNavigator(QWidget):
 
             self.logger.info(f"ディレクトリを設定: {normalized_path}")
 
-            # 履歴に追加
-            self._add_to_history(normalized_path)
-
             # 現在のディレクトリを更新
+            old_directory = self._current_directory
             self._current_directory = normalized_path
+
+            # 履歴に追加（ナビゲーション中でない場合のみ）
+            if old_directory:  # 初回設定時は履歴に追加しない
+                self._add_to_history(old_directory)
 
             # UIを更新
             self._update_address_bar()
@@ -241,61 +232,9 @@ class FolderNavigator(QWidget):
             )
             return False
 
-    def _add_to_history(self, directory_path: str) -> None:
-        """
-        履歴にディレクトリを追加
-
-        Args:
-            directory_path: ディレクトリパス
-        """
-        try:
-            # 現在のインデックス以降の履歴を削除
-            if self._history_index < len(self._directory_history) - 1:
-                self._directory_history = self._directory_history[
-                    : self._history_index + 1
-                ]
-
-            # 新しいディレクトリを追加
-            self._directory_history.append(directory_path)
-            self._history_index = len(self._directory_history) - 1
-
-            # 履歴の最大数を制限
-            max_history = self.settings.get("ui.navigation.max_history", 50)
-            if len(self._directory_history) > max_history:
-                self._directory_history = self._directory_history[-max_history:]
-                self._history_index = len(self._directory_history) - 1
-
-        except Exception as e:
-            self.logger.error(f"履歴の追加に失敗しました: {e}")
-
     def _update_address_bar(self) -> None:
-        """アドレスバーを更新"""
-        try:
-            self.address_bar.setText(self._current_directory)
-
-        except Exception as e:
-            self.logger.error(f"アドレスバーの更新に失敗しました: {e}")
-
-    def _update_navigation_buttons(self) -> None:
-        """ナビゲーションボタンを更新"""
-        try:
-            # 戻るボタン
-            self.back_button.setEnabled(self._history_index > 0)
-
-            # 進むボタン
-            self.forward_button.setEnabled(
-                self._history_index < len(self._directory_history) - 1
-            )
-
-            # 上位フォルダボタン
-            if self._current_directory:
-                parent_dir = str(Path(self._current_directory).parent)
-                self.up_button.setEnabled(parent_dir != self._current_directory)
-            else:
-                self.up_button.setEnabled(False)
-
-        except Exception as e:
-            self.logger.error(f"ナビゲーションボタンの更新に失敗しました: {e}")
+        """アドレスバーを更新（削除済みのため何もしない）"""
+        pass
 
     def _update_folder_tree(self) -> None:
         """フォルダツリーを更新"""
@@ -549,3 +488,94 @@ class FolderNavigator(QWidget):
 
         except Exception as e:
             self.logger.error(f"履歴のクリアに失敗しました: {e}")
+
+    def can_go_back(self) -> bool:
+        """戻ることができるかチェック"""
+        return self._history_index > 0
+
+    def can_go_forward(self) -> bool:
+        """進むことができるかチェック"""
+        return self._history_index < len(self._directory_history) - 1
+
+    def go_back(self) -> bool:
+        """履歴の前のディレクトリに戻る"""
+        try:
+            if self.can_go_back():
+                self._history_index -= 1
+                directory = self._directory_history[self._history_index]
+                self._is_navigating = True
+                self.set_directory(directory)
+                self._is_navigating = False
+                self._update_navigation_buttons()
+                self.logger.info(f"履歴で戻りました: {directory}")
+                return True
+            return False
+        except Exception as e:
+            self.logger.error(f"戻る操作に失敗しました: {e}")
+            self._is_navigating = False
+            return False
+
+    def go_forward(self) -> bool:
+        """履歴の次のディレクトリに進む"""
+        try:
+            if self.can_go_forward():
+                self._history_index += 1
+                directory = self._directory_history[self._history_index]
+                self._is_navigating = True
+                self.set_directory(directory)
+                self._is_navigating = False
+                self._update_navigation_buttons()
+                self.logger.info(f"履歴で進みました: {directory}")
+                return True
+            return False
+        except Exception as e:
+            self.logger.error(f"進む操作に失敗しました: {e}")
+            self._is_navigating = False
+            return False
+
+    def go_up(self) -> bool:
+        """上位ディレクトリに移動"""
+        try:
+            current_path = Path(self._current_directory)
+            parent_path = current_path.parent
+            if parent_path != current_path:  # ルートディレクトリでない場合
+                self.set_directory(str(parent_path))
+                self.logger.info(f"上位ディレクトリに移動: {parent_path}")
+                return True
+            return False
+        except Exception as e:
+            self.logger.error(f"上位ディレクトリへの移動に失敗しました: {e}")
+            return False
+
+    def _add_to_history(self, directory: str) -> None:
+        """ディレクトリを履歴に追加"""
+        try:
+            if self._is_navigating:
+                return
+
+            # 現在と同じディレクトリは追加しない
+            if directory == self._current_directory:
+                return
+
+            # 履歴の現在位置以降を削除（新しいブランチを作る）
+            if self._history_index >= 0 and self._history_index < len(self._directory_history) - 1:
+                self._directory_history = self._directory_history[:self._history_index + 1]
+
+            # 新しいディレクトリを履歴に追加
+            self._directory_history.append(directory)
+            self._history_index = len(self._directory_history) - 1
+
+            # 履歴の最大数を超えた場合、古いものを削除
+            if len(self._directory_history) > self._max_history:
+                self._directory_history = self._directory_history[1:]
+                self._history_index -= 1
+
+            self._update_navigation_buttons()
+
+        except Exception as e:
+            self.logger.error(f"履歴への追加に失敗しました: {e}")
+
+    def _update_navigation_buttons(self) -> None:
+        """ナビゲーションボタンの状態を更新（空実装）"""
+        # ツールバーから制御するため、ここでは何もしない
+        pass

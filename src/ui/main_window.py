@@ -111,52 +111,6 @@ class MainWindow(QMainWindow):
         # ツールバー
         self._init_tool_bar()
 
-    def _init_header_area(self) -> None:
-        """ヘッダーエリアの初期化"""
-        # ヘッダーフレーム
-        self.header_frame = QFrame()
-        self.header_frame.setFrameStyle(QFrame.Shape.StyledPanel)
-        self.header_layout = QHBoxLayout(self.header_frame)
-
-        # アドレスバー
-        self.address_label = QLabel("アドレス:")
-        self.address_edit = QLineEdit()
-        self.address_edit.setReadOnly(True)
-        self.address_edit.setPlaceholderText("フォルダを選択してください")
-
-        # フォルダ選択ボタン
-        self.folder_button = QPushButton("フォルダ選択")
-        self.folder_button.setIcon(QIcon("assets/icons/folder.png"))
-
-        # ナビゲーションボタン
-        self.back_button = QPushButton("←")
-        self.back_button.setToolTip("戻る")
-        self.forward_button = QPushButton("→")
-        self.forward_button.setToolTip("進む")
-        self.up_button = QPushButton("↑")
-        self.up_button.setToolTip("上位フォルダ")
-
-        # テーマ切り替えボタン（トグルボタン）
-        self.theme_button = QPushButton("ダーク")
-        self.theme_button.setCheckable(True)
-        self.theme_button.setChecked(True)  # デフォルトでダークテーマ
-        self.theme_button.setToolTip("テーマ切り替え（ダーク/ライト）")
-        self.theme_button.clicked.connect(self._toggle_theme)
-        self.theme_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.theme_button.customContextMenuRequested.connect(self._show_theme_menu)
-
-        # ヘッダーレイアウトに追加
-        self.header_layout.addWidget(self.address_label)
-        self.header_layout.addWidget(self.address_edit, 1)
-        self.header_layout.addWidget(self.folder_button)
-        self.header_layout.addWidget(self.back_button)
-        self.header_layout.addWidget(self.forward_button)
-        self.header_layout.addWidget(self.up_button)
-        self.header_layout.addWidget(self.theme_button)
-
-        # メインレイアウトに追加
-        self.main_layout.addWidget(self.header_frame)
-
     def _init_left_panel(self) -> None:
         """左パネルの初期化"""
         # 左パネルフレーム
@@ -320,39 +274,106 @@ class MainWindow(QMainWindow):
         help_menu.addAction(about_action)
 
     def _init_tool_bar(self) -> None:
-        """ツールバーの初期化"""
+        """ツールバーの初期化（統合版）"""
         toolbar = self.addToolBar("メインツールバー")
         toolbar.setMovable(False)
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
-        # フォルダ選択アクション
-        open_folder_action = QAction("フォルダを開く", self)
+        # ボタンサイズ統一のための定数
+        BUTTON_SIZE = 32
+
+        # === 左側グループ: フォルダ操作 ===
+        # フォルダ選択ボタン
+        open_folder_action = QAction("📁", self)
+        open_folder_action.setToolTip("フォルダを選択")
         open_folder_action.triggered.connect(self._open_folder)
         toolbar.addAction(open_folder_action)
 
-        toolbar.addSeparator()
+        # パス表示・編集エリア
+        self.address_edit = QLineEdit()
+        self.address_edit.setMinimumWidth(300)
+        self.address_edit.setPlaceholderText("フォルダを選択してください")
+        self.address_edit.setToolTip("現在のフォルダパス（編集可能）")
+        self.address_edit.returnPressed.connect(self._navigate_to_path)
+        toolbar.addWidget(self.address_edit)
 
-        # ナビゲーションアクション
-        back_action = QAction("戻る", self)
+        # スペーサー
+        spacer1 = QWidget()
+        spacer1.setFixedWidth(20)
+        toolbar.addWidget(spacer1)
+
+        # === 中央グループ: ナビゲーション ===
+        # 戻るボタン
+        back_action = QAction("←", self)
+        back_action.setToolTip("戻る")
         back_action.triggered.connect(self._go_back)
         toolbar.addAction(back_action)
 
-        forward_action = QAction("進む", self)
+        # 進むボタン
+        forward_action = QAction("→", self)
+        forward_action.setToolTip("進む")
         forward_action.triggered.connect(self._go_forward)
         toolbar.addAction(forward_action)
 
-        up_action = QAction("上位フォルダ", self)
+        # 上位フォルダボタン
+        up_action = QAction("↑", self)
+        up_action.setToolTip("上位フォルダ")
         up_action.triggered.connect(self._go_up)
         toolbar.addAction(up_action)
 
-        toolbar.addSeparator()
+        # ナビゲーションボタンの参照を保存（状態更新用）
+        self.back_action = back_action
+        self.forward_action = forward_action
+        self.up_action = up_action
 
-        # テーマ切り替えボタン（トグルボタン）
-        self.theme_button = QPushButton("ダーク")
-        self.theme_button.setCheckable(True)
-        self.theme_button.setChecked(True)  # デフォルトでダークテーマ
-        self.theme_button.setToolTip("テーマ切り替え（ダーク/ライト）")
-        self.theme_button.clicked.connect(self._toggle_theme)
-        toolbar.addWidget(self.theme_button)
+        # 右側にストレッチを追加
+        spacer2 = QWidget()
+        spacer2.setSizePolicy(spacer2.sizePolicy().horizontalPolicy(), spacer2.sizePolicy().verticalPolicy())
+        toolbar.addWidget(spacer2)
+
+        # === 右側グループ: 設定・テーマ ===
+        # 設定ボタン（将来の拡張用）
+        settings_action = QAction("⚙️", self)
+        settings_action.setToolTip("設定")
+        settings_action.triggered.connect(self._show_settings)
+        toolbar.addAction(settings_action)
+
+        # テーマ切り替えボタン（QActionに変更してサイズを統一）
+        self.theme_action = QAction("🌙", self)
+        self.theme_action.setCheckable(True)
+        self.theme_action.setChecked(True)  # デフォルトでダークテーマ
+        self.theme_action.setToolTip("テーマ切り替え（ダーク/ライト）")
+        self.theme_action.triggered.connect(self._toggle_theme)
+        toolbar.addAction(self.theme_action)
+
+        # ヘルプボタン
+        help_action = QAction("?", self)
+        help_action.setToolTip("ヘルプ・バージョン情報")
+        help_action.triggered.connect(self._show_about)
+        toolbar.addAction(help_action)
+
+        # ツールバー全体のスタイルシートでボタンサイズを統一
+        if toolbar:
+            toolbar.setStyleSheet(f"""
+                QToolBar {{
+                    spacing: 2px;
+                }}
+                QToolBar QToolButton {{
+                    width: {BUTTON_SIZE}px;
+                    height: {BUTTON_SIZE}px;
+                    margin: 1px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                }}
+                QToolBar QToolButton:hover {{
+                    background-color: #555;
+                }}
+                QToolBar QToolButton:pressed {{
+                    background-color: #777;
+                }}
+            """)
 
     def _init_layout(self) -> None:
         """レイアウトの初期化"""
@@ -368,6 +389,7 @@ class MainWindow(QMainWindow):
         # フォルダナビゲーターとコントローラーの接続
         self.folder_navigator.directory_selected.connect(self.controller.load_directory)
         self.folder_navigator.directory_selected.connect(self._update_address_bar)
+        self.folder_navigator.directory_selected.connect(self._update_navigation_buttons)  # ナビゲーションボタンの更新を追加
 
         # サムネイルグリッドとコントローラーの接続
         self.thumbnail_grid.image_selected.connect(self.controller.select_image)
@@ -474,6 +496,7 @@ class MainWindow(QMainWindow):
             if folder_path:
                 self.settings.set_last_directory(folder_path)
                 self.folder_navigator.set_directory(folder_path)
+                self.address_edit.setText(folder_path)  # ツールバーのパス表示を更新
                 self.directory_changed.emit(folder_path)
                 self.logger.info(f"フォルダを開きました: {folder_path}")
 
@@ -481,32 +504,32 @@ class MainWindow(QMainWindow):
             self.logger.error(f"フォルダの選択に失敗しました: {e}")
             QMessageBox.warning(self, "エラー", f"フォルダの選択に失敗しました: {e}")
 
-    def _go_back(self) -> None:
-        """戻る"""
-        self.logger.debug("戻るボタンがクリックされました")
+    def _navigate_to_path(self) -> None:
+        """アドレスバーのパスに移動"""
         try:
-            if hasattr(self, "folder_navigator"):
-                self.folder_navigator._go_back()
+            path = self.address_edit.text().strip()
+            if path and path != self.folder_navigator.get_current_directory():
+                import os
+                if os.path.exists(path) and os.path.isdir(path):
+                    self.folder_navigator.set_directory(path)
+                    self.settings.set_last_directory(path)
+                    self.directory_changed.emit(path)
+                    self.logger.info(f"パスに移動しました: {path}")
+                else:
+                    QMessageBox.warning(self, "エラー", f"指定されたパスが見つかりません: {path}")
+                    # 現在のディレクトリに戻す
+                    self.address_edit.setText(self.folder_navigator.get_current_directory())
         except Exception as e:
-            self.logger.error(f"戻る操作に失敗しました: {e}")
+            self.logger.error(f"パス移動に失敗しました: {e}")
+            QMessageBox.warning(self, "エラー", f"パス移動に失敗しました: {e}")
 
-    def _go_forward(self) -> None:
-        """進む"""
-        self.logger.debug("進むボタンがクリックされました")
-        try:
-            if hasattr(self, "folder_navigator"):
-                self.folder_navigator._go_forward()
-        except Exception as e:
-            self.logger.error(f"進む操作に失敗しました: {e}")
-
-    def _go_up(self) -> None:
-        """上位フォルダ"""
-        self.logger.debug("上位フォルダボタンがクリックされました")
-        try:
-            if hasattr(self, "folder_navigator"):
-                self.folder_navigator._go_up()
-        except Exception as e:
-            self.logger.error(f"上位フォルダ移動に失敗しました: {e}")
+    def _show_settings(self) -> None:
+        """設定ダイアログを表示（将来の実装予定）"""
+        QMessageBox.information(
+            self,
+            "設定",
+            "設定機能は将来のバージョンで実装予定です。"
+        )
 
     def _toggle_theme(self) -> None:
         """テーマをトグル切り替え（ダーク/ライト）"""
@@ -518,9 +541,10 @@ class MainWindow(QMainWindow):
                 # テーマを適用
                 self.theme_manager.apply_theme(new_theme)
 
-                # ボタンテキストを更新
-                self.theme_button.setText(
-                    "ライト" if new_theme == "light" else "ダーク"
+                # アクションアイコンを更新
+                self.theme_action.setText("☀️" if new_theme == "light" else "🌙")
+                self.theme_action.setToolTip(
+                    f"ライトテーマ" if new_theme == "light" else "ダークテーマ"
                 )
 
                 self.logger.info(
@@ -528,6 +552,61 @@ class MainWindow(QMainWindow):
                 )
         except Exception as e:
             self.logger.error(f"テーマの切り替えに失敗しました: {e}")
+
+    def _go_back(self) -> None:
+        """戻る"""
+        try:
+            if hasattr(self, "folder_navigator"):
+                if self.folder_navigator.go_back():
+                    self._update_navigation_buttons()
+                    self.logger.debug("戻る操作が完了しました")
+                else:
+                    self.logger.debug("戻ることができません")
+        except Exception as e:
+            self.logger.error(f"戻る操作に失敗しました: {e}")
+
+    def _go_forward(self) -> None:
+        """進む"""
+        try:
+            if hasattr(self, "folder_navigator"):
+                if self.folder_navigator.go_forward():
+                    self._update_navigation_buttons()
+                    self.logger.debug("進む操作が完了しました")
+                else:
+                    self.logger.debug("進むことができません")
+        except Exception as e:
+            self.logger.error(f"進む操作に失敗しました: {e}")
+
+    def _go_up(self) -> None:
+        """上位フォルダ"""
+        try:
+            if hasattr(self, "folder_navigator"):
+                if self.folder_navigator.go_up():
+                    self._update_navigation_buttons()
+                    self.logger.debug("上位フォルダ移動が完了しました")
+                else:
+                    self.logger.debug("上位フォルダに移動できません")
+        except Exception as e:
+            self.logger.error(f"上位フォルダ移動に失敗しました: {e}")
+
+    def _update_navigation_buttons(self) -> None:
+        """ナビゲーションボタンの状態を更新"""
+        try:
+            if hasattr(self, "folder_navigator") and hasattr(self, "back_action"):
+                # 戻るボタンの状態
+                self.back_action.setEnabled(self.folder_navigator.can_go_back())
+
+                # 進むボタンの状態
+                self.forward_action.setEnabled(self.folder_navigator.can_go_forward())
+
+                # 上位フォルダボタンの状態（ルートディレクトリでない場合は有効）
+                current_dir = self.folder_navigator.get_current_directory()
+                from pathlib import Path
+                can_go_up = bool(current_dir and Path(current_dir).parent != Path(current_dir))
+                self.up_action.setEnabled(can_go_up)
+
+        except Exception as e:
+            self.logger.error(f"ナビゲーションボタンの更新に失敗しました: {e}")
 
     def _cycle_theme(self) -> None:
         """テーマを切り替え"""
@@ -948,6 +1027,8 @@ class MainWindow(QMainWindow):
 
     def _update_address_bar(self, directory: str) -> None:
         """アドレスバーの更新"""
+        if hasattr(self, 'address_edit'):
+            self.address_edit.setText(directory)
         self.folder_navigator.set_directory(directory)
 
     def _update_info_panel(self, data: dict) -> None:
