@@ -4,6 +4,7 @@ PhotoGeoView プロジェクト用のメインコントローラー
 """
 
 import os
+import traceback
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, QMutex
@@ -265,18 +266,31 @@ class PhotoGeoViewController(QObject):
             file_path: 画像ファイルパス
         """
         try:
-            # 一時的に画像ビューア読み込みを無効化（デバッグ用）
-            self.logger.info(f"画像選択処理をスキップ: {file_path}")
-            # pixmap = self.image_loader.load_image(file_path)
-            # if pixmap:
-            #     self.image_viewer.load_image(file_path, pixmap)
-            #     self._image_data[file_path] = pixmap
-            #     self.image_loaded.emit(file_path, pixmap)
+            # デバッグ用に画像読み込みの詳細ログを追加
+            self.logger.info(f"[DEBUG] 画像読み込み開始: {file_path}")
+
+            # CS4Codingブランチ互換性: ImageViewerが内部でQPixmapを読み込むため、
+            # controllerからpixmapを渡す必要がない
+            self.logger.info(f"[DEBUG] image_viewer読み込み開始: {file_path}")
+            self.image_viewer.load_image(file_path)
+            self.logger.info(f"[DEBUG] image_viewer読み込み完了: {file_path}")
+
+            # 互換性のため、image_loaderでも読み込む
+            pixmap = self.image_loader.load_image(file_path)
+            if pixmap:
+                self.logger.info(f"[DEBUG] QPixmap読み込み完了: {file_path}")
+                self._image_data[file_path] = pixmap
+                self.image_loaded.emit(file_path, pixmap)
+                self.logger.info(f"[DEBUG] 画像読み込み処理完了: {file_path}")
+            else:
+                self.logger.error(f"[DEBUG] QPixmap読み込み失敗: {file_path}")
 
         except Exception as e:
             self.logger.error(
                 f"選択画像の読み込みに失敗しました: {file_path}, エラー: {e}"
             )
+            import traceback
+            self.logger.error(f"スタックトレース: {traceback.format_exc()}")
 
     def _parse_exif_data(self, file_path: str) -> None:
         """
