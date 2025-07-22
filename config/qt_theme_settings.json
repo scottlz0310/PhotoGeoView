@@ -145,140 +145,140 @@
         },
         "blue": {
             "name": "blue",
-            "display_name": "ブルー",
-            "description": "爽やかなブルーテーマ",
-            "primaryColor": "#e3f2fd",
-            "accentColor": "#2196f3",
-            "backgroundColor": "#e3f2fd",
-            "textColor": "#0d47a1",
+            "display_name": "ダークブルー",
+            "description": "洗練されたダークブルーテーマ",
+            "primaryColor": "#1a2332",
+            "accentColor": "#4fc3f7",
+            "backgroundColor": "#1a2332",
+            "textColor": "#e3f2fd",
             "button": {
-                "background": "#2196f3",
-                "text": "#ffffff",
-                "hover": "#1976d2",
-                "pressed": "#1565c0",
-                "border": "#1976d2"
+                "background": "#2d3748",
+                "text": "#e3f2fd",
+                "hover": "#3a4a5c",
+                "pressed": "#1e2733",
+                "border": "#4a5568"
             },
             "panel": {
-                "background": "#e3f2fd",
-                "border": "#90caf9",
+                "background": "#1a2332",
+                "border": "#4a5568",
                 "header": {
-                    "background": "#bbdefb",
-                    "text": "#0d47a1",
-                    "border": "#90caf9"
+                    "background": "#2d3748",
+                    "text": "#e3f2fd",
+                    "border": "#4a5568"
                 },
                 "zebra": {
-                    "alternate": "#e6f3ff"
+                    "alternate": "#1e2836"
                 }
             },
             "text": {
-                "primary": "#0d47a1",
-                "secondary": "#1565c0",
-                "muted": "#5e92f3",
-                "heading": "#0d47a1",
-                "link": "#2196f3",
+                "primary": "#e3f2fd",
+                "secondary": "#bbdefb",
+                "muted": "#90caf9",
+                "heading": "#e3f2fd",
+                "link": "#4fc3f7",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#0d47a1",
-                "border": "#90caf9",
-                "focus": "#2196f3",
-                "placeholder": "#5e92f3"
+                "background": "#2d3748",
+                "text": "#e3f2fd",
+                "border": "#4a5568",
+                "focus": "#4fc3f7",
+                "placeholder": "#90caf9"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#0d47a1",
-                "alternate": "#e6f3ff",
-                "selection": "#bbdefb",
-                "hover": "#e1f5fe",
-                "border": "#90caf9"
+                "background": "#2d3748",
+                "text": "#e3f2fd",
+                "alternate": "#1e2836",
+                "selection": "#3a4a5c",
+                "hover": "#4a5568",
+                "border": "#4a5568"
             },
             "menu": {
-                "background": "#bbdefb",
-                "text": "#0d47a1",
-                "hover": "#90caf9",
-                "border": "#90caf9"
+                "background": "#2d3748",
+                "text": "#e3f2fd",
+                "hover": "#3a4a5c",
+                "border": "#4a5568"
             },
             "toolbar": {
-                "background": "#bbdefb",
-                "text": "#0d47a1",
-                "border": "#90caf9"
+                "background": "#2d3748",
+                "text": "#e3f2fd",
+                "border": "#4a5568"
             },
             "scrollbar": {
-                "background": "#e3f2fd",
-                "handle": "#90caf9",
-                "handle_hover": "#64b5f6"
+                "background": "#1a2332",
+                "handle": "#4a5568",
+                "handle_hover": "#5a6577"
             }
         },
         "green": {
             "name": "green",
-            "display_name": "グリーン",
-            "description": "自然な緑のテーマ",
-            "primaryColor": "#e8f5e8",
-            "accentColor": "#4caf50",
-            "backgroundColor": "#e8f5e8",
-            "textColor": "#1b5e20",
+            "display_name": "ダークグリーン",
+            "description": "自然なダークグリーンテーマ",
+            "primaryColor": "#1b2e1f",
+            "accentColor": "#66bb6a",
+            "backgroundColor": "#1b2e1f",
+            "textColor": "#e8f5e8",
             "button": {
-                "background": "#4caf50",
-                "text": "#ffffff",
-                "hover": "#45a049",
-                "pressed": "#388e3c",
-                "border": "#45a049"
+                "background": "#2d4a32",
+                "text": "#e8f5e8",
+                "hover": "#3a5a40",
+                "pressed": "#1f3424",
+                "border": "#4a6b50"
             },
             "panel": {
-                "background": "#e8f5e8",
-                "border": "#a5d6a7",
+                "background": "#1b2e1f",
+                "border": "#4a6b50",
                 "header": {
-                    "background": "#c8e6c9",
-                    "text": "#1b5e20",
-                    "border": "#a5d6a7"
+                    "background": "#2d4a32",
+                    "text": "#e8f5e8",
+                    "border": "#4a6b50"
                 },
                 "zebra": {
-                    "alternate": "#ebf7eb"
+                    "alternate": "#1f3324"
                 }
             },
             "text": {
-                "primary": "#1b5e20",
-                "secondary": "#2e7d32",
-                "muted": "#66bb6a",
-                "heading": "#1b5e20",
-                "link": "#4caf50",
+                "primary": "#e8f5e8",
+                "secondary": "#c8e6c9",
+                "muted": "#a5d6a7",
+                "heading": "#e8f5e8",
+                "link": "#66bb6a",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#1b5e20",
-                "border": "#a5d6a7",
-                "focus": "#4caf50",
-                "placeholder": "#66bb6a"
+                "background": "#2d4a32",
+                "text": "#e8f5e8",
+                "border": "#4a6b50",
+                "focus": "#66bb6a",
+                "placeholder": "#a5d6a7"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#1b5e20",
-                "alternate": "#ebf7eb",
-                "selection": "#c8e6c9",
-                "hover": "#e8f5e8",
-                "border": "#a5d6a7"
+                "background": "#2d4a32",
+                "text": "#e8f5e8",
+                "alternate": "#1f3324",
+                "selection": "#3a5a40",
+                "hover": "#4a6b50",
+                "border": "#4a6b50"
             },
             "menu": {
-                "background": "#c8e6c9",
-                "text": "#1b5e20",
-                "hover": "#a5d6a7",
-                "border": "#a5d6a7"
+                "background": "#2d4a32",
+                "text": "#e8f5e8",
+                "hover": "#3a5a40",
+                "border": "#4a6b50"
             },
             "toolbar": {
-                "background": "#c8e6c9",
-                "text": "#1b5e20",
-                "border": "#a5d6a7"
+                "background": "#2d4a32",
+                "text": "#e8f5e8",
+                "border": "#4a6b50"
             },
             "scrollbar": {
-                "background": "#e8f5e8",
-                "handle": "#a5d6a7",
-                "handle_hover": "#81c784"
+                "background": "#1b2e1f",
+                "handle": "#4a6b50",
+                "handle_hover": "#5a7b60"
             }
         },
         "warm": {
@@ -352,71 +352,71 @@
         },
         "purple": {
             "name": "purple",
-            "display_name": "パープル",
-            "description": "エレガントな紫のテーマ",
-            "primaryColor": "#f3e5f5",
-            "accentColor": "#9c27b0",
-            "backgroundColor": "#f3e5f5",
-            "textColor": "#4a148c",
+            "display_name": "ダークパープル",
+            "description": "エレガントなダークパープルテーマ",
+            "primaryColor": "#2a1b3d",
+            "accentColor": "#ba68c8",
+            "backgroundColor": "#2a1b3d",
+            "textColor": "#f3e5f5",
             "button": {
-                "background": "#9c27b0",
-                "text": "#ffffff",
-                "hover": "#8e24aa",
-                "pressed": "#7b1fa2",
-                "border": "#8e24aa"
+                "background": "#3e2857",
+                "text": "#f3e5f5",
+                "hover": "#4a3464",
+                "pressed": "#2d1f42",
+                "border": "#5a4675"
             },
             "panel": {
-                "background": "#f3e5f5",
-                "border": "#ce93d8",
+                "background": "#2a1b3d",
+                "border": "#5a4675",
                 "header": {
-                    "background": "#e1bee7",
-                    "text": "#4a148c",
-                    "border": "#ce93d8"
+                    "background": "#3e2857",
+                    "text": "#f3e5f5",
+                    "border": "#5a4675"
                 },
                 "zebra": {
-                    "alternate": "#f5e8f7"
+                    "alternate": "#2f2046"
                 }
             },
             "text": {
-                "primary": "#4a148c",
-                "secondary": "#6a1b9a",
-                "muted": "#ab47bc",
-                "heading": "#4a148c",
-                "link": "#9c27b0",
+                "primary": "#f3e5f5",
+                "secondary": "#e1bee7",
+                "muted": "#ce93d8",
+                "heading": "#f3e5f5",
+                "link": "#ba68c8",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#4a148c",
-                "border": "#ce93d8",
-                "focus": "#9c27b0",
-                "placeholder": "#ab47bc"
+                "background": "#3e2857",
+                "text": "#f3e5f5",
+                "border": "#5a4675",
+                "focus": "#ba68c8",
+                "placeholder": "#ce93d8"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#4a148c",
-                "alternate": "#f5e8f7",
-                "selection": "#e1bee7",
-                "hover": "#f3e5f5",
-                "border": "#ce93d8"
+                "background": "#3e2857",
+                "text": "#f3e5f5",
+                "alternate": "#2f2046",
+                "selection": "#4a3464",
+                "hover": "#5a4675",
+                "border": "#5a4675"
             },
             "menu": {
-                "background": "#e1bee7",
-                "text": "#4a148c",
-                "hover": "#ce93d8",
-                "border": "#ce93d8"
+                "background": "#3e2857",
+                "text": "#f3e5f5",
+                "hover": "#4a3464",
+                "border": "#5a4675"
             },
             "toolbar": {
-                "background": "#e1bee7",
-                "text": "#4a148c",
-                "border": "#ce93d8"
+                "background": "#3e2857",
+                "text": "#f3e5f5",
+                "border": "#5a4675"
             },
             "scrollbar": {
-                "background": "#f3e5f5",
-                "handle": "#ce93d8",
-                "handle_hover": "#ba68c8"
+                "background": "#2a1b3d",
+                "handle": "#5a4675",
+                "handle_hover": "#6b5285"
             }
         },
         "cyan": {
@@ -490,209 +490,209 @@
         },
         "navy": {
             "name": "navy",
-            "display_name": "ネイビー",
-            "description": "プロフェッショナルなネイビーテーマ",
-            "primaryColor": "#e8eaf6",
-            "accentColor": "#3f51b5",
-            "backgroundColor": "#e8eaf6",
-            "textColor": "#1a237e",
+            "display_name": "ダークネイビー",
+            "description": "プロフェッショナルなダークネイビーテーマ",
+            "primaryColor": "#1a1c2e",
+            "accentColor": "#7c4dff",
+            "backgroundColor": "#1a1c2e",
+            "textColor": "#e8eaf6",
             "button": {
-                "background": "#3f51b5",
-                "text": "#ffffff",
-                "hover": "#3949ab",
-                "pressed": "#303f9f",
-                "border": "#3949ab"
+                "background": "#2c2f48",
+                "text": "#e8eaf6",
+                "hover": "#3a3f5c",
+                "pressed": "#1e2138",
+                "border": "#454964"
             },
             "panel": {
-                "background": "#e8eaf6",
-                "border": "#9fa8da",
+                "background": "#1a1c2e",
+                "border": "#454964",
                 "header": {
-                    "background": "#c5cae9",
-                    "text": "#1a237e",
-                    "border": "#9fa8da"
+                    "background": "#2c2f48",
+                    "text": "#e8eaf6",
+                    "border": "#454964"
                 },
                 "zebra": {
-                    "alternate": "#ebedf8"
+                    "alternate": "#1e2138"
                 }
             },
             "text": {
-                "primary": "#1a237e",
-                "secondary": "#283593",
-                "muted": "#5c6bc0",
-                "heading": "#1a237e",
-                "link": "#3f51b5",
+                "primary": "#e8eaf6",
+                "secondary": "#c5cae9",
+                "muted": "#9fa8da",
+                "heading": "#e8eaf6",
+                "link": "#7c4dff",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#1a237e",
-                "border": "#9fa8da",
-                "focus": "#3f51b5",
-                "placeholder": "#5c6bc0"
+                "background": "#2c2f48",
+                "text": "#e8eaf6",
+                "border": "#454964",
+                "focus": "#7c4dff",
+                "placeholder": "#9fa8da"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#1a237e",
-                "alternate": "#ebedf8",
-                "selection": "#c5cae9",
-                "hover": "#e8eaf6",
-                "border": "#9fa8da"
+                "background": "#2c2f48",
+                "text": "#e8eaf6",
+                "alternate": "#1e2138",
+                "selection": "#3a3f5c",
+                "hover": "#454964",
+                "border": "#454964"
             },
             "menu": {
-                "background": "#c5cae9",
-                "text": "#1a237e",
-                "hover": "#9fa8da",
-                "border": "#9fa8da"
+                "background": "#2c2f48",
+                "text": "#e8eaf6",
+                "hover": "#3a3f5c",
+                "border": "#454964"
             },
             "toolbar": {
-                "background": "#c5cae9",
-                "text": "#1a237e",
-                "border": "#9fa8da"
+                "background": "#2c2f48",
+                "text": "#e8eaf6",
+                "border": "#454964"
             },
             "scrollbar": {
-                "background": "#e8eaf6",
-                "handle": "#9fa8da",
-                "handle_hover": "#7986cb"
+                "background": "#1a1c2e",
+                "handle": "#454964",
+                "handle_hover": "#555a7a"
             }
         },
         "red": {
             "name": "red",
-            "display_name": "レッド",
-            "description": "情熱的な赤のテーマ",
-            "primaryColor": "#ffebee",
-            "accentColor": "#f44336",
-            "backgroundColor": "#ffebee",
-            "textColor": "#b71c1c",
+            "display_name": "ダークレッド",
+            "description": "情熱的なダークレッドテーマ",
+            "primaryColor": "#2e1a1a",
+            "accentColor": "#e57373",
+            "backgroundColor": "#2e1a1a",
+            "textColor": "#ffebee",
             "button": {
-                "background": "#f44336",
-                "text": "#ffffff",
-                "hover": "#e53935",
-                "pressed": "#d32f2f",
-                "border": "#e53935"
+                "background": "#4a2c2c",
+                "text": "#ffebee",
+                "hover": "#5c3636",
+                "pressed": "#3a2222",
+                "border": "#664040"
             },
             "panel": {
-                "background": "#ffebee",
-                "border": "#ef9a9a",
+                "background": "#2e1a1a",
+                "border": "#664040",
                 "header": {
-                    "background": "#ffcdd2",
-                    "text": "#b71c1c",
-                    "border": "#ef9a9a"
+                    "background": "#4a2c2c",
+                    "text": "#ffebee",
+                    "border": "#664040"
                 },
                 "zebra": {
-                    "alternate": "#ffeff0"
+                    "alternate": "#331f1f"
                 }
             },
             "text": {
-                "primary": "#b71c1c",
-                "secondary": "#c62828",
-                "muted": "#e57373",
-                "heading": "#b71c1c",
-                "link": "#f44336",
+                "primary": "#ffebee",
+                "secondary": "#ffcdd2",
+                "muted": "#ef9a9a",
+                "heading": "#ffebee",
+                "link": "#e57373",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#b71c1c",
-                "border": "#ef9a9a",
-                "focus": "#f44336",
-                "placeholder": "#e57373"
+                "background": "#4a2c2c",
+                "text": "#ffebee",
+                "border": "#664040",
+                "focus": "#e57373",
+                "placeholder": "#ef9a9a"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#b71c1c",
-                "alternate": "#ffeff0",
-                "selection": "#ffcdd2",
-                "hover": "#ffebee",
-                "border": "#ef9a9a"
+                "background": "#4a2c2c",
+                "text": "#ffebee",
+                "alternate": "#331f1f",
+                "selection": "#5c3636",
+                "hover": "#664040",
+                "border": "#664040"
             },
             "menu": {
-                "background": "#ffcdd2",
-                "text": "#b71c1c",
-                "hover": "#ef9a9a",
-                "border": "#ef9a9a"
+                "background": "#4a2c2c",
+                "text": "#ffebee",
+                "hover": "#5c3636",
+                "border": "#664040"
             },
             "toolbar": {
-                "background": "#ffcdd2",
-                "text": "#b71c1c",
-                "border": "#ef9a9a"
+                "background": "#4a2c2c",
+                "text": "#ffebee",
+                "border": "#664040"
             },
             "scrollbar": {
-                "background": "#ffebee",
-                "handle": "#ef9a9a",
-                "handle_hover": "#e57373"
+                "background": "#2e1a1a",
+                "handle": "#664040",
+                "handle_hover": "#775050"
             }
         },
         "teal": {
             "name": "teal",
-            "display_name": "ティール",
-            "description": "落ち着いたティールテーマ",
-            "primaryColor": "#e0f2f1",
-            "accentColor": "#009688",
-            "backgroundColor": "#e0f2f1",
-            "textColor": "#004d40",
+            "display_name": "ダークティール",
+            "description": "落ち着いたダークティールテーマ",
+            "primaryColor": "#1a2e2a",
+            "accentColor": "#4db6ac",
+            "backgroundColor": "#1a2e2a",
+            "textColor": "#e0f2f1",
             "button": {
-                "background": "#009688",
-                "text": "#ffffff",
-                "hover": "#00897b",
-                "pressed": "#00796b",
-                "border": "#00897b"
+                "background": "#2c4a44",
+                "text": "#e0f2f1",
+                "hover": "#3a5c54",
+                "pressed": "#1f3a34",
+                "border": "#4a6b62"
             },
             "panel": {
-                "background": "#e0f2f1",
-                "border": "#80cbc4",
+                "background": "#1a2e2a",
+                "border": "#4a6b62",
                 "header": {
-                    "background": "#b2dfdb",
-                    "text": "#004d40",
-                    "border": "#80cbc4"
+                    "background": "#2c4a44",
+                    "text": "#e0f2f1",
+                    "border": "#4a6b62"
                 },
                 "zebra": {
-                    "alternate": "#e3f4f3"
+                    "alternate": "#1f3330"
                 }
             },
             "text": {
-                "primary": "#004d40",
-                "secondary": "#00695c",
-                "muted": "#4db6ac",
-                "heading": "#004d40",
-                "link": "#009688",
+                "primary": "#e0f2f1",
+                "secondary": "#b2dfdb",
+                "muted": "#80cbc4",
+                "heading": "#e0f2f1",
+                "link": "#4db6ac",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#004d40",
-                "border": "#80cbc4",
-                "focus": "#009688",
-                "placeholder": "#4db6ac"
+                "background": "#2c4a44",
+                "text": "#e0f2f1",
+                "border": "#4a6b62",
+                "focus": "#4db6ac",
+                "placeholder": "#80cbc4"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#004d40",
-                "alternate": "#e3f4f3",
-                "selection": "#b2dfdb",
-                "hover": "#e0f2f1",
-                "border": "#80cbc4"
+                "background": "#2c4a44",
+                "text": "#e0f2f1",
+                "alternate": "#1f3330",
+                "selection": "#3a5c54",
+                "hover": "#4a6b62",
+                "border": "#4a6b62"
             },
             "menu": {
-                "background": "#b2dfdb",
-                "text": "#004d40",
-                "hover": "#80cbc4",
-                "border": "#80cbc4"
+                "background": "#2c4a44",
+                "text": "#e0f2f1",
+                "hover": "#3a5c54",
+                "border": "#4a6b62"
             },
             "toolbar": {
-                "background": "#b2dfdb",
-                "text": "#004d40",
-                "border": "#80cbc4"
+                "background": "#2c4a44",
+                "text": "#e0f2f1",
+                "border": "#4a6b62"
             },
             "scrollbar": {
-                "background": "#e0f2f1",
-                "handle": "#80cbc4",
-                "handle_hover": "#4db6ac"
+                "background": "#1a2e2a",
+                "handle": "#4a6b62",
+                "handle_hover": "#5a7b72"
             }
         },
         "amber": {
@@ -973,71 +973,71 @@
         },
         "brown": {
             "name": "brown",
-            "display_name": "ブラウン",
-            "description": "アースカラーのブラウンテーマ",
-            "primaryColor": "#efebe9",
-            "accentColor": "#795548",
-            "backgroundColor": "#efebe9",
-            "textColor": "#3e2723",
+            "display_name": "ダークブラウン",
+            "description": "アースカラーのダークブラウンテーマ",
+            "primaryColor": "#2c1e1a",
+            "accentColor": "#8d6e63",
+            "backgroundColor": "#2c1e1a",
+            "textColor": "#efebe9",
             "button": {
-                "background": "#795548",
-                "text": "#ffffff",
-                "hover": "#6d4c41",
-                "pressed": "#5d4037",
-                "border": "#6d4c41"
+                "background": "#4a342c",
+                "text": "#efebe9",
+                "hover": "#5c4238",
+                "pressed": "#3a2a22",
+                "border": "#665046"
             },
             "panel": {
-                "background": "#efebe9",
-                "border": "#bcaaa4",
+                "background": "#2c1e1a",
+                "border": "#665046",
                 "header": {
-                    "background": "#d7ccc8",
-                    "text": "#3e2723",
-                    "border": "#bcaaa4"
+                    "background": "#4a342c",
+                    "text": "#efebe9",
+                    "border": "#665046"
                 },
                 "zebra": {
-                    "alternate": "#f2edeb"
+                    "alternate": "#312220"
                 }
             },
             "text": {
-                "primary": "#3e2723",
-                "secondary": "#4e342e",
-                "muted": "#8d6e63",
-                "heading": "#3e2723",
-                "link": "#795548",
+                "primary": "#efebe9",
+                "secondary": "#d7ccc8",
+                "muted": "#bcaaa4",
+                "heading": "#efebe9",
+                "link": "#8d6e63",
                 "success": "#4caf50",
                 "warning": "#ff9800",
                 "error": "#f44336"
             },
             "input": {
-                "background": "#ffffff",
-                "text": "#3e2723",
-                "border": "#bcaaa4",
-                "focus": "#795548",
-                "placeholder": "#8d6e63"
+                "background": "#4a342c",
+                "text": "#efebe9",
+                "border": "#665046",
+                "focus": "#8d6e63",
+                "placeholder": "#bcaaa4"
             },
             "list": {
-                "background": "#ffffff",
-                "text": "#3e2723",
-                "alternate": "#f2edeb",
-                "selection": "#d7ccc8",
-                "hover": "#efebe9",
-                "border": "#bcaaa4"
+                "background": "#4a342c",
+                "text": "#efebe9",
+                "alternate": "#312220",
+                "selection": "#5c4238",
+                "hover": "#665046",
+                "border": "#665046"
             },
             "menu": {
-                "background": "#d7ccc8",
-                "text": "#3e2723",
-                "hover": "#bcaaa4",
-                "border": "#bcaaa4"
+                "background": "#4a342c",
+                "text": "#efebe9",
+                "hover": "#5c4238",
+                "border": "#665046"
             },
             "toolbar": {
-                "background": "#d7ccc8",
-                "text": "#3e2723",
-                "border": "#bcaaa4"
+                "background": "#4a342c",
+                "text": "#efebe9",
+                "border": "#665046"
             },
             "scrollbar": {
-                "background": "#efebe9",
-                "handle": "#bcaaa4",
-                "handle_hover": "#a1887f"
+                "background": "#2c1e1a",
+                "handle": "#665046",
+                "handle_hover": "#775856"
             }
         }
     }
