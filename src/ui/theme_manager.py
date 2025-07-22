@@ -1,9 +1,13 @@
 """
 テーマ管理機能を提供するモジュール
 Qt-Theme-Managerを使用した16種類のテーマ対応
+外部JSONファイルによるテーマ設定管理
 """
 
+import json
+import os
 from typing import List, Dict
+from pathlib import Path
 
 from PyQt6.QtWidgets import QWidget, QApplication
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -30,109 +34,17 @@ class ThemeManager(QObject):
         self.logger = get_logger(__name__)
         self.settings = get_settings()
 
-        # 利用可能なテーマリスト（Qt-Theme-Manager対応）
-        self.available_themes = [
-            "dark",
-            "light",
-            "blue",
-            "green",
-            "purple",
-            "orange",
-            "red",
-            "pink",
-            "yellow",
-            "brown",
-            "gray",
-            "cyan",
-            "teal",
-            "indigo",
-            "lime",
-            "amber",
-        ]
-
-        # テーマ情報辞書
-        self.theme_info = {
-            "dark": {
-                "display_name": "ダーク",
-                "description": "モダンなダークテーマ",
-                "category": "dark",
-            },
-            "light": {
-                "display_name": "ライト",
-                "description": "クリーンなライトテーマ",
-                "category": "light",
-            },
-            "blue": {
-                "display_name": "ブルー",
-                "description": "落ち着いたブルーテーマ",
-                "category": "color",
-            },
-            "green": {
-                "display_name": "グリーン",
-                "description": "自然なグリーンテーマ",
-                "category": "color",
-            },
-            "purple": {
-                "display_name": "パープル",
-                "description": "エレガントなパープルテーマ",
-                "category": "color",
-            },
-            "orange": {
-                "display_name": "オレンジ",
-                "description": "温かみのあるオレンジテーマ",
-                "category": "color",
-            },
-            "red": {
-                "display_name": "レッド",
-                "description": "情熱的なレッドテーマ",
-                "category": "color",
-            },
-            "pink": {
-                "display_name": "ピンク",
-                "description": "可愛らしいピンクテーマ",
-                "category": "color",
-            },
-            "yellow": {
-                "display_name": "イエロー",
-                "description": "明るいイエローテーマ",
-                "category": "color",
-            },
-            "brown": {
-                "display_name": "ブラウン",
-                "description": "落ち着いたブラウンテーマ",
-                "category": "color",
-            },
-            "gray": {
-                "display_name": "グレー",
-                "description": "シンプルなグレーテーマ",
-                "category": "neutral",
-            },
-            "cyan": {
-                "display_name": "シアン",
-                "description": "爽やかなシアンテーマ",
-                "category": "color",
-            },
-            "teal": {
-                "display_name": "ティール",
-                "description": "洗練されたティールテーマ",
-                "category": "color",
-            },
-            "indigo": {
-                "display_name": "インディゴ",
-                "description": "深みのあるインディゴテーマ",
-                "category": "color",
-            },
-            "lime": {
-                "display_name": "ライム",
-                "description": "フレッシュなライムテーマ",
-                "category": "color",
-            },
-            "amber": {
-                "display_name": "アンバー",
-                "description": "温かみのあるアンバーテーマ",
-                "category": "color",
-            },
-        }
+        # テーマ設定ファイルのパス
+        self.theme_config_path = Path(__file__).parent.parent.parent / "config" / "theme_styles.json"
+        
+        # テーマ設定を読み込み
+        self.theme_config = self._load_theme_config()
+        
+        # 利用可能なテーマリストを設定から取得
+        self.available_themes = list(self.theme_config.get("theme_styles", {}).keys())
+        
+        # テーマ情報辞書を設定ファイルから構築
+        self.theme_info = self._build_theme_info()
 
         # 現在のテーマ
         self.current_theme = self.settings.get("ui.theme_manager.current_theme", "dark")
@@ -150,6 +62,74 @@ class ThemeManager(QObject):
 
         # 初期テーマの適用
         self.apply_theme(self.current_theme)
+
+    def _load_theme_config(self) -> Dict:
+        """テーマ設定ファイルを読み込み"""
+        try:
+            if self.theme_config_path.exists():
+                with open(self.theme_config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                self.logger.info(f"テーマ設定ファイルを読み込みました: {self.theme_config_path}")
+                return config
+            else:
+                self.logger.warning(f"テーマ設定ファイルが見つかりません: {self.theme_config_path}")
+                return self._get_default_theme_config()
+        except json.JSONDecodeError as e:
+            self.logger.error(f"テーマ設定ファイルのJSON解析に失敗しました: {e}")
+            return self._get_default_theme_config()
+        except Exception as e:
+            self.logger.error(f"テーマ設定ファイルの読み込みに失敗しました: {e}")
+            return self._get_default_theme_config()
+
+    def _get_default_theme_config(self) -> Dict:
+        """デフォルトのテーマ設定を返す"""
+        return {
+            "theme_styles": {
+                "dark": {
+                    "name": "ダーク",
+                    "description": "モダンなダークテーマ",
+                    "category": "dark",
+                    "colors": {
+                        "background": "#2b2b2b",
+                        "foreground": "#ffffff",
+                        "menu_background": "#3c3c3c",
+                        "button_background": "#4a4a4a",
+                        "button_hover": "#5a5a5a",
+                        "border": "#555555",
+                        "input_background": "#2b2b2b"
+                    }
+                },
+                "light": {
+                    "name": "ライト",
+                    "description": "クリーンなライトテーマ",
+                    "category": "light",
+                    "colors": {
+                        "background": "#f0f0f0",
+                        "foreground": "#000000",
+                        "menu_background": "#e0e0e0",
+                        "button_background": "#d0d0d0",
+                        "button_hover": "#c0c0c0",
+                        "border": "#b0b0b0",
+                        "input_background": "#ffffff"
+                    }
+                }
+            },
+            "default_stylesheet_template": "QWidget { background-color: {background}; color: {foreground}; }"
+        }
+
+    def _build_theme_info(self) -> Dict:
+        """テーマ設定からテーマ情報辞書を構築"""
+        theme_info = {}
+        theme_styles = self.theme_config.get("theme_styles", {})
+        
+        for theme_name, theme_data in theme_styles.items():
+            theme_info[theme_name] = {
+                "display_name": theme_data.get("name", theme_name.title()),
+                "description": theme_data.get("description", f"{theme_name}テーマ"),
+                "category": theme_data.get("category", "color")
+            }
+        
+        return theme_info
 
     def _init_theme_manager(self) -> None:
         """Qt-Theme-Managerの初期化"""
@@ -239,456 +219,40 @@ class ThemeManager(QObject):
     def _apply_fallback_theme(self, theme_name: str) -> None:
         """
         フォールバックテーマの適用（Qt-Theme-Managerが利用できない場合）
+        JSONファイルから動的にスタイルシートを生成
 
         Args:
             theme_name: テーマ名
         """
-        # 16種類のテーマに対応したスタイルシート
-        theme_styles = {
-            "dark": """
-                QWidget {
-                    background-color: #2b2b2b;
-                    color: #ffffff;
-                }
-                QMainWindow {
-                    background-color: #2b2b2b;
-                }
-                QMenuBar {
-                    background-color: #3c3c3c;
-                    color: #ffffff;
-                }
-                QToolBar {
-                    background-color: #3c3c3c;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #4a4a4a;
-                    border: 1px solid #555555;
-                    color: #ffffff;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #5a5a5a;
-                }
-                QTreeView, QListView {
-                    background-color: #2b2b2b;
-                    color: #ffffff;
-                    border: 1px solid #555555;
-                }
-                QTextEdit {
-                    background-color: #2b2b2b;
-                    color: #ffffff;
-                    border: 1px solid #555555;
-                }
-            """,
-            "light": """
-                QWidget {
-                    background-color: #f0f0f0;
-                    color: #000000;
-                }
-                QMainWindow {
-                    background-color: #f0f0f0;
-                }
-                QMenuBar {
-                    background-color: #e0e0e0;
-                    color: #000000;
-                }
-                QToolBar {
-                    background-color: #e0e0e0;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #d0d0d0;
-                    border: 1px solid #b0b0b0;
-                    color: #000000;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #c0c0c0;
-                }
-                QTreeView, QListView {
-                    background-color: #ffffff;
-                    color: #000000;
-                    border: 1px solid #b0b0b0;
-                }
-                QTextEdit {
-                    background-color: #ffffff;
-                    color: #000000;
-                    border: 1px solid #b0b0b0;
-                }
-            """,
-            "blue": """
-                QWidget {
-                    background-color: #e3f2fd;
-                    color: #1565c0;
-                }
-                QMainWindow {
-                    background-color: #e3f2fd;
-                }
-                QMenuBar {
-                    background-color: #bbdefb;
-                    color: #1565c0;
-                }
-                QToolBar {
-                    background-color: #bbdefb;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #90caf9;
-                    border: 1px solid #64b5f6;
-                    color: #1565c0;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #64b5f6;
-                }
-            """,
-            "green": """
-                QWidget {
-                    background-color: #e8f5e8;
-                    color: #2e7d32;
-                }
-                QMainWindow {
-                    background-color: #e8f5e8;
-                }
-                QMenuBar {
-                    background-color: #c8e6c9;
-                    color: #2e7d32;
-                }
-                QToolBar {
-                    background-color: #c8e6c9;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #a5d6a7;
-                    border: 1px solid #81c784;
-                    color: #2e7d32;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #81c784;
-                }
-            """,
-            "purple": """
-                QWidget {
-                    background-color: #f3e5f5;
-                    color: #7b1fa2;
-                }
-                QMainWindow {
-                    background-color: #f3e5f5;
-                }
-                QMenuBar {
-                    background-color: #e1bee7;
-                    color: #7b1fa2;
-                }
-                QToolBar {
-                    background-color: #e1bee7;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #ce93d8;
-                    border: 1px solid #ba68c8;
-                    color: #7b1fa2;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #ba68c8;
-                }
-            """,
-            "orange": """
-                QWidget {
-                    background-color: #fff3e0;
-                    color: #ef6c00;
-                }
-                QMainWindow {
-                    background-color: #fff3e0;
-                }
-                QMenuBar {
-                    background-color: #ffe0b2;
-                    color: #ef6c00;
-                }
-                QToolBar {
-                    background-color: #ffe0b2;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #ffcc02;
-                    border: 1px solid #ffb74d;
-                    color: #ef6c00;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #ffb74d;
-                }
-            """,
-            "red": """
-                QWidget {
-                    background-color: #ffebee;
-                    color: #c62828;
-                }
-                QMainWindow {
-                    background-color: #ffebee;
-                }
-                QMenuBar {
-                    background-color: #ffcdd2;
-                    color: #c62828;
-                }
-                QToolBar {
-                    background-color: #ffcdd2;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #ef9a9a;
-                    border: 1px solid #e57373;
-                    color: #c62828;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #e57373;
-                }
-            """,
-            "pink": """
-                QWidget {
-                    background-color: #fce4ec;
-                    color: #ad1457;
-                }
-                QMainWindow {
-                    background-color: #fce4ec;
-                }
-                QMenuBar {
-                    background-color: #f8bbd9;
-                    color: #ad1457;
-                }
-                QToolBar {
-                    background-color: #f8bbd9;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #f48fb1;
-                    border: 1px solid #f06292;
-                    color: #ad1457;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #f06292;
-                }
-            """,
-            "yellow": """
-                QWidget {
-                    background-color: #fffde7;
-                    color: #f57f17;
-                }
-                QMainWindow {
-                    background-color: #fffde7;
-                }
-                QMenuBar {
-                    background-color: #fff9c4;
-                    color: #f57f17;
-                }
-                QToolBar {
-                    background-color: #fff9c4;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #fff59d;
-                    border: 1px solid #fff176;
-                    color: #f57f17;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #fff176;
-                }
-            """,
-            "brown": """
-                QWidget {
-                    background-color: #efebe9;
-                    color: #5d4037;
-                }
-                QMainWindow {
-                    background-color: #efebe9;
-                }
-                QMenuBar {
-                    background-color: #d7ccc8;
-                    color: #5d4037;
-                }
-                QToolBar {
-                    background-color: #d7ccc8;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #bcaaa4;
-                    border: 1px solid #a1887f;
-                    color: #5d4037;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #a1887f;
-                }
-            """,
-            "gray": """
-                QWidget {
-                    background-color: #fafafa;
-                    color: #424242;
-                }
-                QMainWindow {
-                    background-color: #fafafa;
-                }
-                QMenuBar {
-                    background-color: #eeeeee;
-                    color: #424242;
-                }
-                QToolBar {
-                    background-color: #eeeeee;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #e0e0e0;
-                    border: 1px solid #bdbdbd;
-                    color: #424242;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #bdbdbd;
-                }
-            """,
-            "cyan": """
-                QWidget {
-                    background-color: #e0f2f1;
-                    color: #00695c;
-                }
-                QMainWindow {
-                    background-color: #e0f2f1;
-                }
-                QMenuBar {
-                    background-color: #b2dfdb;
-                    color: #00695c;
-                }
-                QToolBar {
-                    background-color: #b2dfdb;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #80cbc4;
-                    border: 1px solid #4db6ac;
-                    color: #00695c;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #4db6ac;
-                }
-            """,
-            "teal": """
-                QWidget {
-                    background-color: #e0f2f1;
-                    color: #004d40;
-                }
-                QMainWindow {
-                    background-color: #e0f2f1;
-                }
-                QMenuBar {
-                    background-color: #b2dfdb;
-                    color: #004d40;
-                }
-                QToolBar {
-                    background-color: #b2dfdb;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #80cbc4;
-                    border: 1px solid #4db6ac;
-                    color: #004d40;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #4db6ac;
-                }
-            """,
-            "indigo": """
-                QWidget {
-                    background-color: #e8eaf6;
-                    color: #283593;
-                }
-                QMainWindow {
-                    background-color: #e8eaf6;
-                }
-                QMenuBar {
-                    background-color: #c5cae9;
-                    color: #283593;
-                }
-                QToolBar {
-                    background-color: #c5cae9;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #9fa8da;
-                    border: 1px solid #7986cb;
-                    color: #283593;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #7986cb;
-                }
-            """,
-            "lime": """
-                QWidget {
-                    background-color: #f9fbe7;
-                    color: #827717;
-                }
-                QMainWindow {
-                    background-color: #f9fbe7;
-                }
-                QMenuBar {
-                    background-color: #f0f4c3;
-                    color: #827717;
-                }
-                QToolBar {
-                    background-color: #f0f4c3;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #e6ee9c;
-                    border: 1px solid #dce775;
-                    color: #827717;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #dce775;
-                }
-            """,
-            "amber": """
-                QWidget {
-                    background-color: #fff8e1;
-                    color: #f57c00;
-                }
-                QMainWindow {
-                    background-color: #fff8e1;
-                }
-                QMenuBar {
-                    background-color: #ffecb3;
-                    color: #f57c00;
-                }
-                QToolBar {
-                    background-color: #ffecb3;
-                    border: none;
-                }
-                QPushButton {
-                    background-color: #ffd54f;
-                    border: 1px solid #ffca28;
-                    color: #f57c00;
-                    padding: 5px;
-                }
-                QPushButton:hover {
-                    background-color: #ffca28;
-                }
-            """,
-        }
-
-        # テーマスタイルを適用
-        if theme_name in theme_styles:
-            self.app.setStyleSheet(theme_styles[theme_name])
-        else:
-            # デフォルトはライトテーマ
-            self.app.setStyleSheet(theme_styles["light"])
+        try:
+            theme_styles = self.theme_config.get("theme_styles", {})
+            
+            if theme_name in theme_styles:
+                theme_data = theme_styles[theme_name]
+                colors = theme_data.get("colors", {})
+                
+                # カスタムテンプレートがあれば使用、なければデフォルトテンプレートを使用
+                template = theme_data.get("stylesheet_template", 
+                                        self.theme_config.get("default_stylesheet_template", ""))
+                
+                # カラー値でテンプレートを置換
+                stylesheet = template.format(**colors)
+                
+                self.app.setStyleSheet(stylesheet)
+                self.logger.debug(f"フォールバックテーマを適用しました: {theme_name}")
+            else:
+                # 指定されたテーマが見つからない場合はライトテーマにフォールバック
+                self.logger.warning(f"テーマ '{theme_name}' が見つかりません。ライトテーマを使用します。")
+                if "light" in theme_styles:
+                    self._apply_fallback_theme("light")
+                else:
+                    # 最低限のスタイルを適用
+                    self.app.setStyleSheet("QWidget { background-color: #f0f0f0; color: #000000; }")
+                    
+        except Exception as e:
+            self.logger.error(f"フォールバックテーマの適用に失敗しました: {e}")
+            # 緊急フォールバック: 最低限のスタイル
+            self.app.setStyleSheet("QWidget { background-color: #f0f0f0; color: #000000; }")
 
     def cycle_theme(self) -> str:
         """
@@ -841,3 +405,67 @@ class ThemeManager(QObject):
             return self.theme_info[theme_name]["description"]
         else:
             return f"{theme_name}テーマ"
+
+    def reload_theme_config(self) -> bool:
+        """テーマ設定ファイルを再読み込み"""
+        try:
+            old_themes = set(self.available_themes)
+            self.theme_config = self._load_theme_config()
+            self.available_themes = list(self.theme_config.get("theme_styles", {}).keys())
+            self.theme_info = self._build_theme_info()
+            
+            new_themes = set(self.available_themes)
+            
+            # 有効テーマリストを更新（削除されたテーマを除外）
+            self.enabled_themes = [theme for theme in self.enabled_themes if theme in self.available_themes]
+            if not self.enabled_themes:
+                self.enabled_themes = ["dark"] if "dark" in self.available_themes else self.available_themes[:1]
+            
+            # 現在のテーマが無効になった場合は最初の有効テーマに切り替え
+            if self.current_theme not in self.available_themes:
+                self.apply_theme(self.enabled_themes[0])
+            
+            # 変更をログに記録
+            added = new_themes - old_themes
+            removed = old_themes - new_themes
+            if added:
+                self.logger.info(f"新しいテーマが追加されました: {added}")
+            if removed:
+                self.logger.info(f"テーマが削除されました: {removed}")
+                
+            self.logger.info("テーマ設定ファイルを再読み込みしました")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"テーマ設定ファイルの再読み込みに失敗しました: {e}")
+            return False
+
+    def get_theme_colors(self, theme_name: str) -> Dict[str, str]:
+        """指定したテーマの色設定を取得"""
+        theme_styles = self.theme_config.get("theme_styles", {})
+        if theme_name in theme_styles:
+            return theme_styles[theme_name].get("colors", {})
+        return {}
+
+    def save_custom_theme(self, theme_name: str, theme_data: Dict) -> bool:
+        """カスタムテーマを設定ファイルに保存"""
+        try:
+            if "theme_styles" not in self.theme_config:
+                self.theme_config["theme_styles"] = {}
+                
+            self.theme_config["theme_styles"][theme_name] = theme_data
+            
+            # ファイルに保存
+            with open(self.theme_config_path, 'w', encoding='utf-8') as f:
+                json.dump(self.theme_config, f, ensure_ascii=False, indent=2)
+                
+            # メモリ内の設定を更新
+            self.available_themes = list(self.theme_config.get("theme_styles", {}).keys())
+            self.theme_info = self._build_theme_info()
+            
+            self.logger.info(f"カスタムテーマを保存しました: {theme_name}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"カスタムテーマの保存に失敗しました: {e}")
+            return False

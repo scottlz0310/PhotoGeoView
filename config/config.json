@@ -12,11 +12,11 @@
             "x": 1917,
             "y": -30,
             "maximized": false,
-            "left_panel_width": 610,
-            "right_panel_width": 1276,
+            "left_panel_width": 611,
+            "right_panel_width": 1277,
             "left_splitter_sizes": [
                 333,
-                200,
+                220,
                 300
             ]
         },
@@ -26,7 +26,7 @@
             "thumbnail_size": 60
         },
         "theme_manager": {
-            "current_theme": "dark",
+            "current_theme": "brown",
             "available_themes": [
                 "dark",
                 "light",
