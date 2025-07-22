@@ -98,17 +98,11 @@ class ThumbnailGrid(QWidget):
         self.size_value_label = QLabel(f"{self._thumbnail_size}px")
         self.size_value_label.setMinimumWidth(50)
 
-        # クリアボタン
-        self.clear_button = QPushButton("クリア")
-        self.clear_button.setToolTip("選択をクリア")
-        self.clear_button.setMaximumWidth(60)
-
         # ツールバーに追加
         self.toolbar_layout.addWidget(self.size_label)
         self.toolbar_layout.addWidget(self.size_slider)
         self.toolbar_layout.addWidget(self.size_value_label)
         self.toolbar_layout.addStretch()
-        self.toolbar_layout.addWidget(self.clear_button)
 
     def _init_scroll_area(self) -> None:
         """スクロールエリアの初期化"""
@@ -135,9 +129,6 @@ class ThumbnailGrid(QWidget):
         # スライダー接続
         self.size_slider.valueChanged.connect(self._on_size_changed)
         self.logger.info(f"サムネイルスライダーを初期化: 初期値={self.size_slider.value()}")
-
-        # ボタン接続
-        self.clear_button.clicked.connect(self.clear_selection)
 
         # コンテキストメニュー接続
         self.customContextMenuRequested.connect(self._show_context_menu)
@@ -209,10 +200,6 @@ class ThumbnailGrid(QWidget):
             if file_path not in self._image_files:
                 return
 
-            # 前の選択をクリア
-            if self._selected_image:
-                self._clear_selection_visual()
-
             # 新しい選択を設定
             self._selected_image = file_path
             self._set_selection_visual(file_path)
@@ -222,16 +209,6 @@ class ThumbnailGrid(QWidget):
 
         except Exception as e:
             self.logger.error(f"画像の選択に失敗しました: {file_path}, エラー: {e}")
-
-    def clear_selection(self) -> None:
-        """選択をクリア"""
-        try:
-            if self._selected_image:
-                self._clear_selection_visual()
-                self._selected_image = ""
-
-        except Exception as e:
-            self.logger.error(f"選択のクリアに失敗しました: {e}")
 
     def _clear_grid(self) -> None:
         """グリッドをクリア"""
@@ -421,12 +398,15 @@ class ThumbnailGrid(QWidget):
             file_path: 画像ファイルパス
         """
         try:
-            # 対応するウィジェットを探す
+            # 全てのウィジェットをデフォルトスタイルにリセットし、選択されたもののみハイライト
             for i in range(self.grid_layout.count()):
                 item = self.grid_layout.itemAt(i)
                 if item and item.widget():
                     widget = item.widget()
-                    if widget.property("file_path") == file_path:
+                    widget_file_path = widget.property("file_path")
+
+                    if widget_file_path == file_path:
+                        # 選択されたウィジェットをハイライト
                         widget.setStyleSheet(
                             """
                             QFrame {
@@ -436,22 +416,8 @@ class ThumbnailGrid(QWidget):
                             }
                         """
                         )
-                        break
-
-        except Exception as e:
-            self.logger.error(
-                f"選択の視覚的表示の設定に失敗しました: {file_path}, エラー: {e}"
-            )
-
-    def _clear_selection_visual(self) -> None:
-        """選択の視覚的表示をクリア"""
-        try:
-            # 対応するウィジェットを探す
-            for i in range(self.grid_layout.count()):
-                item = self.grid_layout.itemAt(i)
-                if item and item.widget():
-                    widget = item.widget()
-                    if widget.property("file_path") == self._selected_image:
+                    else:
+                        # その他のウィジェットをデフォルトスタイルに
                         widget.setStyleSheet(
                             """
                             QFrame {
@@ -464,10 +430,11 @@ class ThumbnailGrid(QWidget):
                             }
                         """
                         )
-                        break
 
         except Exception as e:
-            self.logger.error(f"選択の視覚的表示のクリアに失敗しました: {e}")
+            self.logger.error(
+                f"選択の視覚的表示の設定に失敗しました: {file_path}, エラー: {e}"
+            )
 
     def _on_thumbnail_clicked(self, event, file_path: str) -> None:
         """
@@ -564,10 +531,6 @@ class ThumbnailGrid(QWidget):
             refresh_action = QAction("更新", self)
             refresh_action.triggered.connect(self._update_grid)
             menu.addAction(refresh_action)
-
-            clear_action = QAction("選択をクリア", self)
-            clear_action.triggered.connect(self.clear_selection)
-            menu.addAction(clear_action)
 
             # メニューを表示
             menu.exec(self.mapToGlobal(position))
