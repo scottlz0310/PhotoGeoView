@@ -30,7 +30,7 @@ def main():
         logger.info("PhotoGeoView アプリケーションを開始します")
 
         # 設定の初期化
-        settings = get_settings()
+        app_settings = get_settings()
         logger.info("設定を読み込みました")
 
         # QApplicationの作成
@@ -40,9 +40,7 @@ def main():
         app.setOrganizationName("PhotoGeoView Team")
 
         # アプリケーション設定
-        # PyQt6では高DPI設定が自動的に処理されるため、明示的な設定は不要
-
-        logger.info("QApplicationを初期化しました")
+        # PyQt6では高DPI設定が自動的に処理されるため、明示的な設定は不要        logger.info("QApplicationを初期化しました")
 
         # メインウィンドウの作成
         main_window = MainWindow()

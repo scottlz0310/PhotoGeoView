@@ -315,17 +315,34 @@ class PhotoGeoViewController(QObject):
             if "gps" in exif_data:
                 gps = exif_data["gps"]
                 if "latitude" in gps and "longitude" in gps:
-                    coordinates = (gps["latitude"], gps["longitude"])
-                    self._gps_coordinates[file_path] = coordinates
+                    lat, lon = gps["latitude"], gps["longitude"]
+                    
+                    # NullIsland (0.0, 0.0) をGPS情報なしとして扱う
+                    if lat == 0.0 and lon == 0.0:
+                        self.logger.info(f"GPS座標がNullIsland (0.0, 0.0) です: {file_path}")
+                        self._notify_map_no_gps(file_path)
+                    else:
+                        coordinates = (lat, lon)
+                        self._gps_coordinates[file_path] = coordinates
 
-                    # 地図にマーカーを追加
-                    self._add_map_marker(file_path, coordinates, exif_data)
+                        # 地図にマーカーを追加
+                        self._add_map_marker(file_path, coordinates, exif_data)
 
-                    # GPS座標発見を通知
-                    self.gps_coordinates_found.emit(file_path, coordinates)
+                        # GPS座標発見を通知
+                        self.gps_coordinates_found.emit(file_path, coordinates)
+                else:
+                    # GPS情報はあるが座標が不完全な場合
+                    self.logger.info(f"GPS情報が不完全です: {file_path}")
+                    self._notify_map_no_gps(file_path)
+            else:
+                # GPS情報がない場合
+                self.logger.info(f"GPS情報がありません: {file_path}")
+                self._notify_map_no_gps(file_path)
 
         except Exception as e:
             self.logger.error(f"EXIF情報の解析に失敗しました: {file_path}, エラー: {e}")
+            # EXIF解析エラーの場合も GPS情報なし として処理
+            self._notify_map_no_gps(file_path)
 
     def _add_map_marker(
         self,
@@ -368,6 +385,20 @@ class PhotoGeoViewController(QObject):
             self.logger.error(
                 f"地図マーカーの追加に失敗しました: {file_path}, エラー: {e}"
             )
+
+    def _notify_map_no_gps(self, file_path: str) -> None:
+        """
+        GPS情報がない画像を地図ビューアーに通知
+
+        Args:
+            file_path: 画像ファイルパス
+        """
+        try:
+            # MapViewer の set_current_photo をGPS座標なしで呼び出し
+            self.map_viewer.set_current_photo(file_path)
+            self.logger.debug(f"GPS情報なし画像を地図に通知: {file_path}")
+        except Exception as e:
+            self.logger.error(f"GPS情報なし画像の地図通知に失敗: {file_path}, エラー: {e}")
 
     def _on_image_loaded(self, file_path: str, pixmap) -> None:
         """
