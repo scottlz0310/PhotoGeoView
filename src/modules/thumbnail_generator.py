@@ -207,18 +207,18 @@ class ThumbnailGenerator(QObject):
             # 元の画像がすでに小さい場合は直接QPixmapに変換
             orig_width = image.width()
             orig_height = image.height()
-            
+
             if orig_width <= size and orig_height <= size:
                 return QPixmap.fromImage(image)
 
             # 段階的スケーリングでより高品質な結果を得る
             # 最初に大きめのサイズにスケーリング、その後最終サイズに
             intermediate_size = max(size * 2, min(orig_width, orig_height))
-            
+
             if max(orig_width, orig_height) > intermediate_size:
                 # 中間サイズにスケール
                 intermediate_image = image.scaled(
-                    intermediate_size, 
+                    intermediate_size,
                     intermediate_size,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation
@@ -228,7 +228,7 @@ class ThumbnailGenerator(QObject):
 
             # 最終サイズにスケール
             final_image = intermediate_image.scaled(
-                size, 
+                size,
                 size,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
@@ -244,12 +244,12 @@ class ThumbnailGenerator(QObject):
 
             # QPainterで高品質描画
             painter = QPainter(output_image)
-            
+
             # すべての高品質レンダリングヒントを有効化
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
             painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
             painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
-            
+
             # 高品質な補間モードを設定
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
 

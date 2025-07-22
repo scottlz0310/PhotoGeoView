@@ -253,10 +253,10 @@ class ThumbnailGrid(QWidget):
         """グリッドを更新"""
         try:
             self.logger.info(f"[GRID] _update_grid開始: サムネイル辞書サイズ={len(self._thumbnails)}")
-            
+
             # グリッドをクリア
             self._clear_grid()
-            
+
             self.logger.info(f"[GRID] _clear_grid後: サムネイル辞書サイズ={len(self._thumbnails)}")
 
             if not self._image_files:
@@ -647,16 +647,16 @@ class ThumbnailGrid(QWidget):
         # 元のサイズを取得
         orig_width = pixmap.width()
         orig_height = pixmap.height()
-        
+
         # すでに適切なサイズの場合は直接返す
         if orig_width <= size and orig_height <= size:
             return pixmap
 
         # アスペクト比を保持してスケーリング
         scaled_pixmap = pixmap.scaled(
-            size, 
-            size, 
-            Qt.AspectRatioMode.KeepAspectRatio, 
+            size,
+            size,
+            Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation
         )
 
@@ -668,11 +668,11 @@ class ThumbnailGrid(QWidget):
         painter = QPainter(result)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-        
+
         # 中央配置の計算
         x = (size - scaled_pixmap.width()) // 2
         y = (size - scaled_pixmap.height()) // 2
-        
+
         # 高品質描画
         painter.drawPixmap(x, y, scaled_pixmap)
         painter.end()
