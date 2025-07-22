@@ -26,6 +26,8 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QStatusBar,
     QProgressBar,
+    QDialog,
+    QTabWidget,
 )
 from PyQt6.QtCore import Qt, QSize, pyqtSignal, QTimer
 from PyQt6.QtGui import QIcon, QAction, QKeySequence, QFont
@@ -68,6 +70,9 @@ class MainWindow(QMainWindow):
 
         # ウィンドウ状態の復元
         self._restore_window_state()
+
+        # テーマ関連のUI要素を最終更新
+        self._finalize_theme_ui()
 
         self.logger.info("メインウィンドウを初期化しました")
 
@@ -262,9 +267,20 @@ class MainWindow(QMainWindow):
         # 表示メニュー
         view_menu = menubar.addMenu("表示(&V)")
 
-        # テーマメニュー（Pending - 将来の実装予定）
+        # テーマメニュー
         theme_menu = view_menu.addMenu("テーマ(&T)")
-        # TODO: テーマ設定機能は将来の実装予定
+
+        # テーマ設定アクション
+        theme_settings_action = QAction("テーマ設定(&S)...", self)
+        theme_settings_action.setToolTip("使用するテーマを選択")
+        theme_settings_action.triggered.connect(self._show_theme_settings)
+        theme_menu.addAction(theme_settings_action)
+
+        theme_menu.addSeparator()
+
+        # 現在有効なテーマのクイック切り替えメニュー（動的生成）
+        self.quick_theme_menu = theme_menu.addMenu("クイック切り替え(&Q)")
+        self._update_quick_theme_menu()
 
         # ヘルプメニュー
         help_menu = menubar.addMenu("ヘルプ(&H)")
@@ -425,6 +441,11 @@ class MainWindow(QMainWindow):
             if app:
                 self.theme_manager = ThemeManager(app)
                 self.theme_manager.theme_changed.connect(self._on_theme_changed)
+                # テーマボタンの初期化
+                self._update_theme_button_icon(self.theme_manager.get_current_theme())
+                # テーマメニューの初期化（メニューバーが既に初期化されている場合）
+                if hasattr(self, 'quick_theme_menu'):
+                    self._update_quick_theme_menu()
                 self.logger.info("テーママネージャーを初期化しました")
             else:
                 self.logger.error("QApplicationインスタンスが見つかりません")
@@ -524,32 +545,82 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "エラー", f"パス移動に失敗しました: {e}")
 
     def _show_settings(self) -> None:
-        """設定ダイアログを表示（将来の実装予定）"""
-        QMessageBox.information(
-            self,
-            "設定",
-            "設定機能は将来のバージョンで実装予定です。"
-        )
+        """設定ダイアログを表示"""
+        try:
+            from PyQt6.QtWidgets import QTabWidget
+
+            # 設定ダイアログを作成
+            settings_dialog = QDialog(self)
+            settings_dialog.setWindowTitle("設定")
+            settings_dialog.setModal(True)
+            settings_dialog.resize(600, 400)
+
+            layout = QVBoxLayout(settings_dialog)
+
+            # タブウィジェット
+            tab_widget = QTabWidget()
+            layout.addWidget(tab_widget)
+
+            # テーマ設定タブ
+            theme_tab = QWidget()
+            theme_layout = QVBoxLayout(theme_tab)
+
+            # テーマ設定説明
+            theme_desc = QLabel(
+                "テーマ設定では、使用したいテーマを複数選択できます。\n"
+                "ツールバーのテーマボタンで、選択されたテーマを順次切り替えます。"
+            )
+            theme_desc.setWordWrap(True)
+            theme_layout.addWidget(theme_desc)
+
+            # テーマ設定ボタン
+            theme_settings_btn = QPushButton("テーマ設定を開く")
+            theme_settings_btn.clicked.connect(self._show_theme_settings)
+            theme_layout.addWidget(theme_settings_btn)
+
+            theme_layout.addStretch()
+            tab_widget.addTab(theme_tab, "テーマ")
+
+            # その他の設定タブ（将来の実装予定）
+            other_tab = QWidget()
+            other_layout = QVBoxLayout(other_tab)
+            other_label = QLabel("その他の設定は将来のバージョンで実装予定です。")
+            other_layout.addWidget(other_label)
+            other_layout.addStretch()
+            tab_widget.addTab(other_tab, "その他")
+
+            # ボタンパネル
+            button_layout = QHBoxLayout()
+            button_layout.addStretch()
+
+            close_btn = QPushButton("閉じる")
+            close_btn.clicked.connect(settings_dialog.accept)
+            button_layout.addWidget(close_btn)
+
+            layout.addLayout(button_layout)
+
+            # ダイアログを表示
+            settings_dialog.exec()
+
+        except Exception as e:
+            self.logger.error(f"設定ダイアログの表示に失敗しました: {e}")
+            # フォールバック：テーマ設定のみ表示
+            QMessageBox.information(
+                self,
+                "設定",
+                "設定機能を準備中です。\nテーマ設定は「表示」メニューから利用できます。"
+            )
 
     def _toggle_theme(self) -> None:
-        """テーマをトグル切り替え（ダーク/ライト）"""
+        """テーマをループ切り替え（有効なテーマのみ）"""
         try:
             if hasattr(self, "theme_manager"):
-                current_theme = self.theme_manager.get_current_theme()
-                new_theme = "light" if current_theme == "dark" else "dark"
-
-                # テーマを適用
-                self.theme_manager.apply_theme(new_theme)
+                new_theme = self.theme_manager.cycle_theme()
 
                 # アクションアイコンを更新
-                self.theme_action.setText("☀️" if new_theme == "light" else "🌙")
-                self.theme_action.setToolTip(
-                    f"ライトテーマ" if new_theme == "light" else "ダークテーマ"
-                )
+                self._update_theme_button_icon(new_theme)
 
-                self.logger.info(
-                    f"テーマを切り替えました: {current_theme} → {new_theme}"
-                )
+                self.logger.info(f"テーマを切り替えました: → {new_theme}")
         except Exception as e:
             self.logger.error(f"テーマの切り替えに失敗しました: {e}")
 
@@ -621,12 +692,19 @@ class MainWindow(QMainWindow):
         """テーマ変更時の処理"""
         self.logger.debug(f"テーマが変更されました: {theme_name}")
         try:
+            # テーマボタンのアイコンを更新
+            self._update_theme_button_icon(theme_name)
+
+            # クイック切り替えメニューを更新（チェックマーク位置の変更）
+            self._update_quick_theme_menu()
+
             # ウィンドウタイトルを更新
-            self.setWindowTitle(f"PhotoGeoView - {theme_name.title()}")
+            theme_info = self.theme_manager.get_theme_info(theme_name)
+            self.setWindowTitle(f"PhotoGeoView - {theme_info['display_name']}")
 
             # ステータスバーにメッセージを表示
             self.status_bar.showMessage(
-                f"テーマを {theme_name.title()} に変更しました", 2000
+                f"テーマを {theme_info['display_name']} に変更しました", 2000
             )
 
             # 設定を保存
@@ -1150,3 +1228,143 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.logger.error(f"アプリケーション終了時の処理に失敗しました: {e}")
             event.accept()
+
+    def _show_theme_settings(self) -> None:
+        """テーマ設定ダイアログを表示"""
+        try:
+            from .theme_selection_dialog import ThemeSelectionDialog
+
+            dialog = ThemeSelectionDialog(self.theme_manager, self)
+            dialog.themes_applied.connect(self._on_themes_updated)
+
+            result = dialog.exec()
+            if result == QDialog.DialogCode.Accepted:
+                self.logger.info("テーマ設定が更新されました")
+                # クイック切り替えメニューを更新
+                self._update_quick_theme_menu()
+
+        except Exception as e:
+            self.logger.error(f"テーマ設定ダイアログの表示に失敗しました: {e}")
+            QMessageBox.critical(
+                self,
+                "エラー",
+                f"テーマ設定ダイアログの表示に失敗しました: {e}"
+            )
+
+    def _update_quick_theme_menu(self) -> None:
+        """クイック切り替えメニューを更新"""
+        try:
+            if not hasattr(self, 'quick_theme_menu') or not hasattr(self, 'theme_manager'):
+                return
+
+            # 既存のアクションをクリア
+            self.quick_theme_menu.clear()
+
+            # 有効なテーマのアクションを作成
+            enabled_themes = self.theme_manager.get_enabled_themes()
+            current_theme = self.theme_manager.get_current_theme()
+
+            if not enabled_themes:
+                # 有効なテーマがない場合
+                no_themes_action = QAction("有効なテーマがありません", self)
+                no_themes_action.setEnabled(False)
+                self.quick_theme_menu.addAction(no_themes_action)
+                return
+
+            for theme_name in enabled_themes:
+                theme_info = self.theme_manager.get_theme_info(theme_name)
+                action = QAction(theme_info["display_name"], self)
+                action.setToolTip(theme_info["description"])
+
+                # 現在のテーマにチェックマーク
+                if theme_name == current_theme:
+                    action.setCheckable(True)
+                    action.setChecked(True)
+
+                # クリック時の動作
+                action.triggered.connect(
+                    lambda checked, name=theme_name: self._apply_specific_theme(name)
+                )
+
+                self.quick_theme_menu.addAction(action)
+
+        except Exception as e:
+            self.logger.error(f"クイック切り替えメニューの更新に失敗しました: {e}")
+
+    def _apply_specific_theme(self, theme_name: str) -> None:
+        """指定したテーマを適用"""
+        try:
+            if hasattr(self, 'theme_manager'):
+                self.theme_manager.apply_theme(theme_name)
+                self.logger.info(f"テーマを適用しました: {theme_name}")
+        except Exception as e:
+            self.logger.error(f"テーマの適用に失敗しました: {theme_name}, エラー: {e}")
+
+    def _update_theme_button_icon(self, theme_name: str) -> None:
+        """テーマボタンのアイコンを更新"""
+        try:
+            if not hasattr(self, 'theme_action'):
+                return
+
+            # テーマに応じたアイコンマップ
+            theme_icons = {
+                "dark": "🌙",
+                "light": "☀️",
+                "blue": "🔵",
+                "green": "🟢",
+                "purple": "🟣",
+                "orange": "🟠",
+                "red": "🔴",
+                "pink": "🩷",
+                "yellow": "🟡",
+                "brown": "🟤",
+                "gray": "⚫",
+                "cyan": "🔵",
+                "teal": "🟢",
+                "indigo": "🟣",
+                "lime": "🟢",
+                "amber": "🟠"
+            }
+
+            icon = theme_icons.get(theme_name, "🎨")
+            theme_info = self.theme_manager.get_theme_info(theme_name)
+            display_name = theme_info["display_name"]
+
+            self.theme_action.setText(icon)
+            self.theme_action.setToolTip(f"現在のテーマ: {display_name}\nクリックで次のテーマに切り替え")
+
+        except Exception as e:
+            self.logger.error(f"テーマボタンアイコンの更新に失敗しました: {e}")
+
+    def _on_themes_updated(self, selected_themes: list) -> None:
+        """テーマ設定更新時の処理"""
+        try:
+            self.logger.info(f"有効テーマが更新されました: {selected_themes}")
+            # クイック切り替えメニューを更新
+            self._update_quick_theme_menu()
+            # テーマボタンアイコンを更新
+            self._update_theme_button_icon(self.theme_manager.get_current_theme())
+
+        except Exception as e:
+            self.logger.error(f"テーマ更新処理に失敗しました: {e}")
+
+    def _finalize_theme_ui(self) -> None:
+        """テーマ関連UIの最終初期化"""
+        try:
+            if hasattr(self, 'theme_manager'):
+                # テーマボタンのアイコンを更新
+                current_theme = self.theme_manager.get_current_theme()
+                self._update_theme_button_icon(current_theme)
+                
+                # クイック切り替えメニューを更新
+                if hasattr(self, 'quick_theme_menu'):
+                    self._update_quick_theme_menu()
+                
+                # ウィンドウタイトルにテーマ名を追加
+                theme_info = self.theme_manager.get_theme_info(current_theme)
+                self.setWindowTitle(f"PhotoGeoView - {theme_info['display_name']}")
+                
+                self.logger.debug("テーマUIの最終初期化が完了しました")
+                
+        except Exception as e:
+            self.logger.error(f"テーマUI最終初期化に失敗しました: {e}")

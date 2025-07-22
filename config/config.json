@@ -16,7 +16,7 @@
             "right_panel_width": 1276,
             "left_splitter_sizes": [
                 333,
-                202,
+                200,
                 300
             ]
         },
@@ -44,6 +44,24 @@
                 "indigo",
                 "lime",
                 "amber"
+            ],
+            "enabled_themes": [
+                "dark",
+                "light",
+                "blue",
+                "green",
+                "purple",
+                "orange",
+                "red",
+                "pink",
+                "yellow",
+                "brown",
+                "cyan",
+                "teal",
+                "indigo",
+                "lime",
+                "amber",
+                "gray"
             ]
         }
     },

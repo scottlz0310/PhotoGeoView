@@ -137,6 +137,14 @@ class ThemeManager(QObject):
         # 現在のテーマ
         self.current_theme = self.settings.get("ui.theme_manager.current_theme", "dark")
 
+        # 有効なテーマリスト（設定から読み込み、デフォルトは全テーマ有効）
+        self.enabled_themes = self.settings.get("ui.theme_manager.enabled_themes", self.available_themes.copy())
+
+        # 有効なテーマリストの検証（不正なテーマ名を除去）
+        self.enabled_themes = [theme for theme in self.enabled_themes if theme in self.available_themes]
+        if not self.enabled_themes:  # 有効なテーマがない場合はダークテーマを強制追加
+            self.enabled_themes = ["dark"]
+
         # Qt-Theme-Managerの初期化
         self._init_theme_manager()
 
@@ -684,15 +692,24 @@ class ThemeManager(QObject):
 
     def cycle_theme(self) -> str:
         """
-        テーマを循環切り替え
+        有効なテーマを循環切り替え
 
         Returns:
             新しいテーマ名
         """
         try:
-            current_index = self.available_themes.index(self.current_theme)
-            next_index = (current_index + 1) % len(self.available_themes)
-            new_theme = self.available_themes[next_index]
+            # 有効なテーマのみを対象とする
+            if not self.enabled_themes:
+                self.logger.warning("有効なテーマがありません")
+                return self.current_theme
+
+            # 現在のテーマが有効リストにない場合は最初の有効テーマを選択
+            if self.current_theme not in self.enabled_themes:
+                new_theme = self.enabled_themes[0]
+            else:
+                current_index = self.enabled_themes.index(self.current_theme)
+                next_index = (current_index + 1) % len(self.enabled_themes)
+                new_theme = self.enabled_themes[next_index]
 
             self.apply_theme(new_theme)
             return new_theme
@@ -700,6 +717,49 @@ class ThemeManager(QObject):
         except Exception as e:
             self.logger.error(f"テーマの循環切り替えに失敗しました: {e}")
             return self.current_theme
+
+    def get_enabled_themes(self) -> List[str]:
+        """
+        有効なテーマリストを取得
+
+        Returns:
+            有効なテーマのリスト
+        """
+        return self.enabled_themes.copy()
+
+    def set_enabled_themes(self, themes: List[str]) -> bool:
+        """
+        有効なテーマリストを設定
+
+        Args:
+            themes: 有効にするテーマのリスト
+
+        Returns:
+            設定成功の場合True
+        """
+        try:
+            # 有効なテーマ名のみをフィルタリング
+            valid_themes = [theme for theme in themes if theme in self.available_themes]
+
+            if not valid_themes:
+                self.logger.warning("有効なテーマが指定されていません。ダークテーマを追加します。")
+                valid_themes = ["dark"]
+
+            self.enabled_themes = valid_themes
+
+            # 設定に保存
+            self.settings.set("ui.theme_manager.enabled_themes", self.enabled_themes)
+
+            # 現在のテーマが無効になった場合は最初の有効テーマに切り替え
+            if self.current_theme not in self.enabled_themes:
+                self.apply_theme(self.enabled_themes[0])
+
+            self.logger.info(f"有効なテーマを設定しました: {valid_themes}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"有効なテーマの設定に失敗しました: {e}")
+            return False
 
 
 
