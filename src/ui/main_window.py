@@ -198,9 +198,9 @@ class MainWindow(QMainWindow):
         self.image_panel.setMinimumSize(200, 150)
         self.image_layout = QVBoxLayout(self.image_panel)
 
-        # 画像パネルヘッダー
+        # 画像パネルヘッダー（ImageViewerタイトルと全画面ボタンのみ）
         self.image_header = QHBoxLayout()
-        self.image_header.addWidget(QLabel("画像プレビュー"))
+        self.image_header.addWidget(QLabel("🖼️ ImageViewer"))
         self.image_header.addStretch()
 
         # フルスクリーンボタン
@@ -223,9 +223,9 @@ class MainWindow(QMainWindow):
         self.map_panel.setMinimumSize(200, 150)
         self.map_layout = QVBoxLayout(self.map_panel)
 
-        # 地図パネルヘッダー
+        # 地図パネルヘッダー（Map Viewerタイトルと全画面ボタンのみ）
         self.map_header = QHBoxLayout()
-        self.map_header.addWidget(QLabel("地図"))
+        self.map_header.addWidget(QLabel("🗺️ Map Viewer"))
         self.map_header.addStretch()
 
         # フルスクリーンボタン

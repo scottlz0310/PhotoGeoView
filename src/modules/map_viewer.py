@@ -67,23 +67,7 @@ class MapViewer(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
-        # Title bar with fullscreen button
-        title_layout = QHBoxLayout()
-
-        title_label = QLabel("🗺️ Map Viewer")
-        title_label.setStyleSheet("font-weight: bold; padding: 2px;")
-        title_layout.addWidget(title_label)
-
-        title_layout.addStretch()
-
-        # Fullscreen button
-        fullscreen_btn = QPushButton("⛶")
-        fullscreen_btn.setToolTip("Fullscreen view")
-        fullscreen_btn.setFixedSize(24, 24)
-        fullscreen_btn.clicked.connect(self.fullscreen_requested.emit)
-        title_layout.addWidget(fullscreen_btn)
-
-        layout.addLayout(title_layout)
+        # タイトルバーは main_window.py で管理するため削除
 
         # Web engine view for map display
         self.web_view = QWebEngineView()

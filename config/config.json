@@ -9,9 +9,9 @@
         "window": {
             "width": 1914,
             "height": 999,
-            "x": -3,
+            "x": 1917,
             "y": -30,
-            "maximized": true,
+            "maximized": false,
             "left_panel_width": 610,
             "right_panel_width": 1276,
             "left_splitter_sizes": [
