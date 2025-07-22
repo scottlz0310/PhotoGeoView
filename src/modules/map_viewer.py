@@ -364,7 +364,7 @@ class MapViewer(QWidget):
             self.photo_locations.clear()
             self.photos_without_gps.clear()  # ジオタグなし画像リストもクリア
             self.current_photo = None
-            
+
             # 画像選択なしの状態に戻す
             self.show_select_image_message()
             self.status_label.setText("Map cleared - Select an image to view location")
@@ -540,7 +540,7 @@ class MapViewer(QWidget):
         """Display 'select image' message in the web view"""
         try:
             logger.debug("show_select_image_message called")
-            
+
             select_image_html = """
             <!DOCTYPE html>
             <html>
@@ -622,12 +622,12 @@ class MapViewer(QWidget):
             # Save select image HTML to temp file
             temp_dir = tempfile.gettempdir()
             select_image_file = os.path.join(temp_dir, "photogeoview_select_image.html")
-            
+
             logger.debug(f"Saving select-image HTML to: {select_image_file}")
-            
+
             with open(select_image_file, 'w', encoding='utf-8') as f:
                 f.write(select_image_html)
-                
+
             logger.debug(f"HTML file written, size: {len(select_image_html)} chars")
 
             # Load in web view

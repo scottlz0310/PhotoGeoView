@@ -316,7 +316,7 @@ class PhotoGeoViewController(QObject):
                 gps = exif_data["gps"]
                 if "latitude" in gps and "longitude" in gps:
                     lat, lon = gps["latitude"], gps["longitude"]
-                    
+
                     # NullIsland (0.0, 0.0) をGPS情報なしとして扱う
                     if lat == 0.0 and lon == 0.0:
                         self.logger.info(f"GPS座標がNullIsland (0.0, 0.0) です: {file_path}")
