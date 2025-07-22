@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from PyQt6.QtCore import QObject, pyqtSignal, QThread, QMutex
+from PyQt6.QtCore import QObject, pyqtSignal, QThread, QMutex, Qt
 from PyQt6.QtGui import QPixmap, QImage, QImageReader
 
 from src.core.logger import get_logger
@@ -105,9 +105,13 @@ class ImageLoader(QObject):
             if pixmap.format() in ("RGBA", "LA", "P"):
                 pixmap = pixmap.convert("RGB")
 
-            # リサイズ
+            # リサイズ（高品質スケーリング）
             if size:
-                pixmap = pixmap.scaled(size, Qt.AspectRatioMode.KeepAspectRatio)
+                pixmap = pixmap.scaled(
+                    size[0], size[1],
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
 
             # QImageに変換
             qimage = pixmap.toImage()

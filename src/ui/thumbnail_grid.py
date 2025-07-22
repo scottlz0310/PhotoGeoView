@@ -392,11 +392,9 @@ class ThumbnailGrid(QWidget):
                         thumbnail_label = widget.property("thumbnail_label")
                         if thumbnail_label and file_path in self._thumbnails:
                             pixmap = self._thumbnails[file_path]
-                            scaled_pixmap = pixmap.scaled(
-                                self._thumbnail_size,
-                                self._thumbnail_size,
-                                Qt.AspectRatioMode.KeepAspectRatio,
-                                Qt.TransformationMode.SmoothTransformation,
+                            # 高品質スケーリングを使用
+                            scaled_pixmap = self._create_high_quality_thumbnail(
+                                pixmap, self._thumbnail_size
                             )
                             thumbnail_label.setPixmap(scaled_pixmap)
                         break

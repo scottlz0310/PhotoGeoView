@@ -191,3 +191,16 @@ def generate_thumbnail(self, ...):
 - `tests/qt-image-test.py`: 高品質サムネイル生成のリファレンス実装
 - `tests/test_thumbnail_quality.py`: サムネイル品質テストスクリプト
 - Qt6 QImageReader/QPainter 公式ドキュメント
+
+## 🔍 古い実装の削除・更新状況
+
+### ✅ 完了した修正
+1. **`src/modules/thumbnail_generator.py`**: 高品質QPainter方式を実装（完了）
+2. **`src/ui/thumbnail_grid.py`**: UI側でのサムネイル表示も高品質化（完了）
+3. **`src/modules/image_loader.py`**: 一般的な画像リサイズにもSmoothTransformation適用（完了）
+
+### 🎯 修正された古い実装箇所
+- **thumbnail_grid.py の `_update_thumbnail_widget()` 関数**: 古い `pixmap.scaled()` から `_create_high_quality_thumbnail()` に変更
+- **image_loader.py の `load_image()` 関数**: `scaled(size, AspectRatio)` から `scaled(width, height, AspectRatio, SmoothTransformation)` に変更
+
+これらの修正により、アプリケーション全体で一貫して高品質な画像処理が適用されました。
