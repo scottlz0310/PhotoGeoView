@@ -21,7 +21,8 @@ ehthumbs.db
 .thumbnails/
 .thumb/
 
-# ユーザー設定ファイル（テーマ切り替え時に自動更新される）
+# ユーザー設定ファイル（アプリ実行時に自動更新される）
+config/config.json
 config/qt_theme_settings.json
 config/qt_theme_user_settings.json
 
