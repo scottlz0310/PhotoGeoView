@@ -1,0 +1,239 @@
+{
+  "theme_styles": {
+    "dark": {
+      "name": "ダーク",
+      "description": "モダンなダークテーマ",
+      "category": "dark",
+      "colors": {
+        "background": "#2b2b2b",
+        "foreground": "#ffffff",
+        "menu_background": "#3c3c3c",
+        "button_background": "#4a4a4a",
+        "button_hover": "#5a5a5a",
+        "border": "#555555",
+        "input_background": "#2b2b2b"
+      },
+      "stylesheet_template": "QWidget { background-color: {background}; color: {foreground}; } QMainWindow { background-color: {background}; } QMenuBar { background-color: {menu_background}; color: {foreground}; } QToolBar { background-color: {menu_background}; border: none; } QPushButton { background-color: {button_background}; border: 1px solid {border}; color: {foreground}; padding: 5px; } QPushButton:hover { background-color: {button_hover}; } QTreeView, QListView { background-color: {input_background}; color: {foreground}; border: 1px solid {border}; } QTextEdit { background-color: {input_background}; color: {foreground}; border: 1px solid {border}; }"
+    },
+    "light": {
+      "name": "ライト",
+      "description": "クリーンなライトテーマ",
+      "category": "light",
+      "colors": {
+        "background": "#f0f0f0",
+        "foreground": "#000000",
+        "menu_background": "#e0e0e0",
+        "button_background": "#d0d0d0",
+        "button_hover": "#c0c0c0",
+        "border": "#b0b0b0",
+        "input_background": "#ffffff"
+      },
+      "stylesheet_template": "QWidget { background-color: {background}; color: {foreground}; } QMainWindow { background-color: {background}; } QMenuBar { background-color: {menu_background}; color: {foreground}; } QToolBar { background-color: {menu_background}; border: none; } QPushButton { background-color: {button_background}; border: 1px solid {border}; color: {foreground}; padding: 5px; } QPushButton:hover { background-color: {button_hover}; } QTreeView, QListView { background-color: {input_background}; color: {foreground}; border: 1px solid {border}; } QTextEdit { background-color: {input_background}; color: {foreground}; border: 1px solid {border}; }"
+    },
+    "blue": {
+      "name": "ブルー",
+      "description": "落ち着いたブルーテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#e3f2fd",
+        "foreground": "#1565c0",
+        "menu_background": "#bbdefb",
+        "button_background": "#90caf9",
+        "button_hover": "#64b5f6",
+        "border": "#64b5f6",
+        "input_background": "#e3f2fd"
+      }
+    },
+    "green": {
+      "name": "グリーン",
+      "description": "自然なグリーンテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#e8f5e8",
+        "foreground": "#2e7d32",
+        "menu_background": "#c8e6c9",
+        "button_background": "#a5d6a7",
+        "button_hover": "#81c784",
+        "border": "#81c784",
+        "input_background": "#e8f5e8"
+      }
+    },
+    "purple": {
+      "name": "パープル",
+      "description": "エレガントなパープルテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#f3e5f5",
+        "foreground": "#7b1fa2",
+        "menu_background": "#e1bee7",
+        "button_background": "#ce93d8",
+        "button_hover": "#ba68c8",
+        "border": "#ba68c8",
+        "input_background": "#f3e5f5"
+      }
+    },
+    "orange": {
+      "name": "Orange (Improved)",
+      "description": "オレンジテーマ（アクセシビリティ改善版）",
+      "category": "colorful",
+      "colors": {
+        "background": "#fff3e0",
+        "foreground": "#3d2914",
+        "menu_background": "#fbe9a7",
+        "button_background": "#ffb74d",
+        "button_hover": "#ffa726",
+        "border": "#ff9800",
+        "input_background": "#ffebcd",
+        "selection": "#ff9800",
+        "hover": "#ffb74d"
+      }
+    },
+    "red": {
+      "name": "レッド",
+      "description": "情熱的なレッドテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#ffebee",
+        "foreground": "#c62828",
+        "menu_background": "#ffcdd2",
+        "button_background": "#ef9a9a",
+        "button_hover": "#e57373",
+        "border": "#e57373",
+        "input_background": "#ffebee"
+      }
+    },
+    "pink": {
+      "name": "ピンク",
+      "description": "可愛らしいピンクテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#fce4ec",
+        "foreground": "#ad1457",
+        "menu_background": "#f8bbd9",
+        "button_background": "#f48fb1",
+        "button_hover": "#f06292",
+        "border": "#f06292",
+        "input_background": "#fce4ec"
+      }
+    },
+    "yellow": {
+      "name": "Yellow (Improved)",
+      "description": "黄色テーマ（アクセシビリティ改善版）",
+      "category": "colorful",
+      "colors": {
+        "background": "#fffde7",
+        "foreground": "#3d3b00",
+        "menu_background": "#fff59d",
+        "button_background": "#ffeb3b",
+        "button_hover": "#ffcc02",
+        "border": "#ffc107",
+        "input_background": "#fffacd",
+        "selection": "#ffeb3b",
+        "hover": "#fff176"
+      }
+    },
+    "brown": {
+      "name": "ブラウン",
+      "description": "落ち着いたブラウンテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#efebe9",
+        "foreground": "#5d4037",
+        "menu_background": "#d7ccc8",
+        "button_background": "#bcaaa4",
+        "button_hover": "#a1887f",
+        "border": "#a1887f",
+        "input_background": "#efebe9"
+      }
+    },
+    "gray": {
+      "name": "グレー",
+      "description": "シンプルなグレーテーマ",
+      "category": "neutral",
+      "colors": {
+        "background": "#fafafa",
+        "foreground": "#424242",
+        "menu_background": "#eeeeee",
+        "button_background": "#e0e0e0",
+        "button_hover": "#bdbdbd",
+        "border": "#bdbdbd",
+        "input_background": "#fafafa"
+      }
+    },
+    "cyan": {
+      "name": "シアン",
+      "description": "爽やかなシアンテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#e0f2f1",
+        "foreground": "#00695c",
+        "menu_background": "#b2dfdb",
+        "button_background": "#80cbc4",
+        "button_hover": "#4db6ac",
+        "border": "#4db6ac",
+        "input_background": "#e0f2f1"
+      }
+    },
+    "teal": {
+      "name": "ティール",
+      "description": "洗練されたティールテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#e0f2f1",
+        "foreground": "#004d40",
+        "menu_background": "#b2dfdb",
+        "button_background": "#80cbc4",
+        "button_hover": "#4db6ac",
+        "border": "#4db6ac",
+        "input_background": "#e0f2f1"
+      }
+    },
+    "indigo": {
+      "name": "インディゴ",
+      "description": "深みのあるインディゴテーマ",
+      "category": "color",
+      "colors": {
+        "background": "#e8eaf6",
+        "foreground": "#283593",
+        "menu_background": "#c5cae9",
+        "button_background": "#9fa8da",
+        "button_hover": "#7986cb",
+        "border": "#7986cb",
+        "input_background": "#e8eaf6"
+      }
+    },
+    "lime": {
+      "name": "Lime (Improved)",
+      "description": "明るい黄緑テーマ（アクセシビリティ改善版）",
+      "category": "colorful",
+      "colors": {
+        "background": "#f9fbe7",
+        "foreground": "#2e4832",
+        "menu_background": "#e8f5e8",
+        "button_background": "#c8e6c9",
+        "button_hover": "#a5d6a7",
+        "border": "#81c784",
+        "input_background": "#f1f8e9",
+        "selection": "#8bc34a",
+        "hover": "#aed581"
+      }
+    },
+    "amber": {
+      "name": "Amber (Improved)",
+      "description": "アンバーテーマ（アクセシビリティ改善版）",
+      "category": "colorful",
+      "colors": {
+        "background": "#fff8e1",
+        "foreground": "#3d2f00",
+        "menu_background": "#ffecb3",
+        "button_background": "#ffc107",
+        "button_hover": "#ffb300",
+        "border": "#ff9800",
+        "input_background": "#fff4c4",
+        "selection": "#ffc107",
+        "hover": "#ffca28"
+      }
+    }
+  },
+  "default_stylesheet_template": "QWidget { background-color: {background}; color: {foreground}; } QMainWindow { background-color: {background}; } QMenuBar { background-color: {menu_background}; color: {foreground}; } QToolBar { background-color: {menu_background}; border: none; } QPushButton { background-color: {button_background}; border: 1px solid {border}; color: {foreground}; padding: 5px; } QPushButton:hover { background-color: {button_hover}; } QTreeView, QListView { background-color: {input_background}; color: {foreground}; border: 1px solid {border}; } QTextEdit { background-color: {input_background}; color: {foreground}; border: 1px solid {border}; }"
+}

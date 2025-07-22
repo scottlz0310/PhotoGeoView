@@ -3,7 +3,7 @@
 複数テーマを選択可能なダイアログウィンドウ
 """
 
-from typing import List, Dict
+from typing import List, Dict, Union, Optional
 from PyQt6.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -27,6 +27,7 @@ from PyQt6.QtGui import QFont, QPixmap, QPainter, QColor
 
 from src.core.logger import get_logger
 from .theme_manager import ThemeManager
+from .qt_theme_manager_adapter import QtThemeManagerAdapter
 
 
 class ThemeSelectionDialog(QDialog):
@@ -35,12 +36,12 @@ class ThemeSelectionDialog(QDialog):
     # シグナル定義
     themes_applied = pyqtSignal(list)  # テーマ適用時に発信
 
-    def __init__(self, theme_manager: ThemeManager, parent=None):
+    def __init__(self, theme_manager: Union[ThemeManager, QtThemeManagerAdapter], parent: Optional['QWidget'] = None):
         """
         ダイアログの初期化
 
         Args:
-            theme_manager: ThemeManagerインスタンス
+            theme_manager: ThemeManagerまたはQtThemeManagerAdapterインスタンス
             parent: 親ウィジェット
         """
         super().__init__(parent)

@@ -36,13 +36,13 @@ class ThemeManager(QObject):
 
         # テーマ設定ファイルのパス
         self.theme_config_path = Path(__file__).parent.parent.parent / "config" / "theme_styles.json"
-        
+
         # テーマ設定を読み込み
         self.theme_config = self._load_theme_config()
-        
+
         # 利用可能なテーマリストを設定から取得
         self.available_themes = list(self.theme_config.get("theme_styles", {}).keys())
-        
+
         # テーマ情報辞書を設定ファイルから構築
         self.theme_info = self._build_theme_info()
 
@@ -121,14 +121,14 @@ class ThemeManager(QObject):
         """テーマ設定からテーマ情報辞書を構築"""
         theme_info = {}
         theme_styles = self.theme_config.get("theme_styles", {})
-        
+
         for theme_name, theme_data in theme_styles.items():
             theme_info[theme_name] = {
                 "display_name": theme_data.get("name", theme_name.title()),
                 "description": theme_data.get("description", f"{theme_name}テーマ"),
                 "category": theme_data.get("category", "color")
             }
-        
+
         return theme_info
 
     def _init_theme_manager(self) -> None:
@@ -226,18 +226,18 @@ class ThemeManager(QObject):
         """
         try:
             theme_styles = self.theme_config.get("theme_styles", {})
-            
+
             if theme_name in theme_styles:
                 theme_data = theme_styles[theme_name]
                 colors = theme_data.get("colors", {})
-                
+
                 # カスタムテンプレートがあれば使用、なければデフォルトテンプレートを使用
-                template = theme_data.get("stylesheet_template", 
+                template = theme_data.get("stylesheet_template",
                                         self.theme_config.get("default_stylesheet_template", ""))
-                
+
                 # カラー値でテンプレートを置換
                 stylesheet = template.format(**colors)
-                
+
                 self.app.setStyleSheet(stylesheet)
                 self.logger.debug(f"フォールバックテーマを適用しました: {theme_name}")
             else:
@@ -248,7 +248,7 @@ class ThemeManager(QObject):
                 else:
                     # 最低限のスタイルを適用
                     self.app.setStyleSheet("QWidget { background-color: #f0f0f0; color: #000000; }")
-                    
+
         except Exception as e:
             self.logger.error(f"フォールバックテーマの適用に失敗しました: {e}")
             # 緊急フォールバック: 最低限のスタイル
@@ -413,18 +413,18 @@ class ThemeManager(QObject):
             self.theme_config = self._load_theme_config()
             self.available_themes = list(self.theme_config.get("theme_styles", {}).keys())
             self.theme_info = self._build_theme_info()
-            
+
             new_themes = set(self.available_themes)
-            
+
             # 有効テーマリストを更新（削除されたテーマを除外）
             self.enabled_themes = [theme for theme in self.enabled_themes if theme in self.available_themes]
             if not self.enabled_themes:
                 self.enabled_themes = ["dark"] if "dark" in self.available_themes else self.available_themes[:1]
-            
+
             # 現在のテーマが無効になった場合は最初の有効テーマに切り替え
             if self.current_theme not in self.available_themes:
                 self.apply_theme(self.enabled_themes[0])
-            
+
             # 変更をログに記録
             added = new_themes - old_themes
             removed = old_themes - new_themes
@@ -432,10 +432,10 @@ class ThemeManager(QObject):
                 self.logger.info(f"新しいテーマが追加されました: {added}")
             if removed:
                 self.logger.info(f"テーマが削除されました: {removed}")
-                
+
             self.logger.info("テーマ設定ファイルを再読み込みしました")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"テーマ設定ファイルの再読み込みに失敗しました: {e}")
             return False
@@ -452,20 +452,20 @@ class ThemeManager(QObject):
         try:
             if "theme_styles" not in self.theme_config:
                 self.theme_config["theme_styles"] = {}
-                
+
             self.theme_config["theme_styles"][theme_name] = theme_data
-            
+
             # ファイルに保存
             with open(self.theme_config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.theme_config, f, ensure_ascii=False, indent=2)
-                
+
             # メモリ内の設定を更新
             self.available_themes = list(self.theme_config.get("theme_styles", {}).keys())
             self.theme_info = self._build_theme_info()
-            
+
             self.logger.info(f"カスタムテーマを保存しました: {theme_name}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"カスタムテーマの保存に失敗しました: {e}")
             return False

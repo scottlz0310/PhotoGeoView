@@ -36,7 +36,7 @@ from src.core.logger import get_logger
 from src.core.settings import get_settings
 from src.core.utils import ensure_directory_exists
 from src.core.controller import PhotoGeoViewController
-from .theme_manager import ThemeManager
+from .qt_theme_manager_adapter import QtThemeManagerAdapter
 from .folder_navigator import FolderNavigator
 from .thumbnail_grid import ThumbnailGrid
 
@@ -438,15 +438,15 @@ class MainWindow(QMainWindow):
         """テーマの初期化"""
         try:
             app = QApplication.instance()
-            if app:
-                self.theme_manager = ThemeManager(app)
+            if app and isinstance(app, QApplication):
+                self.theme_manager = QtThemeManagerAdapter(app)
                 self.theme_manager.theme_changed.connect(self._on_theme_changed)
                 # テーマボタンの初期化
                 self._update_theme_button_icon(self.theme_manager.get_current_theme())
                 # テーマメニューの初期化（メニューバーが既に初期化されている場合）
                 if hasattr(self, 'quick_theme_menu'):
                     self._update_quick_theme_menu()
-                self.logger.info("テーママネージャーを初期化しました")
+                self.logger.info("Qt-Theme-Managerアダプターを初期化しました")
             else:
                 self.logger.error("QApplicationインスタンスが見つかりません")
         except Exception as e:
@@ -1355,16 +1355,16 @@ class MainWindow(QMainWindow):
                 # テーマボタンのアイコンを更新
                 current_theme = self.theme_manager.get_current_theme()
                 self._update_theme_button_icon(current_theme)
-                
+
                 # クイック切り替えメニューを更新
                 if hasattr(self, 'quick_theme_menu'):
                     self._update_quick_theme_menu()
-                
+
                 # ウィンドウタイトルにテーマ名を追加
                 theme_info = self.theme_manager.get_theme_info(current_theme)
                 self.setWindowTitle(f"PhotoGeoView - {theme_info['display_name']}")
-                
+
                 self.logger.debug("テーマUIの最終初期化が完了しました")
-                
+
         except Exception as e:
             self.logger.error(f"テーマUI最終初期化に失敗しました: {e}")

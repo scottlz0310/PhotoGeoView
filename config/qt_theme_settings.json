@@ -1,0 +1,1044 @@
+{
+    "current_theme": "dark",
+    "last_selected_theme": "dark",
+    "theme_switching_enabled": true,
+    "remember_theme_choice": true,
+    "version": "0.0.1",
+    "available_themes": {
+        "dark": {
+            "name": "dark",
+            "display_name": "ダーク",
+            "description": "モダンなダークテーマ",
+            "primaryColor": "#2b2b2b",
+            "accentColor": "#5a5a5a",
+            "backgroundColor": "#2b2b2b",
+            "textColor": "#ffffff",
+            "button": {
+                "background": "#4a4a4a",
+                "text": "#ffffff",
+                "hover": "#5a5a5a",
+                "pressed": "#5a5a5a",
+                "border": "#555555"
+            },
+            "panel": {
+                "background": "#2b2b2b",
+                "border": "#555555",
+                "header": {
+                    "background": "#3c3c3c",
+                    "text": "#ffffff",
+                    "border": "#555555"
+                },
+                "zebra": {
+                    "alternate": "#2d2d2d"
+                }
+            },
+            "text": {
+                "primary": "#ffffff",
+                "secondary": "#cccccc",
+                "muted": "#999999",
+                "heading": "#ffffff",
+                "link": "#5a9fd4",
+                "success": "#68d391",
+                "warning": "#fbb948",
+                "error": "#fc8181"
+            },
+            "input": {
+                "background": "#3c3c3c",
+                "text": "#ffffff",
+                "border": "#555555",
+                "focus": "#5a9fd4",
+                "placeholder": "#999999"
+            },
+            "list": {
+                "background": "#2b2b2b",
+                "text": "#ffffff",
+                "alternate": "#2d2d2d",
+                "selection": "#5a5a5a",
+                "hover": "#404040",
+                "border": "#555555"
+            },
+            "menu": {
+                "background": "#3c3c3c",
+                "text": "#ffffff",
+                "hover": "#5a5a5a",
+                "border": "#555555"
+            },
+            "toolbar": {
+                "background": "#3c3c3c",
+                "text": "#ffffff",
+                "border": "#555555"
+            },
+            "scrollbar": {
+                "background": "#2b2b2b",
+                "handle": "#5a5a5a",
+                "handle_hover": "#6a6a6a"
+            }
+        },
+        "light": {
+            "name": "light",
+            "display_name": "ライト",
+            "description": "クリーンなライトテーマ",
+            "primaryColor": "#f0f0f0",
+            "accentColor": "#c0c0c0",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#000000",
+            "button": {
+                "background": "#d0d0d0",
+                "text": "#000000",
+                "hover": "#c0c0c0",
+                "pressed": "#c0c0c0",
+                "border": "#b0b0b0"
+            },
+            "panel": {
+                "background": "#f0f0f0",
+                "border": "#b0b0b0",
+                "header": {
+                    "background": "#e0e0e0",
+                    "text": "#000000",
+                    "border": "#b0b0b0"
+                },
+                "zebra": {
+                    "alternate": "#f5f5f5"
+                }
+            },
+            "text": {
+                "primary": "#000000",
+                "secondary": "#333333",
+                "muted": "#666666",
+                "heading": "#000000",
+                "link": "#0066cc",
+                "success": "#28a745",
+                "warning": "#ffc107",
+                "error": "#dc3545"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#000000",
+                "border": "#b0b0b0",
+                "focus": "#0066cc",
+                "placeholder": "#666666"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#000000",
+                "alternate": "#f5f5f5",
+                "selection": "#c0c0c0",
+                "hover": "#e0e0e0",
+                "border": "#b0b0b0"
+            },
+            "menu": {
+                "background": "#e0e0e0",
+                "text": "#000000",
+                "hover": "#c0c0c0",
+                "border": "#b0b0b0"
+            },
+            "toolbar": {
+                "background": "#e0e0e0",
+                "text": "#000000",
+                "border": "#b0b0b0"
+            },
+            "scrollbar": {
+                "background": "#f0f0f0",
+                "handle": "#c0c0c0",
+                "handle_hover": "#b0b0b0"
+            }
+        },
+        "blue": {
+            "name": "blue",
+            "display_name": "ブルー",
+            "description": "爽やかなブルーテーマ",
+            "primaryColor": "#e3f2fd",
+            "accentColor": "#2196f3",
+            "backgroundColor": "#e3f2fd",
+            "textColor": "#0d47a1",
+            "button": {
+                "background": "#2196f3",
+                "text": "#ffffff",
+                "hover": "#1976d2",
+                "pressed": "#1565c0",
+                "border": "#1976d2"
+            },
+            "panel": {
+                "background": "#e3f2fd",
+                "border": "#90caf9",
+                "header": {
+                    "background": "#bbdefb",
+                    "text": "#0d47a1",
+                    "border": "#90caf9"
+                },
+                "zebra": {
+                    "alternate": "#e6f3ff"
+                }
+            },
+            "text": {
+                "primary": "#0d47a1",
+                "secondary": "#1565c0",
+                "muted": "#5e92f3",
+                "heading": "#0d47a1",
+                "link": "#2196f3",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#0d47a1",
+                "border": "#90caf9",
+                "focus": "#2196f3",
+                "placeholder": "#5e92f3"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#0d47a1",
+                "alternate": "#e6f3ff",
+                "selection": "#bbdefb",
+                "hover": "#e1f5fe",
+                "border": "#90caf9"
+            },
+            "menu": {
+                "background": "#bbdefb",
+                "text": "#0d47a1",
+                "hover": "#90caf9",
+                "border": "#90caf9"
+            },
+            "toolbar": {
+                "background": "#bbdefb",
+                "text": "#0d47a1",
+                "border": "#90caf9"
+            },
+            "scrollbar": {
+                "background": "#e3f2fd",
+                "handle": "#90caf9",
+                "handle_hover": "#64b5f6"
+            }
+        },
+        "green": {
+            "name": "green",
+            "display_name": "グリーン",
+            "description": "自然な緑のテーマ",
+            "primaryColor": "#e8f5e8",
+            "accentColor": "#4caf50",
+            "backgroundColor": "#e8f5e8",
+            "textColor": "#1b5e20",
+            "button": {
+                "background": "#4caf50",
+                "text": "#ffffff",
+                "hover": "#45a049",
+                "pressed": "#388e3c",
+                "border": "#45a049"
+            },
+            "panel": {
+                "background": "#e8f5e8",
+                "border": "#a5d6a7",
+                "header": {
+                    "background": "#c8e6c9",
+                    "text": "#1b5e20",
+                    "border": "#a5d6a7"
+                },
+                "zebra": {
+                    "alternate": "#ebf7eb"
+                }
+            },
+            "text": {
+                "primary": "#1b5e20",
+                "secondary": "#2e7d32",
+                "muted": "#66bb6a",
+                "heading": "#1b5e20",
+                "link": "#4caf50",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#1b5e20",
+                "border": "#a5d6a7",
+                "focus": "#4caf50",
+                "placeholder": "#66bb6a"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#1b5e20",
+                "alternate": "#ebf7eb",
+                "selection": "#c8e6c9",
+                "hover": "#e8f5e8",
+                "border": "#a5d6a7"
+            },
+            "menu": {
+                "background": "#c8e6c9",
+                "text": "#1b5e20",
+                "hover": "#a5d6a7",
+                "border": "#a5d6a7"
+            },
+            "toolbar": {
+                "background": "#c8e6c9",
+                "text": "#1b5e20",
+                "border": "#a5d6a7"
+            },
+            "scrollbar": {
+                "background": "#e8f5e8",
+                "handle": "#a5d6a7",
+                "handle_hover": "#81c784"
+            }
+        },
+        "warm": {
+            "name": "warm",
+            "display_name": "ウォーム",
+            "description": "暖かい色調のテーマ",
+            "primaryColor": "#fff3e0",
+            "accentColor": "#ff9800",
+            "backgroundColor": "#fff3e0",
+            "textColor": "#e65100",
+            "button": {
+                "background": "#ff9800",
+                "text": "#ffffff",
+                "hover": "#f57c00",
+                "pressed": "#ef6c00",
+                "border": "#f57c00"
+            },
+            "panel": {
+                "background": "#fff3e0",
+                "border": "#ffcc02",
+                "header": {
+                    "background": "#ffe0b2",
+                    "text": "#e65100",
+                    "border": "#ffcc02"
+                },
+                "zebra": {
+                    "alternate": "#fff6e8"
+                }
+            },
+            "text": {
+                "primary": "#e65100",
+                "secondary": "#f57c00",
+                "muted": "#ffb74d",
+                "heading": "#e65100",
+                "link": "#ff9800",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#e65100",
+                "border": "#ffcc02",
+                "focus": "#ff9800",
+                "placeholder": "#ffb74d"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#e65100",
+                "alternate": "#fff6e8",
+                "selection": "#ffe0b2",
+                "hover": "#fff3e0",
+                "border": "#ffcc02"
+            },
+            "menu": {
+                "background": "#ffe0b2",
+                "text": "#e65100",
+                "hover": "#ffcc02",
+                "border": "#ffcc02"
+            },
+            "toolbar": {
+                "background": "#ffe0b2",
+                "text": "#e65100",
+                "border": "#ffcc02"
+            },
+            "scrollbar": {
+                "background": "#fff3e0",
+                "handle": "#ffcc02",
+                "handle_hover": "#ffb300"
+            }
+        },
+        "purple": {
+            "name": "purple",
+            "display_name": "パープル",
+            "description": "エレガントな紫のテーマ",
+            "primaryColor": "#f3e5f5",
+            "accentColor": "#9c27b0",
+            "backgroundColor": "#f3e5f5",
+            "textColor": "#4a148c",
+            "button": {
+                "background": "#9c27b0",
+                "text": "#ffffff",
+                "hover": "#8e24aa",
+                "pressed": "#7b1fa2",
+                "border": "#8e24aa"
+            },
+            "panel": {
+                "background": "#f3e5f5",
+                "border": "#ce93d8",
+                "header": {
+                    "background": "#e1bee7",
+                    "text": "#4a148c",
+                    "border": "#ce93d8"
+                },
+                "zebra": {
+                    "alternate": "#f5e8f7"
+                }
+            },
+            "text": {
+                "primary": "#4a148c",
+                "secondary": "#6a1b9a",
+                "muted": "#ab47bc",
+                "heading": "#4a148c",
+                "link": "#9c27b0",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#4a148c",
+                "border": "#ce93d8",
+                "focus": "#9c27b0",
+                "placeholder": "#ab47bc"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#4a148c",
+                "alternate": "#f5e8f7",
+                "selection": "#e1bee7",
+                "hover": "#f3e5f5",
+                "border": "#ce93d8"
+            },
+            "menu": {
+                "background": "#e1bee7",
+                "text": "#4a148c",
+                "hover": "#ce93d8",
+                "border": "#ce93d8"
+            },
+            "toolbar": {
+                "background": "#e1bee7",
+                "text": "#4a148c",
+                "border": "#ce93d8"
+            },
+            "scrollbar": {
+                "background": "#f3e5f5",
+                "handle": "#ce93d8",
+                "handle_hover": "#ba68c8"
+            }
+        },
+        "cyan": {
+            "name": "cyan",
+            "display_name": "シアン",
+            "description": "クールなシアンテーマ",
+            "primaryColor": "#e0f2f1",
+            "accentColor": "#00bcd4",
+            "backgroundColor": "#e0f2f1",
+            "textColor": "#004d40",
+            "button": {
+                "background": "#00bcd4",
+                "text": "#ffffff",
+                "hover": "#00acc1",
+                "pressed": "#0097a7",
+                "border": "#00acc1"
+            },
+            "panel": {
+                "background": "#e0f2f1",
+                "border": "#80cbc4",
+                "header": {
+                    "background": "#b2dfdb",
+                    "text": "#004d40",
+                    "border": "#80cbc4"
+                },
+                "zebra": {
+                    "alternate": "#e3f4f3"
+                }
+            },
+            "text": {
+                "primary": "#004d40",
+                "secondary": "#00695c",
+                "muted": "#4db6ac",
+                "heading": "#004d40",
+                "link": "#00bcd4",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#004d40",
+                "border": "#80cbc4",
+                "focus": "#00bcd4",
+                "placeholder": "#4db6ac"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#004d40",
+                "alternate": "#e3f4f3",
+                "selection": "#b2dfdb",
+                "hover": "#e0f2f1",
+                "border": "#80cbc4"
+            },
+            "menu": {
+                "background": "#b2dfdb",
+                "text": "#004d40",
+                "hover": "#80cbc4",
+                "border": "#80cbc4"
+            },
+            "toolbar": {
+                "background": "#b2dfdb",
+                "text": "#004d40",
+                "border": "#80cbc4"
+            },
+            "scrollbar": {
+                "background": "#e0f2f1",
+                "handle": "#80cbc4",
+                "handle_hover": "#4db6ac"
+            }
+        },
+        "navy": {
+            "name": "navy",
+            "display_name": "ネイビー",
+            "description": "プロフェッショナルなネイビーテーマ",
+            "primaryColor": "#e8eaf6",
+            "accentColor": "#3f51b5",
+            "backgroundColor": "#e8eaf6",
+            "textColor": "#1a237e",
+            "button": {
+                "background": "#3f51b5",
+                "text": "#ffffff",
+                "hover": "#3949ab",
+                "pressed": "#303f9f",
+                "border": "#3949ab"
+            },
+            "panel": {
+                "background": "#e8eaf6",
+                "border": "#9fa8da",
+                "header": {
+                    "background": "#c5cae9",
+                    "text": "#1a237e",
+                    "border": "#9fa8da"
+                },
+                "zebra": {
+                    "alternate": "#ebedf8"
+                }
+            },
+            "text": {
+                "primary": "#1a237e",
+                "secondary": "#283593",
+                "muted": "#5c6bc0",
+                "heading": "#1a237e",
+                "link": "#3f51b5",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#1a237e",
+                "border": "#9fa8da",
+                "focus": "#3f51b5",
+                "placeholder": "#5c6bc0"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#1a237e",
+                "alternate": "#ebedf8",
+                "selection": "#c5cae9",
+                "hover": "#e8eaf6",
+                "border": "#9fa8da"
+            },
+            "menu": {
+                "background": "#c5cae9",
+                "text": "#1a237e",
+                "hover": "#9fa8da",
+                "border": "#9fa8da"
+            },
+            "toolbar": {
+                "background": "#c5cae9",
+                "text": "#1a237e",
+                "border": "#9fa8da"
+            },
+            "scrollbar": {
+                "background": "#e8eaf6",
+                "handle": "#9fa8da",
+                "handle_hover": "#7986cb"
+            }
+        },
+        "red": {
+            "name": "red",
+            "display_name": "レッド",
+            "description": "情熱的な赤のテーマ",
+            "primaryColor": "#ffebee",
+            "accentColor": "#f44336",
+            "backgroundColor": "#ffebee",
+            "textColor": "#b71c1c",
+            "button": {
+                "background": "#f44336",
+                "text": "#ffffff",
+                "hover": "#e53935",
+                "pressed": "#d32f2f",
+                "border": "#e53935"
+            },
+            "panel": {
+                "background": "#ffebee",
+                "border": "#ef9a9a",
+                "header": {
+                    "background": "#ffcdd2",
+                    "text": "#b71c1c",
+                    "border": "#ef9a9a"
+                },
+                "zebra": {
+                    "alternate": "#ffeff0"
+                }
+            },
+            "text": {
+                "primary": "#b71c1c",
+                "secondary": "#c62828",
+                "muted": "#e57373",
+                "heading": "#b71c1c",
+                "link": "#f44336",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#b71c1c",
+                "border": "#ef9a9a",
+                "focus": "#f44336",
+                "placeholder": "#e57373"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#b71c1c",
+                "alternate": "#ffeff0",
+                "selection": "#ffcdd2",
+                "hover": "#ffebee",
+                "border": "#ef9a9a"
+            },
+            "menu": {
+                "background": "#ffcdd2",
+                "text": "#b71c1c",
+                "hover": "#ef9a9a",
+                "border": "#ef9a9a"
+            },
+            "toolbar": {
+                "background": "#ffcdd2",
+                "text": "#b71c1c",
+                "border": "#ef9a9a"
+            },
+            "scrollbar": {
+                "background": "#ffebee",
+                "handle": "#ef9a9a",
+                "handle_hover": "#e57373"
+            }
+        },
+        "teal": {
+            "name": "teal",
+            "display_name": "ティール",
+            "description": "落ち着いたティールテーマ",
+            "primaryColor": "#e0f2f1",
+            "accentColor": "#009688",
+            "backgroundColor": "#e0f2f1",
+            "textColor": "#004d40",
+            "button": {
+                "background": "#009688",
+                "text": "#ffffff",
+                "hover": "#00897b",
+                "pressed": "#00796b",
+                "border": "#00897b"
+            },
+            "panel": {
+                "background": "#e0f2f1",
+                "border": "#80cbc4",
+                "header": {
+                    "background": "#b2dfdb",
+                    "text": "#004d40",
+                    "border": "#80cbc4"
+                },
+                "zebra": {
+                    "alternate": "#e3f4f3"
+                }
+            },
+            "text": {
+                "primary": "#004d40",
+                "secondary": "#00695c",
+                "muted": "#4db6ac",
+                "heading": "#004d40",
+                "link": "#009688",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#004d40",
+                "border": "#80cbc4",
+                "focus": "#009688",
+                "placeholder": "#4db6ac"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#004d40",
+                "alternate": "#e3f4f3",
+                "selection": "#b2dfdb",
+                "hover": "#e0f2f1",
+                "border": "#80cbc4"
+            },
+            "menu": {
+                "background": "#b2dfdb",
+                "text": "#004d40",
+                "hover": "#80cbc4",
+                "border": "#80cbc4"
+            },
+            "toolbar": {
+                "background": "#b2dfdb",
+                "text": "#004d40",
+                "border": "#80cbc4"
+            },
+            "scrollbar": {
+                "background": "#e0f2f1",
+                "handle": "#80cbc4",
+                "handle_hover": "#4db6ac"
+            }
+        },
+        "amber": {
+            "name": "amber",
+            "display_name": "アンバー",
+            "description": "明るい琥珀色のテーマ",
+            "primaryColor": "#fff8e1",
+            "accentColor": "#ffc107",
+            "backgroundColor": "#fff8e1",
+            "textColor": "#ff6f00",
+            "button": {
+                "background": "#ffc107",
+                "text": "#000000",
+                "hover": "#ffb300",
+                "pressed": "#ffa000",
+                "border": "#ffb300"
+            },
+            "panel": {
+                "background": "#fff8e1",
+                "border": "#ffecb3",
+                "header": {
+                    "background": "#ffe082",
+                    "text": "#ff6f00",
+                    "border": "#ffecb3"
+                },
+                "zebra": {
+                    "alternate": "#fffae5"
+                }
+            },
+            "text": {
+                "primary": "#ff6f00",
+                "secondary": "#ff8f00",
+                "muted": "#ffb74d",
+                "heading": "#ff6f00",
+                "link": "#ffc107",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#ff6f00",
+                "border": "#ffecb3",
+                "focus": "#ffc107",
+                "placeholder": "#ffb74d"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#ff6f00",
+                "alternate": "#fffae5",
+                "selection": "#ffe082",
+                "hover": "#fff8e1",
+                "border": "#ffecb3"
+            },
+            "menu": {
+                "background": "#ffe082",
+                "text": "#ff6f00",
+                "hover": "#ffecb3",
+                "border": "#ffecb3"
+            },
+            "toolbar": {
+                "background": "#ffe082",
+                "text": "#ff6f00",
+                "border": "#ffecb3"
+            },
+            "scrollbar": {
+                "background": "#fff8e1",
+                "handle": "#ffecb3",
+                "handle_hover": "#ffd54f"
+            }
+        },
+        "pink": {
+            "name": "pink",
+            "display_name": "ピンク",
+            "description": "優雅なピンクテーマ",
+            "primaryColor": "#fce4ec",
+            "accentColor": "#e91e63",
+            "backgroundColor": "#fce4ec",
+            "textColor": "#880e4f",
+            "button": {
+                "background": "#e91e63",
+                "text": "#ffffff",
+                "hover": "#d81b60",
+                "pressed": "#c2185b",
+                "border": "#d81b60"
+            },
+            "panel": {
+                "background": "#fce4ec",
+                "border": "#f8bbd9",
+                "header": {
+                    "background": "#f48fb1",
+                    "text": "#880e4f",
+                    "border": "#f8bbd9"
+                },
+                "zebra": {
+                    "alternate": "#fde7ee"
+                }
+            },
+            "text": {
+                "primary": "#880e4f",
+                "secondary": "#ad1457",
+                "muted": "#f06292",
+                "heading": "#880e4f",
+                "link": "#e91e63",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#880e4f",
+                "border": "#f8bbd9",
+                "focus": "#e91e63",
+                "placeholder": "#f06292"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#880e4f",
+                "alternate": "#fde7ee",
+                "selection": "#f48fb1",
+                "hover": "#fce4ec",
+                "border": "#f8bbd9"
+            },
+            "menu": {
+                "background": "#f48fb1",
+                "text": "#880e4f",
+                "hover": "#f8bbd9",
+                "border": "#f8bbd9"
+            },
+            "toolbar": {
+                "background": "#f48fb1",
+                "text": "#880e4f",
+                "border": "#f8bbd9"
+            },
+            "scrollbar": {
+                "background": "#fce4ec",
+                "handle": "#f8bbd9",
+                "handle_hover": "#f06292"
+            }
+        },
+        "lime": {
+            "name": "lime",
+            "display_name": "ライム",
+            "description": "フレッシュなライムテーマ",
+            "primaryColor": "#f9fbe7",
+            "accentColor": "#cddc39",
+            "backgroundColor": "#f9fbe7",
+            "textColor": "#33691e",
+            "button": {
+                "background": "#cddc39",
+                "text": "#000000",
+                "hover": "#c0ca33",
+                "pressed": "#afb42b",
+                "border": "#c0ca33"
+            },
+            "panel": {
+                "background": "#f9fbe7",
+                "border": "#dcedc8",
+                "header": {
+                    "background": "#aed581",
+                    "text": "#33691e",
+                    "border": "#dcedc8"
+                },
+                "zebra": {
+                    "alternate": "#fafcea"
+                }
+            },
+            "text": {
+                "primary": "#33691e",
+                "secondary": "#689f38",
+                "muted": "#9ccc65",
+                "heading": "#33691e",
+                "link": "#cddc39",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#33691e",
+                "border": "#dcedc8",
+                "focus": "#cddc39",
+                "placeholder": "#9ccc65"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#33691e",
+                "alternate": "#fafcea",
+                "selection": "#aed581",
+                "hover": "#f9fbe7",
+                "border": "#dcedc8"
+            },
+            "menu": {
+                "background": "#aed581",
+                "text": "#33691e",
+                "hover": "#dcedc8",
+                "border": "#dcedc8"
+            },
+            "toolbar": {
+                "background": "#aed581",
+                "text": "#33691e",
+                "border": "#dcedc8"
+            },
+            "scrollbar": {
+                "background": "#f9fbe7",
+                "handle": "#dcedc8",
+                "handle_hover": "#c5e1a5"
+            }
+        },
+        "indigo": {
+            "name": "indigo",
+            "display_name": "インディゴ",
+            "description": "深いインディゴテーマ",
+            "primaryColor": "#e8eaf6",
+            "accentColor": "#3f51b5",
+            "backgroundColor": "#e8eaf6",
+            "textColor": "#1a237e",
+            "button": {
+                "background": "#3f51b5",
+                "text": "#ffffff",
+                "hover": "#3949ab",
+                "pressed": "#303f9f",
+                "border": "#3949ab"
+            },
+            "panel": {
+                "background": "#e8eaf6",
+                "border": "#9fa8da",
+                "header": {
+                    "background": "#c5cae9",
+                    "text": "#1a237e",
+                    "border": "#9fa8da"
+                },
+                "zebra": {
+                    "alternate": "#ebedf8"
+                }
+            },
+            "text": {
+                "primary": "#1a237e",
+                "secondary": "#283593",
+                "muted": "#5c6bc0",
+                "heading": "#1a237e",
+                "link": "#3f51b5",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#1a237e",
+                "border": "#9fa8da",
+                "focus": "#3f51b5",
+                "placeholder": "#5c6bc0"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#1a237e",
+                "alternate": "#ebedf8",
+                "selection": "#c5cae9",
+                "hover": "#e8eaf6",
+                "border": "#9fa8da"
+            },
+            "menu": {
+                "background": "#c5cae9",
+                "text": "#1a237e",
+                "hover": "#9fa8da",
+                "border": "#9fa8da"
+            },
+            "toolbar": {
+                "background": "#c5cae9",
+                "text": "#1a237e",
+                "border": "#9fa8da"
+            },
+            "scrollbar": {
+                "background": "#e8eaf6",
+                "handle": "#9fa8da",
+                "handle_hover": "#7986cb"
+            }
+        },
+        "brown": {
+            "name": "brown",
+            "display_name": "ブラウン",
+            "description": "アースカラーのブラウンテーマ",
+            "primaryColor": "#efebe9",
+            "accentColor": "#795548",
+            "backgroundColor": "#efebe9",
+            "textColor": "#3e2723",
+            "button": {
+                "background": "#795548",
+                "text": "#ffffff",
+                "hover": "#6d4c41",
+                "pressed": "#5d4037",
+                "border": "#6d4c41"
+            },
+            "panel": {
+                "background": "#efebe9",
+                "border": "#bcaaa4",
+                "header": {
+                    "background": "#d7ccc8",
+                    "text": "#3e2723",
+                    "border": "#bcaaa4"
+                },
+                "zebra": {
+                    "alternate": "#f2edeb"
+                }
+            },
+            "text": {
+                "primary": "#3e2723",
+                "secondary": "#4e342e",
+                "muted": "#8d6e63",
+                "heading": "#3e2723",
+                "link": "#795548",
+                "success": "#4caf50",
+                "warning": "#ff9800",
+                "error": "#f44336"
+            },
+            "input": {
+                "background": "#ffffff",
+                "text": "#3e2723",
+                "border": "#bcaaa4",
+                "focus": "#795548",
+                "placeholder": "#8d6e63"
+            },
+            "list": {
+                "background": "#ffffff",
+                "text": "#3e2723",
+                "alternate": "#f2edeb",
+                "selection": "#d7ccc8",
+                "hover": "#efebe9",
+                "border": "#bcaaa4"
+            },
+            "menu": {
+                "background": "#d7ccc8",
+                "text": "#3e2723",
+                "hover": "#bcaaa4",
+                "border": "#bcaaa4"
+            },
+            "toolbar": {
+                "background": "#d7ccc8",
+                "text": "#3e2723",
+                "border": "#bcaaa4"
+            },
+            "scrollbar": {
+                "background": "#efebe9",
+                "handle": "#bcaaa4",
+                "handle_hover": "#a1887f"
+            }
+        }
+    }
+}
