@@ -1,11 +1,13 @@
 """
 統一された設定管理システム
 アプリ設定、ユーザー設定、セッション設定を分離管理
+テーマカスタマイズ機能を含む
 """
 
 import json
+import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from platformdirs import user_config_dir
 
 from .logger import get_logger
@@ -175,6 +177,35 @@ class ConfigManager:
             self.logger.debug("セッションキャッシュを保存しました")
         except Exception as e:
             self.logger.error(f"セッションキャッシュの保存に失敗: {e}")
+
+    # テーマ関連のメソッド
+    def get_theme_engine(self) -> str:
+        """使用するテーマエンジンを取得"""
+        return self.get_app_config("themes.engine", "qt_theme_manager")
+
+    def get_theme_config_paths(self) -> Dict[str, str]:
+        """テーマ設定ファイルのパスを取得"""
+        return {
+            "definitions": self.get_app_config("themes.definitions_file", "config/qt_theme_definitions.json"),
+            "user_settings": self.get_app_config("themes.user_settings_file", "qt_theme_user_settings.json"),
+            "legacy": self.get_app_config("themes.legacy_file", "config/theme_styles.json")
+        }
+
+    def get_available_themes(self) -> List[str]:
+        """利用可能なテーマ一覧を取得"""
+        return self.get_app_config("themes.available_themes", ["dark", "light"])
+
+    def get_default_theme(self) -> str:
+        """デフォルトテーマを取得"""
+        return self.get_app_config("themes.default_theme", "dark")
+
+    def get_current_theme(self) -> str:
+        """現在のテーマを取得（ユーザー設定から）"""
+        return self.get_user_setting("ui.theme_manager.current_theme", self.get_default_theme())
+
+    def set_current_theme(self, theme: str) -> None:
+        """現在のテーマを設定"""
+        self.set_user_setting("ui.theme_manager.current_theme", theme)
 
 
 # グローバル設定管理インスタンス

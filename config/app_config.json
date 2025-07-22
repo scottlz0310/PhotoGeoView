@@ -36,7 +36,25 @@
                 "thumbnail_size": 120
             },
             "theme": "dark"
+        },
+        "theme_system": {
+            "style_config_file": "config/theme_styles.json",
+            "custom_themes_dir": "user_themes",
+            "allow_custom_themes": true,
+            "allow_color_customization": true
         }
+    },
+    "themes": {
+        "engine": "qt_theme_manager",
+        "definitions_file": "config/qt_theme_definitions.json",
+        "user_settings_file": "qt_theme_user_settings.json",
+        "legacy_file": "config/theme_styles.json",
+        "default_theme": "dark",
+        "available_themes": [
+            "dark", "light", "blue", "green", "purple",
+            "orange", "red", "pink", "yellow", "brown",
+            "gray", "cyan", "teal", "indigo", "lime", "amber"
+        ]
     },
     "paths": {
         "thumbnail_cache": "cache/thumbnails",

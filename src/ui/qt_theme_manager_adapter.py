@@ -33,27 +33,27 @@ class QtThemeManagerAdapter(QObject):
         self.logger = get_logger(__name__)
         self.settings = get_settings()
 
-        # Qt-Theme-Manager形式のファイルパス
-        self.qt_theme_definitions_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_definitions.json"
-        self.qt_theme_user_settings_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_user_settings.json"
-
-        # レガシー統合設定ファイルパス（フォールバック用）
-        self.qt_theme_config_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_settings.json"
-
-        # 従来形式の設定ファイルパス（フォールバック用）
-        self.legacy_theme_config_path = Path(__file__).parent.parent.parent / "config" / "theme_styles.json"
+        # 統一設定システムからテーマ設定を取得
+        from src.core.config_manager import get_config_manager
+        self.config_manager = get_config_manager()
+        
+        # テーマファイルのパスを統一設定から取得
+        theme_paths = self.config_manager.get_theme_config_paths()
+        self.qt_theme_definitions_path = Path(theme_paths["definitions"])
+        self.qt_theme_user_settings_path = Path(self.config_manager.user_config_dir) / theme_paths["user_settings"]
+        self.legacy_theme_config_path = Path(theme_paths["legacy"])
 
         # テーマ設定を読み込み（分離型設定を使用）
         self.qt_theme_config = self._load_separated_theme_config()
 
-        # 利用可能なテーマリストを設定から取得
-        self.available_themes = list(self.qt_theme_config.get("available_themes", {}).keys())
+        # 利用可能なテーマリストを統一設定から取得
+        self.available_themes = self.config_manager.get_available_themes()
 
         # テーマ情報辞書を設定ファイルから構築
         self.theme_info = self._build_qt_theme_info()
 
-        # 現在のテーマ
-        self.current_theme = self.qt_theme_config.get("current_theme", "dark")
+        # 現在のテーマ（統一設定システムから取得）
+        self.current_theme = self.config_manager.get_current_theme()
 
         # 有効なテーマリスト
         self.enabled_themes = self.available_themes.copy()
@@ -137,17 +137,14 @@ class QtThemeManagerAdapter(QObject):
             self.logger.warning(f"ユーザー設定ファイルの保存に失敗: {e}")
 
     def _load_qt_theme_config(self) -> Dict[str, Any]:
-        """Qt-Theme-Manager形式の設定ファイルを読み込み"""
+        """Qt-Theme-Manager形式の設定ファイルを読み込み（統一設定システム対応）"""
         try:
-            if self.qt_theme_config_path.exists():
-                with open(self.qt_theme_config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                self.logger.info(f"Qt-Theme-Manager形式設定ファイルを読み込みました: {self.qt_theme_config_path}")
-                return config
-            else:
-                self.logger.warning(f"Qt-Theme-Manager形式設定ファイルが見つかりません: {self.qt_theme_config_path}")
-                # 従来形式からの変換を試行
-                return self._convert_legacy_to_qt_format()
+            # 分離型設定ファイルから読み込み
+            return self._load_separated_theme_config()
+        except Exception as e:
+            self.logger.error(f"Qt-Theme-Manager設定の読み込みに失敗: {e}")
+            # 従来形式からの変換を試行
+            return self._convert_legacy_to_qt_format()
         except json.JSONDecodeError as e:
             self.logger.error(f"Qt-Theme-Manager形式設定ファイルのJSON解析に失敗しました: {e}")
             return self._get_default_qt_theme_config()
@@ -349,11 +346,11 @@ class QtThemeManagerAdapter(QObject):
             # qt-theme-managerのインポート
             from theme_manager.qt.controller import ThemeController
 
-            # Qt-Theme-Manager形式の設定ファイルを使用（パラメータを省略）
+            # Qt-Theme-Manager形式の設定ファイルを使用（統一設定システム対応）
             self.qt_theme_manager = ThemeController()
-            # 設定ファイルを個別に設定
-            self.qt_theme_manager.load_config(str(self.qt_theme_config_path))
-            self.logger.info("Qt-Theme-Manager（Qt形式対応）を初期化しました")
+            # 統一設定システムからテーマファイルパスを設定
+            self.qt_theme_manager.load_config(str(self.qt_theme_definitions_path))
+            self.logger.info("Qt-Theme-Manager（統一設定システム対応）を初期化しました")
 
         except ImportError as e:
             self.logger.error(f"Qt-Theme-Managerのインポートに失敗しました: {e}")
