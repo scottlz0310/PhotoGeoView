@@ -47,7 +47,7 @@ class ThumbnailGenerator(QObject):
         self.logger.info(f"サムネイルジェネレーターを初期化しました: {self.cache_dir}")
 
     def generate_thumbnail(
-        self, file_path: str, size: tuple[int, int] = (120, 120), quality: int = 85
+        self, file_path: str, size: tuple[int, int] = (120, 120), quality: int = 95
     ) -> Optional[QPixmap]:
         """
         サムネイルを生成
@@ -71,7 +71,13 @@ class ThumbnailGenerator(QObject):
             # キャッシュが存在する場合は読み込み
             if os.path.exists(cache_path):
                 self.logger.debug(f"キャッシュからサムネイルを読み込み: {file_path}")
-                return self._load_cached_thumbnail(cache_path)
+                cached_thumbnail = self._load_cached_thumbnail(cache_path)
+                if cached_thumbnail and not cached_thumbnail.isNull():
+                    self.logger.debug(
+                        f"[generate_thumbnail] emit cached: file_path={file_path}"
+                    )
+                    self.thumbnail_generated.emit(file_path, cached_thumbnail)
+                    return cached_thumbnail
 
             # サムネイルを生成
             thumbnail = self._create_thumbnail(file_path, size, quality)
@@ -185,7 +191,7 @@ class ThumbnailGenerator(QObject):
 
     def _create_thumbnail_with_painter(self, image: QImage, size: int) -> Optional[QPixmap]:
         """
-        QPainterを使用した高品質サムネイル生成
+        QPainterを使用した高品質サムネイル生成（改良版）
 
         Args:
             image: 元画像のQImage
@@ -195,42 +201,60 @@ class ThumbnailGenerator(QObject):
             生成されたサムネイルのQPixmap
         """
         try:
-
             if image.isNull():
                 return None
 
-            # 出力用のQImageを作成
-            output_image = QImage(size, size, QImage.Format.Format_ARGB32)
-            output_image.fill(Qt.GlobalColor.transparent)
-
-            # アスペクト比計算
+            # 元の画像がすでに小さい場合は直接QPixmapに変換
             orig_width = image.width()
             orig_height = image.height()
+            
+            if orig_width <= size and orig_height <= size:
+                return QPixmap.fromImage(image)
 
-            if orig_width > orig_height:
-                new_width = size
-                new_height = int((orig_height * size) / orig_width)
+            # 段階的スケーリングでより高品質な結果を得る
+            # 最初に大きめのサイズにスケーリング、その後最終サイズに
+            intermediate_size = max(size * 2, min(orig_width, orig_height))
+            
+            if max(orig_width, orig_height) > intermediate_size:
+                # 中間サイズにスケール
+                intermediate_image = image.scaled(
+                    intermediate_size, 
+                    intermediate_size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
             else:
-                new_height = size
-                new_width = int((orig_width * size) / orig_height)
+                intermediate_image = image
+
+            # 最終サイズにスケール
+            final_image = intermediate_image.scaled(
+                size, 
+                size,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+
+            # 正方形の出力用QImageを作成（高品質フォーマット使用）
+            output_image = QImage(size, size, QImage.Format.Format_ARGB32_Premultiplied)
+            output_image.fill(Qt.GlobalColor.white)  # 白背景に変更
 
             # 中央配置の計算
-            x = (size - new_width) // 2
-            y = (size - new_height) // 2
+            x = (size - final_image.width()) // 2
+            y = (size - final_image.height()) // 2
 
             # QPainterで高品質描画
             painter = QPainter(output_image)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            
+            # すべての高品質レンダリングヒントを有効化
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+            painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+            
+            # 高品質な補間モードを設定
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
 
-            # スケールして描画
-            scaled_image = image.scaled(
-                new_width,
-                new_height,
-                Qt.AspectRatioMode.IgnoreAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
-            )
-            painter.drawImage(x, y, scaled_image)
+            # 最終描画
+            painter.drawImage(x, y, final_image)
             painter.end()
 
             return QPixmap.fromImage(output_image)

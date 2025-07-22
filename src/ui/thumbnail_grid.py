@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QMenu,
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer
-from PyQt6.QtGui import QPixmap, QIcon, QFont, QPainter, QColor, QContextMenuEvent, QMouseEvent, QImage, QAction
+from PyQt6.QtGui import QPixmap, QIcon, QFont, QPainter, QColor, QContextMenuEvent, QMouseEvent, QAction
 
 from src.core.logger import get_logger
 from src.core.settings import get_settings
@@ -134,6 +134,7 @@ class ThumbnailGrid(QWidget):
         """シグナル・スロット接続の初期化"""
         # スライダー接続
         self.size_slider.valueChanged.connect(self._on_size_changed)
+        self.logger.info(f"サムネイルスライダーを初期化: 初期値={self.size_slider.value()}")
 
         # ボタン接続
         self.clear_button.clicked.connect(self.clear_selection)
@@ -182,10 +183,12 @@ class ThumbnailGrid(QWidget):
         """
         try:
             if file_path not in self._image_files:
+                self.logger.warning(f"画像ファイルがリストにありません: {Path(file_path).name}")
                 return
 
             # サムネイルを保存
             self._thumbnails[file_path] = pixmap
+            self.logger.info(f"サムネイルを追加: {Path(file_path).name}, 辞書サイズ: {len(self._thumbnails)}")
 
             # 対応するサムネイルウィジェットを更新
             self._update_thumbnail_widget(file_path)
@@ -239,9 +242,9 @@ class ThumbnailGrid(QWidget):
                 if child.widget():
                     child.widget().deleteLater()
 
-            # データをクリア
-            self._thumbnails.clear()
+            # 選択状態のみクリア（サムネイルデータは保持）
             self._selected_image = ""
+            self.logger.debug(f"グリッドをクリア: サムネイル辞書サイズ={len(self._thumbnails)} を保持")
 
         except Exception as e:
             self.logger.error(f"グリッドのクリアに失敗しました: {e}")
@@ -249,8 +252,12 @@ class ThumbnailGrid(QWidget):
     def _update_grid(self) -> None:
         """グリッドを更新"""
         try:
+            self.logger.info(f"[GRID] _update_grid開始: サムネイル辞書サイズ={len(self._thumbnails)}")
+            
             # グリッドをクリア
             self._clear_grid()
+            
+            self.logger.info(f"[GRID] _clear_grid後: サムネイル辞書サイズ={len(self._thumbnails)}")
 
             if not self._image_files:
                 return
@@ -331,6 +338,7 @@ class ThumbnailGrid(QWidget):
 
             # サムネイル画像を設定
             if file_path in self._thumbnails:
+                self.logger.debug(f"[DEBUG] サムネイル再利用: {Path(file_path).name}, サイズ: {self._thumbnail_size}")
                 pixmap = self._thumbnails[file_path]
                 # 高品質スケーリングを使用
                 scaled_pixmap = self._create_high_quality_thumbnail(
@@ -338,6 +346,7 @@ class ThumbnailGrid(QWidget):
                 )
                 thumbnail_label.setPixmap(scaled_pixmap)
             else:
+                self.logger.debug(f"[DEBUG] サムネイル未キャッシュ: {Path(file_path).name}")
                 # プレースホルダー
                 thumbnail_label.setText("読み込み中...")
                 thumbnail_label.setStyleSheet("border: 1px solid #eee; color: #666;")
@@ -503,15 +512,21 @@ class ThumbnailGrid(QWidget):
         Args:
             value: 新しいサイズ
         """
+        self.logger.info(f"[SLIDER] スライダーイベント発生! value={value}")
         try:
+            self.logger.info(f"[DEBUG] サイズ変更: {self._thumbnail_size} -> {value}")
             self._thumbnail_size = value
             self.size_value_label.setText(f"{value}px")
+
+            self.logger.info(f"[DEBUG] 既存サムネイル数: {len(self._thumbnails)}")
 
             # グリッドを再構築
             self._update_grid()
 
             # 設定を保存
             self.settings.set("ui.panels.thumbnail_size", value)
+
+            self.logger.debug(f"[DEBUG] サイズ変更完了")
 
         except Exception as e:
             self.logger.error(f"サイズ変更の処理に失敗しました: {e}")
@@ -617,7 +632,7 @@ class ThumbnailGrid(QWidget):
 
     def _create_high_quality_thumbnail(self, pixmap: QPixmap, size: int) -> QPixmap:
         """
-        高品質サムネイル生成（QPainterを使用）
+        高品質サムネイル生成（改良版）
 
         Args:
             pixmap: 元のQPixmap
@@ -629,41 +644,37 @@ class ThumbnailGrid(QWidget):
         if pixmap.isNull():
             return pixmap
 
-        # まずQImageに変換
-        image = pixmap.toImage()
+        # 元のサイズを取得
+        orig_width = pixmap.width()
+        orig_height = pixmap.height()
+        
+        # すでに適切なサイズの場合は直接返す
+        if orig_width <= size and orig_height <= size:
+            return pixmap
 
-        # 出力用のQImageを作成
-        output_image = QImage(size, size, QImage.Format.Format_ARGB32)
-        output_image.fill(Qt.GlobalColor.transparent)
-
-        # アスペクト比計算
-        orig_width = image.width()
-        orig_height = image.height()
-
-        if orig_width > orig_height:
-            new_width = size
-            new_height = int((orig_height * size) / orig_width)
-        else:
-            new_height = size
-            new_width = int((orig_width * size) / orig_height)
-
-        # 中央配置の計算
-        x = (size - new_width) // 2
-        y = (size - new_height) // 2
-
-        # QPainterで高品質描画
-        painter = QPainter(output_image)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
-
-        # スケールして描画
-        scaled_image = image.scaled(
-            new_width,
-            new_height,
-            Qt.AspectRatioMode.IgnoreAspectRatio,
+        # アスペクト比を保持してスケーリング
+        scaled_pixmap = pixmap.scaled(
+            size, 
+            size, 
+            Qt.AspectRatioMode.KeepAspectRatio, 
             Qt.TransformationMode.SmoothTransformation
         )
-        painter.drawImage(x, y, scaled_image)
+
+        # 正方形の背景を作成（透明）
+        result = QPixmap(size, size)
+        result.fill(Qt.GlobalColor.transparent)
+
+        # 中央配置で描画
+        painter = QPainter(result)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        
+        # 中央配置の計算
+        x = (size - scaled_pixmap.width()) // 2
+        y = (size - scaled_pixmap.height()) // 2
+        
+        # 高品質描画
+        painter.drawPixmap(x, y, scaled_pixmap)
         painter.end()
 
-        return QPixmap.fromImage(output_image)
+        return result

@@ -265,12 +265,13 @@ class PhotoGeoViewController(QObject):
             file_path: 画像ファイルパス
         """
         try:
-            # 画像ビューアーに画像を読み込み
-            pixmap = self.image_loader.load_image(file_path)
-            if pixmap:
-                self.image_viewer.load_image(file_path, pixmap)
-                self._image_data[file_path] = pixmap
-                self.image_loaded.emit(file_path, pixmap)
+            # 一時的に画像ビューア読み込みを無効化（デバッグ用）
+            self.logger.info(f"画像選択処理をスキップ: {file_path}")
+            # pixmap = self.image_loader.load_image(file_path)
+            # if pixmap:
+            #     self.image_viewer.load_image(file_path, pixmap)
+            #     self._image_data[file_path] = pixmap
+            #     self.image_loaded.emit(file_path, pixmap)
 
         except Exception as e:
             self.logger.error(

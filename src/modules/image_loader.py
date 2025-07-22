@@ -101,10 +101,6 @@ class ImageLoader(QObject):
                 self.error_occurred.emit(file_path, "画像の読み込みに失敗しました")
                 return None
 
-            # 画像をRGBに変換
-            if pixmap.format() in ("RGBA", "LA", "P"):
-                pixmap = pixmap.convert("RGB")
-
             # リサイズ（高品質スケーリング）
             if size:
                 pixmap = pixmap.scaled(
@@ -112,9 +108,6 @@ class ImageLoader(QObject):
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation
                 )
-
-            # QImageに変換
-            qimage = pixmap.toImage()
 
             # キャッシュに保存
             self._loaded_images[cache_key] = pixmap
