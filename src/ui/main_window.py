@@ -82,12 +82,18 @@ class MainWindow(QMainWindow):
 
         # メインエリア（スプリッター）
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        # メインスプリッターハンドルの幅を設定
+        self.main_splitter.setHandleWidth(8)
+        self.main_splitter.setChildrenCollapsible(False)
 
         # 左パネル
         self._init_left_panel()
 
         # 右パネル（スプリッター）
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
+        # 右スプリッターハンドルの幅を設定
+        self.right_splitter.setHandleWidth(8)
+        self.right_splitter.setChildrenCollapsible(False)
         self._init_right_panels()
 
         # ステータスバー
@@ -160,24 +166,57 @@ class MainWindow(QMainWindow):
         self.left_panel.setMinimumSize(250, 400)
         self.left_layout = QVBoxLayout(self.left_panel)
 
-        # フォルダナビゲーター
+        # 左パネル用の縦スプリッター作成
+        self.left_splitter = QSplitter(Qt.Orientation.Vertical)
+        # スプリッターハンドルの幅を設定（ドラッグしやすくする）
+        self.left_splitter.setHandleWidth(8)
+        # スプリッターハンドルの見た目を改善
+        self.left_splitter.setChildrenCollapsible(False)  # 子ウィジェットの完全な折りたたみを防ぐ
+
+        # フォルダナビゲーター部分
+        self.folder_section = QWidget()
+        self.folder_section_layout = QVBoxLayout(self.folder_section)
+        self.folder_section_layout.setContentsMargins(0, 0, 0, 0)
+        self.folder_section_layout.addWidget(QLabel("フォルダナビゲーション"))
         self.folder_navigator = FolderNavigator()
+        # フォルダナビゲーションエリアに最小サイズを設定
+        self.folder_section.setMinimumHeight(120)
+        self.folder_section_layout.addWidget(self.folder_navigator)
 
-        # サムネイルグリッド
+        # サムネイルグリッド部分
+        self.thumbnail_section = QWidget()
+        self.thumbnail_section_layout = QVBoxLayout(self.thumbnail_section)
+        self.thumbnail_section_layout.setContentsMargins(0, 0, 0, 0)
+        self.thumbnail_section_layout.addWidget(QLabel("サムネイル"))
         self.thumbnail_grid = ThumbnailGrid()
+        # サムネイルエリアに最小サイズを設定
+        self.thumbnail_section.setMinimumHeight(200)
+        self.thumbnail_section_layout.addWidget(self.thumbnail_grid)
 
-        # 詳細情報パネル
+        # 詳細情報部分
+        self.info_section = QWidget()
+        self.info_section_layout = QVBoxLayout(self.info_section)
+        self.info_section_layout.setContentsMargins(0, 0, 0, 0)
+        self.info_section_layout.addWidget(QLabel("詳細情報"))
         self.info_panel = QTextEdit()
-        self.info_panel.setMaximumHeight(150)
         self.info_panel.setReadOnly(True)
+        # 詳細情報エリアに最小サイズを設定
+        self.info_section.setMinimumHeight(100)
+        self.info_section_layout.addWidget(self.info_panel)
+
+        # 左スプリッターに各セクションを追加
+        self.left_splitter.addWidget(self.folder_section)
+        self.left_splitter.addWidget(self.thumbnail_section)
+        self.left_splitter.addWidget(self.info_section)
+
+        # 初期サイズの設定（フォルダ：サムネイル：詳細情報 = 1:3:1の比率）
+        self.left_splitter.setSizes([150, 450, 150])
+        self.left_splitter.setStretchFactor(0, 0)  # フォルダ部分は固定的
+        self.left_splitter.setStretchFactor(1, 1)  # サムネイル部分は拡縮可能
+        self.left_splitter.setStretchFactor(2, 0)  # 詳細情報部分は固定的
 
         # 左パネルレイアウトに追加
-        self.left_layout.addWidget(QLabel("フォルダナビゲーション"))
-        self.left_layout.addWidget(self.folder_navigator)
-        self.left_layout.addWidget(QLabel("サムネイル"))
-        self.left_layout.addWidget(self.thumbnail_grid, 1)
-        self.left_layout.addWidget(QLabel("詳細情報"))
-        self.left_layout.addWidget(self.info_panel)
+        self.left_layout.addWidget(self.left_splitter)
 
         # メインスプリッターに追加
         self.main_splitter.addWidget(self.left_panel)
@@ -394,6 +433,11 @@ class MainWindow(QMainWindow):
 
             self.main_splitter.setSizes([left_width, right_width])
 
+            # 左パネル内スプリッターのサイズ復元
+            left_splitter_sizes = window_settings.get("left_splitter_sizes", [150, 450, 150])
+            if len(left_splitter_sizes) == 3:
+                self.left_splitter.setSizes(left_splitter_sizes)
+
             self.logger.debug("ウィンドウ状態を復元しました")
 
         except Exception as e:
@@ -410,6 +454,7 @@ class MainWindow(QMainWindow):
                 "maximized": self.isMaximized(),
                 "left_panel_width": self.main_splitter.sizes()[0],
                 "right_panel_width": self.main_splitter.sizes()[1],
+                "left_splitter_sizes": self.left_splitter.sizes(),
             }
 
             self.settings.set_window_settings(window_settings)
