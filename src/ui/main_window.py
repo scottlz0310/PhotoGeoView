@@ -332,7 +332,6 @@ class MainWindow(QMainWindow):
         self.controller.images_loaded.connect(self.thumbnail_grid.load_images)
         self.controller.thumbnail_loaded.connect(self.thumbnail_grid.add_thumbnail)
         self.controller.image_selected.connect(self._update_info_panel)
-        self.controller.exif_parsed.connect(self._update_info_panel)
         self.controller.map_marker_added.connect(self._update_status)
         self.controller.loading_progress.connect(self._update_progress)
         self.controller.loading_finished.connect(self._hide_progress)
@@ -705,6 +704,7 @@ class MainWindow(QMainWindow):
             )
         except Exception as e:
             self.logger.error(f"[DEBUG] 画像パネル状態ログ出力失敗: {e}")
+
         if not data:
             self.info_panel.setText("画像を選択してください")
             return
@@ -715,23 +715,52 @@ class MainWindow(QMainWindow):
         if "file_path" in data:
             info_text += f"ファイル: {data['file_path']}\n"
         if "file_size" in data:
-            info_text += f"サイズ: {data['file_size']}\n"
-        if "dimensions" in data:
-            info_text += f"サイズ: {data['dimensions']}\n"
+            size_mb = data["file_size"] / (1024 * 1024)
+            info_text += f"サイズ: {size_mb:.2f} MB\n"
 
-        # EXIF情報
-        if "exif_data" in data and data["exif_data"]:
-            exif = data["exif_data"]
+        # EXIF情報（ExifParserの実際の構造に対応）
+        if "exif" in data and data["exif"]:
+            exif = data["exif"]
             info_text += "\n=== EXIF情報 ===\n"
-            if "DateTime" in exif:
-                info_text += f"撮影日時: {exif['DateTime']}\n"
-            if "Make" in exif:
-                info_text += f"カメラ: {exif['Make']}\n"
-            if "Model" in exif:
-                info_text += f"モデル: {exif['Model']}\n"
-            if "GPSLatitude" in exif and "GPSLongitude" in exif:
-                info_text += f"緯度: {exif['GPSLatitude']}\n"
-                info_text += f"経度: {exif['GPSLongitude']}\n"
+
+            # 撮影日時
+            if "datetime_original" in exif and exif["datetime_original"]:
+                info_text += f"撮影日時: {exif['datetime_original'].strftime('%Y-%m-%d %H:%M:%S')}\n"
+            elif "datetime" in exif and exif["datetime"]:
+                info_text += f"撮影日時: {exif['datetime'].strftime('%Y-%m-%d %H:%M:%S')}\n"
+
+            # カメラ情報
+            if "make" in exif:
+                info_text += f"メーカー: {exif['make']}\n"
+            if "model" in exif:
+                info_text += f"モデル: {exif['model']}\n"
+            if "lens_model" in exif:
+                info_text += f"レンズ: {exif['lens_model']}\n"
+
+            # 撮影設定
+            if "exposure_time" in exif:
+                info_text += f"シャッター速度: {exif['exposure_time']}\n"
+            if "f_number" in exif:
+                info_text += f"F値: {exif['f_number']}\n"
+            if "iso" in exif:
+                info_text += f"ISO感度: {exif['iso']}\n"
+            if "focal_length" in exif:
+                info_text += f"焦点距離: {exif['focal_length']}\n"
+
+            # 画像サイズ
+            if "width" in exif and "height" in exif:
+                info_text += f"解像度: {exif['width']} x {exif['height']}\n"
+
+            # GPS情報
+            if "gps" in exif:
+                gps = exif["gps"]
+                if "latitude" in gps and "longitude" in gps:
+                    info_text += f"緯度: {gps['latitude']:.6f}\n"
+                    info_text += f"経度: {gps['longitude']:.6f}\n"
+                if "altitude" in gps:
+                    info_text += f"高度: {gps['altitude']:.1f}m\n"
+        else:
+            info_text += "\nEXIF情報: なし\n"
 
         self.info_panel.setText(info_text)
 

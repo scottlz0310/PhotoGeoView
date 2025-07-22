@@ -26,7 +26,7 @@ class PhotoGeoViewController(QObject):
     current_directory_changed = pyqtSignal(str)  # 現在のディレクトリ変更時に発信
     images_loaded = pyqtSignal(list)  # 画像リスト読み込み完了時に発信
     image_list_updated = pyqtSignal(list)  # 画像リスト更新時に発信
-    image_selected = pyqtSignal(str)  # 画像選択時に発信
+    image_selected = pyqtSignal(dict)  # 画像選択時に発信（画像情報辞書）
     selected_image_changed = pyqtSignal(str)  # 選択画像変更時に発信
     thumbnail_loaded = pyqtSignal(str, object)  # サムネイル読み込み完了時に発信
     image_loaded = pyqtSignal(str, object)  # 画像読み込み完了時に発信
@@ -243,7 +243,6 @@ class PhotoGeoViewController(QObject):
 
             # 選択画像を更新
             self._selected_image = file_path
-            self.image_selected.emit(file_path)
             self.selected_image_changed.emit(file_path)
 
             # 画像を読み込み
@@ -251,6 +250,10 @@ class PhotoGeoViewController(QObject):
 
             # EXIF情報を解析
             self._parse_exif_data(file_path)
+
+            # 画像情報を取得して送信
+            image_info = self.get_image_info(file_path)
+            self.image_selected.emit(image_info)
 
             return True
 
