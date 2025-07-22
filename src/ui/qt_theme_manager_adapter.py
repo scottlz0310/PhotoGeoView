@@ -36,7 +36,7 @@ class QtThemeManagerAdapter(QObject):
         # Qt-Theme-Manager形式のファイルパス
         self.qt_theme_definitions_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_definitions.json"
         self.qt_theme_user_settings_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_user_settings.json"
-        
+
         # レガシー統合設定ファイルパス（フォールバック用）
         self.qt_theme_config_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_settings.json"
 
@@ -69,16 +69,16 @@ class QtThemeManagerAdapter(QObject):
         try:
             # テーマ定義ファイルを読み込み
             theme_definitions = self._load_theme_definitions()
-            
+
             # ユーザー設定ファイルを読み込み
             user_settings = self._load_user_settings()
-            
+
             # 統合設定を作成
             merged_config = {**user_settings, **theme_definitions}
-            
+
             self.logger.info("分離型設定ファイルを読み込みました")
             return merged_config
-            
+
         except Exception as e:
             self.logger.error(f"分離型設定の読み込みに失敗、フォールバックを使用: {e}")
             return self._load_qt_theme_config()
@@ -405,14 +405,14 @@ class QtThemeManagerAdapter(QObject):
         try:
             # 現在のユーザー設定を読み込み
             user_settings = self._load_user_settings()
-            
+
             # テーマ設定を更新
             user_settings["current_theme"] = theme_name
             user_settings["last_selected_theme"] = theme_name
 
             # ユーザー設定ファイルのみを更新
             self._save_user_settings(user_settings)
-            
+
             # メモリ上の統合設定も更新
             self.qt_theme_config["current_theme"] = theme_name
             self.qt_theme_config["last_selected_theme"] = theme_name
