@@ -27,7 +27,7 @@ from PyQt6.QtWidgets import (
     QStatusBar,
     QProgressBar,
 )
-from PyQt6.QtCore import Qt, QSize, pyqtSignal
+from PyQt6.QtCore import Qt, QSize, pyqtSignal, QTimer
 from PyQt6.QtGui import QIcon, QAction, QKeySequence, QFont
 
 from src.core.logger import get_logger
@@ -337,9 +337,19 @@ class MainWindow(QMainWindow):
         self.controller.loading_finished.connect(self._hide_progress)
         self.controller.error_occurred.connect(self._show_error)
 
-        # 全画面ボタン
-        self.image_fullscreen_button.clicked.connect(self._toggle_image_fullscreen)
+        # 全画面ボタンのデバッグログ付き接続
+        self.logger.info("全画面ボタンの接続を設定中...")
+        self.image_fullscreen_button.clicked.connect(self._debug_fullscreen_click)
         self.map_fullscreen_button.clicked.connect(self._toggle_map_fullscreen)
+
+        # ImageViewer内の全画面ボタンの接続
+        self.image_viewer.fullscreen_requested.connect(self._debug_fullscreen_request)
+        self.map_viewer.fullscreen_requested.connect(self._toggle_map_fullscreen)
+
+        # エスケープキーでの全画面解除
+        self.image_viewer.escape_pressed.connect(self._debug_escape_key)
+
+        self.logger.info("シグナル・スロット接続が完了しました")
 
     def _init_theme(self) -> None:
         """テーマの初期化"""
@@ -496,26 +506,46 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.logger.error(f"テーマ変更時の処理に失敗しました: {e}")
 
+    def _debug_fullscreen_click(self) -> None:
+        """デバッグ用：全画面ボタンクリック"""
+        self.logger.info("画像全画面ボタンがクリックされました")
+        self._toggle_image_fullscreen()
+
+    def _debug_fullscreen_request(self) -> None:
+        """デバッグ用：ImageViewerからの全画面リクエスト"""
+        self.logger.info("ImageViewerから全画面リクエストを受信")
+        self._toggle_image_fullscreen()
+
+    def _debug_escape_key(self) -> None:
+        """デバッグ用：ESCキー処理"""
+        self.logger.info("ImageViewerからESCキーシグナルを受信")
+        self._handle_escape_key()
+
     def _toggle_image_fullscreen(self) -> None:
         """画像パネルの全画面切り替え"""
         try:
+            self.logger.info(f"_toggle_image_fullscreen called. Current state: {getattr(self, '_image_fullscreen', 'undefined')}")
             if hasattr(self, "_image_fullscreen") and self._image_fullscreen:
                 # 全画面モードを解除
+                self.logger.info("画像全画面モード解除を開始")
                 self._image_fullscreen = False
-                self._restore_normal_layout()
+                self._restore_image_normal_layout()
                 self.image_fullscreen_button.setText("全画面")
                 self.image_fullscreen_button.setToolTip("画像を全画面表示")
-                self.logger.debug("画像パネルの全画面モードを解除しました")
+                self.logger.info("画像パネルの全画面モードを解除しました")
             else:
                 # 全画面モードを有効化
+                self.logger.info("画像全画面モード有効化を開始")
                 self._image_fullscreen = True
                 self._save_current_layout()
                 self._show_image_fullscreen()
                 self.image_fullscreen_button.setText("戻る")
                 self.image_fullscreen_button.setToolTip("通常表示に戻る")
-                self.logger.debug("画像パネルを全画面表示しました")
+                self.logger.info("画像パネルを全画面表示しました")
         except Exception as e:
             self.logger.error(f"画像パネルの全画面切り替えに失敗しました: {e}")
+            import traceback
+            self.logger.error(f"スタックトレース: {traceback.format_exc()}")
 
     def _toggle_map_fullscreen(self) -> None:
         """地図パネルの全画面切り替え"""
@@ -523,7 +553,7 @@ class MainWindow(QMainWindow):
             if hasattr(self, "_map_fullscreen") and self._map_fullscreen:
                 # 全画面モードを解除
                 self._map_fullscreen = False
-                self._restore_normal_layout()
+                self._restore_map_normal_layout()
                 self.map_fullscreen_button.setText("全画面")
                 self.map_fullscreen_button.setToolTip("地図を全画面表示")
                 self.logger.debug("地図パネルの全画面モードを解除しました")
@@ -538,49 +568,307 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.logger.error(f"地図パネルの全画面切り替えに失敗しました: {e}")
 
+    def _handle_escape_key(self) -> None:
+        """エスケープキーで全画面モードから戻る"""
+        try:
+            self.logger.debug("ESCキーが押されました")
+            # 画像が全画面モードの場合
+            if hasattr(self, "_image_fullscreen") and self._image_fullscreen:
+                self.logger.debug("画像全画面モードからESCで戻ります")
+                self._toggle_image_fullscreen()
+            # 地図が全画面モードの場合
+            elif hasattr(self, "_map_fullscreen") and self._map_fullscreen:
+                self.logger.debug("地図全画面モードからESCで戻ります")
+                self._toggle_map_fullscreen()
+            else:
+                self.logger.debug("全画面モードではありません")
+        except Exception as e:
+            self.logger.error(f"エスケープキー処理に失敗しました: {e}")
+
     def _save_current_layout(self) -> None:
         """現在のレイアウトを保存"""
         self._saved_central_widget = self.centralWidget()
-        self._saved_main_splitter = self.main_splitter
+        # スプリッターのサイズも保存
+        self._saved_main_sizes = self.main_splitter.sizes()
+        self._saved_right_sizes = self.right_splitter.sizes()
 
     def _show_image_fullscreen(self) -> None:
         """画像パネルを全画面表示"""
-        # 左パネルを非表示
-        self.left_panel.setVisible(False)
-        # 地図パネルを非表示
-        self.map_panel.setVisible(False)
-        # 画像パネルを中央に配置
-        self.image_panel.setParent(None)
-        self.setCentralWidget(self.image_panel)
+        try:
+            self.logger.debug("画像全画面表示開始")
+
+            # 左パネルと地図パネルを非表示にして、画像パネルを拡大
+            self.left_panel.setVisible(False)
+            self.map_panel.setVisible(False)
+
+            # 画像パネルがright_splitterの唯一の可視子になるように調整
+            # スプリッターのサイズを調整して画像パネルを最大化
+            total_width = self.main_splitter.width()
+            self.main_splitter.setSizes([0, total_width])  # 左パネル0, 右パネル全幅
+
+            # 全画面表示後にウィンドウフィットを実行（少し遅延して）
+            if hasattr(self.image_viewer, 'image_display'):
+                QTimer.singleShot(100, self.image_viewer.image_display.fit_to_window)
+
+        except Exception as e:
+            self.logger.error(f"画像全画面表示エラー: {e}")
 
     def _show_map_fullscreen(self) -> None:
         """地図パネルを全画面表示"""
-        # 左パネルを非表示
-        self.left_panel.setVisible(False)
-        # 画像パネルを非表示
-        self.image_panel.setVisible(False)
-        # 地図パネルを中央に配置
-        self.map_panel.setParent(None)
-        self.setCentralWidget(self.map_panel)
+        try:
+            self.logger.debug("地図全画面表示開始")
+
+            # 左パネルと画像パネルを非表示にして、地図パネルを拡大
+            self.left_panel.setVisible(False)
+            self.image_panel.setVisible(False)
+
+            # 地図パネルがright_splitterの唯一の可視子になるように調整
+            total_width = self.main_splitter.width()
+            self.main_splitter.setSizes([0, total_width])  # 左パネル0, 右パネル全幅
+
+        except Exception as e:
+            self.logger.error(f"地図全画面表示エラー: {e}")
+
+    def _restore_image_normal_layout(self) -> None:
+        """画像全画面から通常レイアウトに復元"""
+        try:
+            self.logger.debug("画像全画面から通常レイアウト復元開始")
+
+            # 現在の状態をログ出力
+            left_visible = self.left_panel.isVisible()
+            image_visible = self.image_panel.isVisible()
+            map_visible = self.map_panel.isVisible()
+            main_sizes = self.main_splitter.sizes()
+            right_sizes = self.right_splitter.sizes()
+
+            self.logger.debug(f"復元前状態: left={left_visible}, image={image_visible}, map={map_visible}")
+            self.logger.debug(f"復元前サイズ: main={main_sizes}, right={right_sizes}")
+
+            # ウィジェットの更新を停止（パフォーマンス向上）
+            self.setUpdatesEnabled(False)
+
+            # すべてのパネルを表示
+            self.left_panel.setVisible(True)
+            self.image_panel.setVisible(True)
+            self.map_panel.setVisible(True)
+            self.logger.debug("すべてのパネルを表示に設定しました")
+
+            # 最小サイズ制約をリセット
+            self.image_panel.setMinimumSize(0, 0)
+            self.map_panel.setMinimumSize(0, 0)
+            self.logger.debug("最小サイズ制約をリセット")
+
+            # レイアウト更新を強制
+            QApplication.processEvents()
+
+            # スプリッターのサイズを復元（画像全画面専用）
+            if hasattr(self, "_saved_main_sizes"):
+                self.logger.debug(f"保存されたメインサイズを復元: {self._saved_main_sizes}")
+                # 複数回試行してサイズを確実に設定
+                for attempt in range(3):
+                    self.main_splitter.setSizes(self._saved_main_sizes)
+                    actual_main = self.main_splitter.sizes()
+                    self.logger.debug(f"メインスプリッター設定試行{attempt+1}: 期待値={self._saved_main_sizes}, 実際={actual_main}")
+                    if actual_main == self._saved_main_sizes:
+                        break
+                    QApplication.processEvents()
+            else:
+                # デフォルトサイズに戻す
+                self.logger.debug("デフォルトメインサイズに設定: [300, 700]")
+                self.main_splitter.setSizes([300, 700])
+
+            # 右スプリッターの復元（堅牢な方法）
+            if hasattr(self, "_saved_right_sizes") and len(self._saved_right_sizes) == 2:
+                self.logger.debug(f"保存された右サイズを復元: {self._saved_right_sizes}")
+
+                success = False
+
+                # 方法1: 直接的なsetSizes（複数回試行）
+                for attempt in range(5):
+                    self.right_splitter.setSizes(self._saved_right_sizes)
+                    QApplication.processEvents()
+                    actual_right = self.right_splitter.sizes()
+                    self.logger.debug(f"右スプリッター設定試行{attempt+1}: 期待値={self._saved_right_sizes}, 実際={actual_right}")
+
+                    # より寛容な一致判定（10%以内の差異は許容）
+                    if len(actual_right) == 2:
+                        error1 = abs(actual_right[0] - self._saved_right_sizes[0])
+                        error2 = abs(actual_right[1] - self._saved_right_sizes[1])
+                        total_expected = sum(self._saved_right_sizes)
+
+                        if error1 < total_expected * 0.1 and error2 < total_expected * 0.1:
+                            success = True
+                            self.logger.debug("右スプリッターサイズ復元成功（許容範囲内）")
+                            break
+
+                    QApplication.processEvents()
+
+                # 方法2: 比率ベースの復元
+                if not success:
+                    self.logger.debug("比率ベースの右スプリッター復元を試行")
+                    total_saved = sum(self._saved_right_sizes)
+
+                    if total_saved > 0:
+                        # 現在の右スプリッター全体のサイズを取得
+                        splitter_height = self.right_splitter.height()
+
+                        if splitter_height > 200:  # 最小サイズチェック
+                            # 保存された比率を計算
+                            ratio1 = self._saved_right_sizes[0] / total_saved
+                            ratio2 = self._saved_right_sizes[1] / total_saved
+
+                            # 新しいサイズを計算（少し余裕を持たせる）
+                            new_size1 = max(100, int(splitter_height * ratio1))
+                            new_size2 = max(100, splitter_height - new_size1)
+                            new_sizes = [new_size1, new_size2]
+
+                            self.logger.debug(f"比率ベース復元: splitter_height={splitter_height}, ratios=[{ratio1:.3f}, {ratio2:.3f}], new_sizes={new_sizes}")
+
+                            # 比率ベースのサイズを設定
+                            for attempt in range(3):
+                                self.right_splitter.setSizes(new_sizes)
+                                QApplication.processEvents()
+                                actual_right = self.right_splitter.sizes()
+                                self.logger.debug(f"比率ベース復元試行{attempt+1}: 期待値={new_sizes}, 実際={actual_right}")
+
+                                if len(actual_right) == 2 and sum(actual_right) > 200:
+                                    success = True
+                                    break
+
+                if not success:
+                    self.logger.warning("右スプリッターサイズ復元に失敗、デフォルトサイズを使用")
+                    self.right_splitter.setSizes([400, 300])
+            else:
+                # デフォルトサイズに戻す
+                self.logger.debug("デフォルト右サイズに設定: [400, 300]")
+                self.right_splitter.setSizes([400, 300])
+
+            # 強制的にレイアウト更新を実行
+            if hasattr(self.main_splitter, 'refresh'):
+                self.main_splitter.refresh()
+            if hasattr(self.right_splitter, 'refresh'):
+                self.right_splitter.refresh()
+
+            # ウィジェット全体のレイアウトを強制更新
+            central_widget = self.centralWidget()
+            if central_widget:
+                central_widget.updateGeometry()
+
+            # 最終的な強制更新
+            QApplication.processEvents()
+            self.main_splitter.update()
+            self.right_splitter.update()
+            self.updateGeometry()
+
+            # ウィジェットの更新を再開
+            self.setUpdatesEnabled(True)
+
+            # 画面を強制的に再描画
+            self.update()
+            self.repaint()
+
+            # 復元後の状態をログ出力
+            main_sizes_after = self.main_splitter.sizes()
+            right_sizes_after = self.right_splitter.sizes()
+            self.logger.debug(f"復元後サイズ: main={main_sizes_after}, right={right_sizes_after}")
+
+            # レイアウト復元後に画像をフィット（遅延実行で確実にフィット）
+            def delayed_fit():
+                if hasattr(self.image_viewer, 'image_display'):
+                    self.logger.debug("画像フィット実行")
+                    self.image_viewer.image_display.fit_to_window()
+                    # フォーカスも設定
+                    self.image_viewer.setFocus()
+
+            QTimer.singleShot(200, delayed_fit)
+
+            self.logger.debug("画像全画面から通常レイアウト復元完了")
+
+        except Exception as e:
+            self.logger.error(f"画像レイアウト復元エラー: {e}")
+            import traceback
+            self.logger.error(f"スタックトレース: {traceback.format_exc()}")
+
+    def _restore_map_normal_layout(self) -> None:
+        """地図全画面から通常レイアウトに復元"""
+        try:
+            self.logger.debug("地図全画面から通常レイアウト復元開始")
+
+            # すべてのパネルを表示
+            self.left_panel.setVisible(True)
+            self.image_panel.setVisible(True)
+            self.map_panel.setVisible(True)
+
+            # スプリッターのサイズを復元
+            if hasattr(self, "_saved_main_sizes"):
+                self.main_splitter.setSizes(self._saved_main_sizes)
+            else:
+                self.main_splitter.setSizes([300, 700])
+
+            if hasattr(self, "_saved_right_sizes"):
+                self.right_splitter.setSizes(self._saved_right_sizes)
+            else:
+                self.right_splitter.setSizes([400, 300])
+
+            self.logger.debug("地図全画面から通常レイアウト復元完了")
+
+        except Exception as e:
+            self.logger.error(f"地図レイアウト復元エラー: {e}")
 
     def _restore_normal_layout(self) -> None:
-        """通常レイアウトに復元"""
-        # 中央ウィジェットを復元
-        if hasattr(self, "_saved_central_widget"):
-            self.setCentralWidget(self._saved_central_widget)
+        """通常レイアウトに復元（汎用メソッド）"""
+        try:
+            self.logger.debug("通常レイアウト復元開始")
 
-        # パネルを元の位置に戻す
-        if hasattr(self, "_saved_main_splitter"):
-            self.main_splitter = self._saved_main_splitter
+            # 現在の状態をログ出力
+            left_visible = self.left_panel.isVisible()
+            image_visible = self.image_panel.isVisible()
+            map_visible = self.map_panel.isVisible()
+            main_sizes = self.main_splitter.sizes()
+            right_sizes = self.right_splitter.sizes()
 
-        # すべてのパネルを表示
-        self.left_panel.setVisible(True)
-        self.image_panel.setVisible(True)
-        self.map_panel.setVisible(True)
+            self.logger.debug(f"復元前状態: left={left_visible}, image={image_visible}, map={map_visible}")
+            self.logger.debug(f"復元前サイズ: main={main_sizes}, right={right_sizes}")
 
-        # 右スプリッターに画像と地図パネルを追加
-        self.right_splitter.addWidget(self.image_panel)
-        self.right_splitter.addWidget(self.map_panel)
+            # すべてのパネルを表示
+            self.left_panel.setVisible(True)
+            self.image_panel.setVisible(True)
+            self.map_panel.setVisible(True)
+            self.logger.debug("すべてのパネルを表示に設定しました")
+
+            # スプリッターのサイズを復元
+            if hasattr(self, "_saved_main_sizes"):
+                self.logger.debug(f"保存されたメインサイズを復元: {self._saved_main_sizes}")
+                self.main_splitter.setSizes(self._saved_main_sizes)
+            else:
+                # デフォルトサイズに戻す
+                self.logger.debug("デフォルトメインサイズに設定: [300, 700]")
+                self.main_splitter.setSizes([300, 700])
+
+            if hasattr(self, "_saved_right_sizes"):
+                self.logger.debug(f"保存された右サイズを復元: {self._saved_right_sizes}")
+                self.right_splitter.setSizes(self._saved_right_sizes)
+            else:
+                # デフォルトサイズに戻す
+                self.logger.debug("デフォルト右サイズに設定: [400, 300]")
+                self.right_splitter.setSizes([400, 300])
+
+            # 復元後の状態をログ出力
+            main_sizes_after = self.main_splitter.sizes()
+            right_sizes_after = self.right_splitter.sizes()
+            self.logger.debug(f"復元後サイズ: main={main_sizes_after}, right={right_sizes_after}")
+
+            # レイアウト復元後に画像をフィット（少し遅延して）
+            if hasattr(self.image_viewer, 'image_display'):
+                self.logger.debug("画像フィットをスケジュール")
+                QTimer.singleShot(100, self.image_viewer.image_display.fit_to_window)
+
+            self.logger.debug("通常レイアウト復元完了")
+
+        except Exception as e:
+            self.logger.error(f"レイアウト復元エラー: {e}")
+            import traceback
+            self.logger.error(f"スタックトレース: {traceback.format_exc()}")
 
     def _animate_panel_transition(self, panel, show: bool) -> None:
         """

@@ -272,10 +272,17 @@ class PhotoGeoViewController(QObject):
             # デバッグ用に画像読み込みの詳細ログを追加
             self.logger.info(f"[DEBUG] 画像読み込み開始: {file_path}")
 
-            # CS4Codingブランチ互換性: ImageViewerが内部でQPixmapを読み込むため、
-            # controllerからpixmapを渡す必要がない
-            self.logger.info(f"[DEBUG] image_viewer読み込み開始: {file_path}")
-            self.image_viewer.load_image(file_path)
+            # 現在の画像のインデックスを取得
+            try:
+                current_index = self._image_files.index(file_path)
+            except ValueError:
+                self.logger.warning(f"画像ファイルがリストにありません: {file_path}")
+                current_index = 0
+
+            # 画像リストを設定してナビゲーションを有効にする
+            self.logger.info(f"[DEBUG] 画像リスト設定: {len(self._image_files)}枚, index={current_index}")
+            self.image_viewer.set_image_list(self._image_files, current_index)
+
             self.logger.info(f"[DEBUG] image_viewer読み込み完了: {file_path}")
 
             # 互換性のため、image_loaderでも読み込む

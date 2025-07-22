@@ -12,8 +12,8 @@
             "x": -3,
             "y": -30,
             "maximized": false,
-            "left_panel_width": 813,
-            "right_panel_width": 1191
+            "left_panel_width": 372,
+            "right_panel_width": 1632
         },
         "panels": {
             "left_panel_width": 300,
@@ -43,7 +43,7 @@
         }
     },
     "paths": {
-        "last_directory": "/home/hiro/Projects/photomap-explorer/assets",
+        "last_directory": "/home/hiro/Repository/PhotoGeoView/tests/test_data/images/with_gps",
         "thumbnail_cache": "cache/thumbnails",
         "logs": "logs"
     },

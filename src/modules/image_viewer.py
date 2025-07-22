@@ -118,6 +118,12 @@ class ImageDisplayWidget(QLabel):
         widget_size = self.size()
         image_size = self.original_pixmap.size()
 
+        # サイズが0の場合は処理しない（レイアウト未完了の可能性）
+        if widget_size.width() <= 0 or widget_size.height() <= 0:
+            return
+        if image_size.width() <= 0 or image_size.height() <= 0:
+            return
+
         # Calculate zoom factor to fit image in widget
         scale_x = widget_size.width() / image_size.width()
         scale_y = widget_size.height() / image_size.height()
@@ -253,7 +259,8 @@ class ImageDisplayWidget(QLabel):
         # Delegate navigation keys to parent ImageViewer
         key = ev.key()
         if key in [Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up, Qt.Key.Key_Down,
-                   Qt.Key.Key_Space, Qt.Key.Key_Backspace, Qt.Key.Key_Home, Qt.Key.Key_End]:
+                   Qt.Key.Key_Space, Qt.Key.Key_Backspace, Qt.Key.Key_Home, Qt.Key.Key_End,
+                   Qt.Key.Key_Escape]:  # ESCキーも親に委譲
             # Ignore navigation keys - let the parent ImageViewer handle them
             ev.ignore()
             return
@@ -309,6 +316,7 @@ class ImageViewer(QWidget):
     # Signals
     image_changed = pyqtSignal(str)     # Current image path
     fullscreen_requested = pyqtSignal()  # Request fullscreen mode
+    escape_pressed = pyqtSignal()        # Escape key pressed
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -324,6 +332,9 @@ class ImageViewer(QWidget):
         self.zoom_slider: QSlider
         self.zoom_label: QLabel
         self.nav_buttons: dict[str, QPushButton] = {}
+
+        # フォーカス設定
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.setup_ui()
         self.setup_connections()
@@ -456,6 +467,9 @@ class ImageViewer(QWidget):
                 self.update_navigation_buttons()
                 self.image_changed.emit(image_path)
 
+                # フォーカスを設定してキー入力を受け取れるようにする
+                self.setFocus()
+
                 self.logger.info(f"Loaded single image: {Path(image_path).name}")
 
         except Exception as e:
@@ -490,22 +504,33 @@ class ImageViewer(QWidget):
                     self.current_image = image_path
                     self.image_changed.emit(image_path)
 
+                    # フォーカスを設定してキー入力を受け取れるようにする
+                    self.setFocus()
+
         except Exception as e:
             self.logger.error(f"Error loading current image: {e}")
 
     def previous_image(self) -> None:
         """Navigate to previous image"""
+        self.logger.debug(f"previous_image called: list_len={len(self.image_list)}, current_index={self.current_index}")
         if len(self.image_list) > 1 and self.current_index > 0:
             self.current_index -= 1
             self.load_current_image()
             self.update_navigation_buttons()
+            self.logger.debug(f"Moved to previous image: index={self.current_index}")
+        else:
+            self.logger.debug("Cannot go to previous image")
 
     def next_image(self) -> None:
         """Navigate to next image"""
+        self.logger.debug(f"next_image called: list_len={len(self.image_list)}, current_index={self.current_index}")
         if len(self.image_list) > 1 and self.current_index < len(self.image_list) - 1:
             self.current_index += 1
             self.load_current_image()
             self.update_navigation_buttons()
+            self.logger.debug(f"Moved to next image: index={self.current_index}")
+        else:
+            self.logger.debug("Cannot go to next image")
 
     def update_navigation_buttons(self) -> None:
         """Update navigation button states"""
@@ -514,6 +539,8 @@ class ImageViewer(QWidget):
 
         self.nav_buttons['prev'].setEnabled(has_prev)
         self.nav_buttons['next'].setEnabled(has_next)
+
+        self.logger.debug(f"Navigation buttons updated: prev={has_prev}, next={has_next} (list_len={len(self.image_list)}, index={self.current_index})")
 
     def on_zoom_changed(self, zoom_factor: float) -> None:
         """Handle zoom factor changes"""
@@ -564,6 +591,7 @@ class ImageViewer(QWidget):
             return
 
         key = a0.key()
+        self.logger.debug(f"ImageViewer received key: {key}")
 
         if key == Qt.Key.Key_Left or key == Qt.Key.Key_Up:
             # Previous image
@@ -603,6 +631,13 @@ class ImageViewer(QWidget):
                 self.current_index = len(self.image_list) - 1
                 self.load_current_image()
                 self.update_navigation_buttons()
+            a0.accept()
+
+        elif key == Qt.Key.Key_Escape:
+            # Escape key - emit signal for parent to handle
+            self.logger.info("ImageViewer: ESCキーが押されました - シグナル発行")
+            self.escape_pressed.emit()
+            self.logger.info("ImageViewer: escape_pressed シグナルを発行しました")
             a0.accept()
 
         else:
