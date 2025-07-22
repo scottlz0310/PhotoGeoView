@@ -10,7 +10,7 @@ from typing import Optional, Dict, List
 from concurrent.futures import ThreadPoolExecutor
 
 from PyQt6.QtCore import QObject, pyqtSignal, QMutex, Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QImage, QImageReader, QPainter
 
 from src.core.logger import get_logger
 from src.core.utils import is_image_file, ensure_directory_exists, get_cache_directory
@@ -47,7 +47,7 @@ class ThumbnailGenerator(QObject):
         self.logger.info(f"サムネイルジェネレーターを初期化しました: {self.cache_dir}")
 
     def generate_thumbnail(
-        self, file_path: str, size: tuple = (120, 120), quality: int = 85
+        self, file_path: str, size: tuple[int, int] = (120, 120), quality: int = 85
     ) -> Optional[QPixmap]:
         """
         サムネイルを生成
@@ -76,8 +76,9 @@ class ThumbnailGenerator(QObject):
             # サムネイルを生成
             thumbnail = self._create_thumbnail(file_path, size, quality)
             if thumbnail is not None and not thumbnail.isNull():
+                # 【デバッグ用】キャッシュ保存を一時的に無効化
                 # キャッシュに保存
-                self._save_thumbnail_cache(thumbnail, cache_path, quality)
+                # self._save_thumbnail_cache(thumbnail, cache_path, quality)
                 self.logger.debug(
                     f"[generate_thumbnail] emit: file_path={file_path}, isNull={thumbnail.isNull()}"
                 )
@@ -95,7 +96,7 @@ class ThumbnailGenerator(QObject):
             self.error_occurred.emit(file_path, str(e))
             return None
 
-    def _get_cache_path(self, file_path: str, size: tuple) -> str:
+    def _get_cache_path(self, file_path: str, size: tuple[int, int]) -> str:
         """
         キャッシュファイルパスを生成
 
@@ -127,10 +128,10 @@ class ThumbnailGenerator(QObject):
         return os.path.join(self.cache_dir, f"{hash_value}{file_ext}")
 
     def _create_thumbnail(
-        self, file_path: str, size: tuple, quality: int
+        self, file_path: str, size: tuple[int, int], quality: int
     ) -> Optional[QPixmap]:
         """
-        サムネイル画像を作成
+        サムネイル画像を作成（高品質サムネイル生成）
 
         Args:
             file_path: 画像ファイルパス
@@ -141,11 +142,33 @@ class ThumbnailGenerator(QObject):
             生成されたサムネイルのQPixmap
         """
         try:
-            pixmap = QPixmap(file_path)
-            if pixmap.isNull():
-                self.logger.error(f"[_create_thumbnail] QPixmap isNull: {file_path}")
+            # QImageReaderを使用してより詳細なエラー情報を取得
+            reader = QImageReader(file_path)
+
+            if not reader.canRead():
+                self.logger.error(f"[_create_thumbnail] 読み込み不可: {reader.errorString()}, file_path={file_path}")
                 return None
-            # アスペクト比を維持してリサイズ
+
+            # 画像を読み込み
+            image = reader.read()
+
+            if image.isNull():
+                self.logger.error(f"[_create_thumbnail] 読み込み失敗: {reader.errorString()}, file_path={file_path}")
+                return None
+
+            # 高品質サムネイル生成方法1: QPainterを使用した方法
+            thumbnail_pixmap = self._create_thumbnail_with_painter(image, size[0])
+
+            if thumbnail_pixmap is not None and not thumbnail_pixmap.isNull():
+                return thumbnail_pixmap
+
+            # フォールバック: 従来の方法
+            pixmap = QPixmap.fromImage(image)
+            if pixmap.isNull():
+                self.logger.error(f"[_create_thumbnail] QPixmap変換失敗: {file_path}")
+                return None
+
+            # アスペクト比を維持してリサイズ（高品質変換）
             scaled = pixmap.scaled(
                 size[0],
                 size[1],
@@ -158,6 +181,62 @@ class ThumbnailGenerator(QObject):
             self.logger.error(
                 f"サムネイル画像の作成に失敗しました: {file_path}, エラー: {e}"
             )
+            return None
+
+    def _create_thumbnail_with_painter(self, image: QImage, size: int) -> Optional[QPixmap]:
+        """
+        QPainterを使用した高品質サムネイル生成
+
+        Args:
+            image: 元画像のQImage
+            size: サムネイルサイズ（正方形）
+
+        Returns:
+            生成されたサムネイルのQPixmap
+        """
+        try:
+
+            if image.isNull():
+                return None
+
+            # 出力用のQImageを作成
+            output_image = QImage(size, size, QImage.Format.Format_ARGB32)
+            output_image.fill(Qt.GlobalColor.transparent)
+
+            # アスペクト比計算
+            orig_width = image.width()
+            orig_height = image.height()
+
+            if orig_width > orig_height:
+                new_width = size
+                new_height = int((orig_height * size) / orig_width)
+            else:
+                new_height = size
+                new_width = int((orig_width * size) / orig_height)
+
+            # 中央配置の計算
+            x = (size - new_width) // 2
+            y = (size - new_height) // 2
+
+            # QPainterで高品質描画
+            painter = QPainter(output_image)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+
+            # スケールして描画
+            scaled_image = image.scaled(
+                new_width,
+                new_height,
+                Qt.AspectRatioMode.IgnoreAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            painter.drawImage(x, y, scaled_image)
+            painter.end()
+
+            return QPixmap.fromImage(output_image)
+
+        except Exception as e:
+            self.logger.error(f"QPainterサムネイル生成エラー: {e}")
             return None
 
     def _save_thumbnail_cache(
@@ -218,7 +297,7 @@ class ThumbnailGenerator(QObject):
             return None
 
     def generate_thumbnails_async(
-        self, file_paths: List[str], size: tuple = (120, 120), quality: int = 85
+        self, file_paths: List[str], size: tuple[int, int] = (120, 120), quality: int = 85
     ) -> None:
         """
         サムネイルを非同期で生成
@@ -334,7 +413,7 @@ class ThumbnailGenerator(QObject):
                 return 0
 
             total_size = 0
-            for dirpath, dirnames, filenames in os.walk(self.cache_dir):
+            for dirpath, _, filenames in os.walk(self.cache_dir):
                 for filename in filenames:
                     file_path = os.path.join(dirpath, filename)
                     if os.path.isfile(file_path):
@@ -353,13 +432,20 @@ class ThumbnailGenerator(QObject):
         Returns:
             生成中の場合はTrue
         """
-        with self.mutex:
-            return len(self._generating_files) > 0
+        self.mutex.lock()
+        try:
+            result = len(self._generating_files) > 0
+        finally:
+            self.mutex.unlock()
+        return result
 
     def cancel_generation(self) -> None:
         """生成をキャンセル"""
-        with self.mutex:
+        self.mutex.lock()
+        try:
             self._generating_files.clear()
+        finally:
+            self.mutex.unlock()
         self.logger.info("サムネイル生成をキャンセルしました")
 
     def get_generating_files(self) -> List[str]:
@@ -369,8 +455,12 @@ class ThumbnailGenerator(QObject):
         Returns:
             生成中のファイルパスのリスト
         """
-        with self.mutex:
-            return self._generating_files.copy()
+        self.mutex.lock()
+        try:
+            result = self._generating_files.copy()
+        finally:
+            self.mutex.unlock()
+        return result
 
     def __del__(self):
         """デストラクタ"""

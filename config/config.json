@@ -9,8 +9,8 @@
         "window": {
             "width": 1200,
             "height": 800,
-            "x": 335,
-            "y": 2130,
+            "x": -3,
+            "y": -30,
             "maximized": false,
             "left_panel_width": 477,
             "right_panel_width": 699
@@ -18,7 +18,7 @@
         "panels": {
             "left_panel_width": 300,
             "right_panel_width": 400,
-            "thumbnail_size": 60
+            "thumbnail_size": 200
         },
         "theme_manager": {
             "current_theme": "dark",

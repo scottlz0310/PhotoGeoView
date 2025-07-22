@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QMenu,
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QTimer
-from PyQt6.QtGui import QPixmap, QIcon, QFont, QPainter, QColor, QContextMenuEvent
+from PyQt6.QtGui import QPixmap, QIcon, QFont, QPainter, QColor, QContextMenuEvent, QMouseEvent, QImage, QAction
 
 from src.core.logger import get_logger
 from src.core.settings import get_settings
@@ -332,11 +332,9 @@ class ThumbnailGrid(QWidget):
             # サムネイル画像を設定
             if file_path in self._thumbnails:
                 pixmap = self._thumbnails[file_path]
-                scaled_pixmap = pixmap.scaled(
-                    self._thumbnail_size,
-                    self._thumbnail_size,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
+                # 高品質スケーリングを使用
+                scaled_pixmap = self._create_high_quality_thumbnail(
+                    pixmap, self._thumbnail_size
                 )
                 thumbnail_label.setPixmap(scaled_pixmap)
             else:
@@ -528,7 +526,7 @@ class ThumbnailGrid(QWidget):
             position: メニュー表示位置
         """
         try:
-            from PyQt6.QtWidgets import QMenu, QAction
+            from PyQt6.QtGui import QAction
 
             menu = QMenu(self)
 
@@ -618,3 +616,56 @@ class ThumbnailGrid(QWidget):
             画像数
         """
         return len(self._image_files)
+
+    def _create_high_quality_thumbnail(self, pixmap: QPixmap, size: int) -> QPixmap:
+        """
+        高品質サムネイル生成（QPainterを使用）
+
+        Args:
+            pixmap: 元のQPixmap
+            size: サムネイルサイズ（正方形）
+
+        Returns:
+            高品質にスケーリングされたQPixmap
+        """
+        if pixmap.isNull():
+            return pixmap
+
+        # まずQImageに変換
+        image = pixmap.toImage()
+
+        # 出力用のQImageを作成
+        output_image = QImage(size, size, QImage.Format.Format_ARGB32)
+        output_image.fill(Qt.GlobalColor.transparent)
+
+        # アスペクト比計算
+        orig_width = image.width()
+        orig_height = image.height()
+
+        if orig_width > orig_height:
+            new_width = size
+            new_height = int((orig_height * size) / orig_width)
+        else:
+            new_height = size
+            new_width = int((orig_width * size) / orig_height)
+
+        # 中央配置の計算
+        x = (size - new_width) // 2
+        y = (size - new_height) // 2
+
+        # QPainterで高品質描画
+        painter = QPainter(output_image)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+
+        # スケールして描画
+        scaled_image = image.scaled(
+            new_width,
+            new_height,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+        painter.drawImage(x, y, scaled_image)
+        painter.end()
+
+        return QPixmap.fromImage(output_image)
