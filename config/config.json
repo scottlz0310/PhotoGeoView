@@ -7,13 +7,13 @@
     },
     "ui": {
         "window": {
-            "width": 2028,
-            "height": 1627,
-            "x": -3,
+            "width": 1014,
+            "height": 783,
+            "x": 1917,
             "y": -30,
             "maximized": false,
-            "left_panel_width": 372,
-            "right_panel_width": 1632
+            "left_panel_width": 250,
+            "right_panel_width": 740
         },
         "panels": {
             "left_panel_width": 300,

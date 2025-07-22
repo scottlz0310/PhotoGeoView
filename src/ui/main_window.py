@@ -156,6 +156,8 @@ class MainWindow(QMainWindow):
         # 左パネルフレーム
         self.left_panel = QFrame()
         self.left_panel.setFrameStyle(QFrame.Shape.StyledPanel)
+        # 左パネルの適切な最小サイズを設定
+        self.left_panel.setMinimumSize(250, 400)
         self.left_layout = QVBoxLayout(self.left_panel)
 
         # フォルダナビゲーター
@@ -199,6 +201,8 @@ class MainWindow(QMainWindow):
         """画像プレビューパネルの初期化"""
         self.image_panel = QFrame()
         self.image_panel.setFrameStyle(QFrame.Shape.StyledPanel)
+        # 画像パネルの適切な最小サイズを設定
+        self.image_panel.setMinimumSize(200, 150)
         self.image_layout = QVBoxLayout(self.image_panel)
 
         # 画像パネルヘッダー
@@ -222,6 +226,8 @@ class MainWindow(QMainWindow):
         """地図パネルの初期化"""
         self.map_panel = QFrame()
         self.map_panel.setFrameStyle(QFrame.Shape.StyledPanel)
+        # 地図パネルの適切な最小サイズを設定
+        self.map_panel.setMinimumSize(200, 150)
         self.map_layout = QVBoxLayout(self.map_panel)
 
         # 地図パネルヘッダー
@@ -653,119 +659,36 @@ class MainWindow(QMainWindow):
             self.map_panel.setVisible(True)
             self.logger.debug("すべてのパネルを表示に設定しました")
 
-            # 最小サイズ制約をリセット
-            self.image_panel.setMinimumSize(0, 0)
-            self.map_panel.setMinimumSize(0, 0)
-            self.logger.debug("最小サイズ制約をリセット")
+            # 【修正】適切な最小サイズを復元（0,0ではなく適切なサイズ）
+            self.left_panel.setMinimumSize(250, 400)
+            self.image_panel.setMinimumSize(200, 150)
+            self.map_panel.setMinimumSize(200, 150)
+            self.logger.debug("適切な最小サイズを復元しました")
 
             # レイアウト更新を強制
             QApplication.processEvents()
 
-            # スプリッターのサイズを復元（画像全画面専用）
-            if hasattr(self, "_saved_main_sizes"):
-                self.logger.debug(f"保存されたメインサイズを復元: {self._saved_main_sizes}")
-                # 複数回試行してサイズを確実に設定
-                for attempt in range(3):
-                    self.main_splitter.setSizes(self._saved_main_sizes)
-                    actual_main = self.main_splitter.sizes()
-                    self.logger.debug(f"メインスプリッター設定試行{attempt+1}: 期待値={self._saved_main_sizes}, 実際={actual_main}")
-                    if actual_main == self._saved_main_sizes:
-                        break
-                    QApplication.processEvents()
+            # スプリッターのサイズを復元（簡略化版）
+            if hasattr(self, "_saved_main_sizes") and hasattr(self, "_saved_right_sizes"):
+                self.logger.debug(f"保存されたサイズを復元: main={self._saved_main_sizes}, right={self._saved_right_sizes}")
+
+                # レイアウト更新を強制
+                QApplication.processEvents()
+
+                # サイズを復元
+                self.main_splitter.setSizes(self._saved_main_sizes)
+                self.right_splitter.setSizes(self._saved_right_sizes)
+
+                # 復元後の確認用に少し待機
+                QTimer.singleShot(50, lambda: QApplication.processEvents())
             else:
                 # デフォルトサイズに戻す
-                self.logger.debug("デフォルトメインサイズに設定: [300, 700]")
+                self.logger.debug("デフォルトサイズに設定")
                 self.main_splitter.setSizes([300, 700])
-
-            # 右スプリッターの復元（堅牢な方法）
-            if hasattr(self, "_saved_right_sizes") and len(self._saved_right_sizes) == 2:
-                self.logger.debug(f"保存された右サイズを復元: {self._saved_right_sizes}")
-
-                success = False
-
-                # 方法1: 直接的なsetSizes（複数回試行）
-                for attempt in range(5):
-                    self.right_splitter.setSizes(self._saved_right_sizes)
-                    QApplication.processEvents()
-                    actual_right = self.right_splitter.sizes()
-                    self.logger.debug(f"右スプリッター設定試行{attempt+1}: 期待値={self._saved_right_sizes}, 実際={actual_right}")
-
-                    # より寛容な一致判定（10%以内の差異は許容）
-                    if len(actual_right) == 2:
-                        error1 = abs(actual_right[0] - self._saved_right_sizes[0])
-                        error2 = abs(actual_right[1] - self._saved_right_sizes[1])
-                        total_expected = sum(self._saved_right_sizes)
-
-                        if error1 < total_expected * 0.1 and error2 < total_expected * 0.1:
-                            success = True
-                            self.logger.debug("右スプリッターサイズ復元成功（許容範囲内）")
-                            break
-
-                    QApplication.processEvents()
-
-                # 方法2: 比率ベースの復元
-                if not success:
-                    self.logger.debug("比率ベースの右スプリッター復元を試行")
-                    total_saved = sum(self._saved_right_sizes)
-
-                    if total_saved > 0:
-                        # 現在の右スプリッター全体のサイズを取得
-                        splitter_height = self.right_splitter.height()
-
-                        if splitter_height > 200:  # 最小サイズチェック
-                            # 保存された比率を計算
-                            ratio1 = self._saved_right_sizes[0] / total_saved
-                            ratio2 = self._saved_right_sizes[1] / total_saved
-
-                            # 新しいサイズを計算（少し余裕を持たせる）
-                            new_size1 = max(100, int(splitter_height * ratio1))
-                            new_size2 = max(100, splitter_height - new_size1)
-                            new_sizes = [new_size1, new_size2]
-
-                            self.logger.debug(f"比率ベース復元: splitter_height={splitter_height}, ratios=[{ratio1:.3f}, {ratio2:.3f}], new_sizes={new_sizes}")
-
-                            # 比率ベースのサイズを設定
-                            for attempt in range(3):
-                                self.right_splitter.setSizes(new_sizes)
-                                QApplication.processEvents()
-                                actual_right = self.right_splitter.sizes()
-                                self.logger.debug(f"比率ベース復元試行{attempt+1}: 期待値={new_sizes}, 実際={actual_right}")
-
-                                if len(actual_right) == 2 and sum(actual_right) > 200:
-                                    success = True
-                                    break
-
-                if not success:
-                    self.logger.warning("右スプリッターサイズ復元に失敗、デフォルトサイズを使用")
-                    self.right_splitter.setSizes([400, 300])
-            else:
-                # デフォルトサイズに戻す
-                self.logger.debug("デフォルト右サイズに設定: [400, 300]")
                 self.right_splitter.setSizes([400, 300])
-
-            # 強制的にレイアウト更新を実行
-            if hasattr(self.main_splitter, 'refresh'):
-                self.main_splitter.refresh()
-            if hasattr(self.right_splitter, 'refresh'):
-                self.right_splitter.refresh()
-
-            # ウィジェット全体のレイアウトを強制更新
-            central_widget = self.centralWidget()
-            if central_widget:
-                central_widget.updateGeometry()
-
-            # 最終的な強制更新
-            QApplication.processEvents()
-            self.main_splitter.update()
-            self.right_splitter.update()
-            self.updateGeometry()
 
             # ウィジェットの更新を再開
             self.setUpdatesEnabled(True)
-
-            # 画面を強制的に再描画
-            self.update()
-            self.repaint()
 
             # 復元後の状態をログ出力
             main_sizes_after = self.main_splitter.sizes()
@@ -798,6 +721,12 @@ class MainWindow(QMainWindow):
             self.left_panel.setVisible(True)
             self.image_panel.setVisible(True)
             self.map_panel.setVisible(True)
+
+            # 【修正】適切な最小サイズを復元
+            self.left_panel.setMinimumSize(250, 400)
+            self.image_panel.setMinimumSize(200, 150)
+            self.map_panel.setMinimumSize(200, 150)
+            self.logger.debug("適切な最小サイズを復元しました")
 
             # スプリッターのサイズを復元
             if hasattr(self, "_saved_main_sizes"):
@@ -835,6 +764,12 @@ class MainWindow(QMainWindow):
             self.image_panel.setVisible(True)
             self.map_panel.setVisible(True)
             self.logger.debug("すべてのパネルを表示に設定しました")
+
+            # 【修正】適切な最小サイズを復元
+            self.left_panel.setMinimumSize(250, 400)
+            self.image_panel.setMinimumSize(200, 150)
+            self.map_panel.setMinimumSize(200, 150)
+            self.logger.debug("適切な最小サイズを復元しました")
 
             # スプリッターのサイズを復元
             if hasattr(self, "_saved_main_sizes"):
