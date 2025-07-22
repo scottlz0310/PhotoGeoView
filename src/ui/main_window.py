@@ -421,7 +421,7 @@ class MainWindow(QMainWindow):
         self.controller.error_occurred.connect(self._show_error)
 
         # 全画面ボタンのデバッグログ付き接続
-        self.logger.info("全画面ボタンの接続を設定中...")
+        self.logger.debug("全画面ボタンの接続を設定中...")
         self.image_fullscreen_button.clicked.connect(self._debug_fullscreen_click)
         self.map_fullscreen_button.clicked.connect(self._toggle_map_fullscreen)
 
@@ -432,7 +432,7 @@ class MainWindow(QMainWindow):
         # エスケープキーでの全画面解除
         self.image_viewer.escape_pressed.connect(self._debug_escape_key)
 
-        self.logger.info("シグナル・スロット接続が完了しました")
+        self.logger.debug("シグナル・スロット接続が完了しました")
 
     def _init_theme(self) -> None:
         """テーマの初期化"""
@@ -716,40 +716,40 @@ class MainWindow(QMainWindow):
 
     def _debug_fullscreen_click(self) -> None:
         """デバッグ用：全画面ボタンクリック"""
-        self.logger.info("画像全画面ボタンがクリックされました")
+        self.logger.debug("画像全画面ボタンがクリックされました")
         self._toggle_image_fullscreen()
 
     def _debug_fullscreen_request(self) -> None:
         """デバッグ用：ImageViewerからの全画面リクエスト"""
-        self.logger.info("ImageViewerから全画面リクエストを受信")
+        self.logger.debug("ImageViewerから全画面リクエストを受信")
         self._toggle_image_fullscreen()
 
     def _debug_escape_key(self) -> None:
         """デバッグ用：ESCキー処理"""
-        self.logger.info("ImageViewerからESCキーシグナルを受信")
+        self.logger.debug("ImageViewerからESCキーシグナルを受信")
         self._handle_escape_key()
 
     def _toggle_image_fullscreen(self) -> None:
         """画像パネルの全画面切り替え"""
         try:
-            self.logger.info(f"_toggle_image_fullscreen called. Current state: {getattr(self, '_image_fullscreen', 'undefined')}")
+            self.logger.debug(f"_toggle_image_fullscreen called. Current state: {getattr(self, '_image_fullscreen', 'undefined')}")
             if hasattr(self, "_image_fullscreen") and self._image_fullscreen:
                 # 全画面モードを解除
-                self.logger.info("画像全画面モード解除を開始")
+                self.logger.debug("画像全画面モード解除を開始")
                 self._image_fullscreen = False
                 self._restore_image_normal_layout()
                 self.image_fullscreen_button.setText("全画面")
                 self.image_fullscreen_button.setToolTip("画像を全画面表示")
-                self.logger.info("画像パネルの全画面モードを解除しました")
+                self.logger.debug("画像パネルの全画面モードを解除しました")
             else:
                 # 全画面モードを有効化
-                self.logger.info("画像全画面モード有効化を開始")
+                self.logger.debug("画像全画面モード有効化を開始")
                 self._image_fullscreen = True
                 self._save_current_layout()
                 self._show_image_fullscreen()
                 self.image_fullscreen_button.setText("戻る")
                 self.image_fullscreen_button.setToolTip("通常表示に戻る")
-                self.logger.info("画像パネルを全画面表示しました")
+                self.logger.debug("画像パネルを全画面表示しました")
         except Exception as e:
             self.logger.error(f"画像パネルの全画面切り替えに失敗しました: {e}")
             import traceback

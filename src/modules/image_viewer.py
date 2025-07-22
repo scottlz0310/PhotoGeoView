@@ -454,7 +454,7 @@ class ImageViewer(QWidget):
                 # フォーカスを設定してキー入力を受け取れるようにする
                 self.setFocus()
 
-                self.logger.info(f"Loaded single image: {Path(image_path).name}")
+                self.logger.debug(f"Loaded single image: {Path(image_path).name}")
 
         except Exception as e:
             self.logger.error(f"Error loading image: {e}")
@@ -474,7 +474,7 @@ class ImageViewer(QWidget):
 
             self.update_navigation_buttons()
 
-            self.logger.info(f"Set image list with {len(image_list)} images")
+            self.logger.debug(f"Set image list with {len(image_list)} images")
 
         except Exception as e:
             self.logger.error(f"Error setting image list: {e}")
@@ -619,9 +619,9 @@ class ImageViewer(QWidget):
 
         elif key == Qt.Key.Key_Escape:
             # Escape key - emit signal for parent to handle
-            self.logger.info("ImageViewer: ESCキーが押されました - シグナル発行")
+            self.logger.debug("ImageViewer: ESCキーが押されました - シグナル発行")
             self.escape_pressed.emit()
-            self.logger.info("ImageViewer: escape_pressed シグナルを発行しました")
+            self.logger.debug("ImageViewer: escape_pressed シグナルを発行しました")
             a0.accept()
 
         else:

@@ -13,7 +13,8 @@ from PyQt6.QtCore import QObject, pyqtSignal, QMutex, Qt
 from PyQt6.QtGui import QPixmap, QImage, QImageReader, QPainter
 
 from src.core.logger import get_logger
-from src.core.utils import is_image_file, ensure_directory_exists, get_cache_directory
+from src.core.utils import is_image_file, ensure_directory_exists
+from src.core.config_manager import get_config_manager
 
 
 class ThumbnailGenerator(QObject):
@@ -25,26 +26,46 @@ class ThumbnailGenerator(QObject):
     generation_finished = pyqtSignal()  # 生成完了時に発信
     error_occurred = pyqtSignal(str, str)  # エラー発生時に発信
 
-    def __init__(self, cache_dir: Optional[str] = None):
+    def __init__(self, cache_dir: Optional[str] = None, max_cache_size_mb: Optional[int] = None):
         """
         ThumbnailGeneratorの初期化
 
         Args:
-            cache_dir: キャッシュディレクトリパス
+            cache_dir: キャッシュディレクトリパス（Noneの場合は設定から取得）
+            max_cache_size_mb: 最大キャッシュサイズ（MB、Noneの場合は設定から取得）
         """
         super().__init__()
         self.logger = get_logger(__name__)
         self.mutex = QMutex()
         self.executor = ThreadPoolExecutor(max_workers=4)
 
+        # 設定管理システムを取得
+        config_manager = get_config_manager()
+
         # キャッシュディレクトリの設定
-        self.cache_dir = cache_dir or os.path.join(get_cache_directory(), "thumbnails")
+        self.cache_dir = cache_dir or config_manager.get_app_config("paths.thumbnail_cache", "cache/thumbnails")
+        if not os.path.isabs(self.cache_dir):
+            self.cache_dir = os.path.join(os.getcwd(), self.cache_dir)
         ensure_directory_exists(self.cache_dir)
+
+        # キャッシュサイズ制限設定（設定ファイルから取得）
+        if max_cache_size_mb is None:
+            max_cache_size_mb = config_manager.get_app_config("cache.thumbnail_max_size_mb", 500)
+
+        # None チェックを追加
+        if max_cache_size_mb is None:
+            max_cache_size_mb = 500
+
+        self.max_cache_size_bytes = max_cache_size_mb * 1024 * 1024  # MBをバイトに変換
+        self.cleanup_ratio = config_manager.get_app_config("cache.thumbnail_cleanup_ratio", 0.8)
+
+        self.logger.info(f"サムネイルジェネレーターを初期化: キャッシュ={self.cache_dir}, 最大サイズ={max_cache_size_mb}MB")
 
         # 生成中のファイルリスト
         self._generating_files: List[str] = []
 
         self.logger.info(f"サムネイルジェネレーターを初期化しました: {self.cache_dir}")
+        self.logger.info(f"最大キャッシュサイズ: {max_cache_size_mb}MB")
 
     def generate_thumbnail(
         self, file_path: str, size: tuple[int, int] = (120, 120), quality: int = 95
@@ -82,9 +103,8 @@ class ThumbnailGenerator(QObject):
             # サムネイルを生成
             thumbnail = self._create_thumbnail(file_path, size, quality)
             if thumbnail is not None and not thumbnail.isNull():
-                # 【デバッグ用】キャッシュ保存を一時的に無効化
                 # キャッシュに保存
-                # self._save_thumbnail_cache(thumbnail, cache_path, quality)
+                self._save_thumbnail_cache(thumbnail, cache_path, quality)
                 self.logger.debug(
                     f"[generate_thumbnail] emit: file_path={file_path}, isNull={thumbnail.isNull()}"
                 )
@@ -278,6 +298,9 @@ class ThumbnailGenerator(QObject):
             保存成功の場合True
         """
         try:
+            # キャッシュサイズをチェックして、必要に応じて古いファイルを削除
+            self._manage_cache_size()
+
             # QPixmapを直接JPEGファイルとして保存
             success = pixmap.save(cache_path, "JPEG", quality)
 
@@ -485,6 +508,80 @@ class ThumbnailGenerator(QObject):
         finally:
             self.mutex.unlock()
         return result
+
+    def _manage_cache_size(self) -> None:
+        """
+        キャッシュサイズを管理し、制限を超えている場合は古いファイルを削除
+        """
+        try:
+            current_size = self.get_cache_size_bytes()
+
+            # サイズ制限をチェック
+            if current_size <= self.max_cache_size_bytes:
+                return  # 制限内なので何もしない
+
+            self.logger.info(f"キャッシュサイズが制限を超過: {current_size / 1024 / 1024:.1f}MB / {self.max_cache_size_bytes / 1024 / 1024:.1f}MB")
+
+            # ファイルリストを作成（アクセス時間順）
+            cache_files = []
+            for root, _, files in os.walk(self.cache_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    try:
+                        stat = os.stat(file_path)
+                        cache_files.append((file_path, stat.st_atime, stat.st_size))
+                    except OSError:
+                        continue
+
+            # アクセス時間でソート（古いものから）
+            cache_files.sort(key=lambda x: x[1])
+
+            # 制限サイズの80%になるまで古いファイルを削除
+            target_size = int(self.max_cache_size_bytes * 0.8)
+            deleted_count = 0
+            deleted_size = 0
+
+            for file_path, _, file_size in cache_files:
+                if current_size - deleted_size <= target_size:
+                    break
+
+                try:
+                    os.remove(file_path)
+                    deleted_count += 1
+                    deleted_size += file_size
+                    self.logger.debug(f"古いキャッシュファイルを削除: {file_path}")
+                except OSError as e:
+                    self.logger.warning(f"キャッシュファイルの削除に失敗: {file_path}, エラー: {e}")
+
+            if deleted_count > 0:
+                self.logger.info(f"キャッシュクリーンアップ完了: {deleted_count}ファイル, {deleted_size / 1024 / 1024:.1f}MB削除")
+
+        except Exception as e:
+            self.logger.error(f"キャッシュサイズ管理に失敗しました: {e}")
+
+    def get_max_cache_size_mb(self) -> int:
+        """
+        最大キャッシュサイズを取得（MB単位）
+
+        Returns:
+            最大キャッシュサイズ（MB）
+        """
+        return int(self.max_cache_size_bytes / 1024 / 1024)
+
+    def set_max_cache_size_mb(self, size_mb: int) -> None:
+        """
+        最大キャッシュサイズを設定（MB単位）
+
+        Args:
+            size_mb: 最大キャッシュサイズ（MB）
+        """
+        old_size = self.get_max_cache_size_mb()
+        self.max_cache_size_bytes = size_mb * 1024 * 1024
+        self.logger.info(f"最大キャッシュサイズを変更: {old_size}MB → {size_mb}MB")
+
+        # サイズ制限が小さくなった場合は即座にクリーンアップ
+        if size_mb < old_size:
+            self._manage_cache_size()
 
     def __del__(self):
         """デストラクタ"""
