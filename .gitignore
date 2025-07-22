@@ -21,6 +21,10 @@ ehthumbs.db
 .thumbnails/
 .thumb/
 
+# ユーザー設定ファイル（テーマ切り替え時に自動更新される）
+config/qt_theme_settings.json
+config/qt_theme_user_settings.json
+
 # 仮想環境
 .vscode/
 venv/

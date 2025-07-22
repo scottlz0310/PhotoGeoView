@@ -33,14 +33,18 @@ class QtThemeManagerAdapter(QObject):
         self.logger = get_logger(__name__)
         self.settings = get_settings()
 
-        # Qt-Theme-Manager形式の設定ファイルパス
+        # Qt-Theme-Manager形式のファイルパス
+        self.qt_theme_definitions_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_definitions.json"
+        self.qt_theme_user_settings_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_user_settings.json"
+        
+        # レガシー統合設定ファイルパス（フォールバック用）
         self.qt_theme_config_path = Path(__file__).parent.parent.parent / "config" / "qt_theme_settings.json"
 
         # 従来形式の設定ファイルパス（フォールバック用）
         self.legacy_theme_config_path = Path(__file__).parent.parent.parent / "config" / "theme_styles.json"
 
-        # テーマ設定を読み込み
-        self.qt_theme_config = self._load_qt_theme_config()
+        # テーマ設定を読み込み（分離型設定を使用）
+        self.qt_theme_config = self._load_separated_theme_config()
 
         # 利用可能なテーマリストを設定から取得
         self.available_themes = list(self.qt_theme_config.get("available_themes", {}).keys())
@@ -59,6 +63,78 @@ class QtThemeManagerAdapter(QObject):
 
         # 初期テーマの適用
         self.apply_theme(self.current_theme)
+
+    def _load_separated_theme_config(self) -> Dict[str, Any]:
+        """分離型設定ファイルを読み込み（定義ファイル + ユーザー設定ファイル）"""
+        try:
+            # テーマ定義ファイルを読み込み
+            theme_definitions = self._load_theme_definitions()
+            
+            # ユーザー設定ファイルを読み込み
+            user_settings = self._load_user_settings()
+            
+            # 統合設定を作成
+            merged_config = {**user_settings, **theme_definitions}
+            
+            self.logger.info("分離型設定ファイルを読み込みました")
+            return merged_config
+            
+        except Exception as e:
+            self.logger.error(f"分離型設定の読み込みに失敗、フォールバックを使用: {e}")
+            return self._load_qt_theme_config()
+
+    def _load_theme_definitions(self) -> Dict[str, Any]:
+        """テーマ定義ファイルを読み込み"""
+        try:
+            if self.qt_theme_definitions_path.exists():
+                with open(self.qt_theme_definitions_path, 'r', encoding='utf-8') as f:
+                    definitions = json.load(f)
+                self.logger.debug(f"テーマ定義ファイルを読み込みました: {self.qt_theme_definitions_path}")
+                return definitions
+            else:
+                self.logger.warning(f"テーマ定義ファイルが見つかりません: {self.qt_theme_definitions_path}")
+                return {"available_themes": {}}
+        except Exception as e:
+            self.logger.error(f"テーマ定義ファイルの読み込みに失敗: {e}")
+            return {"available_themes": {}}
+
+    def _load_user_settings(self) -> Dict[str, Any]:
+        """ユーザー設定ファイルを読み込み"""
+        try:
+            if self.qt_theme_user_settings_path.exists():
+                with open(self.qt_theme_user_settings_path, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                self.logger.debug(f"ユーザー設定ファイルを読み込みました: {self.qt_theme_user_settings_path}")
+                return settings
+            else:
+                # ユーザー設定ファイルが存在しない場合はデフォルト設定を作成
+                default_settings = {
+                    "current_theme": "dark",
+                    "last_selected_theme": "dark",
+                    "theme_switching_enabled": True,
+                    "remember_theme_choice": True,
+                    "version": "0.0.1"
+                }
+                self._save_user_settings(default_settings)
+                return default_settings
+        except Exception as e:
+            self.logger.error(f"ユーザー設定ファイルの読み込みに失敗: {e}")
+            return {
+                "current_theme": "dark",
+                "last_selected_theme": "dark",
+                "theme_switching_enabled": True,
+                "remember_theme_choice": True,
+                "version": "0.0.1"
+            }
+
+    def _save_user_settings(self, settings: Dict[str, Any]) -> None:
+        """ユーザー設定ファイルを保存"""
+        try:
+            with open(self.qt_theme_user_settings_path, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+            self.logger.debug(f"ユーザー設定ファイルを保存しました: {self.qt_theme_user_settings_path}")
+        except Exception as e:
+            self.logger.warning(f"ユーザー設定ファイルの保存に失敗: {e}")
 
     def _load_qt_theme_config(self) -> Dict[str, Any]:
         """Qt-Theme-Manager形式の設定ファイルを読み込み"""
@@ -325,13 +401,21 @@ class QtThemeManagerAdapter(QObject):
             return self._apply_fallback_theme(theme_name)
 
     def _update_current_theme_in_config(self, theme_name: str) -> None:
-        """設定ファイルの current_theme を更新"""
+        """設定ファイルの current_theme を更新（ユーザー設定ファイルのみ）"""
         try:
+            # 現在のユーザー設定を読み込み
+            user_settings = self._load_user_settings()
+            
+            # テーマ設定を更新
+            user_settings["current_theme"] = theme_name
+            user_settings["last_selected_theme"] = theme_name
+
+            # ユーザー設定ファイルのみを更新
+            self._save_user_settings(user_settings)
+            
+            # メモリ上の統合設定も更新
             self.qt_theme_config["current_theme"] = theme_name
             self.qt_theme_config["last_selected_theme"] = theme_name
-
-            with open(self.qt_theme_config_path, 'w', encoding='utf-8') as f:
-                json.dump(self.qt_theme_config, f, indent=2, ensure_ascii=False)
 
         except Exception as e:
             self.logger.warning(f"設定ファイルの更新に失敗しました: {e}")
@@ -538,7 +622,7 @@ QScrollBar::handle:vertical:hover {{
     def reload_themes(self) -> bool:
         """テーマ設定を再読み込み"""
         try:
-            self.qt_theme_config = self._load_qt_theme_config()
+            self.qt_theme_config = self._load_separated_theme_config()
             self.available_themes = list(self.qt_theme_config.get("available_themes", {}).keys())
             self.theme_info = self._build_qt_theme_info()
             self.enabled_themes = self.available_themes.copy()
