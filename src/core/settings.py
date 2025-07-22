@@ -87,6 +87,18 @@ class Settings:
             }
         }
 
+    @property
+    def data(self) -> Dict[str, Any]:
+        """
+        後方互換性のためのdataプロパティ
+        
+        Returns:
+            統合された設定データ
+        """
+        # 最新の設定を反映
+        self._build_unified_config()
+        return self._config
+
     def _load_config(self) -> None:
         """設定ファイルの読み込み"""
         try:

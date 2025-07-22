@@ -70,8 +70,7 @@ class PhotoGeoViewController(QObject):
             self.exif_parser = ExifParser()
 
             # サムネイル生成モジュール（キャッシュ設定を反映）
-            cache_settings = self.settings.data.get("cache", {})
-            max_cache_size_mb = cache_settings.get("thumbnail_max_size_mb", 500)
+            max_cache_size_mb = self.settings.get("cache.thumbnail_max_size_mb", 500)
             self.thumbnail_generator = ThumbnailGenerator(max_cache_size_mb=max_cache_size_mb)
 
             # 画像表示モジュール
