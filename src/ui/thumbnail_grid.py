@@ -48,13 +48,14 @@ class ThumbnailGrid(QWidget):
 
         # サムネイルデータ
         self._image_files: List[str] = []
-        self._thumbnails: Dict[str, QPixmap] = {}
+        self._thumbnails: Dict[str, QPixmap] = {}  # 元の高解像度サムネイル
         self._selected_image: str = ""
 
         # 表示設定
         self._thumbnail_size: int = 120
         self._grid_spacing: int = 5
         self._columns: int = 4
+        self._max_cache_size: int = 512  # キャッシュサムネイルの最大サイズ
 
         # UI初期化
         self._init_ui()
@@ -170,15 +171,29 @@ class ThumbnailGrid(QWidget):
 
         Args:
             file_path: 画像ファイルパス
-            pixmap: サムネイルのQPixmap
+            pixmap: サムネイルのQPixmap（元の高解像度）
         """
         try:
             if file_path not in self._image_files:
                 self.logger.warning(f"画像ファイルがリストにありません: {Path(file_path).name}")
                 return
 
-            # サムネイルを保存
-            self._thumbnails[file_path] = pixmap
+            # 元の高解像度サムネイルを保存（最大サイズで制限）
+            if pixmap.width() > self._max_cache_size or pixmap.height() > self._max_cache_size:
+                # 大きすぎる場合はキャッシュサイズに制限
+                cached_pixmap = pixmap.scaled(
+                    self._max_cache_size,
+                    self._max_cache_size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                self._thumbnails[file_path] = cached_pixmap
+                self.logger.debug(f"サムネイル縮小保存: {Path(file_path).name}, {pixmap.size()} -> {cached_pixmap.size()}")
+            else:
+                # 元サイズで保存
+                self._thumbnails[file_path] = pixmap
+                self.logger.debug(f"サムネイル原寸保存: {Path(file_path).name}, {pixmap.size()}")
+
             self.logger.info(f"サムネイルを追加: {Path(file_path).name}, 辞書サイズ: {len(self._thumbnails)}")
 
             # 対応するサムネイルウィジェットを更新
@@ -315,15 +330,19 @@ class ThumbnailGrid(QWidget):
 
             # サムネイル画像を設定
             if file_path in self._thumbnails:
-                self.logger.debug(f"[DEBUG] サムネイル再利用: {Path(file_path).name}, サイズ: {self._thumbnail_size}")
-                pixmap = self._thumbnails[file_path]
-                # 高品質スケーリングを使用
+                self.logger.info(f"[THUMBNAIL] サムネイル再利用: {Path(file_path).name}, サイズ: {self._thumbnail_size}")
+                # 元の画像から現在のサイズに再スケーリング
+                original_pixmap = self._thumbnails[file_path]
+                self.logger.info(f"[THUMBNAIL] 元Pixmapサイズ: {original_pixmap.size()}, ターゲット: {self._thumbnail_size}")
+                # 高品質スケーリングを使用して現在のサイズに調整
                 scaled_pixmap = self._create_high_quality_thumbnail(
-                    pixmap, self._thumbnail_size
+                    original_pixmap, self._thumbnail_size
                 )
+                self.logger.info(f"[THUMBNAIL] スケーリング後サイズ: {scaled_pixmap.size()}")
                 thumbnail_label.setPixmap(scaled_pixmap)
+                self.logger.info(f"[THUMBNAIL] スケーリング完了: {original_pixmap.size()} -> {scaled_pixmap.size()}")
             else:
-                self.logger.debug(f"[DEBUG] サムネイル未キャッシュ: {Path(file_path).name}")
+                self.logger.info(f"[THUMBNAIL] サムネイル未キャッシュ: {Path(file_path).name}")
                 # プレースホルダー
                 thumbnail_label.setText("読み込み中...")
                 thumbnail_label.setStyleSheet("border: 1px solid #eee; color: #666;")
@@ -607,14 +626,7 @@ class ThumbnailGrid(QWidget):
         if pixmap.isNull():
             return pixmap
 
-        # 元のサイズを取得
-        orig_width = pixmap.width()
-        orig_height = pixmap.height()
-
-        # すでに適切なサイズの場合は直接返す
-        if orig_width <= size and orig_height <= size:
-            return pixmap
-
+        # 常にターゲットサイズに合わせてスケーリング（サイズ変更対応）
         # アスペクト比を保持してスケーリング
         scaled_pixmap = pixmap.scaled(
             size,

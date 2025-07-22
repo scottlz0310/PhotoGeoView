@@ -16,14 +16,14 @@
             "right_panel_width": 1277,
             "left_splitter_sizes": [
                 333,
-                220,
+                218,
                 300
             ]
         },
         "panels": {
             "left_panel_width": 300,
             "right_panel_width": 400,
-            "thumbnail_size": 60
+            "thumbnail_size": 200
         },
         "theme_manager": {
             "current_theme": "brown",
@@ -66,7 +66,7 @@
         }
     },
     "paths": {
-        "last_directory": "/home/hiro/",
+        "last_directory": "/home/hiro/Samples",
         "thumbnail_cache": "cache/thumbnails",
         "logs": "logs"
     },
