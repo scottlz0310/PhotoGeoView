@@ -103,6 +103,10 @@ class ConfigManager:
                 }),
                 "theme_manager": {
                     "current_theme": "dark",
+                    "last_selected_theme": "dark",
+                    "theme_switching_enabled": True,
+                    "remember_theme_choice": True,
+                    "version": "0.0.1",
                     "available_themes": [
                         "dark", "light", "blue", "green", "purple",
                         "orange", "red", "pink", "yellow", "brown",
@@ -192,7 +196,13 @@ class ConfigManager:
         }
 
     def get_available_themes(self) -> List[str]:
-        """利用可能なテーマ一覧を取得"""
+        """利用可能なテーマ一覧を取得（ユーザー設定優先）"""
+        # ユーザー設定から取得（カスタムテーマを含む）
+        user_themes = self.get_user_setting("ui.theme_manager.available_themes")
+        if user_themes:
+            return user_themes
+        
+        # フォールバック：アプリ設定から取得
         return self.get_app_config("themes.available_themes", ["dark", "light"])
 
     def get_default_theme(self) -> str:

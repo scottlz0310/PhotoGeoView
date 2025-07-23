@@ -51,9 +51,22 @@
         "legacy_file": "config/theme_styles.json",
         "default_theme": "dark",
         "available_themes": [
-            "dark", "light", "blue", "green", "purple",
-            "orange", "red", "pink", "yellow", "brown",
-            "gray", "cyan", "teal", "indigo", "lime", "amber"
+            "dark",
+            "light",
+            "blue",
+            "green",
+            "purple",
+            "orange",
+            "red",
+            "pink",
+            "yellow",
+            "brown",
+            "gray",
+            "cyan",
+            "teal",
+            "indigo",
+            "lime",
+            "amber"
         ]
     },
     "paths": {

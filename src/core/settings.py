@@ -91,7 +91,7 @@ class Settings:
     def data(self) -> Dict[str, Any]:
         """
         後方互換性のためのdataプロパティ
-        
+
         Returns:
             統合された設定データ
         """

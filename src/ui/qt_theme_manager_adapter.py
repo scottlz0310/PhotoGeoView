@@ -36,7 +36,7 @@ class QtThemeManagerAdapter(QObject):
         # 統一設定システムからテーマ設定を取得
         from src.core.config_manager import get_config_manager
         self.config_manager = get_config_manager()
-        
+
         # テーマファイルのパスを統一設定から取得
         theme_paths = self.config_manager.get_theme_config_paths()
         self.qt_theme_definitions_path = Path(theme_paths["definitions"])
@@ -99,26 +99,25 @@ class QtThemeManagerAdapter(QObject):
             return {"available_themes": {}}
 
     def _load_user_settings(self) -> Dict[str, Any]:
-        """ユーザー設定ファイルを読み込み"""
+        """統一設定システムからユーザー設定を読み込み"""
         try:
-            if self.qt_theme_user_settings_path.exists():
-                with open(self.qt_theme_user_settings_path, 'r', encoding='utf-8') as f:
-                    settings = json.load(f)
-                self.logger.debug(f"ユーザー設定ファイルを読み込みました: {self.qt_theme_user_settings_path}")
-                return settings
-            else:
-                # ユーザー設定ファイルが存在しない場合はデフォルト設定を作成
-                default_settings = {
-                    "current_theme": "dark",
-                    "last_selected_theme": "dark",
-                    "theme_switching_enabled": True,
-                    "remember_theme_choice": True,
-                    "version": "0.0.1"
-                }
-                self._save_user_settings(default_settings)
-                return default_settings
+            # 統一設定システムから theme_manager 設定を取得
+            theme_manager_settings = self.config_manager.get_user_setting('ui.theme_manager', {})
+
+            # Qt Theme Manager に必要な形式に変換
+            user_settings = {
+                "current_theme": theme_manager_settings.get("current_theme", "dark"),
+                "last_selected_theme": theme_manager_settings.get("last_selected_theme", "dark"),
+                "theme_switching_enabled": theme_manager_settings.get("theme_switching_enabled", True),
+                "remember_theme_choice": theme_manager_settings.get("remember_theme_choice", True),
+                "version": theme_manager_settings.get("version", "0.0.1")
+            }
+
+            self.logger.debug("統一設定システムからユーザー設定を読み込みました")
+            return user_settings
+
         except Exception as e:
-            self.logger.error(f"ユーザー設定ファイルの読み込みに失敗: {e}")
+            self.logger.error(f"ユーザー設定の読み込みに失敗: {e}")
             return {
                 "current_theme": "dark",
                 "last_selected_theme": "dark",
@@ -128,13 +127,27 @@ class QtThemeManagerAdapter(QObject):
             }
 
     def _save_user_settings(self, settings: Dict[str, Any]) -> None:
-        """ユーザー設定ファイルを保存"""
+        """統一設定システムにユーザー設定を保存"""
         try:
-            with open(self.qt_theme_user_settings_path, 'w', encoding='utf-8') as f:
-                json.dump(settings, f, indent=2, ensure_ascii=False)
-            self.logger.debug(f"ユーザー設定ファイルを保存しました: {self.qt_theme_user_settings_path}")
+            # 現在の theme_manager 設定を取得
+            current_theme_manager = self.config_manager.get_user_setting('ui.theme_manager', {})
+
+            # 新しい設定で更新
+            current_theme_manager.update({
+                "current_theme": settings.get("current_theme", "dark"),
+                "last_selected_theme": settings.get("last_selected_theme", "dark"),
+                "theme_switching_enabled": settings.get("theme_switching_enabled", True),
+                "remember_theme_choice": settings.get("remember_theme_choice", True),
+                "version": settings.get("version", "0.0.1")
+            })
+
+            # 統一設定システムに保存
+            self.config_manager.set_user_setting('ui.theme_manager', current_theme_manager)
+
+            self.logger.debug("統一設定システムにユーザー設定を保存しました")
+
         except Exception as e:
-            self.logger.warning(f"ユーザー設定ファイルの保存に失敗: {e}")
+            self.logger.warning(f"ユーザー設定の保存に失敗: {e}")
 
     def _load_qt_theme_config(self) -> Dict[str, Any]:
         """Qt-Theme-Manager形式の設定ファイルを読み込み（統一設定システム対応）"""
@@ -398,21 +411,24 @@ class QtThemeManagerAdapter(QObject):
             return self._apply_fallback_theme(theme_name)
 
     def _update_current_theme_in_config(self, theme_name: str) -> None:
-        """設定ファイルの current_theme を更新（ユーザー設定ファイルのみ）"""
+        """統一設定システムでテーマ設定を更新"""
         try:
-            # 現在のユーザー設定を読み込み
-            user_settings = self._load_user_settings()
+            # ConfigManager を使用してテーマを設定
+            self.config_manager.set_current_theme(theme_name)
 
-            # テーマ設定を更新
-            user_settings["current_theme"] = theme_name
-            user_settings["last_selected_theme"] = theme_name
-
-            # ユーザー設定ファイルのみを更新
-            self._save_user_settings(user_settings)
+            # 追加的なテーマ管理設定も更新
+            theme_manager_settings = self.config_manager.get_user_setting('ui.theme_manager', {})
+            theme_manager_settings.update({
+                "current_theme": theme_name,
+                "last_selected_theme": theme_name
+            })
+            self.config_manager.set_user_setting('ui.theme_manager', theme_manager_settings)
 
             # メモリ上の統合設定も更新
             self.qt_theme_config["current_theme"] = theme_name
             self.qt_theme_config["last_selected_theme"] = theme_name
+
+            self.logger.debug(f"統一設定システムでテーマを更新: {theme_name}")
 
         except Exception as e:
             self.logger.warning(f"設定ファイルの更新に失敗しました: {e}")
@@ -570,8 +586,14 @@ QScrollBar::handle:vertical:hover {{
 
     # 他のメソッドは元のThemeManagerと同じ
     def get_available_themes(self) -> List[str]:
-        """利用可能なテーマのリストを取得"""
-        return self.available_themes.copy()
+        """利用可能なテーマのリストを取得（統一設定システムから動的取得）"""
+        try:
+            # 統一設定システムから最新のテーマリストを取得
+            return self.config_manager.get_available_themes()
+        except Exception as e:
+            self.logger.error(f"利用可能テーマの取得に失敗: {e}")
+            # フォールバック：メモリのリストを返す
+            return self.available_themes.copy()
 
     def get_enabled_themes(self) -> List[str]:
         """有効なテーマのリストを取得"""
@@ -590,12 +612,43 @@ QScrollBar::handle:vertical:hover {{
             return False
 
     def get_current_theme(self) -> str:
-        """現在のテーマを取得"""
-        return self.current_theme
+        """現在のテーマを取得（統一設定システムから動的取得）"""
+        try:
+            # 統一設定システムから最新の現在テーマを取得
+            return self.config_manager.get_current_theme()
+        except Exception as e:
+            self.logger.error(f"現在のテーマ取得に失敗: {e}")
+            # フォールバック：メモリの値を返す
+            return self.current_theme
 
     def get_theme_info(self, theme_name: str) -> Dict[str, str]:
         """指定されたテーマの情報を取得"""
-        return self.theme_info.get(theme_name, {})
+        # 標準的なテーマ情報を取得
+        theme_info = self.theme_info.get(theme_name, {})
+
+        # カスタムテーマの場合は統一設定システムから取得
+        if not theme_info or 'display_name' not in theme_info:
+            custom_theme_data = self.config_manager.get_user_setting(f'ui.theme_manager.custom_themes.{theme_name}')
+            if custom_theme_data:
+                theme_info = {
+                    'display_name': custom_theme_data.get('display_name', theme_name),
+                    'description': custom_theme_data.get('description', f'{theme_name}テーマ'),
+                    'category': 'custom'
+                }
+
+        # フォールバック：最低限の情報を提供
+        if not theme_info:
+            theme_info = {
+                'display_name': theme_name.title(),
+                'description': f'{theme_name}テーマ',
+                'category': 'unknown'
+            }
+
+        # display_nameキーが存在することを保証
+        if 'display_name' not in theme_info:
+            theme_info['display_name'] = theme_name.title()
+
+        return theme_info
 
     def set_theme(self, theme_name: str) -> bool:
         """テーマを設定（apply_themeのエイリアス）"""

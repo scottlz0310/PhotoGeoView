@@ -1,0 +1,77 @@
+{
+  "name": "DarkForest",
+  "display_name": "ダークフォレスト",
+  "description": "深い森林をイメージしたテストテーマ",
+  "primaryColor": "#008080",
+  "accentColor": "#800000",
+  "backgroundColor": "#285050",
+  "textColor": "#ffffff",
+  "button": {
+    "normal": "#008080",
+    "hover": "#174573",
+    "pressed": "#004d4d",
+    "disabled": "#408080",
+    "border": "#003333"
+  },
+  "panel": {
+    "background": "#2e5c5c",
+    "border": "#346969",
+    "title_background": "#326464",
+    "title_text": "#ffffff"
+  },
+  "text": {
+    "primary": "#2d3748",
+    "secondary": "#4a5568",
+    "muted": "#718096",
+    "heading": "#1a202c",
+    "link": "#0078d4",
+    "success": "#38a169",
+    "warning": "#d69e2e",
+    "error": "#e53e3e"
+  },
+  "input": {
+    "background": "#214343",
+    "text": "#ffffff",
+    "border": "#00cccc",
+    "focus": "#177345",
+    "placeholder": "#b2b2b2",
+    "selection": "#00b3b3"
+  },
+  "toolbar": {
+    "background": "#f7fafc",
+    "text": "#2d3748",
+    "border": "#e2e8f0",
+    "button": {
+      "background": "#ffffff",
+      "text": "#2d3748",
+      "hover": "#0078d4",
+      "pressed": "#e2e8f0"
+    }
+  },
+  "status": {
+    "background": "#f7fafc",
+    "text": "#4a5568",
+    "border": "#e2e8f0"
+  },
+  "headingColor": "#64B5F6",
+  "menu": {
+    "background": "#285050",
+    "text": "#ffffff",
+    "hover": "#346969",
+    "selected": "#174573",
+    "selected_text": "#ffffff",
+    "separator": "#418383"
+  },
+  "progress": {
+    "background": "#346969",
+    "chunk": "#008080",
+    "groove": "#3b7676",
+    "handle": "#008080"
+  },
+  "scrollbar": {
+    "background": "#2e5c5c",
+    "handle": "#4e9c9c",
+    "handle_hover": "#5bb6b6",
+    "handle_pressed": "#67cfcf"
+  }
+}
