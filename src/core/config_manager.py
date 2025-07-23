@@ -201,7 +201,7 @@ class ConfigManager:
         user_themes = self.get_user_setting("ui.theme_manager.available_themes")
         if user_themes:
             return user_themes
-        
+
         # フォールバック：アプリ設定から取得
         return self.get_app_config("themes.available_themes", ["dark", "light"])
 
