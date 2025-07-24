@@ -60,9 +60,9 @@
         "**/*.pyc": true
     },
     // エディター設定
-    "files.autoSave": "afterDelay",
+    "files.autoSave": "off",
     "files.autoSaveDelay": 1000,
-    "files.hotExit": "onExit",
+    "files.hotExit": "onExitAndWindowClose",
     "files.associations": {
         "*.py": "python",
         "*.ui": "xml",
@@ -71,6 +71,11 @@
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
+    // ワークベンチ設定（ファイル復活防止）
+    "workbench.editor.closeEmptyGroups": true,
+    "workbench.editor.enablePreview": true,
+    "workbench.editor.restoreViewState": false,
+    "workbench.startupEditor": "none",
     // コード品質設定
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true,
