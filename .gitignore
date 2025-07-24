@@ -1,6 +1,35 @@
 # Python キャッシュ
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# キャッシュディレクトリ（個人情報含む可能性）
+.cache/
+cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# PhotoGeoView固有のキャッシュ（個人的な画像情報含む）
+cache/thumbnails/
+.thumbnails/
+.thumb/
+thumbs.db
+Thumbs.db
+ehthumbs.db
+
+# 設定ファイル（ユーザー環境固有・個人設定含む）
+config/config.json
+config/qt_theme_settings.json
+config/qt_theme_user_settings.json
+
+# ログファイル（個人的な使用履歴含む）
+logs/
+*.log
 
 # 仮想環境
 .vscode/
@@ -14,9 +43,7 @@ venv/
 *.html
 
 # その他除外したい一時ファイル
-*.log
 *.spec
-*.ini
 dist/
 build/
 
