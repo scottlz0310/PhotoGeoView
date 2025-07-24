@@ -1,15 +1,15 @@
 {
     "window": {
-        "width": 1200,
-        "height": 800,
-        "x": 1917,
+        "width": 1650,
+        "height": 1245,
+        "x": -3,
         "y": -30,
         "maximized": false,
         "remember_position": true,
         "remember_size": true
     },
     "ui": {
-        "current_theme": "dark_blue",
+        "current_theme": "light_cyan_500",
         "theme_manager_enabled": true,
         "selected_themes": [
             "dark_blue",
@@ -29,7 +29,7 @@
             "light_purple",
             "light_red"
         ],
-        "theme_toggle_index": 0,
+        "theme_toggle_index": 10,
         "show_thumbnails": true,
         "thumbnail_size": 128,
         "thumbnail_cache_size": 1000,
@@ -40,15 +40,18 @@
         "map_panel_maximized": false
     },
     "folders": {
-        "last_opened_folder": "/home/hiro/Projects/photomap-explorer/test_images",
+        "last_opened_folder": "/home/hiro/Repository/photomap-explorer/assets",
         "recent_folders": [
+            "/home/hiro/Repository/photomap-explorer/assets",
+            "/home/hiro",
+            "/home/hiro/Repository",
+            "/home/hiro/Repository/PhotoGeoView",
+            "/home/hiro/Repository/PhotoGeoView/test_images",
             "/home/hiro/Projects/photomap-explorer/test_images",
             "/",
             "/home",
-            "/home/hiro",
             "/home/hiro/Projects",
-            "/home/hiro/Projects/photomap-explorer",
-            "/mnt/c/Users/菅原浩恭/OneDrive - 菅原建設有限会社/Documents/アラタ工業/2024年度/町道維持Local/撮影写真/101_0418"
+            "/home/hiro/Projects/photomap-explorer"
         ],
         "max_recent_folders": 10,
         "show_hidden_files": false,
