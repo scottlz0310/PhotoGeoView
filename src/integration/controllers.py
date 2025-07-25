@@ -21,6 +21,12 @@ from .interfaces import (
     IConfigManager, IPerformanceMonitor
 )
 from .image_processor import CS4CodingImageProcessor
+from .performance_monitor import KiroPerformanceMonitor
+from .unified_cache import UnifiedCacheSystem
+from .state_manager import StateManager
+from .performance_monitor import KiroPerformanceMonitor
+from .unified_cache import UnifiedCacheSystem
+from .state_manager import StateManager
 from .models import (
     ImageMetadata, ThemeConfiguration, ApplicationState,
     AIComponent, ProcessingStatus, PerformanceMetrics
@@ -55,11 +61,19 @@ class AppController:
         self.logger_system = logger_system or LoggerSystem()
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
+        # Kiro integration components
+        self.state_manager: Optional[StateManager] = None
+        self.unified_cache: Optional[UnifiedCacheSystem] = None
+
         # AI component interfaces (to be initialized)
         self.image_processor: Optional[IImageProcessor] = None
         self.theme_manager: Optional[IThemeManager] = None
         self.map_provider: Optional[IMapProvider] = None
         self.performance_monitor: Optional[IPerformanceMonitor] = None
+
+        # Kiro integration components
+        self.cache_system: Optional[UnifiedCacheSystem] = None
+        self.state_manager: Optional[StateManager] = None
 
         # Application state
         self.app_state = ApplicationState()
@@ -138,17 +152,35 @@ class AppController:
         """Initialize all AI component interfaces"""
 
         try:
-            # Initialize CS4Coding ImageProcessor
-            from .image_processor import CS4CodingImageProcessor
-            self.image_processor = CS4CodingImageProcessor(
-                self.config_manager,
-                self.logger_system
+            # Initialize Kiro integration components first
+            self.cache_system = UnifiedCacheSystem(
+                config_manager=self.config_manager,
+                logger_system=self.logger_system
             )
+
+            self.state_manager = StateManager(
+                config_manager=self.config_manager,
+                logger_system=self.logger_system
+            )
+
+            self.performance_monitor = KiroPerformanceMonitor(
+                config_manager=self.config_manager,
+                logger_system=self.logger_system
+            )
+
+            # Initialize CS4Coding ImageProcessor
+            self.image_processor = CS4CodingImageProcessor(
+                config_manager=self.config_manager,
+                logger_system=self.logger_system
+            )
+
+            # Start performance monitoring
+            self.performance_monitor.start_monitoring()
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "component_initialization",
-                "AI component interfaces initialized"
+                "All AI component interfaces initialized"
             )
 
             # Mark components as initialized
@@ -623,6 +655,19 @@ class AppController:
                 # Stop performance monitoring
                 if self.performance_monitor:
                     self.performance_monitor.stop_monitoring()
+                    self.performance_monitor.shutdown()
+
+                # Shutdown cache system
+                if self.cache_system:
+                    self.cache_system.shutdown()
+
+                # Shutdown state manager
+                if self.state_manager:
+                    self.state_manager.shutdown()
+
+                # Shutdown image processor
+                if self.image_processor and hasattr(self.image_processor, 'shutdown'):
+                    self.image_processor.shutdown()
 
                 # Clear cache
                 self.clear_cache()
