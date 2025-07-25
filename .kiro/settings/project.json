@@ -56,6 +56,18 @@
         "architecture_lead": "kiro",
         "testing_approach": "comprehensive_integration"
     },
+    "development": {
+        "python_path": "./venv/bin/python",
+        "test_framework": "pytest",
+        "formatter": "black",
+        "linter": "pylint",
+        "type_checker": "strict"
+    },
+    "monitoring": {
+        "ignore_paths": ["cache/", "logs/", "__pycache__/", ".pytest_cache/"],
+        "focus_extensions": [".py", ".json", ".md"],
+        "auto_test_on_save": true
+    },
     "quality": {
         "code_coverage_target": 90,
         "performance_baseline": "maintain_or_improve",
