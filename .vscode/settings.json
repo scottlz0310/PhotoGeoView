@@ -98,5 +98,47 @@
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingTypeStubs": "none",
         "reportUnknownMemberType": "none"
+    },
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.diagnosticMode": "workspace",
+    "cursorpyright.analysis.diagnosticSeverityOverrides": {
+        "reportMissingTypeStubs": "none",
+        "reportUnknownMemberType": "none"
+    },
+    "cursorpyright.analysis.extraPaths": [
+        "./src",
+        "./venv/lib/python*/site-packages"
+    ],
+    "cursorpyright.analysis.stubPath": "./typings",
+    "cursorpyright.analysis.typeCheckingMode": "strict",
+    "cursorpyright.analysis.useLibraryCodeForTypes": true,
+    "kiroAgent.configureMCP": "Disabled",
+    // ターミナル設定
+    "terminal.integrated.defaultProfile.windows": "WSL Ubuntu",
+    // Kiro AI エージェント用ターミナル設定
+    "kiro.terminal.defaultProfile": "WSL Ubuntu",
+    "kiro.terminal.preferredShell": "bash",
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "WSL Ubuntu": {
+            "path": "wsl.exe",
+            "args": [
+                "-d",
+                "Ubuntu"
+            ],
+            "icon": "terminal-ubuntu"
+        }
     }
 }
