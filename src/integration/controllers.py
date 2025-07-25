@@ -20,6 +20,7 @@ from .interfaces import (
     IImageProcessor, IThemeManager, IMapProvider,
     IConfigManager, IPerformanceMonitor
 )
+from .image_processor import CS4CodingImageProcessor
 from .models import (
     ImageMetadata, ThemeConfiguration, ApplicationState,
     AIComponent, ProcessingStatus, PerformanceMetrics
@@ -136,19 +137,31 @@ class AppController:
     async def _initialize_ai_components(self):
         """Initialize all AI component interfaces"""
 
-        # This will be implemented with actual AI component factories
-        # For now, we set up the structure
+        try:
+            # Initialize CS4Coding ImageProcessor
+            from .image_processor import CS4CodingImageProcessor
+            self.image_processor = CS4CodingImageProcessor(
+                self.config_manager,
+                self.logger_system
+            )
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "component_initialization",
-            "Initializing AI component interfaces"
-        )
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "component_initialization",
+                "AI component interfaces initialized"
+            )
 
-        # Mark components as initialized (placeholder)
-        for component in self.ai_components:
-            self.ai_components[component]["status"] = "active"
-            self.ai_components[component]["last_operation"] = "initialization"
+            # Mark components as initialized
+            for component in self.ai_components:
+                self.ai_components[component]["status"] = "active"
+                self.ai_components[component]["last_operation"] = "initialization"
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "ai_component_initialization"},
+                AIComponent.KIRO
+            )
 
     def _setup_event_system(self):
         """Setup the event handling system"""
