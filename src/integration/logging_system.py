@@ -436,6 +436,26 @@ class LoggerSystem:
         if self.performance_handler:
             self.performance_handler.flush_metrics()
 
+    def info(self, message: str, **kwargs):
+        """Log info message"""
+        logger = self.get_logger("system")
+        logger.info(message, extra=kwargs)
+
+    def warning(self, message: str, **kwargs):
+        """Log warning message"""
+        logger = self.get_logger("system")
+        logger.warning(message, extra=kwargs)
+
+    def error(self, message: str, **kwargs):
+        """Log error message"""
+        logger = self.get_logger("system")
+        logger.error(message, extra=kwargs)
+
+    def debug(self, message: str, **kwargs):
+        """Log debug message"""
+        logger = self.get_logger("system")
+        logger.debug(message, extra=kwargs)
+
     def shutdown(self):
         """Shutdown logging system"""
 
