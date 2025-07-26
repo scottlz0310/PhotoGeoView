@@ -98,6 +98,19 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         # Alert system
         self.alert_handlers: List[Callable[[PerformanceAlert], None]] = []
+        self.alert_history: deque = deque(maxlen=200)
+        self.alert_suppression: Dict[str, datetime] = {}  # Suppress duplicate alerts
+
+        # Thresholds
+        self.thresholds = ResourceThresholds()
+        self._load_thresholds_from_config()
+
+        # Real-time monitoring
+        self.monitoring_interval = 2.0  # seconds
+        self.alert_cooldown = 60.0  # seconds between same alerts
+
+        # Performance optimization integration
+        self.optimizer: Optional['PerformanceOptimizer'] = None
         self.recent_alerts: deque = deque(maxlen=100)
         self.alert_cooldown: Dict[str, datetime] = {}  # Prevent alert spam
 
@@ -703,4 +716,483 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 e,
                 "performance_monitor_shutdown",
                 {}
+            )
+    def _load_thresholds_from_config(self):
+        """Load performance thresholds from configuration"""
+        try:
+            if self.config_manager:
+                self.thresholds.memory_warning_mb = self.config_manager.get_setting(
+                    "performance.memory_warning_mb", 400.0
+                )
+                self.thresholds.memory_critical_mb = self.config_manager.get_setting(
+                    "performance.memory_critical_mb", 600.0
+                )
+                self.thresholds.cpu_warning_percent = self.config_manager.get_setting(
+                    "performance.cpu_warning_percent", 70.0
+                )
+                self.thresholds.cpu_critical_percent = self.config_manager.get_setting(
+                    "performance.cpu_critical_percent", 90.0
+                )
+                self.thresholds.response_time_warning_ms = self.config_manager.get_setting(
+                    "performance.response_time_warning_ms", 1000.0
+                )
+                self.thresholds.response_time_critical_ms = self.config_manager.get_setting(
+                    "performance.response_time_critical_ms", 3000.0
+ )
+        except Exception as e:
+            self.logger_system.error(f"Failed to load thresholds from config: {e}")
+
+    def set_optimizer(self, optimizer: 'PerformanceOptimizer'):
+        """Set performance optimizer for integration"""
+        self.optimizer = optimizer
+
+    def start_monitoring(self):
+        """Start performance monitoring"""
+        try:
+            with self.monitoring_lock:
+                if self.is_monitoring:
+                    return
+
+                self.is_monitoring = True
+                self.monitoring_thread = threading.Thread(
+                    target=self._monitoring_loop,
+                    name="performance_monitor",
+                    daemon=True
+                )
+                self.monitoring_thread.start()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "monitoring_started",
+                "Performance monitoring started"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "start_monitoring"},
+                AIComponent.KIRO
+            )
+
+    def stop_monitoring(self):
+        """Stop performance monitoring"""
+        try:
+            with self.monitoring_lock:
+                self.is_monitoring = False
+
+            if self.monitoring_thread and self.monitoring_thread.is_alive():
+                self.monitoring_thread.join(timeout=5.0)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "monitoring_stopped",
+                "Performance monitoring stopped"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "stop_monitoring"},
+                AIComponent.KIRO
+            )
+
+    def _monitoring_loop(self):
+        """Enhanced monitoring loop with real-time alerting"""
+        while self.is_monitoring:
+            try:
+                # Collect current metrics
+                metrics = self._collect_enhanced_metrics()
+
+                if metrics:
+                    # Store metrics
+                    self.current_metrics = metrics
+                    self.metrics_history.append(metrics)
+
+                    # Check for alerts
+                    self._check_performance_alerts(metrics)
+
+                    # Update AI component status
+                    self._update_ai_component_status()
+
+                # Sleep until next check
+                time.sleep(self.monitoring_interval)
+
+            except Exception as e:
+                self.error_handler.handle_error(
+                    e, ErrorCategory.INTEGRATION_ERROR,
+                    {"operation": "monitoring_loop"},
+                    AIComponent.KIRO
+                )
+                time.sleep(5.0)  # Longer sleep on error
+
+    def _collect_enhanced_metrics(self) -> Optional[PerformanceMetrics]:
+        """Collect enhanced performance metrics"""
+        try:
+            process = psutil.Process()
+            system_memory = psutil.virtual_memory()
+
+            # Memory metrics
+            memory_info = process.memory_info()
+            memory_usage_mb = memory_info.rss / 1024 / 1024
+            memory_peak_mb = getattr(memory_info, 'peak_wset', memory_info.rss) / 1024 / 1024
+            memory_available_mb = system_memory.available / 1024 / 1024
+
+            # CPU metrics
+            cpu_usage_percent = process.cpu_percent()
+            cpu_cores = psutil.cpu_count()
+
+            # Application metrics (would be updated by other components)
+            images_loaded = 0
+            thumbnails_generated = 0
+            maps_rendered = 0
+            cache_hits = 0
+            cache_misses = 0
+
+            # AI component metrics
+            copilot_operations = len(self.ai_components[AIComponent.COPILOT]["response_times"])
+            cursor_operations = len(self.ai_components[AIComponent.CURSOR]["response_times"])
+            kiro_operations = len(self.ai_components[AIComponent.KIRO]["response_times"])
+
+            # Response times (averages)
+            avg_image_load_time = self._calculate_average_response_time(AIComponent.COPILOT)
+            avg_thumbnail_time = self._calculate_average_response_time(AIComponent.CURSOR)
+            avg_exif_parse_time = self._calculate_average_response_time(AIComponent.COPILOT)
+            avg_map_render_time = self._calculate_average_response_time(AIComponent.COPILOT)
+
+            return PerformanceMetrics(
+                memory_usage_mb=memory_usage_mb,
+                memory_peak_mb=memory_peak_mb,
+                memory_available_mb=memory_available_mb,
+                cpu_usage_percent=cpu_usage_percent,
+                cpu_cores=cpu_cores,
+                images_loaded=images_loaded,
+                thumbnails_generated=thumbnails_generated,
+                maps_rendered=maps_rendered,
+                cache_hits=cache_hits,
+                cache_misses=cache_misses,
+                copilot_operations=copilot_operations,
+                cursor_operations=cursor_operations,
+                kiro_operations=kiro_operations,
+                avg_image_load_time=avg_image_load_time,
+                avg_thumbnail_time=avg_thumbnail_time,
+                avg_exif_parse_time=avg_exif_parse_time,
+                avg_map_render_time=avg_map_render_time
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "collect_enhanced_metrics"},
+                AIComponent.KIRO
+            )
+            return None
+
+    def _calculate_average_response_time(self, component: AIComponent) -> float:
+        """Calculate average response time for AI component"""
+        try:
+            response_times = self.ai_components[component]["response_times"]
+            if response_times:
+                return sum(response_times) / len(response_times)
+            return 0.0
+        except Exception:
+            return 0.0
+
+    def _check_performance_alerts(self, metrics: PerformanceMetrics):
+        """Check for performance alerts with enhanced logic"""
+        try:
+            current_time = datetime.now()
+
+            # Memory alerts
+            if metrics.memory_usage_mb > self.thresholds.memory_critical_mb:
+                self._emit_performance_alert("critical", "Memory usage critical", AIComponent.KIRO,
+                               "memory_usage", metrics.memory_usage_mb, self.thresholds.memory_critical_mb)
+            elif metrics.memory_usage_mb > self.thresholds.memory_warning_mb:
+                self._emit_performance_alert("warning", "Memory usage high", AIComponent.KIRO,
+                               "memory_usage", metrics.memory_usage_mb, self.thresholds.memory_warning_mb)
+
+            # CPU alerts
+            if metrics.cpu_usage_percent > self.thresholds.cpu_critical_percent:
+                self._emit_performance_alert("critical", "CPU usage critical", AIComponent.KIRO,
+                               "cpu_usage", metrics.cpu_usage_percent, self.thresholds.cpu_critical_percent)
+            elif metrics.cpu_usage_percent > self.thresholds.cpu_warning_percent:
+                self._emit_performance_alert("warning", "CPU usage high", AIComponent.KIRO,
+                               "cpu_usage", metrics.cpu_usage_percent, self.thresholds.cpu_warning_percent)
+
+            # Response time alerts
+            if metrics.avg_image_load_time > self.thresholds.response_time_critical_ms:
+                self._emit_performance_alert("critical", "Image loading very slow", AIComponent.COPILOT,
+                               "response_time", metrics.avg_image_load_time, self.thresholds.response_time_critical_ms)
+            elif metrics.avg_image_load_time > self.thresholds.response_time_warning_ms:
+                self._emit_performance_alert("warning", "Image loading slow", AIComponent.COPILOT,
+                               "response_time", metrics.avg_image_load_time, self.thresholds.response_time_warning_ms)
+
+            # Cache performance alerts
+            cache_hit_ratio = metrics.cache_hit_ratio
+            if cache_hit_ratio < 0.5:  # Less than 50%
+                self._emit_performance_alert("warning", "Low cache hit ratio", AIComponent.KIRO,
+                               "cache_hit_ratio", cache_hit_ratio, 0.5)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "check_performance_alerts"},
+                AIComponent.KIRO
+            )
+
+    def _emit_performance_alert(self, level: str, message: str, component: AIComponent,
+                   metric_name: str, current_value: float, threshold: float):
+        """Emit performance alert with enhanced suppression and optimization triggers"""
+        try:
+            # Create alert key for suppression
+            alert_key = f"{component.value}_{metric_name}_{level}"
+            current_time = datetime.now()
+
+            # Check if alert is suppressed
+            if alert_key in self.alert_cooldown:
+                last_alert_time = self.alert_cooldown[alert_key]
+                if (current_time - last_alert_time).total_seconds() < 60.0:  # 60 second cooldown
+                    return  # Suppress duplicate alert
+
+            # Create alert
+            alert = PerformanceAlert(
+                level=level,
+                message=message,
+                component=component,
+                metric_name=metric_name,
+                current_value=current_value,
+                threshold=threshold,
+                timestamp=current_time
+            )
+
+            # Store alert
+            self.recent_alerts.append(alert)
+            self.alert_cooldown[alert_key] = current_time
+
+            # Notify handlers
+            for handler in self.alert_handlers:
+                try:
+                    handler(alert)
+                except Exception as e:
+                    self.logger_system.error(f"Alert handler failed: {e}")
+
+            # Log alert
+            self.logger_system.log_ai_operation(
+                component,
+                "performance_alert",
+                f"[{level.upper()}] {message}: {current_value:.2f} (threshold: {threshold:.2f})"
+            )
+
+            # Trigger optimization if available
+            if self.optimizer and level == "critical":
+                self._trigger_emergency_optimization(metric_name, current_value)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "emit_performance_alert", "level": level, "message": message},
+                AIComponent.KIRO
+            )
+
+    def _trigger_emergency_optimization(self, metric_name: str, current_value: float):
+        """Trigger emergency optimization for critical alerts"""
+        try:
+            if not self.optimizer:
+                return
+
+            if metric_name == "memory_usage":
+                # Force aggressive memory cleanup
+                self.optimizer._optimize_memory_usage()
+
+                # Clear more cache if still critical
+                if current_value > self.thresholds.memory_critical_mb * 1.1:
+                    self.optimizer.cache_system.clear_lru(0.5)  # Clear 50%
+
+            elif metric_name == "cpu_usage":
+                # Reduce processing load
+                self.optimizer._optimize_cpu_usage()
+
+            elif metric_name == "response_time":
+                # Optimize processing pipeline
+                self.optimizer._optimize_cache_performance()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "trigger_emergency_optimization", "metric": metric_name},
+                AIComponent.KIRO
+            )
+
+    def _update_ai_component_status(self):
+        """Update AI component status based on performance"""
+        try:
+            current_time = datetime.now()
+
+            for component in self.ai_components:
+                component_data = self.ai_components[component]
+
+                # Update last check time
+                component_data["last_check"] = current_time
+
+                # Determine status based on response times and alerts
+                response_times = component_data["response_times"]
+                if response_times:
+                    avg_response = sum(response_times) / len(response_times)
+
+                    if avg_response > self.thresholds.response_time_critical_ms:
+                        component_data["status"] = "critical"
+                    elif avg_response > self.thresholds.response_time_warning_ms:
+                        component_data["status"] = "warning"
+                    else:
+                        component_data["status"] = "active"
+                else:
+                    component_data["status"] = "idle"
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "update_ai_component_status"},
+                AIComponent.KIRO
+            )
+
+    # Enhanced public API methods
+
+    def add_alert_handler(self, handler: Callable[[PerformanceAlert], None]):
+        """Add alert handler"""
+        if handler not in self.alert_handlers:
+            self.alert_handlers.append(handler)
+
+    def remove_alert_handler(self, handler: Callable[[PerformanceAlert], None]):
+        """Remove alert handler"""
+        if handler in self.alert_handlers:
+            self.alert_handlers.remove(handler)
+
+    def record_operation_time(self, component: AIComponent, operation_time_ms: float):
+        """Record operation time for AI component"""
+        try:
+            if component in self.ai_components:
+                self.ai_components[component]["response_times"].append(operation_time_ms)
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "record_operation_time", "component": component.value},
+                AIComponent.KIRO
+            )
+
+    def get_current_metrics(self) -> Optional[PerformanceMetrics]:
+        """Get current performance metrics"""
+        return self.current_metrics
+
+    def get_metrics_history(self, limit: int = 100) -> List[PerformanceMetrics]:
+        """Get performance metrics history"""
+        return list(self.metrics_history)[-limit:]
+
+    def get_recent_alerts(self, limit: int = 50) -> List[PerformanceAlert]:
+        """Get recent alerts"""
+        return list(self.recent_alerts)[-limit:]
+
+    def get_ai_component_status(self) -> Dict[AIComponent, Dict[str, Any]]:
+        """Get AI component status"""
+        return self.ai_components.copy()
+
+    def update_thresholds(self, **kwargs):
+        """Update performance thresholds"""
+        try:
+            for key, value in kwargs.items():
+                if hasattr(self.thresholds, key):
+                    setattr(self.thresholds, key, value)
+
+                    # Save to configuration
+                    if self.config_manager:
+                        self.config_manager.set_setting(f"performance.{key}", value)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "thresholds_updated",
+                f"Performance thresholds updated: {list(kwargs.keys())}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "update_thresholds"},
+                AIComponent.KIRO
+            )
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get comprehensive performance summary"""
+        try:
+            if not self.current_metrics:
+                return {}
+
+            metrics = self.current_metrics
+            recent_alerts = [a for a in self.recent_alerts if
+                           (datetime.now() - a.timestamp).total_seconds() < 300]  # Last 5 minutes
+
+            return {
+                "timestamp": metrics.timestamp.isoformat(),
+                "memory": {
+                    "usage_mb": metrics.memory_usage_mb,
+                    "usage_percent": (metrics.memory_usage_mb / (metrics.memory_usage_mb + metrics.memory_available_mb)) * 100,
+                    "available_mb": metrics.memory_available_mb,
+                    "status": "critical" if metrics.memory_usage_mb > self.thresholds.memory_critical_mb else
+                             "warning" if metrics.memory_usage_mb > self.thresholds.memory_warning_mb else "normal"
+                },
+                "cpu": {
+                    "usage_percent": metrics.cpu_usage_percent,
+                    "cores": metrics.cpu_cores,
+                    "status": "critical" if metrics.cpu_usage_percent > self.thresholds.cpu_critical_percent else
+                             "warning" if metrics.cpu_usage_percent > self.thresholds.cpu_warning_percent else "normal"
+                },
+                "cache": {
+                    "hit_ratio": metrics.cache_hit_ratio,
+                    "hits": metrics.cache_hits,
+                    "misses": metrics.cache_misses,
+                    "status": "warning" if metrics.cache_hit_ratio < 0.5 else "normal"
+                },
+                "ai_components": {
+                    component.value: {
+                        "status": data["status"],
+                        "avg_response_time": sum(data["response_times"]) / len(data["response_times"]) if data["response_times"] else 0,
+                        "operations": len(data["response_times"])
+                    }
+                    for component, data in self.ai_components.items()
+                },
+                "recent_alerts": len(recent_alerts),
+                "alert_levels": {
+                    "critical": len([a for a in recent_alerts if a.level == "critical"]),
+                    "warning": len([a for a in recent_alerts if a.level == "warning"]),
+                    "info": len([a for a in recent_alerts if a.level == "info"])
+                }
+            }
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "get_performance_summary"},
+                AIComponent.KIRO
+            )
+            return {}
+
+    def cleanup(self):
+        """Cleanup monitor resources"""
+        try:
+            # Stop monitoring
+            self.stop_monitoring()
+
+            # Clear data
+            self.metrics_history.clear()
+            self.recent_alerts.clear()
+            self.alert_handlers.clear()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "performance_monitor_cleanup",
+                "Performance monitor cleaned up"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "cleanup"},
+                AIComponent.KIRO
             )
