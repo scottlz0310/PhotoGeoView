@@ -39,6 +39,8 @@ class ThumbnailItem(QLabel):
     """
 
     clicked = pyqtSignal(Path)
+    context_menu_requested = pyqtSignal(Path, object)  # image_path, position
+    exif_info_requested = pyqtSignal(Path)
 
     def __init__(self, image_path: Path, thumbnail_size: int = 150):
         super().__init__()
@@ -98,6 +100,74 @@ class ThumbnailItem(QLabel):
             self.is_loaded = True
         else:
             self._show_error()
+
+    def _show_error(self):
+        """Show error placeholder"""
+        error_pixmap = QPixmap(self.thumbnail_size, self.thumbnail_size)
+        error_pixmap.fill(QColor("#f8d7da"))
+
+        painter = QPainter(error_pixmap)
+        painter.setPen(QColor("#721c24"))
+        painter.setFont(QFont("Arial", 10))
+        painter.drawText(error_pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "Error")
+        painter.end()
+
+        self.setPixmap(error_pixmap)
+
+    def set_exif_info(self, exif_data: Dict[str, Any]):
+        """Set EXIF information for display"""
+        if not exif_data:
+            return
+
+        # Create tooltip with EXIF information
+        tooltip_lines = []
+
+        # Camera information
+        if exif_data.get("camera_make") and exif_data.get("camera_model"):
+            tooltip_lines.append(f"Camera: {exif_data['camera_make']} {exif_data['camera_model']}")
+
+        # Lens information
+        if exif_data.get("lens_model"):
+            tooltip_lines.append(f"Lens: {exif_data['lens_model']}")
+
+        # Shooting settings
+        settings = []
+        if exif_data.get("focal_length"):
+            settings.append(f"{exif_data['focal_length']}mm")
+        if exif_data.get("aperture"):
+            settings.append(f"f/{exif_data['aperture']}")
+        if exif_data.get("shutter_speed"):
+            settings.append(f"{exif_data['shutter_speed']}")
+        if exif_data.get("iso"):
+            settings.append(f"ISO {exif_data['iso']}")
+
+        if settings:
+            tooltip_lines.append(" | ".join(settings))
+
+        # GPS information
+        if exif_data.get("latitude") and exif_data.get("longitude"):
+            tooltip_lines.append(f"GPS: {exif_data['latitude']:.6f}, {exif_data['longitude']:.6f}")
+
+        # Image dimensions
+        if exif_data.get("width") and exif_data.get("height"):
+            tooltip_lines.append(f"Size: {exif_data['width']} × {exif_data['height']}")
+
+        if tooltip_lines:
+            self.setToolTip("\n".join(tooltip_lines))
+
+    def mousePressEvent(self, event):
+        """Handle mouse press events"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit(self.image_path)
+        elif event.button() == Qt.MouseButton.RightButton:
+            self.context_menu_requested.emit(self.image_path, event.globalPosition())
+        super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        """Handle double-click events"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.exif_info_requested.emit(self.image_path)
+        super().mouseDoubleClickEvent(event)
 
     def _show_error(self):
         """Show error placeholder"""
@@ -260,6 +330,624 @@ class ThumbnailLoader(QObject):
 
 
 class OptimizedThumbnailGrid(QWidget):
+    """
+    Optimized thumbnail grid with fast loading and EXIF display
+
+    Features:
+    - CursorBLD: High-speed thumbnail generation and display
+    - Kiro: Memory management, intelligent caching, performance monitoring
+    - CS4Coding: Accurate EXIF data integration
+    """
+
+    # Signals
+    image_selected = pyqtSignal(Path)
+    thumbnail_requested = pyqtSignal(Path)
+    exif_display_requested = pyqtSignal(Path)
+    performance_warning = pyqtSignal(str)
+
+    def __init__(self,
+                 config_manager: ConfigManager,
+                 state_manager: StateManager,
+                 logger_system: LoggerSystem = None):
+        """
+        Initialize optimized thumbnail grid
+
+        Args:
+            config_manager: Configuration manager
+            state_manager: State manager
+            logger_system: Logging system
+        """
+        super().__init__()
+
+        # Core systems
+        self.config_manager = config_manager
+        self.state_manager = state_manager
+        self.logger_system = logger_system or LoggerSystem()
+        self.error_handler = IntegratedErrorHandler(self.logger_system)
+
+        # Grid settings
+        self.thumbnail_size = self.state_manager.get_state().thumbnail_size
+        self.columns = 4
+        self.spacing = 10
+
+        # Data storage
+        self.image_list: List[Path] = []
+        self.thumbnail_items: Dict[Path, ThumbnailItem] = {}
+        self.exif_cache: Dict[Path, Dict[str, Any]] = {}
+
+        # Performance tracking
+        self.load_start_time = None
+  self.loaded_count = 0
+        self.total_count = 0
+        self.performance_metrics = {
+            "avg_load_time": 0.0,
+            "cache_hit_rate": 0.0,
+            "memory_usage": 0
+        }
+
+        # Threading
+        self.thumbnail_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="thumbnail")
+        self.exif_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="exif")
+        self.load_mutex = QMutex()
+
+        # UI components
+        self.scroll_area: Optional[QScrollArea] = None
+        self.grid_widget: Optional[QWidget] = None
+        self.grid_layout: Optional[QGridLayout] = None
+        self.controls_widget: Optional[QWidget] = None
+
+        # Performance monitoring
+        self.performance_timer = QTimer()
+        self.performance_timer.timeout.connect(self._monitor_performance)
+        self.performance_timer.start(2000)  # Check every 2 seconds
+
+        # Initialize UI
+        self._setup_ui()
+
+        self.logger_system.log_ai_operation(
+            AIComponent.CURSOR,
+            "thumbnail_grid_init",
+            "Optimized thumbnail grid initialized"
+        )
+
+    def _setup_ui(self):
+        """Setup the user interface"""
+        try:
+            layout = QVBoxLayout(self)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+
+            # Controls
+            self.controls_widget = self._create_controls()
+            layout.addWidget(self.controls_widget)
+
+            # Scroll area for thumbnails
+            self.scroll_area = QScrollArea()
+            self.scroll_area.setWidgetResizable(True)
+            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
+            # Grid widget
+            self.grid_widget = QWidget()
+            self.grid_layout = QGridLayout(self.grid_widget)
+            self.grid_layout.setSpacing(self.spacing)
+            self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+
+            self.scroll_area.setWidget(self.grid_widget)
+            layout.addWidget(self.scroll_area)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "setup_ui"},
+                AIComponent.CURSOR
+            )
+
+    def _create_controls(self) -> QWidget:
+        """Create control widgets"""
+        controls = QWidget()
+        layout = QHBoxLayout(controls)
+
+        # Thumbnail size control
+        size_label = QLabel("Size:")
+        layout.addWidget(size_label)
+
+        size_slider = QSlider(Qt.Orientation.Horizontal)
+        size_slider.setRange(50, 300)
+        size_slider.setValue(self.thumbnail_size)
+        size_slider.valueChanged.connect(self._on_size_changed)
+        layout.addWidget(size_slider)
+
+        size_spinbox = QSpinBox()
+        size_spinbox.setRange(50, 300)
+        size_spinbox.setValue(self.thumbnail_size)
+        size_spinbox.valueChanged.connect(self._on_size_changed)
+        layout.addWidget(size_spinbox)
+
+        # Connect slider and spinbox
+        size_slider.valueChanged.connect(size_spinbox.setValue)
+        size_spinbox.valueChanged.connect(size_slider.setValue)
+
+        layout.addStretch()
+
+        # Performance info
+        self.performance_label = QLabel("Ready")
+        layout.addWidget(self.performance_label)
+
+        return controls
+
+    def set_image_list(self, image_list: List[Path]):
+        """Set the list of images to display"""
+        try:
+            with QMutexLocker(self.load_mutex):
+                self.image_list = image_list
+                self.total_count = len(image_list)
+                self.loaded_count = 0
+                self.load_start_time = time.time()
+
+            # Clear existing thumbnails
+            self.clear_thumbnails()
+
+            # Create thumbnail items
+            self._create_thumbnail_items()
+
+            # Start loading thumbnails
+            self._load_thumbnails_async()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "image_list_set",
+                f"Image list set with {len(image_list)} images"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "set_image_list", "count": len(image_list)},
+                AIComponent.CURSOR
+            )
+
+    def _create_thumbnail_items(self):
+        """Create thumbnail items for all images"""
+        try:
+            row = 0
+            col = 0
+
+            for image_path in self.image_list:
+                # Create thumbnail item
+                thumbnail_item = ThumbnailItem(image_path, self.thumbnail_size)
+
+                # Connect signals
+                thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
+                thumbnail_item.context_menu_requested.connect(self._on_context_menu_requested)
+                thumbnail_item.exif_info_requested.connect(self._on_exif_info_requested)
+
+                # Add to layout
+                self.grid_layout.addWidget(thumbnail_item, row, col)
+
+                # Store reference
+                self.thumbnail_items[image_path] = thumbnail_item
+
+                # Update grid position
+                col += 1
+                if col >= self.columns:
+                    col = 0
+                    row += 1
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "create_thumbnail_items"},
+                AIComponent.CURSOR
+            )
+
+    def _load_thumbnails_async(self):
+        """Load thumbnails asynchronously"""
+        try:
+            for image_path in self.image_list:
+                # Submit thumbnail loading task
+                future = self.thumbnail_executor.submit(self._load_single_thumbnail, image_path)
+
+                # Submit EXIF loading task
+                exif_future = self.exif_executor.submit(self._load_single_exif, image_path)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "load_thumbnails_async"},
+                AIComponent.KIRO
+            )
+
+    def _load_single_thumbnail(self, image_path: Path):
+        """Load a single thumbnail"""
+        try:
+            # Emit request signal for caching system
+            self.thumbnail_requested.emit(image_path)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "load_single_thumbnail", "image": str(image_path)},
+                AIComponent.KIRO
+            )
+
+    def _load_single_exif(self, image_path: Path):
+        """Load EXIF data for a single image"""
+        try:
+            # Check cache first
+            if image_path in self.exif_cache:
+                exif_data = self.exif_cache[image_path]
+                self._update_thumbnail_exif(image_path, exif_data)
+                return
+
+            # Request EXIF data
+            self.exif_display_requested.emit(image_path)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "load_single_exif", "image": str(image_path)},
+                AIComponent.COPILOT
+            )
+
+    def set_thumbnail(self, image_path: Path, pixmap: QPixmap):
+        """Set thumbnail for specific image"""
+        try:
+            if image_path in self.thumbnail_items:
+                thumbnail_item = self.thumbnail_items[image_path]
+                thumbnail_item.set_thumbnail(pixmap)
+
+                with QMutexLocker(self.load_mutex):
+                    self.loaded_count += 1
+
+                self._update_performance_metrics()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "set_thumbnail", "image": str(image_path)},
+                AIComponent.CURSOR
+            )
+
+    def set_exif_data(self, image_path: Path, exif_data: Dict[str, Any]):
+        """Set EXIF data for specific image"""
+        try:
+            # Cache EXIF data
+            self.exif_cache[image_path] = exif_data
+
+            # Update thumbnail item
+            self._update_thumbnail_exif(image_path, exif_data)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "set_exif_data", "image": str(image_path)},
+                AIComponent.COPILOT
+            )
+
+    def _update_thumbnail_exif(self, image_path: Path, exif_data: Dict[str, Any]):
+        """Update thumbnail with EXIF information"""
+        try:
+            if image_path in self.thumbnail_items:
+                thumbnail_item = self.thumbnail_items[image_path]
+                thumbnail_item.set_exif_info(exif_data)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "update_thumbnail_exif", "image": str(image_path)},
+                AIComponent.COPILOT
+            )
+
+    def _on_thumbnail_clicked(self, image_path: Path):
+        """Handle thumbnail click"""
+        try:
+            self.image_selected.emit(image_path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_clicked",
+                f"Thumbnail clicked: {image_path}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "thumbnail_clicked", "image": str(image_path)},
+                AIComponent.CURSOR
+            )
+
+    def _on_context_menu_requested(self, image_path: Path, position):
+        """Handle context menu request"""
+        try:
+            menu = QMenu(self)
+
+            # Add menu actions
+            view_action = menu.addAction("View Image")
+            view_action.triggered.connect(lambda: self.image_selected.emit(image_path))
+
+            exif_action = menu.addAction("Show EXIF Data")
+            exif_action.triggered.connect(lambda: self._on_exif_info_requested(image_path))
+
+            menu.addSeparator()
+
+            refresh_action = menu.addAction("Refresh Thumbnail")
+            refresh_action.triggered.connect(lambda: self._refresh_thumbnail(image_path))
+
+            # Show menu
+            menu.exec(position.toPoint())
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "context_menu_requested", "image": str(image_path)},
+                AIComponent.CURSOR
+            )
+
+    def _on_exif_info_requested(self, image_path: Path):
+        """Handle EXIF info request"""
+        try:
+            self.exif_display_requested.emit(image_path)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "exif_info_requested", "image": str(image_path)},
+                AIComponent.COPILOT
+            )
+
+    def _refresh_thumbnail(self, image_path: Path):
+        """Refresh specific thumbnail"""
+        try:
+            if image_path in self.thumbnail_items:
+                thumbnail_item = self.thumbnail_items[image_path]
+                thumbnail_item._show_placeholder()
+
+                # Request new thumbnail
+                self.thumbnail_requested.emit(image_path)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "refresh_thumbnail", "image": str(image_path)},
+                AIComponent.CURSOR
+            )
+
+    def _on_size_changed(self, size: int):
+        """Handle thumbnail size change"""
+        try:
+            self.thumbnail_size = size
+
+            # Update all thumbnail items
+            for thumbnail_item in self.thumbnail_items.values():
+                thumbnail_item.thumbnail_size = size
+                thumbnail_item.setFixedSize(size + 20, size + 40)
+                thumbnail_item._show_placeholder()
+
+            # Update grid layout
+            self._update_grid_layout()
+
+            # Request new thumbnails
+            for image_path in self.image_list:
+                self.thumbnail_requested.emit(image_path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_size_changed",
+                f"Thumbnail size changed to: {size}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "size_changed", "size": size},
+                AIComponent.CURSOR
+            )
+
+    def _update_grid_layout(self):
+        """Update grid layout based on current size"""
+        try:
+            # Calculate optimal columns based on widget width and thumbnail size
+            widget_width = self.width()
+            if widget_width > 0:
+                item_width = self.thumbnail_size + 20 + self.spacing
+                new_columns = max(1, widget_width // item_width)
+
+                if new_columns != self.columns:
+                    self.columns = new_columns
+                    self._reorganize_grid()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "update_grid_layout"},
+                AIComponent.CURSOR
+            )
+
+    def _reorganize_grid(self):
+        """Reorganize grid with new column count"""
+        try:
+            # Remove all items from layout
+            for i in reversed(range(self.grid_layout.count())):
+                item = self.grid_layout.itemAt(i)
+                if item:
+                    self.grid_layout.removeItem(item)
+
+            # Re-add items with new layout
+            row = 0
+            col = 0
+
+            for image_path in self.image_list:
+                if image_path in self.thumbnail_items:
+                    thumbnail_item = self.thumbnail_items[image_path]
+                    self.grid_layout.addWidget(thumbnail_item, row, col)
+
+                    col += 1
+                    if col >= self.columns:
+                        col = 0
+                        row += 1
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "reorganize_grid"},
+                AIComponent.CURSOR
+            )
+
+    def _update_performance_metrics(self):
+        """Update performance metrics"""
+        try:
+            with QMutexLocker(self.load_mutex):
+                if self.total_count > 0 and self.load_start_time:
+                    elapsed_time = time.time() - self.load_start_time
+                    progress = self.loaded_count / self.total_count
+
+                    if progress > 0:
+                        estimated_total_time = elapsed_time / progress
+                        self.performance_metrics["avg_load_time"] = estimated_total_time
+
+                    # Update performance label
+                    self.performance_label.setText(
+                        f"Loaded: {self.loaded_count}/{self.total_count} "
+                        f"({progress*100:.1f}%)"
+                    )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "update_performance_metrics"},
+                AIComponent.KIRO
+            )
+
+    def _monitor_performance(self):
+        """Monitor performance and emit warnings if needed"""
+        try:
+            # Check memory usage
+            import psutil
+            process = psutil.Process()
+            memory_mb = process.memory_info().rss / 1024 / 1024
+
+            self.performance_metrics["memory_usage"] = memory_mb
+
+            # Check for performance issues
+            if memory_mb > 500:  # 500MB threshold
+                self.performance_warning.emit(f"High memory usage: {memory_mb:.1f}MB")
+
+            # Check loading performance
+            if (self.total_count > 0 and
+                self.loaded_count < self.total_count and
+                self.performance_metrics["avg_load_time"] > 30):  # 30 seconds threshold
+
+                self.performance_warning.emit("Slow thumbnail loading detected")
+
+        except Exception as e:
+            # Don't log performance monitoring errors to avoid spam
+            pass
+
+    def clear_thumbnails(self):
+        """Clear all thumbnails"""
+        try:
+            # Clear layout
+            for i in reversed(range(self.grid_layout.count())):
+                item = self.grid_layout.itemAt(i)
+                if item and item.widget():
+                    item.widget().deleteLater()
+
+            # Clear data
+            self.thumbnail_items.clear()
+            self.exif_cache.clear()
+
+            with QMutexLocker(self.load_mutex):
+                self.loaded_count = 0
+                self.total_count = 0
+
+            self.performance_label.setText("Ready")
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "clear_thumbnails"},
+                AIComponent.CURSOR
+            )
+
+    def refresh_theme(self):
+        """Refresh theme for all thumbnails"""
+        try:
+            # Update thumbnail item styles based on current theme
+            current_theme = self.state_manager.get_state().current_theme
+
+            for thumbnail_item in self.thumbnail_items.values():
+                # Apply theme-specific styling
+                if "dark" in current_theme:
+                    thumbnail_item.setStyleSheet("""
+                        QLabel {
+                            border: 2px solid transparent;
+                            border-radius: 4px;
+                            background-color: #3a3a3a;
+                            color: #ffffff;
+                            padding: 4px;
+                        }
+                        QLabel:hover {
+                            border-color: #007acc;
+                            background-color: #4a4a4a;
+                        }
+                    """)
+                else:
+                    thumbnail_item.setStyleSheet("""
+                        QLabel {
+                            border: 2px solid transparent;
+                            border-radius: 4px;
+                            background-color: #f8f9fa;
+                            color: #000000;
+                            padding: 4px;
+                        }
+                        QLabel:hover {
+                            border-color: #007acc;
+                            background-color: #e3f2fd;
+                        }
+                    """)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "refresh_theme"},
+                AIComponent.CURSOR
+            )
+
+    def set_thumbnail_size(self, size: int):
+        """Set thumbnail size programmatically"""
+        self._on_size_changed(size)
+
+    def get_performance_metrics(self) -> Dict[str, Any]:
+        """Get current performance metrics"""
+        return self.performance_metrics.copy()
+
+    def cleanup(self):
+        """Cleanup resources"""
+        try:
+            # Stop performance monitoring
+            if self.performance_timer:
+                self.performance_timer.stop()
+
+            # Shutdown thread pools
+            self.thumbnail_executor.shutdown(wait=False)
+            self.exif_executor.shutdown(wait=False)
+
+            # Clear data
+            self.clear_thumbnails()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_grid_cleanup",
+                "Thumbnail grid cleaned up"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "cleanup"},
+                AIComponent.CURSOR
+            )
     """
     Optimized thumbnail grid combining CursorBLD speed with Kiro optimization
 
