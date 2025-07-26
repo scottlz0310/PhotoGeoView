@@ -1,0 +1,100 @@
+# AI統合品質保証 Pre-commit設定
+#
+# AI貢献者:
+# - Kiro: Pre-commit設定・品質チェック統合
+#
+# 作成者: Kiro AI統合システム
+# 作成日: 2025年1月26日
+
+repos:
+  # コードフォーマット
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=88]
+
+  # インポート順序
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88]
+
+  # コードスタイル
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88, --extend-ignore=E203,W503]
+
+  # 型チェック
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+        args: [--ignore-missing-imports, --no-strict-optional]
+
+  # セキュリティチェック
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: [-r, src/, -f, json]
+        exclude: tests/
+
+  # 基本的なチェック
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: debug-statements
+      - id: check-docstring-first
+
+  # AI統合品質チェック
+  - repo: local
+    hooks:
+      - id: ai-quality-check
+        name: AI統合品質チェック
+        entry: python tools/ai_quality_checker.py
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [--fail-on-critical]
+
+      - id: ai-documentation-check
+        name: AIドキュメント整合性チェック
+        entry: python docs/ai_integration/standalone_doc_generator.py
+        language: system
+        files: ^src/.*\.py$
+        pass_filenames: false
+
+      - id: performance-regression-check
+        name: パフォーマンス回帰チェック
+        entry: python tests/performance_tests/performance_regression_detector.py
+        language: system
+        files: ^src/.*\.py$
+        pass_filenames: false
+        args: [--iterations=3]
+
+# CI設定
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [ai-quality-check, ai-documentation-check, performance-regression-check]
+  submodules: false
