@@ -558,11 +558,6 @@ class ConfigMigrationManager:
             "config_directory": str(self.config_dir),
             "available_migrations": list(self.migration_mappings.keys())
         }
-                    "performance_config.json"
-                ],
-                "target_section": "ai_kiro",
-                "mappings": {
-                    # Integration settings
                     "error_correlation": "integration.error_correlation",
                     "performance_monitoring": "integration.performance_monitoring",
                     "ai_coordination": "integration.ai_coordination",
