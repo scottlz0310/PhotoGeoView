@@ -11,8 +11,8 @@ import sys
 import json
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+# Add src to path for imports - adjusted for examples folder
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from integration.config_manager import ConfigManager
 from integration.models import AIComponent, ApplicationState
@@ -35,7 +35,7 @@ def main():
 
         # Demonstrate default configuration
         print("\n2. Default Configuration:")
-        print(f"   App Name: {config_manager.get_set'app.name')}")
+        print(f"   App Name: {config_manager.get_setting('app.name')}")
         print(f"   App Version: {config_manager.get_setting('app.version')}")
         print(f"   UI Theme: {config_manager.get_setting('ui.theme')}")
         print(f"   Thumbnail Size: {config_manager.get_setting('ui.thumbnail_size')}")

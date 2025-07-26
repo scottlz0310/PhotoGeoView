@@ -1,1 +1,66 @@
-{}
+{
+  "app": {
+    "name": "PhotoGeoView",
+    "version": "1.0.0",
+    "debug_mode": false,
+    "auto_save": true,
+    "backup_enabled": true,
+    "telemetry_enabled": false
+  },
+  "ui": {
+    "theme": "dark",
+    "thumbnail_size": 300,
+    "window_geometry": "b'\\x01\\xd9\\xd0\\xcb\\x00\\x03\\x00\\x00\\x00\\x00\\x07}\\xff\\xff\\xff\\xe2\\x00\\x00\\x0c2\\x00\\x00\\x03\"\\x00\\x00\\x07\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x0c/\\x00\\x00\\x03\\x1f\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x07\\x80\\x00\\x00\\x07\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x0c/\\x00\\x00\\x03\\x1f'",
+    "splitter_states": {
+      "main_splitter": "b'\\x00\\x00\\x00\\xff\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x02\\x00\\x00\\x02\\x1c\\x00\\x00\\x02\\x88\\x01\\xff\\xff\\xff\\xff\\x01\\x00\\x00\\x00\\x01\\x00'"
+    },
+    "show_toolbar": true,
+    "show_statusbar": true,
+    "animation_enabled": true,
+    "current_folder": "/home/hiro/Samples",
+    "high_contrast_mode": false,
+    "large_fonts_mode": false,
+    "transparency_enabled": true,
+    "bookmarks": [
+      "/home/hiro"
+    ],
+    "folder_history": [
+      "/",
+      "/home",
+      "/home/hiro"
+    ]
+  },
+  "core": {
+    "image_formats": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".tiff",
+      ".bmp",
+      ".gif"
+    ],
+    "exif_parsing_enabled": true,
+    "map_provider": "folium",
+    "map_zoom_default": 10,
+    "thumbnail_quality": 85,
+    "cache_enabled": true,
+    "cache_size_mb": 100
+  },
+  "performance": {
+    "mode": "balanced",
+    "max_memory_mb": 512,
+    "thread_pool_size": 4,
+    "async_loading": true,
+    "preload_thumbnails": true,
+    "performance_monitoring": true
+  },
+  "logging": {
+    "level": "INFO",
+    "file_logging": true,
+    "console_logging": true,
+    "performance_logging": true,
+    "ai_operation_logging": true,
+    "max_log_size_mb": 10,
+    "log_retention_days": 30
+  }
+}

@@ -14,8 +14,8 @@ Author: Kiro AI Integration System
 import sys
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent / "src"))
+# Add src to path - adjusted for examples folder
+sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.image_processor import CS4CodingImageProcessor
 from integration.config_manager import ConfigManager

@@ -61,3 +61,6 @@ build/
 *.egg-info/
 *.whl
 *.tar.gz
+
+# Examples フォルダは開発・デモ用として含める
+# examples/ - これらのファイルはリポジトリに含まれます

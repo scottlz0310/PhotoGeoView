@@ -15,8 +15,8 @@ import time
 import asyncio
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent / "src"))
+# Add src to path - adjusted for examples folder
+sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.performance_monitor import KiroPerformanceMonitor
 from integration.unified_cache import UnifiedCacheSystem

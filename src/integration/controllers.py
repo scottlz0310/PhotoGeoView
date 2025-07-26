@@ -10,6 +10,7 @@ Author: Kiro AI Integration System
 """
 
 import asyncio
+import logging
 from typing import Dict, Any, Optional, List, Callable
 from pathlib import Path
 from datetime import datetime
@@ -682,7 +683,10 @@ class AppController:
 
         except Exception as e:
             # Log error but continue shutdown
-            print(f"Error during shutdown: {e}")
+            logger = logging.getLogger(__name__)
+            error_msg = f"Error during shutdown: {e}"
+            logger.error(error_msg)
+            print(error_msg)  # コンソールにも出力（シャットダウン時の重要情報）
 
         finally:
             self.is_initialized = False

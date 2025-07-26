@@ -37,29 +37,50 @@ def setup_logging():
 
 def print_startup_banner():
     """起動バナーを表示"""
-    print("=" * 60)
-    print("🌟 PhotoGeoView AI統合版")
-    print("=" * 60)
-    print("🤖 AI協調開発システム:")
-    print("  📷 GitHub Copilot (CS4Coding): EXIF解析・地図表示")
-    print("  🎨 Cursor (CursorBLD): UI/UX・テーマシステム")
-    print("  ⚡ Kiro: 統合制御・パフォーマンス最適化")
-    print("=" * 60)
-    print("🚀 アプリケーションを起動中...")
-    print()
+    logger = logging.getLogger(__name__)
+
+    banner_lines = [
+        "=" * 60,
+        "🌟 PhotoGeoView AI統合版",
+        "=" * 60,
+        "🤖 AI協調開発システム:",
+        "  📷 GitHub Copilot (CS4Coding): EXIF解析・地図表示",
+        "  🎨 Cursor (CursorBLD): UI/UX・テーマシステム",
+        "  ⚡ Kiro: 統合制御・パフォーマンス最適化",
+        "=" * 60,
+        "🚀 アプリケーションを起動中...",
+        ""
+    ]
+
+    for line in banner_lines:
+        logger.info(line)
+        print(line)  # コンソールにも表示
 
 def check_environment():
     """環境をチェック"""
+    logger = logging.getLogger(__name__)
+
     try:
         import PyQt6  # noqa: F401
         import PIL  # noqa: F401
         import folium  # noqa: F401
-        print("✅ 必要な依存関係が確認されました")
+
+        message = "✅ 必要な依存関係が確認されました"
+        logger.info(message)
+        print(message)
         return True
     except ImportError as e:
-        print(f"❌ 依存関係が不足しています: {e}")
-        print("以下のコマンドで依存関係をインストールしてください:")
-        print("pip install -r requirements.txt")
+        error_msg = f"❌ 依存関係が不足しています: {e}"
+        install_msg = "以下のコマンドで依存関係をインストールしてください:"
+        cmd_msg = "pip install -r requirements.txt"
+
+        logger.error(error_msg)
+        logger.info(install_msg)
+        logger.info(cmd_msg)
+
+        print(error_msg)
+        print(install_msg)
+        print(cmd_msg)
         return False
 
 def main():
@@ -80,47 +101,88 @@ def main():
         from src.integration.logging_system import LoggerSystem
         from PyQt6.QtWidgets import QApplication
 
-        print("🔧 Qt アプリケーションを初期化中...")
+        logger = logging.getLogger(__name__)
+
+        qt_msg = "🔧 Qt アプリケーションを初期化中..."
+        logger.info(qt_msg)
+        print(qt_msg)
+
         app = QApplication(sys.argv)
         app.setApplicationName("PhotoGeoView AI Integration")
         app.setApplicationVersion("1.0.0")
         app.setOrganizationName("AI Development Team")
 
-        print("🎯 システムコンポーネントを初期化中...")
+        components_msg = "🎯 システムコンポーネントを初期化中..."
+        logger.info(components_msg)
+        print(components_msg)
+
         logger_system = LoggerSystem()
         config_manager = ConfigManager(logger_system=logger_system)
         state_manager = StateManager(config_manager=config_manager, logger_system=logger_system)
 
-        print("🎯 アプリケーションコントローラーを初期化中...")
+        controller_msg = "🎯 アプリケーションコントローラーを初期化中..."
+        logger.info(controller_msg)
+        print(controller_msg)
+
         controller = AppController(config_manager=config_manager, logger_system=logger_system)  # noqa: F841
 
         # メインウィンドウを作成・表示
-        print("🖼️  メインウィンドウを表示中...")
+        window_msg = "🖼️  メインウィンドウを表示中..."
+        logger.info(window_msg)
+        print(window_msg)
+
         main_window = IntegratedMainWindow(
             config_manager=config_manager,
             state_manager=state_manager,
             logger_system=logger_system
         )
         main_window.show()
-        print("✨ PhotoGeoView AI統合版が正常に起動しました！")
-        print("📝 ログファイル: logs/photogeoview.log")
-        print("🎨 テーマ切り替え、画像表示、地図機能をお楽しみください")
+
+        success_msg = "✨ PhotoGeoView AI統合版が正常に起動しました！"
+        log_msg = "📝 ログファイル: logs/photogeoview.log"
+        enjoy_msg = "🎨 テーマ切り替え、画像表示、地図機能をお楽しみください"
+
+        logger.info(success_msg)
+        logger.info(log_msg)
+        logger.info(enjoy_msg)
+
+        print(success_msg)
+        print(log_msg)
+        print(enjoy_msg)
         print()
 
         # Qtイベントループを開始
-        print("⏳ アプリケーション実行中... (終了するにはウィンドウを閉じるかCtrl+Cを押してください)")
+        run_msg = "⏳ アプリケーション実行中... (終了するにはウィンドウを閉じるかCtrl+Cを押してください)"
+        logger.info(run_msg)
+        print(run_msg)
+
         sys.exit(app.exec())
 
     except ImportError as e:
-        print(f"❌ モジュールのインポートエラー: {e}")
-        print("📁 プロジェクト構造を確認してください")
-        print("🔧 依存関係が正しくインストールされているかチェックしてください")
+        logger = logging.getLogger(__name__)
+        import_error = f"❌ モジュールのインポートエラー: {e}"
+        structure_msg = "📁 プロジェクト構造を確認してください"
+        deps_msg = "🔧 依存関係が正しくインストールされているかチェックしてください"
+
+        logger.error(import_error)
+        logger.info(structure_msg)
+        logger.info(deps_msg)
+
+        print(import_error)
+        print(structure_msg)
+        print(deps_msg)
         sys.exit(1)
 
     except Exception as e:
-        logging.error(f"アプリケーション起動エラー: {e}")
-        print(f"❌ 予期しないエラーが発生しました: {e}")
-        print("📋 詳細はログファイルを確認してください: logs/photogeoview.log")
+        logger = logging.getLogger(__name__)
+        error_msg = f"❌ 予期しないエラーが発生しました: {e}"
+        detail_msg = "📋 詳細はログファイルを確認してください: logs/photogeoview.log"
+
+        logger.error(f"アプリケーション起動エラー: {e}")
+        logger.info(detail_msg)
+
+        print(error_msg)
+        print(detail_msg)
         sys.exit(1)
 
 if __name__ == "__main__":

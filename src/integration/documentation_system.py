@@ -21,6 +21,7 @@ from enum import Enum
 import json
 import ast
 import re
+import logging
 
 
 class AIContributor(Enum):
@@ -532,7 +533,10 @@ class DocumentationSystem:
                 try:
                     self.analyze_file_contributions(file_path)
                 except Exception as e:
-                    print(f"ファイル分析エラー {file_path}: {e}")
+                    logger = logging.getLogger(__name__)
+                    error_msg = f"ファイル分析エラー {file_path}: {e}"
+                    logger.error(error_msg)
+                    print(error_msg)  # ユーザーへの進行状況表示
 
     def generate_integration_documentation(self, output_dir: Path) -> None:
         """
@@ -558,7 +562,10 @@ class DocumentationSystem:
         contribution_report = self._generate_contribution_report()
         (output_dir / 'ai_contribution_report.md').write_text(contribution_report, encoding='utf-8')
 
-        print(f"統合ドキュメントを生成しました: {output_dir}")
+        logger = logging.getLogger(__name__)
+        success_msg = f"統合ドキュメントを生成しました: {output_dir}"
+        logger.info(success_msg)
+        print(success_msg)  # ユーザーへの完了通知
 
     def _generate_contribution_report(self) -> str:
         """AI貢献度レポートを生成"""
@@ -666,7 +673,10 @@ class DocumentationSystem:
                 updated_files.append(file_path)
 
             except Exception as e:
-                print(f"ファイルヘッダー更新エラー {file_path}: {e}")
+                logger = logging.getLogger(__name__)
+                error_msg = f"ファイルヘッダー更新エラー {file_path}: {e}"
+                logger.error(error_msg)
+                print(error_msg)  # ユーザーへのエラー通知
 
         return updated_files
 
@@ -683,7 +693,11 @@ def main():
 
     # ファイルヘッダー更新（dry run）
     updated_files = doc_system.update_file_headers(dry_run=True)
-    print(f"更新対象ファイル数: {len(updated_files)}")
+
+    logger = logging.getLogger(__name__)
+    update_msg = f"更新対象ファイル数: {len(updated_files)}"
+    logger.info(update_msg)
+    print(update_msg)  # ユーザーへの結果表示
 
 
 if __name__ == "__main__":

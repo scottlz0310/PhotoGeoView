@@ -152,7 +152,7 @@ class IntegratedMainWindow(QMainWindow):
         exit_action = QAction("E&xit", self)
         exit_action.setShortcut(QKeySequence.StandardKey.Quit)
         exit_action.setStatusTip("Exit the application")
-        exit_actiel.triggered.connect(self.close)
+        exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
         # View menu
@@ -537,18 +537,25 @@ class IntegratedMainWindow(QMainWindow):
     def _on_performance_alert(self, level: str, message: str):
         """Handle performance alerts (Kiro enhancement)"""
 
+        # UI要素の存在確認
+        if not hasattr(self, 'performance_label') or self.performance_label is None:
+            return
+
         if level == "warning":
             self.performance_label.setStyleSheet("color: orange; font-weight: bold;")
-            self.status_performance.setStyleSheet("color: orange;")
-            self.status_performance.setText(f"Performance: {message}")
+            if hasattr(self, 'status_performance') and self.status_performance is not None:
+                self.status_performance.setStyleSheet("color: orange;")
+                self.status_performance.setText(f"Performance: {message}")
         elif level == "critical":
             self.performance_label.setStyleSheet("color: red; font-weight: bold;")
-            self.status_performance.setStyleSheet("color: red;")
-            self.status_performance.setText(f"Performance: {message}")
+            if hasattr(self, 'status_performance') and self.status_performance is not None:
+                self.status_performance.setStyleSheet("color: red;")
+                self.status_performance.setText(f"Performance: {message}")
         else:
             self.performance_label.setStyleSheet("color: green; font-weight: bold;")
-            self.status_performance.setStyleSheet("color: green;")
-            self.status_performance.setText("Performance: Good")
+            if hasattr(self, 'status_performance') and self.status_performance is not None:
+                self.status_performance.setStyleSheet("color: green;")
+                self.status_performance.setText("Performance: Good")
 
     # Monitoring methods (Kiro enhancements)
 
@@ -556,6 +563,10 @@ class IntegratedMainWindow(QMainWindow):
         """Update performance metrics display"""
 
         try:
+            # UI要素が初期化されているかチェック
+            if not hasattr(self, 'performance_label') or self.performance_label is None:
+                return
+
             # Get performance summary from state manager
             perf_summary = self.state_manager.get_performance_summary()
 
@@ -585,6 +596,10 @@ class IntegratedMainWindow(QMainWindow):
         """Update memory usage display"""
 
         try:
+            # UI要素が初期化されているかチェック
+            if not hasattr(self, 'memory_label') or self.memory_label is None:
+                return
+
             import psutil
             import os
 
@@ -594,7 +609,8 @@ class IntegratedMainWindow(QMainWindow):
 
             # Update memory labels
             self.memory_label.setText(f"Memory: {memory_mb:.1f} MB")
-            self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
+            if hasattr(self, 'status_memory') and self.status_memory is not None:
+                self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
 
             # Check for memory alerts
             max_memory = self.config_manager.get_setting("performance.max_memory_mb", 512)

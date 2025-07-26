@@ -1,9 +1,9 @@
 {
-  "current_folder": null,
+  "current_folder": "/home",
   "selected_image": null,
   "loaded_images": [],
   "current_theme": "default",
-  "thumbnail_size": 150,
+  "thumbnail_size": 300,
   "folder_history": [],
   "ui_layout": {},
   "window_geometry": null,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-26 13:17:07.643134",
-  "last_activity": "2025-07-26 13:17:07.643134",
+  "last_activity": "2025-07-26 16:01:40.057457",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-07-26T13:17:07.644101",
-    "state_changes": 0,
-    "state_accesses": 0
+    "saved_at": "2025-07-26T16:01:40.057953",
+    "state_changes": 55,
+    "state_accesses": 55
   }
 }

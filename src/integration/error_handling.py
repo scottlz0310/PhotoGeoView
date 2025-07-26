@@ -11,6 +11,7 @@ Author: Kiro AI Integration System
 
 import traceback
 import sys
+import logging
 from enum import Enum
 from typing import Dict, Any, Optional, Callable, List
 from datetime import datetime
@@ -432,9 +433,16 @@ class IntegratedErrorHandler:
         if self.logger:
             self.logger.critical(f"Error handler failed: {handler_error}")
 
-        # Minimal error handling
-        print(f"Critical error in error handler: {handler_error}")
-        print(f"Original error: {error_context.message}")
+        # Minimal error handling - 最終手段として標準エラー出力とコンソールの両方に出力
+        fallback_logger = logging.getLogger(__name__)
+        handler_error_msg = f"Critical error in error handler: {handler_error}"
+        original_error_msg = f"Original error: {error_context.message}"
+
+        fallback_logger.critical(handler_error_msg)
+        fallback_logger.critical(original_error_msg)
+
+        print(handler_error_msg)
+        print(original_error_msg)
 
     # Utility methods
 

@@ -13,8 +13,8 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+# Add src to path for imports - adjusted for examples folder
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from integration.data_validation import DataValidator, ValidationSeverity
 from integration.data_migration import DataMigrationManager, MigrationStatus
@@ -36,7 +36,7 @@ def create_sample_data():
     # Create sample CursorBLD image cache
     cursor_cache = [
         {
-            "path":ir / "sample_image_1.jpg"),
+            "path": str(data_dir / "sample_image_1.jpg"),
             "size": 1024000,
             "thumb_path": str(data_dir / "thumb_1.jpg"),
             "name": "Sample Image 1",

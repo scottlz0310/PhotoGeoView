@@ -14,6 +14,7 @@ from typing import Dict, List, Any
 from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime
+import logging
 
 
 @dataclass
@@ -305,6 +306,9 @@ def example_usage():
     }
 
     header = template_manager.render_template('file_header', variables)
+
+    logger = logging.getLogger(__name__)
+    logger.info("ファイルヘッダーテンプレートを生成しました")
     print("生成されたファイルヘッダー:")
     print(header)
 

@@ -15,8 +15,8 @@ import time
 import asyncio
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent / "src"))
+# Add src to path - adjusted for examples folder
+sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.performance_monitor import KiroPerformanceMonitor
 from integration.unified_cache import UnifiedCacheSystem
@@ -113,7 +113,7 @@ async def main():
     print(f"\n   State Summary:")
     print(f"   - Session duration: {state_summary['session_duration']:.1f}s")
     print(f"   - Current theme: {state_summary['current_theme']}")
-    print(f"   - Performance mode: {state_summarance_mode']}")
+    print(f"   - Performance mode: {state_summary['performance_mode']}")
 
     # Demonstrate performance monitoring
     print("\n5. Testing Performance Monitoring...")
