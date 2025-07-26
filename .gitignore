@@ -13,6 +13,7 @@ cache/
 .mypy_cache/
 .coverage
 htmlcov/
+coverage.xml
 
 # PhotoGeoView固有のキャッシュ（個人的な画像情報含む）
 cache/thumbnails/
@@ -31,6 +32,10 @@ config/qt_theme_user_settings.json
 logs/
 *.log
 
+# テストレポート（自動生成）
+tests/reports/
+tests/cache/
+
 # 仮想環境
 .vscode/
 venv/
@@ -41,6 +46,11 @@ venv/
 *.swp
 *.ini
 *.html
+
+# バックアップファイル
+*.backup
+*.bak
+*~
 
 # その他除外したい一時ファイル
 *.spec
