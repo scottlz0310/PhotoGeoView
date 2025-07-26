@@ -145,8 +145,8 @@ class IntegratedLogger(ILogger):
 
     def _get_component_from_extra(self, extra: Optional[Dict[str, Any]]) -> str:
         """Extract component name from extra data"""
-        if not e
-           return 'main'
+        if not extra:
+            return 'main'
 
         component = extra.get('component', '')
 
