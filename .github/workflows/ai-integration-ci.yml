@@ -28,6 +28,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: システム依存関係をインストール (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
     - name: 依存関係をキャッシュ
       uses: actions/cache@v3
       with:
@@ -59,16 +65,25 @@ jobs:
         mypy src/ --ignore-missing-imports --no-strict-optional
 
     - name: AI統合テストを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        pytest tests/integration_tests/ -v --cov=src --cov-report=xml --cov-report=html
+        xvfb-run -a pytest tests/integration_tests/ -v --cov=src --cov-report=xml --cov-report=html
 
     - name: パフォーマンステストを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        pytest tests/performance_tests/ -v --tb=short
+        xvfb-run -a pytest tests/performance_tests/ -v --tb=short
 
     - name: AI互換性テストを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        pytest tests/ai_compatibility/ -v --tb=short
+        xvfb-run -a pytest tests/ai_compatibility/ -v --tb=short
 
     - name: カバレッジレポートをアップロード
       uses: codecov/codecov-action@v3
@@ -96,6 +111,12 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: システム依存関係をインストール (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
     - name: 依存関係をインストール
       run: |
         python -m pip install --upgrade pip
@@ -103,12 +124,24 @@ jobs:
         pip install pytest pytest-cov
 
     - name: ${{ matrix.ai-component }} コンポーネントテストを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        pytest tests/${{ matrix.ai-component }}_tests/ -v --cov=src --cov-report=xml
+        if [ "${{ matrix.ai-component }}" = "kiro" ]; then
+          xvfb-run -a pytest tests/test_kiro_components.py -v --cov=src --cov-report=xml
+        elif [ "${{ matrix.ai-component }}" = "copilot" ]; then
+          xvfb-run -a pytest tests/test_image_processor.py -v --cov=src --cov-report=xml
+        elif [ "${{ matrix.ai-component }}" = "cursor" ]; then
+          xvfb-run -a pytest tests/test_config_manager.py -v --cov=src --cov-report=xml
+        fi
 
     - name: ${{ matrix.ai-component }} パフォーマンステストを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        python tests/performance_benchmarks.py --component=${{ matrix.ai-component }}
+        xvfb-run -a python tests/performance_benchmarks.py --component=${{ matrix.ai-component }}
 
   # ドキュメント生成テスト
   documentation-tests:
@@ -194,6 +227,12 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: システム依存関係をインストール (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
     - name: 依存関係をインストール
       run: |
         python -m pip install --upgrade pip
@@ -201,8 +240,11 @@ jobs:
         pip install pytest-benchmark
 
     - name: パフォーマンスベンチマークを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        pytest tests/performance_tests/ --benchmark-only --benchmark-json=benchmark.json
+        xvfb-run -a pytest tests/performance_tests/ --benchmark-only --benchmark-json=benchmark.json
 
     - name: ベンチマーク結果を保存
       uses: actions/upload-artifact@v3
@@ -258,14 +300,23 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: システム依存関係をインストール (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
     - name: 依存関係をインストール
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: 統合レポートを生成
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        python tools/generate_integration_report.py
+        xvfb-run -a python tools/generate_integration_report.py
 
     - name: レポートをアップロード
       uses: actions/upload-artifact@v3
