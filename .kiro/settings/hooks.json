@@ -1,0 +1,79 @@
+{
+    "hooks": {
+        "debug_work_guidelines": {
+            "name": "デバッグ作業ガイドライン",
+            "description": "デバッグ作業時に従うべき開発ルールを適用するhook",
+            "trigger": "manual",
+            "active": true,
+            "rules": [
+                {
+                    "id": "logger_only_debug",
+                    "title": "ロガー経由でのデバッグ出力",
+                    "description": "デバッグ情報の出力は必ずロガー経由で行うこと。print()文やconsole.log()の直接使用は禁止。",
+                    "enforcement": "strict",
+                    "examples": [
+                        "✅ logger.debug('デバッグ情報: %s', variable)",
+                        "❌ print('デバッグ情報:', variable)"
+                    ]
+                },
+                {
+                    "id": "no_temp_scripts_in_root",
+                    "title": "一時スクリプトの配置制限",
+                    "description": "デバッグ等の一時スクリプトはルートディレクトリに置かないこと。tools/debug/またはtests/debug/に配置する。",
+                    "enforcement": "strict",
+                    "allowed_paths": [
+                        "tools/debug/",
+                        "tests/debug/",
+                        "examples/debug/"
+                    ],
+                    "forbidden_paths": [
+                        "./",
+                        "src/",
+                        "config/"
+                    ]
+                },
+                {
+                    "id": "japanese_only_communication",
+                    "title": "日本語での応答とドキュメント作成",
+                    "description": "必ず日本語で応答し、ドキュメントやコメントも日本語で書くこと。コード内のコメント、commit message、ドキュメントすべて日本語で統一する。",
+                    "enforcement": "strict",
+                    "applies_to": [
+                        "responses",
+                        "code_comments",
+                        "documentation",
+                        "commit_messages",
+                        "error_messages"
+                    ]
+                }
+            ],
+            "pre_execution_checks": [
+                "デバッグ作業開始前にロガー設定を確認",
+                "一時ファイル用ディレクトリの存在確認",
+                "日本語環境設定の確認"
+            ],
+            "post_execution_actions": [
+                "一時ファイルのクリーンアップ確認",
+                "ログファイルの整理",
+                "デバッグコードの削除確認"
+            ]
+        },
+        "code_quality_check": {
+            "name": "コード品質チェック",
+            "description": "デバッグ作業後のコード品質を確認するhook",
+            "trigger": "on_save",
+            "active": true,
+            "checks": [
+                "print文の残存チェック",
+                "一時ファイルの残存チェック",
+                "日本語コメントの確認",
+                "ロガー使用の確認"
+            ]
+        }
+    },
+    "global_settings": {
+        "language": "ja",
+        "logging_level": "DEBUG",
+        "temp_directory": "tools/debug/",
+        "cleanup_on_exit": true
+    }
+}

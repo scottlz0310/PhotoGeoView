@@ -368,6 +368,8 @@ class IntegratedMainWindow(QMainWindow):
         # Connect thumbnail grid signals
         if self.thumbnail_grid:
             self.thumbnail_grid.image_selected.connect(self._on_image_selected)
+            # Connect folder changes to thumbnail grid
+            self.folder_changed.connect(self._update_thumbnail_grid)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -532,6 +534,42 @@ class IntegratedMainWindow(QMainWindow):
                 e, ErrorCategory.UI_ERROR,
                 {"operation": "theme_change_handling", "theme": theme_name},
                 AIComponent.CURSOR
+            )
+
+    def _update_thumbnail_grid(self, folder_path: Path):
+        """Update thumbnail grid with images from the selected folder"""
+
+        try:
+            if not folder_path.exists() or not folder_path.is_dir():
+                return
+
+            # Get image files from folder
+            image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp'}
+            image_files = []
+
+            for file_path in folder_path.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in image_extensions:
+                    image_files.append(file_path)
+
+            # Sort by name
+            image_files.sort(key=lambda x: x.name.lower())
+
+            # Update thumbnail grid
+            if self.thumbnail_grid:
+                self.thumbnail_grid.set_image_list(image_files)
+
+            # Log the operation
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "thumbnail_update",
+                f"Updated thumbnails for {len(image_files)} images in {folder_path}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "thumbnail_grid_update", "folder": str(folder_path)},
+                AIComponent.KIRO
             )
 
     def _on_performance_alert(self, level: str, message: str):
