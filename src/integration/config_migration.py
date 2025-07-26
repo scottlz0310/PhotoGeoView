@@ -193,7 +193,7 @@ class ConfigMigrationManager:
 
                     # Logging settings
                     "log_level": "logging.level",
-le_logging": "logging.file_logging",
+                    "file_logging": "logging.file_logging",
                     "console_logging": "logging.console_logging",
                     "performance_logging": "logging.performance_logging",
                     "ai_operation_logging": "logging.ai_operation_logging",
