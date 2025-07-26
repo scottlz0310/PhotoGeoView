@@ -107,23 +107,18 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         # Real-time monitoring
         self.monitoring_interval = 2.0  # seconds
-        self.alert_cooldown = 60.0  # seconds between same alerts
+        self.alert_cooldown_duration = 60.0  # seconds between same alerts
 
         # Performance optimization integration
         self.optimizer: Optional['PerformanceOptimizer'] = None
         self.recent_alerts: deque = deque(maxlen=100)
         self.alert_cooldown: Dict[str, datetime] = {}  # Prevent alert spam
 
-        # Thresholds
-        self.thresholds = ResourceThresholds()
-        self._load_thresholds_from_config()
-
         # System info
         self.process = psutil.Process(os.getpid())
         self.system_info = self._get_system_info()
 
         # Monitoring intervals
-        self.monitoring_interval = 2.0  # seconds
         self.health_check_interval = 10.0  # seconds
         self.last_health_check = datetime.now()
 
@@ -143,18 +138,39 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             # Load thresholds from config
             perf_config = self.config_manager.get_setting("performance", {})
 
-            self.thresholds.memory_warning_mb = perf_config.get("memory_warning_mb", 400.0)
-            self.thresholds.memory_critical_mb = perf_config.get("memory_critical_mb", 600.0)
-            self.thresholds.cpu_warning_percent = perf_config.get("cpu_warning_percent", 70.0)
-            self.thresholds.cpu_critical_percent = perf_config.get("cpu_critical_percent", 90.0)
+            # Ensure we have a dict and not some other type
+            if not isinstance(perf_config, dict):
+                perf_config = {}
 
-            # Load monitoring intervals
-            self.monitoring_interval = perf_config.get("monitoring_interval", 2.0)
-            self.health_check_interval = perf_config.get("health_check_interval", 10.0)
+            # Set thresholds with type checking
+            memory_warning = perf_config.get("memory_warning_mb", 400.0)
+            if isinstance(memory_warning, (int, float)):
+                self.thresholds.memory_warning_mb = float(memory_warning)
+
+            memory_critical = perf_config.get("memory_critical_mb", 600.0)
+            if isinstance(memory_critical, (int, float)):
+                self.thresholds.memory_critical_mb = float(memory_critical)
+
+            cpu_warning = perf_config.get("cpu_warning_percent", 70.0)
+            if isinstance(cpu_warning, (int, float)):
+                self.thresholds.cpu_warning_percent = float(cpu_warning)
+
+            cpu_critical = perf_config.get("cpu_critical_percent", 90.0)
+            if isinstance(cpu_critical, (int, float)):
+                self.thresholds.cpu_critical_percent = float(cpu_critical)
+
+            # Load monitoring intervals with type checking
+            monitoring_interval = perf_config.get("monitoring_interval", 2.0)
+            if isinstance(monitoring_interval, (int, float)):
+                self.monitoring_interval = float(monitoring_interval)
+
+            health_check_interval = perf_config.get("health_check_interval", 10.0)
+            if isinstance(health_check_interval, (int, float)):
+                self.health_check_interval = float(health_check_interval)
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e, ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_thresholds"},
                 AIComponent.KIRO
             )
@@ -1086,10 +1102,6 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         """Get performance metrics history"""
         return list(self.metrics_history)[-limit:]
 
-    def get_recent_alerts(self, limit: int = 50) -> List[PerformanceAlert]:
-        """Get recent alerts"""
-        return list(self.recent_alerts)[-limit:]
-
     def get_ai_component_status(self) -> Dict[AIComponent, Dict[str, Any]]:
         """Get AI component status"""
         return self.ai_components.copy()
@@ -1117,61 +1129,6 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 {"operation": "update_thresholds"},
                 AIComponent.KIRO
             )
-
-    def get_performance_summary(self) -> Dict[str, Any]:
-        """Get comprehensive performance summary"""
-        try:
-            if not self.current_metrics:
-                return {}
-
-            metrics = self.current_metrics
-            recent_alerts = [a for a in self.recent_alerts if
-                           (datetime.now() - a.timestamp).total_seconds() < 300]  # Last 5 minutes
-
-            return {
-                "timestamp": metrics.timestamp.isoformat(),
-                "memory": {
-                    "usage_mb": metrics.memory_usage_mb,
-                    "usage_percent": (metrics.memory_usage_mb / (metrics.memory_usage_mb + metrics.memory_available_mb)) * 100,
-                    "available_mb": metrics.memory_available_mb,
-                    "status": "critical" if metrics.memory_usage_mb > self.thresholds.memory_critical_mb else
-                             "warning" if metrics.memory_usage_mb > self.thresholds.memory_warning_mb else "normal"
-                },
-                "cpu": {
-                    "usage_percent": metrics.cpu_usage_percent,
-                    "cores": metrics.cpu_cores,
-                    "status": "critical" if metrics.cpu_usage_percent > self.thresholds.cpu_critical_percent else
-                             "warning" if metrics.cpu_usage_percent > self.thresholds.cpu_warning_percent else "normal"
-                },
-                "cache": {
-                    "hit_ratio": metrics.cache_hit_ratio,
-                    "hits": metrics.cache_hits,
-                    "misses": metrics.cache_misses,
-                    "status": "warning" if metrics.cache_hit_ratio < 0.5 else "normal"
-                },
-                "ai_components": {
-                    component.value: {
-                        "status": data["status"],
-                        "avg_response_time": sum(data["response_times"]) / len(data["response_times"]) if data["response_times"] else 0,
-                        "operations": len(data["response_times"])
-                    }
-                    for component, data in self.ai_components.items()
-                },
-                "recent_alerts": len(recent_alerts),
-                "alert_levels": {
-                    "critical": len([a for a in recent_alerts if a.level == "critical"]),
-                    "warning": len([a for a in recent_alerts if a.level == "warning"]),
-                    "info": len([a for a in recent_alerts if a.level == "info"])
-                }
-            }
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "get_performance_summary"},
-                AIComponent.KIRO
-            )
-            return {}
 
     def cleanup(self):
         """Cleanup monitor resources"""

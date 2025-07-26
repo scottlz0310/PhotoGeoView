@@ -37,7 +37,7 @@ class ValidationResult:
     warnings: List[Dict[str, Any]] = field(default_factory=list)
     info: List[Dict[str, Any]] = field(default_factory=list)
 
-    def add_issue(self, severity: ValidatiSeverity, field: str, message: str, value: Any = None):
+    def add_issue(self, severity: ValidationSeverity, field: str, message: str, value: Any = None):
         """Add a validation issue"""
         issue = {
             "field": field,

@@ -175,7 +175,7 @@ class ThumbnailItem(QLabel):
         error_pixmap = QPixmap(self.thumbnail_size, self.thumbnail_size)
         error_pixmap.fill(QColor("#f8d7da"))
 
-        painter = QPainterpixmap)
+        painter = QPainter(error_pixmap)
         painter.setPen(QColor("#721c24"))
         painter.setFont(QFont("Arial", 10))
         painter.drawText(error_pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "Error")
@@ -377,7 +377,7 @@ class OptimizedThumbnailGrid(QWidget):
 
         # Performance tracking
         self.load_start_time = None
-  self.loaded_count = 0
+        self.loaded_count = 0
         self.total_count = 0
         self.performance_metrics = {
             "avg_load_time": 0.0,

@@ -22,7 +22,7 @@ from .models import (
 )
 from .data_validation import DataValidator, ValidationResult
 from .logging_system import LoggerSystem
-from .error_handling iratedErrorHandler, ErrorCategory
+from .error_handling import IntegratedErrorHandler, ErrorCategory
 
 
 class MigrationStatus(Enum):

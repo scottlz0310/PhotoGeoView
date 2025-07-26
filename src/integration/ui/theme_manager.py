@@ -14,7 +14,6 @@ from pathlib import Path
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
-from ..interfaces import IThemeManager
 from ..models import ThemeConfiguration, AIComponent
 from ..config_manager import ConfigManager
 from ..state_manager import StateManager
@@ -22,7 +21,7 @@ from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
 
 
-class IntegratedThemeManager(QObject, IThemeManager):
+class IntegratedThemeManager(QObject):
     """
     Integrated theme manager combining CursorBLD's theme system with Kiro enhancements
 
@@ -702,23 +701,6 @@ class IntegratedThemeManager(QObject, IThemeManager):
             return self.themes[theme_name].accessibility_score
 
         return 0.0
-            self._load_accessibility_settings()
-
-            # Load performance settings
-            self._load_performance_settings()
-
-            self.logger_system.log_ai_operation(
-                AIComponent.CURSOR,
-                "theme_manager_init",
-                f"Theme manager initialized with {len(self.themes)} themes"
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
-                {"operation": "theme_manager_init"},
-                AIComponent.CURSOR
-            )
 
     def _initialize_qt_theme_manager(self):
         """Initialize Qt-Theme-Manager integration (CursorBLD feature)"""

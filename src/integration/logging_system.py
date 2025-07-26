@@ -66,7 +66,7 @@ class PerformanceLogHandler(logging.Handler):
     def __init__(self, metrics_file: Path):
         super().__init__()
         self.metrics_file = metrics_file
-        ses_buffer: List[Dict[str, Any]] = []
+        self.metrics_buffer: List[Dict[str, Any]] = []
         self.buffer_size = 100
 
     def emit(self, record):

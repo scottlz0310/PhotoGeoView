@@ -37,7 +37,7 @@ class TestDataValidator:
     @pytest.fixture
     def sample_image_metadata(self, temp_dir):
         """Create sample ImageMetadata for testing"""
-        test_image = temp_dirtest_image.jpg"
+        test_image = temp_dir / "test_image.jpg"
         test_image.write_text("fake image content")
 
         return ImageMetadata(

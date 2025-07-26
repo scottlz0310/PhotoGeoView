@@ -141,10 +141,16 @@ class TestComprehensiveAIIntegration:
     def test_ui_theme_integration(self):
         """UIテーマ統合テスト"""
         try:
-            from src.integration.ui.theme_manager import CursorThemeManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
+            from src.integration.config_manager import ConfigManager
+            from src.integration.state_manager import StateManager
 
             # テーママネージャーの初期化
-            theme_manager = CursorThemeManager()
+            with patch.object(ConfigManager, '__init__', return_value=None), \
+                 patch.object(StateManager, '__init__', return_value=None):
+                config_manager = ConfigManager()
+                state_manager = StateManager()
+                theme_manager = IntegratedThemeManager(config_manager, state_manager)
 
             # テーマ一覧取得テスト
             if hasattr(theme_manager, 'get_available_themes'):
@@ -304,6 +310,12 @@ class TestComprehensiveAIIntegration:
 class TestUserAcceptanceScenarios:
     """ユーザー受け入れテストシナリオ"""
 
+    @pytest.fixture
+    def temp_config_dir(self):
+        """一時設定ディレクトリ"""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            yield Path(temp_dir)
+
     def test_application_startup_scenario(self):
         """アプリケーション起動シナリオ"""
         try:
@@ -349,10 +361,16 @@ class TestUserAcceptanceScenarios:
     def test_theme_switching_scenario(self):
         """テーマ切り替えシナリオ"""
         try:
-            from src.integration.ui.theme_manager import CursorThemeManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
+            from src.integration.config_manager import ConfigManager
+            from src.integration.state_manager import StateManager
 
             # シナリオ: ユーザーがテーマを切り替え
-            theme_manager = CursorThemeManager()
+            with patch.object(ConfigManager, '__init__', return_value=None), \
+                 patch.object(StateManager, '__init__', return_value=None):
+                config_manager = ConfigManager()
+                state_manager = StateManager()
+                theme_manager = IntegratedThemeManager(config_manager, state_manager)
 
             # 期待: 利用可能なテーマが表示される
             if hasattr(theme_manager, 'get_available_themes'):
@@ -381,11 +399,17 @@ class TestRequirementValidation:
     def test_requirement_1_1_ui_ux_integration(self):
         """要件1.1: CursorBLD UI/UX統合の検証"""
         try:
-            from src.integration.ui.theme_manager import CursorThemeManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
+            from src.integration.config_manager import ConfigManager
+            from src.integration.state_manager import StateManager
 
             # CursorBLDのテーマシステムが統合されているか確認
-            theme_manager = CursorThemeManager()
-            assert theme_manager is not None
+            with patch.object(ConfigManager, '__init__', return_value=None), \
+                 patch.object(StateManager, '__init__', return_value=None):
+                config_manager = ConfigManager()
+                state_manager = StateManager()
+                theme_manager = IntegratedThemeManager(config_manager, state_manager)
+                assert theme_manager is not None
 
         except ImportError:
             pytest.fail("要件1.1: CursorBLD UI/UX統合が実装されていません")

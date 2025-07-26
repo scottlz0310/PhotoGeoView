@@ -15,11 +15,11 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit,
-    QTreeView, QFileSystemModel, QLabel, QComboBox, QFrame,
+    QTreeView, QLabel, QComboBox, QFrame,
     QFileDialog, QMenu, QMessageBox
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QModelIndex, QTimer
-from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem
+from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QFileSystemModel
 
 from ..models import AIComponent
 from ..config_manager import ConfigManager
@@ -225,7 +225,7 @@ class EnhancedFolderNavigator(QWidget):
             )
 
     def _load_settings(self):
-        """Load settings and restore state""
+        """Load settings and restore state"""
 
         try:
             # Load folder history
@@ -704,7 +704,6 @@ class EnhancedFolderNavigator(QWidget):
 
     def optimize_for_large_directories(self, enabled: bool = True):
         """Optimize for large directories"""
-
         try:
             if enabled:
                 # Reduce update frequency

@@ -190,7 +190,7 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
 
         # Mock PIL Image
         mock_img = MagicMock()
-        mock_image.open.return_value.__enter__.return_value = mock_img
+        mock_image.open.return_value = mock_img
 
         # Mock ImageOps.exif_transpose
         with patch('integration.image_processor.ImageOps') as mock_imageops:

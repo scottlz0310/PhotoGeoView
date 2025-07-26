@@ -558,55 +558,6 @@ class ConfigMigrationManager:
             "config_directory": str(self.config_dir),
             "available_migrations": list(self.migration_mappings.keys())
         }
-                    "error_correlation": "integration.error_correlation",
-                    "performance_monitoring": "integration.performance_monitoring",
-                    "ai_coordination": "integration.ai_coordination",
-                    "quality_assurance": "integration.quality_assurance",
-
-                    # Optimization settings
-                    "memory_management": "optimization.memory_management",
-                    "cache_optimization": "optimization.cache_optimization",
-                    "async_processing": "optimization.async_processing",
-                    "resource_pooling": "optimization.resource_pooling",
-
-                    # Performance settings
-                    "mode": "performance.mode",
-                    "max_memory_mb": "performance.max_memory_mb",
-                    "thread_pool_size": "performance.thread_pool_size",
-                    "async_loading": "performance.async_loading",
-                    "preload_thumbnails": "performance.preload_thumbnails",
-                    "performance_monitoring": "performance.performance_monitoring"
-                }
-            },
-
-            # Legacy PhotoGeoView configuration
-            "legacy": {
-                "source_files": [
-                    "photogeoview_config.json",
-                    "app_settings.json",
-                    "user_preferences.json"
-                ],
-                "target_section": "app",
-                "mappings": {
-                    # Application settings
-                    "app_name": "app.name",
-                    "app_version": "app.version",
-                    "debug_mode": "app.debug_mode",
-                    "auto_save": "app.auto_save",
-                    "backup_enabled": "app.backup_enabled",
-                    "telemetry_enabled": "app.telemetry_enabled",
-
-                    # Logging settings
-                    "log_level": "logging.level",
-                    "file_logging": "logging.file_logging",
-                    "console_logging": "logging.console_logging",
-                    "performance_logging": "logging.performance_logging",
-                    "ai_operation_logging": "logging.ai_operation_logging",
-                    "max_log_size_mb": "logging.max_log_size_mb",
-                    "log_retention_days": "logging.log_retention_days"
-                }
-            }
-        }
 
     def migrate_all_configurations(self) -> Dict[str, Any]:
         """
