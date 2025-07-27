@@ -25,6 +25,7 @@ from ..config_manager import ConfigManager
 from ..state_manager import StateManager
 from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
+from ..services.file_discovery_service import FileDiscoveryService
 from .theme_manager import IntegratedThemeManager
 from .thumbnail_grid import OptimizedThumbnailGrid
 from .folder_navigator import EnhancedFolderNavigator
@@ -71,6 +72,11 @@ class IntegratedMainWindow(QMainWindow):
         self.theme_manager: Optional[IntegratedThemeManager] = None
         self.thumbnail_grid: Optional[OptimizedThumbnailGrid] = None
         self.folder_navigator: Optional[EnhancedFolderNavigator] = None
+
+        # Services
+        self.file_discovery_service = FileDiscoveryService(
+            logger_system=self.logger_system
+        )
 
         # Layout components
         self.central_widget: Optional[QWidget] = None
@@ -537,39 +543,148 @@ class IntegratedMainWindow(QMainWindow):
             )
 
     def _update_thumbnail_grid(self, folder_path: Path):
-        """Update thumbnail grid with images from the selected folder"""
+        """
+        Update thumbnail grid with images from the selected folder using FileDiscoveryService
 
+        Args:
+            folder_path: Path to the folder to scan for images
+        """
         try:
-            if not folder_path.exists() or not folder_path.is_dir():
-                return
-
-            # Get image files from folder
-            image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp'}
-            image_files = []
-
-            for file_path in folder_path.iterdir():
-                if file_path.is_file() and file_path.suffix.lower() in image_extensions:
-                    image_files.append(file_path)
-
-            # Sort by name
-            image_files.sort(key=lambda x: x.name.lower())
-
-            # Update thumbnail grid
-            if self.thumbnail_grid:
-                self.thumbnail_grid.set_image_list(image_files)
-
-            # Log the operation
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
-                "thumbnail_update",
-                f"Updated thumbnails for {len(image_files)} images in {folder_path}"
+                "thumbnail_update_start",
+                f"Starting thumbnail update for folder: {folder_path}"
             )
 
+            # Validate folder path
+            if not folder_path.exists() or not folder_path.is_dir():
+                error_msg = f"フォルダが存在しないか、アクセスできません: {folder_path}"
+                self.logger_system.log_error(
+                    AIComponent.KIRO,
+                    Exception(error_msg),
+                    "folder_validation",
+                    {"folder_path": str(folder_path)}
+                )
+
+                if self.thumbnail_grid:
+                    self.thumbnail_grid.show_error_state(error_msg)
+                return
+
+            # Show loading state
+            if self.thumbnail_grid:
+                self.thumbnail_grid.show_loading_state("フォルダをスキャン中...")
+
+            # Use FileDiscoveryService to discover images
+            try:
+                image_files = self.file_discovery_service.discover_images(folder_path)
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "file_discovery_complete",
+                    f"Discovered {len(image_files)} images in {folder_path}"
+                )
+
+                # Update thumbnail grid based on results
+                if self.thumbnail_grid:
+                    if image_files:
+                        # Update with discovered images
+                        self.thumbnail_grid.update_image_list(image_files)
+
+                        # Update status bar
+                        if hasattr(self, 'status_bar') and self.status_bar:
+                            self.status_bar.showMessage(
+                                f"{len(image_files)}個の画像ファイルが見つかりました - {folder_path.name}",
+                                3000
+                            )
+                    else:
+                        # Show empty state
+                        self.thumbnail_grid.show_empty_state()
+
+                        # Update status bar
+                        if hasattr(self, 'status_bar') and self.status_bar:
+                            self.status_bar.showMessage(
+                                f"画像ファイルが見つかりませんでした - {folder_path.name}",
+                                3000
+                            )
+
+                # Update state manager
+                self.state_manager.update_state(
+                    current_folder=folder_path,
+                    image_count=len(image_files)
+                )
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "thumbnail_update_complete",
+                    f"Successfully updated thumbnails for {len(image_files)} images"
+                )
+
+            except Exception as discovery_error:
+                # Handle FileDiscoveryService errors
+                error_msg = f"ファイル検出中にエラーが発生しました: {str(discovery_error)}"
+
+                self.logger_system.log_error(
+                    AIComponent.KIRO,
+                    discovery_error,
+                    "file_discovery_error",
+                    {"folder_path": str(folder_path)}
+                )
+
+                if self.thumbnail_grid:
+                    self.thumbnail_grid.show_error_state(error_msg)
+
+                # Update status bar with error
+                if hasattr(self, 'status_bar') and self.status_bar:
+                    self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
+
+                # Show user-friendly error dialog
+                self._show_error_dialog(
+                    "ファイル検出エラー",
+                    f"フォルダ '{folder_path.name}' の画像ファイル検出中にエラーが発生しました。\n\n"
+                    f"詳細: {str(discovery_error)}\n\n"
+                    "フォルダの権限を確認するか、別のフォルダを選択してください。"
+                )
+
         except Exception as e:
+            # Handle unexpected errors
+            error_msg = f"サムネイル更新中に予期しないエラーが発生しました: {str(e)}"
+
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR,
                 {"operation": "thumbnail_grid_update", "folder": str(folder_path)},
                 AIComponent.KIRO
+            )
+
+            if self.thumbnail_grid:
+                self.thumbnail_grid.show_error_state("予期しないエラーが発生しました")
+
+            # Update status bar with error
+            if hasattr(self, 'status_bar') and self.status_bar:
+                self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
+
+    def _show_error_dialog(self, title: str, message: str):
+        """
+        Show error dialog to user
+
+        Args:
+            title: Dialog title
+            message: Error message
+        """
+        try:
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Warning)
+            msg_box.setWindowTitle(title)
+            msg_box.setText(message)
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.exec()
+
+        except Exception as e:
+            # Fallback if dialog fails
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "error_dialog_failure",
+                {"title": title, "message": message}
             )
 
     def _on_performance_alert(self, level: str, message: str):

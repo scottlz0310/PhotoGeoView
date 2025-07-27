@@ -922,6 +922,355 @@ class OptimizedThumbnailGrid(QWidget):
         """Get current performance metrics"""
         return self.performance_metrics.copy()
 
+    def update_image_list(self, image_list: List[Path]):
+        """
+        Update the image list with new images
+
+        Args:
+            image_list: List of image paths to display
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "update_image_list",
+                f"Updating image list with {len(image_list)} images"
+            )
+
+            # Clear existing thumbnails safely
+            self.clear_thumbnails_safely()
+
+            # Update image list
+            self.image_list = image_list
+            self.total_count = len(image_list)
+            self.loaded_count = 0
+            self.load_start_time = time.time()
+
+            if not image_list:
+                # Show empty state if no images
+                self.performance_label.setText("画像ファイルがありません")
+                return
+
+            # Create new thumbnail items
+            self._create_thumbnail_items()
+
+            # Start loading thumbnails asynchronously
+            self._load_thumbnails_async()
+
+            # Update performance label
+            self.performance_label.setText(f"読み込み中... 0/{len(image_list)}")
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "update_image_list_complete",
+                f"Image list updated successfully with {len(image_list)} images"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "update_image_list", "count": len(image_list)},
+                AIComponent.CURSOR
+            )
+
+    def clear_thumbnails_safely(self):
+        """
+        Safely clear all thumbnails with proper cleanup
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "clear_thumbnails_safely",
+                "Safely clearing thumbnails"
+            )
+
+            # Stop any ongoing loading operations
+            with QMutexLocker(self.load_mutex):
+                self.loaded_count = 0
+                self.total_count = 0
+                self.load_start_time = None
+
+            # Clear thumbnail items from layout
+            if self.grid_layout:
+                for i in reversed(range(self.grid_layout.count())):
+                    item = self.grid_layout.itemAt(i)
+                    if item and item.widget():
+                        widget = item.widget()
+                        self.grid_layout.removeWidget(widget)
+                        widget.setParent(None)
+                        widget.deleteLater()
+
+            # Clear data structures
+            self.thumbnail_items.clear()
+            self.exif_cache.clear()
+
+            # Reset performance label
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText("準備完了")
+
+            # Force garbage collection to free memory
+            import gc
+            gc.collect()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "clear_thumbnails_safely_complete",
+                "Thumbnails cleared safely"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "clear_thumbnails_safely"},
+                AIComponent.CURSOR
+            )
+
+    def show_loading_state(self, message: str):
+        """
+        Show loading state with Japanese message
+
+        Args:
+            message: Loading message to display
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "show_loading_state",
+                f"Showing loading state: {message}"
+            )
+
+            # Clear existing thumbnails
+            self.clear_thumbnails_safely()
+
+            # Create loading indicator widget
+            loading_widget = QWidget()
+            loading_layout = QVBoxLayout(loading_widget)
+            loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            # Loading icon/animation placeholder
+            loading_icon = QLabel("🔄")
+            loading_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            loading_icon.setStyleSheet("""
+                QLabel {
+                    font-size: 48px;
+                    color: #007acc;
+                    margin: 20px;
+                }
+            """)
+            loading_layout.addWidget(loading_icon)
+
+            # Loading message
+            loading_label = QLabel(message)
+            loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            loading_label.setStyleSheet("""
+                QLabel {
+                    font-size: 16px;
+                    color: #333333;
+                    margin: 10px;
+                    padding: 10px;
+                }
+            """)
+            loading_layout.addWidget(loading_label)
+
+            # Add to grid layout
+            self.grid_layout.addWidget(loading_widget, 0, 0, 1, self.columns)
+
+            # Update performance label
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText(message)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "show_loading_state_complete",
+                f"Loading state displayed: {message}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "show_loading_state", "message": message},
+                AIComponent.CURSOR
+            )
+
+    def show_error_state(self, error_message: str):
+        """
+        Show error state with Japanese error message
+
+        Args:
+            error_message: Error message to display
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "show_error_state",
+                f"Showing error state: {error_message}"
+            )
+
+            # Clear existing thumbnails
+            self.clear_thumbnails_safely()
+
+            # Create error indicator widget
+            error_widget = QWidget()
+            error_layout = QVBoxLayout(error_widget)
+            error_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            # Error icon
+            error_icon = QLabel("⚠️")
+            error_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            error_icon.setStyleSheet("""
+                QLabel {
+                    font-size: 48px;
+                    color: #dc3545;
+                    margin: 20px;
+                }
+            """)
+            error_layout.addWidget(error_icon)
+
+            # Error message
+            error_label = QLabel(error_message)
+            error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            error_label.setWordWrap(True)
+            error_label.setStyleSheet("""
+                QLabel {
+                    font-size: 14px;
+                    color: #dc3545;
+                    margin: 10px;
+                    padding: 15px;
+                    background-color: #f8d7da;
+                    border: 1px solid #f5c6cb;
+                    border-radius: 4px;
+                    max-width: 400px;
+                }
+            """)
+            error_layout.addWidget(error_label)
+
+            # Retry suggestion
+            retry_label = QLabel("フォルダを再選択するか、アプリケーションを再起動してください。")
+            retry_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            retry_label.setWordWrap(True)
+            retry_label.setStyleSheet("""
+                QLabel {
+                    font-size: 12px;
+                    color: #6c757d;
+                    margin: 5px;
+                    padding: 10px;
+                }
+            """)
+            error_layout.addWidget(retry_label)
+
+            # Add to grid layout
+            self.grid_layout.addWidget(error_widget, 0, 0, 1, self.columns)
+
+            # Update performance label
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText(f"エラー: {error_message}")
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "show_error_state_complete",
+                f"Error state displayed: {error_message}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "show_error_state", "error_message": error_message},
+                AIComponent.CURSOR
+            )
+
+    def show_empty_state(self):
+        """
+        Show empty state when no images are found
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "show_empty_state",
+                "Showing empty state"
+            )
+
+            # Clear existing thumbnails
+            self.clear_thumbnails_safely()
+
+            # Create empty state widget
+            empty_widget = QWidget()
+            empty_layout = QVBoxLayout(empty_widget)
+            empty_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            # Empty state icon
+            empty_icon = QLabel("📁")
+            empty_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_icon.setStyleSheet("""
+                QLabel {
+                    font-size: 64px;
+                    color: #6c757d;
+                    margin: 30px;
+                }
+            """)
+            empty_layout.addWidget(empty_icon)
+
+            # Empty state message
+            empty_title = QLabel("画像ファイルが見つかりません")
+            empty_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_title.setStyleSheet("""
+                QLabel {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #495057;
+                    margin: 10px;
+                }
+            """)
+            empty_layout.addWidget(empty_title)
+
+            # Helpful message
+            empty_message = QLabel("このフォルダには対応する画像ファイル（JPG、PNG、GIF、BMP、TIFF、WEBP）がありません。\n別のフォルダを選択してください。")
+            empty_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_message.setWordWrap(True)
+            empty_message.setStyleSheet("""
+                QLabel {
+                    font-size: 14px;
+                    color: #6c757d;
+                    margin: 10px;
+                    padding: 15px;
+                    max-width: 500px;
+                    line-height: 1.4;
+                }
+            """)
+            empty_layout.addWidget(empty_message)
+
+            # Supported formats info
+            formats_label = QLabel("対応形式: .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp")
+            formats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            formats_label.setStyleSheet("""
+                QLabel {
+                    font-size: 12px;
+                    color: #868e96;
+                    margin: 5px;
+                    padding: 5px;
+                    font-style: italic;
+                }
+            """)
+            empty_layout.addWidget(formats_label)
+
+            # Add to grid layout
+            self.grid_layout.addWidget(empty_widget, 0, 0, 1, self.columns)
+
+            # Update performance label
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText("画像ファイルがありません")
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "show_empty_state_complete",
+                "Empty state displayed"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "show_empty_state"},
+                AIComponent.CURSOR
+            )
+
     def cleanup(self):
         """Cleanup resources"""
         try:
@@ -933,8 +1282,8 @@ class OptimizedThumbnailGrid(QWidget):
             self.thumbnail_executor.shutdown(wait=False)
             self.exif_executor.shutdown(wait=False)
 
-            # Clear data
-            self.clear_thumbnails()
+            # Clear data safely
+            self.clear_thumbnails_safely()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
