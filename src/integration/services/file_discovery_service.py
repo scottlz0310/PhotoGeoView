@@ -25,6 +25,7 @@ from .file_discovery_errors import (
     ScanTimeoutError, MemoryLimitExceededError, TooManyFilesError,
     FileDiscoveryErrorLevel
 )
+from .file_discovery_cache import FileDiscoveryCache, FileDiscoveryResult
 
 
 class FileDiscoveryService:
@@ -45,13 +46,17 @@ class FileDiscoveryService:
 
     def __init__(self,
                  logger_system: Optional[LoggerSystem] = None,
-                 image_processor: Optional[CS4CodingImageProcessor] = None):
+                 image_processor: Optional[CS4CodingImageProcessor] = None,
+                 enable_cache: bool = True,
+                 cache_config: Optional[Dict[str, Any]] = None):
         """
         FileDiscoveryServiceの初期化
 
         Args:
             logger_system: ログシステムインスタンス
             image_processor: 画像処理インスタンス
+            enable_cache: キャッシュ機能を有効にするか
+            cache_config: キャッシュ設定
         """
 
         # ロガーとエラーハンドラーの初期化
@@ -68,13 +73,28 @@ class FileDiscoveryService:
             logger_system=self.logger_system
         )
 
+        # キャッシュシステムの初期化
+        self.enable_cache = enable_cache
+        if self.enable_cache:
+            cache_config = cache_config or {}
+            self.cache = FileDiscoveryCache(
+                max_file_entries=cache_config.get('max_file_entries', 2000),
+                max_folder_entries=cache_config.get('max_folder_entries', 100),
+                max_memory_mb=cache_config.get('max_memory_mb', 50.0),
+                logger_system=self.logger_system
+            )
+        else:
+            self.cache = None
+
         # パフォーマンス追跡用の変数
         self.discovery_stats = {
             'total_scans': 0,
             'total_files_found': 0,
             'total_valid_files': 0,
             'total_scan_time': 0.0,
-            'last_scan_time': None
+            'last_scan_time': None,
+            'cache_hits': 0,
+            'cache_misses': 0
         }
 
         # ログレベル設定の初期化
@@ -90,13 +110,14 @@ class FileDiscoveryService:
                 "supported_extensions": list(self.SUPPORTED_EXTENSIONS),
                 "debug_enabled": self.debug_enabled,
                 "performance_logging_enabled": self.performance_logging_enabled,
+                "cache_enabled": self.enable_cache,
                 "initialization_time": datetime.now().isoformat()
             }
         )
 
     def discover_images(self, folder_path: Path) -> List[Path]:
         """
-        指定されたフォルダ内の画像ファイルを検出する
+        指定されたフォルダ内の画像ファイルを検出する（キャッシュ対応）
 
         Args:
             folder_path: 検索対象のフォルダパス
@@ -111,10 +132,43 @@ class FileDiscoveryService:
             discovered_files = []
             scan_details = {
                 "folder_path": str(folder_path),
-                "start_time": datetime.now().isoformat()
+                "start_time": datetime.now().isoformat(),
+                "cache_enabled": self.enable_cache
             }
 
             try:
+                # キャッシュからフォルダスキャン結果を確認
+                if self.enable_cache and self.cache:
+                    cached_folder_scan = self.cache.get_cached_folder_scan(folder_path)
+                    if cached_folder_scan:
+                        # キャッシュヒット - キャッシュされた結果を使用
+                        discovered_files = [result.file_path for result in cached_folder_scan.file_results if result.is_valid]
+                        scan_duration = time.time() - start_time
+
+                        self.discovery_stats['cache_hits'] += 1
+
+                        self.logger_system.log_ai_operation(
+                            AIComponent.KIRO,
+                            "folder_cache_hit",
+                            f"フォルダキャッシュヒット: {folder_path} - "
+                            f"{len(discovered_files)}個のファイル ({cached_folder_scan.scan_duration:.2f}秒でスキャン済み)"
+                        )
+
+                        scan_details.update({
+                            "cache_hit": True,
+                            "cached_scan_duration": cached_folder_scan.scan_duration,
+                            "cached_file_count": len(cached_folder_scan.file_results),
+                            "images_found": len(discovered_files),
+                            "scan_duration": scan_duration
+                        })
+
+                        self._log_scan_performance(scan_details, cached_folder_scan.total_files_scanned, len(discovered_files), scan_duration)
+                        return discovered_files
+
+                # キャッシュミスまたはキャッシュ無効 - 実際のスキャンを実行
+                if self.enable_cache:
+                    self.discovery_stats['cache_misses'] += 1
+
                 # デバッグ情報: フォルダスキャン開始
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -180,9 +234,10 @@ class FileDiscoveryService:
                     self._log_scan_performance(scan_details, 0, 0, time.time() - start_time)
                     return []
 
-                # 画像ファイルのフィルタリング
+                # 画像ファイルのフィルタリング（キャッシュ対応）
                 filtered_count = 0
                 validation_failures = 0
+                file_results = []  # キャッシュ用のファイル結果リスト
 
                 for file_path in all_files:
                     if file_path.is_file():
@@ -198,17 +253,58 @@ class FileDiscoveryService:
                                 level="DEBUG"
                             )
 
-                            # 基本的なファイル存在確認
-                            if self._basic_file_validation(file_path):
-                                discovered_files.append(file_path)
-                            else:
-                                validation_failures += 1
+                            # キャッシュから個別ファイル結果を確認
+                            cached_result = None
+                            if self.enable_cache and self.cache:
+                                cached_result = self.cache.get_cached_file_result(file_path)
 
-                                # デバッグ情報: バリデーション失敗
+                            if cached_result:
+                                # ファイルキャッシュヒット
+                                if cached_result.is_valid:
+                                    discovered_files.append(file_path)
+                                else:
+                                    validation_failures += 1
+                                file_results.append(cached_result)
+
+                                self.logger_system.log_ai_operation(
+                                    AIComponent.KIRO,
+                                    "file_cache_hit_debug",
+                                    f"ファイルキャッシュヒット: {file_path.name} - 有効: {cached_result.is_valid}",
+                                    level="DEBUG"
+                                )
+                            else:
+                                # キャッシュミス - 実際のバリデーションを実行
+                                validation_start_time = time.time()
+                                is_valid = self._basic_file_validation(file_path)
+                                validation_time = time.time() - validation_start_time
+
+                                if is_valid:
+                                    discovered_files.append(file_path)
+                                else:
+                                    validation_failures += 1
+
+                                # ファイル結果をキャッシュに保存
+                                if self.enable_cache and self.cache:
+                                    try:
+                                        file_stat = file_path.stat()
+                                        file_result = FileDiscoveryResult(
+                                            file_path=file_path,
+                                            is_valid=is_valid,
+                                            file_size=file_stat.st_size,
+                                            modified_time=file_stat.st_mtime,
+                                            discovery_time=datetime.now(),
+                                            validation_time=validation_time
+                                        )
+                                        file_results.append(file_result)
+                                        self.cache.cache_file_result(file_path, is_valid, validation_time)
+                                    except (OSError, FileNotFoundError):
+                                        pass
+
+                                # デバッグ情報: バリデーション結果
                                 self.logger_system.log_ai_operation(
                                     AIComponent.KIRO,
                                     "file_validation_debug",
-                                    f"基本バリデーション失敗: {file_path.name}",
+                                    f"ファイルバリデーション: {file_path.name} - 有効: {is_valid} ({validation_time:.3f}秒)",
                                     level="DEBUG"
                                 )
 
@@ -219,6 +315,10 @@ class FileDiscoveryService:
                     "folder_scan_complete",
                     f"フォルダスキャン完了: {len(discovered_files)}個のファイルを{scan_duration:.2f}秒で検出"
                 )
+
+                # フォルダスキャン結果をキャッシュに保存
+                if self.enable_cache and self.cache and file_results:
+                    self.cache.cache_folder_scan(folder_path, file_results, len(all_files), scan_duration)
 
                 # 詳細なデバッグ情報をログに記録
                 self.logger_system.log_ai_operation(
@@ -236,6 +336,7 @@ class FileDiscoveryService:
 
                 # 詳細なパフォーマンス情報をログに記録
                 scan_details.update({
+                    "cache_hit": False,
                     "total_files_scanned": len(all_files),
                     "filtered_files": filtered_count,
                     "validation_failures": validation_failures,
@@ -255,6 +356,7 @@ class FileDiscoveryService:
                     "files_processed": len(all_files),
                     "files_per_second": len(all_files) / scan_duration if scan_duration > 0 else 0,
                     "success_rate": len(discovered_files) / filtered_count if filtered_count > 0 else 0,
+                    "cache_enabled": self.enable_cache,
                     "start_time": scan_details["start_time"],
                     "end_time": scan_details["end_time"]
                 })
@@ -296,7 +398,7 @@ class FileDiscoveryService:
 
     def validate_image_file(self, file_path: Path) -> bool:
         """
-        CS4CodingImageProcessorと連携してファイルの有効性をチェックする
+        CS4CodingImageProcessorと連携してファイルの有効性をチェックする（キャッシュ対応）
 
         Args:
             file_path: 検証対象のファイルパス
@@ -311,10 +413,42 @@ class FileDiscoveryService:
             validation_details = {
                 "file_path": str(file_path),
                 "file_name": file_path.name,
-                "start_time": datetime.now().isoformat()
+                "start_time": datetime.now().isoformat(),
+                "cache_enabled": self.enable_cache
             }
 
             try:
+                # キャッシュからバリデーション結果を確認
+                if self.enable_cache and self.cache:
+                    cached_result = self.cache.get_cached_validation_result(file_path)
+                    if cached_result is not None:
+                        # キャッシュヒット
+                        validation_duration = time.time() - validation_start_time
+
+                        self.logger_system.log_ai_operation(
+                            AIComponent.COPILOT,
+                            "validation_cache_hit",
+                            f"バリデーションキャッシュヒット: {file_path.name} - 有効: {cached_result} ({validation_duration:.3f}秒)",
+                            level="DEBUG"
+                        )
+
+                        validation_details.update({
+                            "cache_hit": True,
+                            "is_valid": cached_result,
+                            "validation_duration": validation_duration,
+                            "end_time": datetime.now().isoformat()
+                        })
+
+                        self._log_validation_performance(validation_details, cached_result, validation_duration)
+
+                        if cached_result:
+                            self.discovery_stats['total_valid_files'] += 1
+
+                        return cached_result
+
+                # キャッシュミスまたはキャッシュ無効 - 実際のバリデーションを実行
+                validation_details["cache_hit"] = False
+
                 # ファイル情報の詳細ログ記録
                 try:
                     file_stat = file_path.stat()
@@ -349,6 +483,11 @@ class FileDiscoveryService:
                         f"基本ファイル検証失敗: {file_path.name}",
                         level="DEBUG"
                     )
+
+                    # 失敗結果をキャッシュに保存
+                    if self.enable_cache and self.cache:
+                        self.cache.cache_validation_result(file_path, False)
+
                     self._log_validation_performance(validation_details, False, time.time() - validation_start_time)
                     return False
 
@@ -366,6 +505,11 @@ class FileDiscoveryService:
                         f"ファイルサイズが異常に小さいため破損ファイルとして除外: {file_path.name} ({file_size}バイト)",
                         level="WARNING"
                     )
+
+                    # 失敗結果をキャッシュに保存
+                    if self.enable_cache and self.cache:
+                        self.cache.cache_validation_result(file_path, False)
+
                     self._log_validation_performance(validation_details, False, time.time() - validation_start_time)
                     return False
 
@@ -440,6 +584,10 @@ class FileDiscoveryService:
                         )
                         is_valid = False
 
+                # バリデーション結果をキャッシュに保存
+                if self.enable_cache and self.cache:
+                    self.cache.cache_validation_result(file_path, is_valid)
+
                 # バリデーション結果をログに記録
                 validation_duration = time.time() - validation_start_time
                 validation_details.update({
@@ -486,6 +634,8 @@ class FileDiscoveryService:
                     "duration": validation_duration,
                     "file_size": file_size,
                     "is_valid": is_valid,
+                    "cache_enabled": self.enable_cache,
+                    "cache_hit": validation_details.get("cache_hit", False),
                     "processor_duration": validation_details.get("processor_duration", 0),
                     "load_test_duration": validation_details.get("load_test_duration", 0),
                     "start_time": validation_details["start_time"],
@@ -1720,3 +1870,273 @@ class FileDiscoveryService:
                 level="ERROR"
             )
             return discovered_files
+    # キャッシュ管理メソッド
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """
+        キャッシュ統計情報を取得する
+
+        Returns:
+            キャッシュ統計情報の辞書
+        """
+
+        if not self.enable_cache or not self.cache:
+            return {
+                "cache_enabled": False,
+                "message": "キャッシュが無効です"
+            }
+
+        try:
+            cache_stats = self.cache.get_cache_stats()
+
+            # 発見サービス固有の統計を追加
+            cache_stats.update({
+                "discovery_cache_hits": self.discovery_stats.get('cache_hits', 0),
+                "discovery_cache_misses": self.discovery_stats.get('cache_misses', 0),
+                "discovery_cache_hit_rate": (
+                    self.discovery_stats.get('cache_hits', 0) /
+                    max(1, self.discovery_stats.get('cache_hits', 0) + self.discovery_stats.get('cache_misses', 0))
+                )
+            })
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "cache_stats_request",
+                f"キャッシュ統計情報を取得: ヒット率 {cache_stats.get('overall_hit_rate', 0):.1%}"
+            )
+
+            return cache_stats
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "get_cache_stats"},
+                AIComponent.KIRO
+            )
+            return {"error": str(e)}
+
+    def clear_cache(self, cache_type: Optional[str] = None):
+        """
+        キャッシュをクリアする
+
+        Args:
+            cache_type: クリアするキャッシュタイプ（'file', 'folder', 'validation'）
+                       Noneの場合は全てクリア
+        """
+
+        if not self.enable_cache or not self.cache:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "cache_clear_disabled",
+                "キャッシュが無効のため、クリア操作をスキップ",
+                level="WARNING"
+            )
+            return
+
+        try:
+            self.cache.clear_cache(cache_type)
+
+            # 統計情報もリセット
+            if cache_type is None:
+                self.discovery_stats['cache_hits'] = 0
+                self.discovery_stats['cache_misses'] = 0
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "cache_clear_success",
+                f"キャッシュクリア完了: {cache_type or 'all'}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "clear_cache", "cache_type": cache_type},
+                AIComponent.KIRO
+            )
+
+    def cleanup_cache(self):
+        """
+        期限切れキャッシュエントリのクリーンアップを実行する
+        """
+
+        if not self.enable_cache or not self.cache:
+            return
+
+        try:
+            self.cache.cleanup_expired_entries()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "cache_cleanup_success",
+                "キャッシュクリーンアップ完了"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "cleanup_cache"},
+                AIComponent.KIRO
+            )
+
+    def get_cache_summary(self) -> str:
+        """
+        キャッシュサマリーを文字列で取得する
+
+        Returns:
+            キャッシュサマリー文字列
+        """
+
+        if not self.enable_cache or not self.cache:
+            return "キャッシュ機能: 無効"
+
+        try:
+            return self.cache.get_cache_summary()
+        except Exception as e:
+            return f"キャッシュサマリー取得エラー: {str(e)}"
+
+    def configure_cache(self, cache_config: Dict[str, Any]):
+        """
+        キャッシュ設定を更新する
+
+        Args:
+            cache_config: 新しいキャッシュ設定
+        """
+
+        try:
+            if not self.enable_cache:
+                # キャッシュが無効の場合は有効化
+                self.enable_cache = True
+                self.cache = FileDiscoveryCache(
+                    max_file_entries=cache_config.get('max_file_entries', 2000),
+                    max_folder_entries=cache_config.get('max_folder_entries', 100),
+                    max_memory_mb=cache_config.get('max_memory_mb', 50.0),
+                    logger_system=self.logger_system
+                )
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "cache_enabled",
+                    f"キャッシュ機能を有効化: {cache_config}"
+                )
+            else:
+                # 既存のキャッシュ設定を更新（新しいインスタンスを作成）
+                old_cache = self.cache
+                self.cache = FileDiscoveryCache(
+                    max_file_entries=cache_config.get('max_file_entries', 2000),
+                    max_folder_entries=cache_config.get('max_folder_entries', 100),
+                    max_memory_mb=cache_config.get('max_memory_mb', 50.0),
+                    logger_system=self.logger_system
+                )
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "cache_reconfigured",
+                    f"キャッシュ設定を更新: {cache_config}"
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "configure_cache", "cache_config": cache_config},
+                AIComponent.KIRO
+            )
+
+    def disable_cache(self):
+        """
+        キャッシュ機能を無効化する
+        """
+
+        try:
+            if self.enable_cache and self.cache:
+                self.cache.clear_cache()
+                self.cache = None
+
+            self.enable_cache = False
+
+            # 統計情報をリセット
+            self.discovery_stats['cache_hits'] = 0
+            self.discovery_stats['cache_misses'] = 0
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "cache_disabled",
+                "キャッシュ機能を無効化"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "disable_cache"},
+                AIComponent.KIRO
+            )
+
+    def get_cache_hit_rate(self) -> float:
+        """
+        キャッシュヒット率を取得する
+
+        Returns:
+            キャッシュヒット率（0.0-1.0）
+        """
+
+        if not self.enable_cache:
+            return 0.0
+
+        hits = self.discovery_stats.get('cache_hits', 0)
+        misses = self.discovery_stats.get('cache_misses', 0)
+        total = hits + misses
+
+        return hits / total if total > 0 else 0.0
+
+    def optimize_cache_performance(self):
+        """
+        キャッシュパフォーマンスを最適化する
+        """
+
+        if not self.enable_cache or not self.cache:
+            return
+
+        try:
+            # 期限切れエントリのクリーンアップ
+            self.cache.cleanup_expired_entries()
+
+            # キャッシュ統計を取得してパフォーマンスを分析
+            stats = self.cache.get_cache_stats()
+
+            # ヒット率が低い場合の警告
+            overall_hit_rate = stats.get('overall_hit_rate', 0)
+            if overall_hit_rate < 0.3:  # 30%未満
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "cache_performance_warning",
+                    f"キャッシュヒット率が低いです: {overall_hit_rate:.1%}。"
+                    "キャッシュサイズの増加を検討してください。",
+                    level="WARNING"
+                )
+
+            # メモリ使用量の確認
+            total_memory_mb = stats.get('total_memory_mb', 0)
+            if total_memory_mb > 100:  # 100MB超過
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "cache_memory_warning",
+                    f"キャッシュメモリ使用量が多いです: {total_memory_mb:.1f}MB。"
+                    "クリーンアップを実行します。",
+                    level="WARNING"
+                )
+
+                # 自動クリーンアップ
+                self.cache.cleanup_expired_entries()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "cache_optimization_complete",
+                f"キャッシュ最適化完了 - ヒット率: {overall_hit_rate:.1%}, "
+                f"メモリ使用量: {total_memory_mb:.1f}MB"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "optimize_cache_performance"},
+                AIComponent.KIRO
+            )
