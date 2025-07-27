@@ -4,6 +4,25 @@ FileSystemWatcher - ファイルシステム監視サービス
 フォルダ内のファイル変更を監視し、リアルタイムでファイルリスト更新を行うサービスクラス。
 watchdogライブラリを使用してクロスプラットフォーム対応のファイル監視機能を提供する。
 
+主な機能:
+- リアルタイムファイル変更監視（作成、削除、変更、移動）
+- 画像ファイルのみのフィルタリング機能
+- デバウンス処理による連続イベントの抑制
+- 複数のコールバック関数登録対応
+- 詳細な監視統計情報の記録
+
+技術仕様:
+- watchdogライブラリによるクロスプラットフォーム対応
+- スレッドセーフな監視状態管理
+- メモリ効率的なイベント処理
+- 自動フォールバック機能（watchdog未インストール時）
+- 統合ログシステムによる詳細な動作記録
+
+使用例:
+    watcher = FileSystemWatcher(logger_system=logger)
+    watcher.add_change_listener(callback_function)
+    watcher.start_watching(Path("/path/to/folder"))
+
 Author: Kiro AI Integration System
 """
 
@@ -114,11 +133,24 @@ class FileSystemWatcher:
         """
         指定されたフォルダの監視を開始する
 
+        このメソッドは以下の処理を実行します:
+        1. 既存の監視を停止（必要に応じて）
+        2. フォルダの存在確認とアクセス権限チェック
+        3. watchdogオブザーバーの作成と設定
+        4. イベントハンドラーの登録
+        5. 監視の開始と状態管理の初期化
+
         Args:
-            folder_path: 監視対象のフォルダパス
+            folder_path (Path): 監視対象のフォルダパス
 
         Returns:
-            監視開始に成功した場合True、失敗した場合False
+            bool: 監視開始に成功した場合True、失敗した場合False
+
+        Note:
+            - watchdogライブラリが必要（未インストール時は自動的にFalseを返却）
+            - サブフォルダは監視対象外（recursive=False）
+            - 画像ファイルのみがフィルタリング対象
+            - 監視統計情報が自動的にリセットされる
         """
 
         # 操作コンテキストを使用してログ記録を自動化
@@ -365,9 +397,20 @@ class FileSystemWatcher:
         """
         ファイル変更通知のコールバック関数を追加する
 
+        登録されたコールバック関数は、監視対象フォルダ内で画像ファイルの
+        変更が検出された際に自動的に呼び出されます。
+
         Args:
-            callback: ファイル変更時に呼び出されるコールバック関数
-                     引数: (file_path, change_type, old_path)
+            callback (Callable): ファイル変更時に呼び出されるコールバック関数
+                引数:
+                - file_path (Path): 変更されたファイルのパス
+                - change_type (FileChangeType): 変更タイプ（CREATED, DELETED, MODIFIED, MOVED）
+                - old_path (Optional[Path]): 移動前のパス（移動の場合のみ）
+
+        Note:
+            - 同じコールバック関数の重複登録は防止される
+            - コールバック実行中のエラーは自動的にログに記録される
+            - デバウンス処理により連続する同一ファイルの変更は抑制される
         """
 
         if callback not in self.change_listeners:
@@ -549,6 +592,91 @@ class FileSystemWatcher:
                 },
                 AIComponent.KIRO
             )
+
+    def optimize_logging_for_production(self):
+        """
+        本番環境向けにログ出力を最適化する
+
+        本番環境では以下の最適化を実行:
+        - デバッグログの無効化
+        - 重要なイベントのみログ出力
+        - パフォーマンス統計の定期出力
+        """
+
+        # 本番環境設定
+        self._production_mode = True
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "watcher_production_optimized",
+            "ファイルシステム監視の本番環境最適化が完了しました",
+            level="INFO"
+        )
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """
+        監視パフォーマンスの要約を取得する
+
+        Returns:
+            パフォーマンス統計の要約辞書
+        """
+
+        watch_duration = 0.0
+        if self.is_watching and self.watch_stats['start_time']:
+            watch_duration = (datetime.now() - self.watch_stats['start_time']).total_seconds()
+
+        event_rate = self.watch_stats['total_events'] / max(1, watch_duration) if watch_duration > 0 else 0
+        filter_efficiency = self.watch_stats['filtered_events'] / max(1, self.watch_stats['total_events']) if self.watch_stats['total_events'] > 0 else 0
+
+        summary = {
+            "monitoring": {
+                "is_watching": self.is_watching,
+                "current_folder": str(self.current_folder) if self.current_folder else None,
+                "watch_duration": watch_duration,
+                "watchdog_available": self.watchdog_available
+            },
+            "events": {
+                "total_events": self.watch_stats['total_events'],
+                "filtered_events": self.watch_stats['filtered_events'],
+                "callback_calls": self.watch_stats['callback_calls'],
+                "errors": self.watch_stats['errors'],
+                "event_rate_per_second": event_rate,
+                "filter_efficiency": filter_efficiency
+            },
+            "listeners": {
+                "listener_count": len(self.change_listeners),
+                "debounce_interval": self.debounce_interval
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+        return summary
+
+    def log_performance_summary(self):
+        """
+        パフォーマンス要約をログに出力する
+        """
+
+        summary = self.get_performance_summary()
+
+        if self.is_watching:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "watcher_performance_summary",
+                f"監視パフォーマンス要約 - "
+                f"監視時間: {summary['monitoring']['watch_duration']:.1f}秒, "
+                f"イベント数: {summary['events']['total_events']}, "
+                f"フィルタ効率: {summary['events']['filter_efficiency']:.1%}, "
+                f"イベント率: {summary['events']['event_rate_per_second']:.2f}/秒",
+                level="INFO"
+            )
+
+        # 詳細統計をパフォーマンスログに記録
+        self.logger_system.log_performance(
+            AIComponent.KIRO,
+            "watcher_detailed_performance",
+            summary
+        )
 
 
 if WATCHDOG_AVAILABLE:

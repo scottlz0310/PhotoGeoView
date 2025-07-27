@@ -1,11 +1,29 @@
 """
 FileDiscoveryCache - ファイル検出結果キャッシュシステム
 
-ファイル検出とバリデーション結果の効率的なキャッシュ管理:
-- mtimeベースのキャッシュキー生成
-- LRUキャッシュによる効率的なメモリ使用
-- キャッシュヒット率の監視
-- バリデーション結果のキャッシュ
+ファイル検出とバリデーション結果の効率的なキャッシュ管理システム。
+mtimeベースのキャッシュキー生成により、ファイル変更を自動検出し、
+LRUアルゴリズムによる効率的なメモリ使用を実現します。
+
+主な機能:
+- ファイル検出結果の高速キャッシュ（mtimeベース）
+- バリデーション結果の永続化キャッシュ
+- フォルダスキャン結果の一括キャッシュ
+- LRUアルゴリズムによる自動メモリ管理
+- 詳細なキャッシュヒット率統計
+
+技術仕様:
+- スレッドセーフなキャッシュ操作（RLock使用）
+- 自動期限切れ検出（ファイルmtime比較）
+- 設定可能なキャッシュサイズ制限
+- メモリ使用量の継続監視
+- 統合ログシステムによる詳細な動作記録
+
+キャッシュ戦略:
+- ファイルキャッシュ: ファイルサイズ + mtime
+- フォルダキャッシュ: フォルダmtime + ハッシュ
+- バリデーションキャッシュ: ファイルサイズ + mtime
+- 自動クリーンアップ: 定期的な期限切れエントリ削除
 
 Author: Kiro AI Integration System
 """
@@ -179,16 +197,33 @@ class FileDiscoveryCache:
                          validation_time: Optional[float] = None,
                          error_message: Optional[str] = None) -> bool:
         """
-        ファイル検出結果をキャッシュ
+        ファイル検出結果をキャッシュに保存する
+
+        ファイルの検出・バリデーション結果を効率的にキャッシュし、
+        後続の同一ファイルアクセス時の高速化を図ります。
+
+        処理内容:
+        1. ファイル情報（サイズ、mtime）の取得
+        2. FileDiscoveryResultオブジェクトの生成
+        3. 既存エントリの削除（重複防止）
+        4. メモリ制限チェックと必要に応じた古いエントリ削除
+        5. 新しいエントリの追加とLRU順序の更新
+        6. メトリクス情報の更新
 
         Args:
-            file_path: ファイルパス
-            is_valid: バリデーション結果
-            validation_time: バリデーション時間
-            error_message: エラーメッセージ
+            file_path (Path): ファイルパス
+            is_valid (bool): バリデーション結果
+            validation_time (Optional[float]): バリデーション時間（秒）
+            error_message (Optional[str]): エラーメッセージ（エラー時のみ）
 
         Returns:
-            キャッシュ成功時True
+            bool: キャッシュ成功時True、失敗時False
+
+        Note:
+            - mtimeベースのキャッシュキーにより自動的にファイル変更を検出
+            - LRU順序により最近使用されたエントリが優先保持される
+            - メモリ制限に達した場合は古いエントリが自動削除される
+            - スレッドセーフな操作が保証される
         """
 
         try:
@@ -849,3 +884,155 @@ class FileDiscoveryCache:
             f"  Total Memory: {stats['total_memory_mb']:.1f}MB\n"
             f"  Overall Hit Rate: {stats['overall_hit_rate']:.1%}"
         )
+
+    def optimize_logging_for_production(self):
+        """
+        本番環境向けにログ出力を最適化する
+
+        本番環境では以下の最適化を実行:
+        - デバッグレベルのキャッシュログを無効化
+        - 重要なキャッシュ統計のみログ出力
+        - パフォーマンス警告の強化
+        """
+
+        self._production_mode = True
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "cache_production_optimized",
+            "キャッシュシステムの本番環境最適化が完了しました",
+            level="INFO"
+        )
+
+    def log_cache_performance_summary(self):
+        """
+        キャッシュパフォーマンス要約をログに出力する
+        """
+
+        stats = self.get_cache_stats()
+
+        # 全体的なパフォーマンス評価
+        overall_hit_rate = stats['overall_hit_rate']
+        total_memory_mb = stats['total_memory_mb']
+        total_entries = stats['total_entries']
+
+        # ログレベルの決定
+        log_level = "INFO"
+        if overall_hit_rate < 0.5:  # 50%未満
+            log_level = "WARNING"
+        elif total_memory_mb > self.max_memory_bytes / 1024 / 1024 * 0.9:  # 90%以上
+            log_level = "WARNING"
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "cache_performance_summary",
+            f"キャッシュパフォーマンス要約 - "
+            f"全体ヒット率: {overall_hit_rate:.1%}, "
+            f"総エントリ数: {total_entries}, "
+            f"メモリ使用量: {total_memory_mb:.1f}MB, "
+            f"ファイルキャッシュ: {stats['file_cache']['hit_rate']:.1%}, "
+            f"フォルダキャッシュ: {stats['folder_cache']['hit_rate']:.1%}",
+            level=log_level
+        )
+
+        # 詳細統計をパフォーマンスログに記録
+        self.logger_system.log_performance(
+            AIComponent.KIRO,
+            "cache_detailed_performance",
+            stats
+        )
+
+    def enable_debug_cache_logging(self):
+        """
+        キャッシュデバッグログを有効にする（トラブルシューティング用）
+        """
+
+        self._debug_cache_logging = True
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "cache_debug_logging_enabled",
+            "キャッシュデバッグログが有効になりました",
+            level="DEBUG"
+        )
+
+    def get_cache_health_status(self) -> Dict[str, Any]:
+        """
+        キャッシュの健全性状態を取得する
+
+        Returns:
+            キャッシュ健全性の評価結果
+        """
+
+        stats = self.get_cache_stats()
+
+        # 健全性評価
+        health_score = 0
+        issues = []
+        recommendations = []
+
+        # ヒット率の評価
+        overall_hit_rate = stats['overall_hit_rate']
+        if overall_hit_rate >= 0.8:
+            health_score += 40
+        elif overall_hit_rate >= 0.6:
+            health_score += 30
+            recommendations.append("キャッシュヒット率の改善を検討してください")
+        else:
+            health_score += 10
+            issues.append(f"キャッシュヒット率が低い: {overall_hit_rate:.1%}")
+            recommendations.append("キャッシュ戦略の見直しが必要です")
+
+        # メモリ使用量の評価
+        memory_usage_ratio = stats['total_memory_mb'] / (self.max_memory_bytes / 1024 / 1024)
+        if memory_usage_ratio <= 0.7:
+            health_score += 30
+        elif memory_usage_ratio <= 0.9:
+            health_score += 20
+            recommendations.append("メモリ使用量が増加しています")
+        else:
+            health_score += 5
+            issues.append(f"メモリ使用量が制限に近い: {memory_usage_ratio:.1%}")
+            recommendations.append("キャッシュサイズの調整が必要です")
+
+        # エントリ数の評価
+        total_entries = stats['total_entries']
+        max_total_entries = self.max_file_entries + self.max_folder_entries + (self.max_file_entries * 2)
+        entry_usage_ratio = total_entries / max_total_entries
+        if entry_usage_ratio <= 0.8:
+            health_score += 30
+        elif entry_usage_ratio <= 0.95:
+            health_score += 20
+        else:
+            health_score += 10
+            issues.append("キャッシュエントリ数が上限に近い")
+
+        # 健全性レベルの決定
+        if health_score >= 90:
+            health_level = "excellent"
+            health_message = "キャッシュは最適な状態です"
+        elif health_score >= 70:
+            health_level = "good"
+            health_message = "キャッシュは良好な状態です"
+        elif health_score >= 50:
+            health_level = "fair"
+            health_message = "キャッシュの改善が推奨されます"
+        else:
+            health_level = "poor"
+            health_message = "キャッシュの最適化が必要です"
+
+        return {
+            "health_score": health_score,
+            "health_level": health_level,
+            "health_message": health_message,
+            "issues": issues,
+            "recommendations": recommendations,
+            "metrics": {
+                "overall_hit_rate": overall_hit_rate,
+                "memory_usage_ratio": memory_usage_ratio,
+                "entry_usage_ratio": entry_usage_ratio,
+                "total_entries": total_entries,
+                "total_memory_mb": stats['total_memory_mb']
+            },
+            "timestamp": datetime.now().isoformat()
+        }

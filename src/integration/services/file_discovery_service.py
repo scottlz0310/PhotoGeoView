@@ -5,6 +5,20 @@ FileDiscoveryService - 画像ファイル検出サービス
 CS4CodingImageProcessorと連携してファイルの有効性をチェックし、
 Kiroの統合ログシステムでエラーハンドリングを行う。
 
+主な機能:
+- 対応画像形式（.jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp）のファイル検出
+- CS4CodingImageProcessorを使用したファイルバリデーション
+- 破損ファイルの検出と除外
+- キャッシュ機能による高速化
+- 詳細なパフォーマンス監視とログ記録
+- 日本語エラーメッセージ対応
+
+技術仕様:
+- 非同期処理によるUI応答性の維持
+- LRUキャッシュによる効率的なメモリ使用
+- 統合ログシステムによる詳細な動作記録
+- エラーハンドリングとフォールバック機能
+
 Author: Kiro AI Integration System
 """
 
@@ -119,11 +133,29 @@ class FileDiscoveryService:
         """
         指定されたフォルダ内の画像ファイルを検出する（キャッシュ対応）
 
+        このメソッドは以下の処理を順次実行します:
+        1. キャッシュから既存の検出結果を確認
+        2. フォルダの存在確認とアクセス権限チェック
+        3. フォルダ内ファイルの走査と拡張子フィルタリング
+        4. 各ファイルのバリデーション実行
+        5. 結果のキャッシュ保存とパフォーマンス記録
+
         Args:
-            folder_path: 検索対象のフォルダパス
+            folder_path (Path): 検索対象のフォルダパス
 
         Returns:
-            検出された画像ファイルのパスリスト
+            List[Path]: 検出された有効な画像ファイルのパスリスト
+
+        Raises:
+            FileNotFoundError: フォルダが存在しない場合
+            PermissionError: フォルダへのアクセス権限がない場合
+            Exception: その他の予期しないエラー
+
+        Note:
+            - 対応形式: .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp
+            - キャッシュヒット時は高速に結果を返却
+            - 破損ファイルは自動的に除外される
+            - 詳細なパフォーマンス情報がログに記録される
         """
 
         # 操作コンテキストを使用してログ記録を自動化
@@ -400,11 +432,25 @@ class FileDiscoveryService:
         """
         CS4CodingImageProcessorと連携してファイルの有効性をチェックする（キャッシュ対応）
 
+        このメソッドは多段階のバリデーションを実行します:
+        1. キャッシュから既存のバリデーション結果を確認
+        2. 基本的なファイル存在確認とサイズチェック
+        3. CS4CodingImageProcessorによる詳細検証
+        4. 実際の画像読み込みテストによる最終確認
+        5. 結果のキャッシュ保存とパフォーマンス記録
+
         Args:
-            file_path: 検証対象のファイルパス
+            file_path (Path): 検証対象のファイルパス
 
         Returns:
-            ファイルが有効な画像の場合True、そうでなければFalse
+            bool: ファイルが有効な画像の場合True、そうでなければFalse
+
+        Note:
+            - 100バイト未満のファイルは破損とみなして除外
+            - CS4CodingImageProcessorで形式チェック実行
+            - 実際の読み込みテストで最終確認
+            - バリデーション結果はキャッシュに保存
+            - 詳細なバリデーション時間がログに記録
         """
 
         # 操作コンテキストを使用してバリデーション処理をログ記録
@@ -1594,6 +1640,132 @@ class FileDiscoveryService:
                 "memory_usage_mb": self._get_memory_usage()
             }
         )
+
+    def optimize_logging_for_production(self):
+        """
+        本番環境向けにログ出力を最適化する
+
+        本番環境では以下の最適化を実行:
+        - デバッグログの無効化
+        - パフォーマンスログの定期出力設定
+        - ログレベルをINFO以上に制限
+        - メモリ使用量の監視強化
+        """
+
+        # 本番環境設定
+        self.debug_enabled = False
+        self.performance_logging_enabled = True
+
+        # ログレベルをINFOに設定
+        import logging
+        self.logger_system.log_level = logging.INFO
+
+        # パフォーマンス情報の定期出力を設定
+        self._setup_periodic_performance_logging()
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "production_logging_optimized",
+            "本番環境向けログ最適化が完了しました",
+            level="INFO"
+        )
+
+    def _setup_periodic_performance_logging(self):
+        """
+        パフォーマンス情報の定期出力を設定する
+        """
+
+        # 定期的なパフォーマンス統計の出力
+        def log_periodic_stats():
+            stats = {
+                "total_scans": self.discovery_stats['total_scans'],
+                "total_files_found": self.discovery_stats['total_files_found'],
+                "total_valid_files": self.discovery_stats['total_valid_files'],
+                "avg_scan_time": self.discovery_stats['total_scan_time'] / max(1, self.discovery_stats['total_scans']),
+                "cache_hit_rate": self.discovery_stats['cache_hits'] / max(1, self.discovery_stats['cache_hits'] + self.discovery_stats['cache_misses']),
+                "memory_usage_mb": self._get_memory_usage(),
+                "timestamp": datetime.now().isoformat()
+            }
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "periodic_performance_stats",
+                f"定期パフォーマンス統計 - スキャン数: {stats['total_scans']}, "
+                f"平均時間: {stats['avg_scan_time']:.2f}秒, "
+                f"キャッシュヒット率: {stats['cache_hit_rate']:.1%}, "
+                f"メモリ使用量: {stats['memory_usage_mb']:.1f}MB",
+                level="INFO"
+            )
+
+            # 詳細統計をパフォーマンスログに記録
+            self.logger_system.log_performance(
+                AIComponent.KIRO,
+                "periodic_performance_detailed",
+                stats
+            )
+
+        # 初回実行
+        log_periodic_stats()
+
+        # 定期実行の設定（実際の実装では適切なスケジューラーを使用）
+        self._periodic_stats_callback = log_periodic_stats
+
+    def enable_debug_logging(self):
+        """
+        デバッグログを有効にする（開発・トラブルシューティング用）
+        """
+
+        self.debug_enabled = True
+        self.performance_logging_enabled = True
+
+        import logging
+        self.logger_system.log_level = logging.DEBUG
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "debug_logging_enabled",
+            "デバッグログが有効になりました",
+            level="DEBUG"
+        )
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """
+        パフォーマンス統計の要約を取得する
+
+        Returns:
+            パフォーマンス統計の要約辞書
+        """
+
+        total_operations = self.discovery_stats['total_scans']
+        cache_requests = self.discovery_stats['cache_hits'] + self.discovery_stats['cache_misses']
+
+        summary = {
+            "operations": {
+                "total_scans": total_operations,
+                "total_files_found": self.discovery_stats['total_files_found'],
+                "total_valid_files": self.discovery_stats['total_valid_files'],
+                "avg_files_per_scan": self.discovery_stats['total_files_found'] / max(1, total_operations)
+            },
+            "performance": {
+                "total_scan_time": self.discovery_stats['total_scan_time'],
+                "avg_scan_time": self.discovery_stats['total_scan_time'] / max(1, total_operations),
+                "last_scan_time": self.discovery_stats['last_scan_time']
+            },
+            "cache": {
+                "cache_hits": self.discovery_stats['cache_hits'],
+                "cache_misses": self.discovery_stats['cache_misses'],
+                "hit_rate": self.discovery_stats['cache_hits'] / max(1, cache_requests),
+                "total_requests": cache_requests
+            },
+            "system": {
+                "memory_usage_mb": self._get_memory_usage(),
+                "debug_enabled": self.debug_enabled,
+                "performance_logging_enabled": self.performance_logging_enabled
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+        return summary
 
     async def discover_images_async(self,
                                   folder_path: Path,

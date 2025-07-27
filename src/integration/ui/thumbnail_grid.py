@@ -1,9 +1,28 @@
 """
-Optimized Thumbnail Grid for AI Integration
+Optimized Thumbnail Grid for AI Integration - 最適化サムネイルグリッド
 
-Combines CursorBLD's fast thumbnail display with Kiro optimization:
-- CursorBLD: Qt native high-speed thumbnail generation and display
-- Kiro: Memory management, caching, performance monitoring
+CursorBLDの高速サムネイル表示とKiroの最適化を組み合わせた
+高性能サムネイルグリッドコンポーネント。
+
+主な機能:
+- CursorBLD: Qt native高速サムネイル生成と表示
+- Kiro: メモリ管理、キャッシュ機能、パフォーマンス監視
+- CS4Coding: 正確なEXIFデータ統合と表示
+- 非同期サムネイル読み込みによる応答性向上
+- 動的ファイルリスト更新対応
+
+技術仕様:
+- ThreadPoolExecutorによる並列サムネイル生成
+- LRUキャッシュによる効率的なメモリ使用
+- QMutexによるスレッドセーフな操作
+- 設定可能なサムネイルサイズとグリッド列数
+- リアルタイムパフォーマンス監視
+
+UI機能:
+- マウスクリック・ダブルクリック・右クリックメニュー対応
+- EXIFデータのツールチップ表示
+- ローディング・エラー・空状態の適切な表示
+- サムネイルサイズのリアルタイム調整
 
 Author: Kiro AI Integration System
 """
@@ -401,6 +420,9 @@ class OptimizedThumbnailGrid(QWidget):
         self.performance_timer.timeout.connect(self._monitor_performance)
         self.performance_timer.start(2000)  # Check every 2 seconds
 
+        # Progress indicator for accessibility
+        self.progress_indicator = None
+
         # Initialize UI
         self._setup_ui()
 
@@ -409,6 +431,140 @@ class OptimizedThumbnailGrid(QWidget):
             "thumbnail_grid_init",
             "Optimized thumbnail grid initialized"
         )
+
+    def show_progress_indicator(self, message: str, maximum: int = 0):
+        """
+        進行状況インジケーターを表示する（アクセシビリティ対応）
+
+        Args:
+            message: 進行状況メッセージ
+            maximum: 最大値（0の場合は不定進行状況）
+        """
+        try:
+            from PyQt6.QtWidgets import QProgressBar, QVBoxLayout, QLabel
+
+            # 既存のインジケーターを削除
+            if self.progress_indicator:
+                self.progress_indicator.deleteLater()
+
+            # 進行状況ウィジェットを作成
+            self.progress_indicator = QWidget(self)
+            progress_layout = QVBoxLayout(self.progress_indicator)
+
+            # メッセージラベル
+            message_label = QLabel(message)
+            message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            message_label.setAccessibleName("進行状況メッセージ")
+            message_label.setAccessibleDescription(f"現在の処理状況: {message}")
+            progress_layout.addWidget(message_label)
+
+            # プログレスバー
+            progress_bar = QProgressBar()
+            if maximum > 0:
+                progress_bar.setMaximum(maximum)
+                progress_bar.setValue(0)
+            else:
+                progress_bar.setRange(0, 0)  # 不定進行状況
+
+            progress_bar.setAccessibleName("進行状況バー")
+            progress_bar.setAccessibleDescription("処理の進行状況を示すプログレスバー")
+            progress_layout.addWidget(progress_bar)
+
+            # スタイル設定
+            self.progress_indicator.setStyleSheet("""
+                QWidget {
+                    background-color: rgba(255, 255, 255, 240);
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    padding: 20px;
+                }
+                QProgressBar {
+                    border: 2px solid #e0e0e0;
+                    border-radius: 5px;
+                    text-align: center;
+                }
+                QProgressBar::chunk {
+                    background-color: #2196f3;
+                    border-radius: 3px;
+                }
+            """)
+
+            # 位置とサイズの設定
+            self.progress_indicator.resize(300, 100)
+            self.progress_indicator.move(
+                (self.width() - 300) // 2,
+                (self.height() - 100) // 2
+            )
+
+            self.progress_indicator.show()
+            self.progress_indicator.raise_()
+
+            # 参照を保存
+            self._progress_bar = progress_bar
+            self._progress_message = message_label
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_progress_indicator",
+                    "message": message,
+                    "user_action": "進行状況表示"
+                },
+                AIComponent.CURSOR
+            )
+
+    def update_progress(self, value: int, message: str = None):
+        """
+        進行状況を更新する
+
+        Args:
+            value: 現在の値
+            message: 更新するメッセージ（オプション）
+        """
+        try:
+            if hasattr(self, '_progress_bar') and self._progress_bar:
+                self._progress_bar.setValue(value)
+
+                # アクセシビリティ用の説明更新
+                total = self._progress_bar.maximum()
+                if total > 0:
+                    percentage = (value / total) * 100
+                    self._progress_bar.setAccessibleDescription(
+                        f"進行状況: {value}/{total} ({percentage:.0f}%)"
+                    )
+
+            if message and hasattr(self, '_progress_message') and self._progress_message:
+                self._progress_message.setText(message)
+                self._progress_message.setAccessibleDescription(f"現在の処理状況: {message}")
+
+        except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "progress_update_error",
+                f"進行状況更新エラー: {str(e)}",
+                level="WARNING"
+            )
+
+    def hide_progress_indicator(self):
+        """
+        進行状況インジケーターを非表示にする
+        """
+        try:
+            if self.progress_indicator:
+                self.progress_indicator.hide()
+                self.progress_indicator.deleteLater()
+                self.progress_indicator = None
+                self._progress_bar = None
+                self._progress_message = None
+
+        except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "progress_hide_error",
+                f"進行状況非表示エラー: {str(e)}",
+                level="WARNING"
+            )
 
     def _setup_ui(self):
         """Setup the user interface"""
@@ -511,8 +667,25 @@ class OptimizedThumbnailGrid(QWidget):
         """
         動的にファイルリストを更新する（ファイルシステム監視用）
 
+        ファイルシステム監視からの通知に基づいて、サムネイルグリッドを
+        効率的に更新します。差分検出により必要最小限の更新を実行します。
+
+        処理フロー:
+        1. 現在のリストと新しいリストの差分を計算
+        2. 削除されたファイルのサムネイルを除去
+        3. 追加されたファイルの新しいサムネイルを生成
+        4. グリッドレイアウトの再構成
+        5. 統計情報とパフォーマンス指標の更新
+
         Args:
-            image_list: 新しい画像ファイルのリスト
+            image_list (List[Path]): 新しい画像ファイルのリスト
+
+        Note:
+            - 差分検出により効率的な更新を実現
+            - 既存のサムネイルキャッシュは保持される
+            - スレッドセーフな操作が保証される
+            - 更新中もUI応答性を維持
+            - 詳細な更新ログが記録される
         """
         try:
             self.logger_system.log_ai_operation(
@@ -584,6 +757,22 @@ class OptimizedThumbnailGrid(QWidget):
     def clear_thumbnails_safely(self):
         """
         既存のサムネイルを安全にクリアする
+
+        メモリリークを防ぐため、全てのサムネイルアイテムを適切に
+        削除し、関連するリソースを解放します。
+
+        処理内容:
+        1. 各サムネイルアイテムのレイアウトからの除去
+        2. Qtウィジェットの適切な削除（deleteLater）
+        3. 内部辞書とキャッシュのクリア
+        4. EXIFデータキャッシュのクリア
+        5. メモリ使用量の最適化
+
+        Note:
+            - Qt のメモリ管理に従った安全な削除
+            - 削除中のエラーは個別にハンドリング
+            - 全ての操作がログに記録される
+            - メモリリークの防止を最優先
         """
         try:
             self.logger_system.log_ai_operation(
@@ -633,7 +822,7 @@ class OptimizedThumbnailGrid(QWidget):
 
     def show_loading_state(self, message: str):
         """
-        ローディング状態を表示する
+        ローディング状態を表示する（アクセシビリティ対応）
 
         Args:
             message: 表示するメッセージ
@@ -641,7 +830,15 @@ class OptimizedThumbnailGrid(QWidget):
         try:
             # パフォーマンスラベルにローディングメッセージを表示
             if hasattr(self, 'performance_label'):
-                self.performance_label.setText(f"🔄 {message}")
+                loading_text = f"🔄 {message}"
+                self.performance_label.setText(loading_text)
+
+                # アクセシビリティ対応
+                self.performance_label.setAccessibleName("読み込み状態")
+                self.performance_label.setAccessibleDescription(f"現在の状態: {message}")
+
+                # スクリーンリーダー用の追加情報
+                self.setAccessibleDescription(f"サムネイルグリッド: {message}")
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -663,7 +860,7 @@ class OptimizedThumbnailGrid(QWidget):
 
     def show_error_state(self, error_message: str):
         """
-        エラー状態を表示する
+        エラー状態を表示する（アクセシビリティ対応）
 
         Args:
             error_message: エラーメッセージ
@@ -671,7 +868,26 @@ class OptimizedThumbnailGrid(QWidget):
         try:
             # パフォーマンスラベルにエラーメッセージを表示
             if hasattr(self, 'performance_label'):
-                self.performance_label.setText(f"❌ エラー: {error_message}")
+                error_text = f"❌ エラー: {error_message}"
+                self.performance_label.setText(error_text)
+
+                # アクセシビリティ対応
+                self.performance_label.setAccessibleName("エラー状態")
+                self.performance_label.setAccessibleDescription(f"エラーが発生しました: {error_message}")
+
+                # 高コントラストモード対応
+                self.performance_label.setStyleSheet("""
+                    QLabel {
+                        color: #d32f2f;
+                        background-color: #ffebee;
+                        border: 1px solid #d32f2f;
+                        border-radius: 4px;
+                        padding: 4px;
+                    }
+                """)
+
+                # スクリーンリーダー用の追加情報
+                self.setAccessibleDescription(f"サムネイルグリッド: エラー - {error_message}")
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -693,12 +909,32 @@ class OptimizedThumbnailGrid(QWidget):
 
     def show_empty_state(self):
         """
-        空の状態（画像なし）を表示する
+        空の状態（画像なし）を表示する（アクセシビリティ対応）
         """
         try:
             # パフォーマンスラベルに空状態メッセージを表示
             if hasattr(self, 'performance_label'):
-                self.performance_label.setText("📁 画像ファイルがありません")
+                empty_text = "📁 画像ファイルがありません"
+                self.performance_label.setText(empty_text)
+
+                # アクセシビリティ対応
+                self.performance_label.setAccessibleName("空の状態")
+                self.performance_label.setAccessibleDescription("選択されたフォルダに画像ファイルがありません")
+
+                # スタイル調整（視認性向上）
+                self.performance_label.setStyleSheet("""
+                    QLabel {
+                        color: #757575;
+                        font-style: italic;
+                        padding: 8px;
+                    }
+                """)
+
+                # スクリーンリーダー用の追加情報
+                self.setAccessibleDescription("サムネイルグリッド: 画像ファイルなし")
+
+            # 空状態用のプレースホルダーを表示
+            self._show_empty_placeholder()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -715,6 +951,62 @@ class OptimizedThumbnailGrid(QWidget):
                     "user_action": "空状態表示"
                 },
                 AIComponent.CURSOR
+            )
+
+    def _show_empty_placeholder(self):
+        """
+        空状態用のプレースホルダーを表示する
+        """
+        try:
+            # 既存のプレースホルダーを削除
+            if hasattr(self, '_empty_placeholder'):
+                self._empty_placeholder.deleteLater()
+
+            # 新しいプレースホルダーを作成
+            from PyQt6.QtWidgets import QLabel
+            from PyQt6.QtCore import Qt
+            from PyQt6.QtGui import QFont
+
+            self._empty_placeholder = QLabel(self.grid_widget)
+            self._empty_placeholder.setText(
+                "📁\n\n"
+                "画像ファイルがありません\n\n"
+                "対応形式: JPG, PNG, GIF, BMP, TIFF, WebP\n"
+                "別のフォルダを選択してください"
+            )
+
+            # スタイル設定
+            font = QFont()
+            font.setPointSize(14)
+            self._empty_placeholder.setFont(font)
+            self._empty_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._empty_placeholder.setStyleSheet("""
+                QLabel {
+                    color: #9e9e9e;
+                    background-color: #fafafa;
+                    border: 2px dashed #e0e0e0;
+                    border-radius: 8px;
+                    padding: 40px;
+                    margin: 20px;
+                }
+            """)
+
+            # アクセシビリティ対応
+            self._empty_placeholder.setAccessibleName("空状態プレースホルダー")
+            self._empty_placeholder.setAccessibleDescription(
+                "画像ファイルがない状態を示すプレースホルダー。"
+                "対応形式の説明と別のフォルダ選択の案内を含む"
+            )
+
+            # レイアウトに追加
+            self.grid_layout.addWidget(self._empty_placeholder, 0, 0, 1, self.columns)
+
+        except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "empty_placeholder_error",
+                f"空状態プレースホルダー表示エラー: {str(e)}",
+                level="WARNING"
             )
 
     def _add_thumbnail_item(self, image_path: Path):

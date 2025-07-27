@@ -1,9 +1,28 @@
 """
-Enhanced Folder Navigator for AI Integration
+Enhanced Folder Navigator for AI Integration - 拡張フォルダナビゲーター
 
-Combines CursorBLD's folder navigation with Kiro optimization:
-- CursorBLD: Intuitive folder browsing and history management
-- Kiro: Performancetion, error handling, accessibility
+CursorBLDの直感的なフォルダナビゲーションとKiroの最適化を組み合わせた
+高機能フォルダナビゲーターコンポーネント。
+
+主な機能:
+- CursorBLD: 直感的なフォルダブラウジングと履歴管理
+- Kiro: パフォーマンス最適化、エラーハンドリング、アクセシビリティ対応
+- 統合ファイル検出サービスとの連携
+- リアルタイムファイルシステム監視
+- 日本語エラーメッセージとユーザーフィードバック
+
+技術仕様:
+- PyQt6ベースの高性能UI
+- FileDiscoveryServiceとの統合による高速画像検出
+- FileSystemWatcherによるリアルタイム更新
+- 設定可能なフォルダ履歴とブックマーク機能
+- アクセシビリティ対応とキーボードナビゲーション
+
+UI構成:
+- ナビゲーションコントロール（戻る、進む、上へ、ホーム）
+- アドレスバーによる直接パス入力
+- 履歴ドロップダウンとブックマーク機能
+- フォルダツリービューによる階層表示
 
 Author: Kiro AI Integration System
 """
@@ -285,11 +304,26 @@ class EnhancedFolderNavigator(QWidget):
         """
         指定されたフォルダ内の画像ファイルを検出する
 
+        FileDiscoveryServiceを使用してフォルダ内の画像ファイルを検出し、
+        適切なエラーハンドリングとユーザーフィードバックを提供します。
+
+        処理フロー:
+        1. FileDiscoveryServiceによる画像ファイル検出
+        2. 検出結果のログ記録
+        3. 画像が見つからない場合のユーザー通知
+        4. エラー発生時の適切なハンドリング
+
         Args:
-            folder_path: 検索対象のフォルダパス
+            folder_path (Path): 検索対象のフォルダパス
 
         Returns:
-            検出された画像ファイルのパスリスト
+            List[Path]: 検出された画像ファイルのパスリスト
+
+        Note:
+            - 対応形式: .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp
+            - 画像が見つからない場合は日本語メッセージを表示
+            - エラー時は詳細な日本語エラーメッセージを表示
+            - 全ての処理が統合ログシステムに記録される
         """
         try:
             self.logger_system.log_ai_operation(
@@ -376,11 +410,26 @@ class EnhancedFolderNavigator(QWidget):
 
     def _handle_discovery_error(self, error: Exception, folder_path: Path):
         """
-        ファイル検出エラーを処理し、ユーザーに分かりやすいメッセージを表示する
+        ファイル検出エラーを処理し、ユーザーに分かりやすい日本語メッセージを表示する
+
+        エラーの種類を自動判別し、ユーザーが理解しやすい日本語メッセージと
+        適切な対処法を提示します。
+
+        エラー分類と対応:
+        - PermissionError: アクセス権限エラー → 管理者権限での実行を提案
+        - FileNotFoundError: フォルダ不存在 → フォルダの移動・削除を通知
+        - TimeoutError: 読み込みタイムアウト → ネットワーク接続確認を提案
+        - その他: 一般的なエラー → 詳細情報と共に表示
 
         Args:
-            error: 発生したエラー
-            folder_path: エラーが発生したフォルダのパス
+            error (Exception): 発生したエラー
+            folder_path (Path): エラーが発生したフォルダのパス
+
+        Note:
+            - 全てのエラーメッセージは日本語で表示
+            - エラー詳細は統合ログシステムに記録
+            - ユーザーには適切な対処法を提示
+            - エラー統計情報も自動更新
         """
         try:
             # エラーの種類に応じて適切な日本語メッセージを生成
@@ -408,12 +457,25 @@ class EnhancedFolderNavigator(QWidget):
                 level="ERROR"
             )
 
-            # ユーザーにエラーメッセージを表示
-            QMessageBox.warning(
-                self,
-                user_message,
-                error_message
-            )
+            # ユーザーにエラーメッセージを表示（アクセシビリティ対応）
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Warning)
+            msg_box.setWindowTitle(user_message)
+            msg_box.setText(error_message)
+
+            # アクセシビリティ対応
+            msg_box.setAccessibleName(f"エラーダイアログ: {user_message}")
+            msg_box.setAccessibleDescription(f"フォルダアクセスエラーの詳細: {error_message}")
+
+            # 適切なボタンテキスト
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.button(QMessageBox.StandardButton.Ok).setText("了解")
+
+            # 進行状況の表示を停止
+            if hasattr(self, 'progress_indicator'):
+                self.progress_indicator.hide()
+
+            msg_box.exec()
 
             # エラー発生をシグナルで通知
             self.navigation_error.emit(error_type.lower(), error_message)
@@ -465,12 +527,28 @@ class EnhancedFolderNavigator(QWidget):
                 level="INFO"
             )
 
-            # ユーザーに情報メッセージを表示
-            QMessageBox.information(
-                self,
-                "画像ファイルが見つかりません",
-                message
+            # ユーザーに情報メッセージを表示（アクセシビリティ対応）
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Information)
+            msg_box.setWindowTitle("画像ファイルが見つかりません")
+            msg_box.setText(message)
+
+            # アクセシビリティ対応
+            msg_box.setAccessibleName("情報ダイアログ: 画像ファイルなし")
+            msg_box.setAccessibleDescription(f"フォルダ '{folder_name}' に画像ファイルが見つからない旨の通知")
+
+            # 適切なボタンテキストと追加アクション
+            msg_box.setStandardButtons(
+                QMessageBox.StandardButton.Ok |
+                QMessageBox.StandardButton.Help
             )
+            msg_box.button(QMessageBox.StandardButton.Ok).setText("了解")
+            msg_box.button(QMessageBox.StandardButton.Help).setText("別のフォルダを選択")
+
+            # ヘルプボタンが押された場合の処理
+            result = msg_box.exec()
+            if result == QMessageBox.StandardButton.Help:
+                self.open_folder_dialog()
 
             # 統計情報を更新
             self.logger_system.log_ai_operation(
@@ -819,12 +897,29 @@ class EnhancedFolderNavigator(QWidget):
                 "自動監視機能を有効にするには、watchdogライブラリをインストールしてください。"
             )
 
-            # 情報メッセージとして表示（警告ではなく）
-            QMessageBox.information(
-                self,
-                "ファイル監視機能について",
-                message
-            )
+            # 情報メッセージとして表示（アクセシビリティ対応）
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Information)
+            msg_box.setWindowTitle("ファイル監視機能について")
+            msg_box.setText(message)
+
+            # アクセシビリティ対応
+            msg_box.setAccessibleName("情報ダイアログ: ファイル監視機能")
+            msg_box.setAccessibleDescription("ファイル監視機能が利用できない場合の説明と対処法")
+
+            # 適切なボタンテキスト
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.button(QMessageBox.StandardButton.Ok).setText("了解")
+
+            # 詳細情報ボタンを追加
+            details_button = msg_box.addButton("詳細情報", QMessageBox.ButtonRole.ActionRole)
+            details_button.setAccessibleDescription("ファイル監視機能の詳細情報を表示")
+
+            result = msg_box.exec()
+
+            # 詳細情報が要求された場合
+            if msg_box.clickedButton() == details_button:
+                self._show_file_monitoring_details()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -839,6 +934,54 @@ class EnhancedFolderNavigator(QWidget):
                 {
                     "operation": "show_monitoring_fallback_message",
                     "user_action": "監視フォールバックメッセージ表示"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _show_file_monitoring_details(self):
+        """
+        ファイル監視機能の詳細情報を表示する
+        """
+        try:
+            details_message = (
+                "ファイル監視機能の詳細情報:\n\n"
+                "【機能概要】\n"
+                "• フォルダ内のファイル変更を自動検出\n"
+                "• 画像ファイルの追加・削除・変更を監視\n"
+                "• リアルタイムでサムネイル表示を更新\n\n"
+                "【必要な環境】\n"
+                "• Python watchdogライブラリ\n"
+                "• インストール方法: pip install watchdog\n\n"
+                "【代替手段】\n"
+                "• フォルダを再選択して手動更新\n"
+                "• メニューから「更新」を選択\n"
+                "• F5キーで画面を更新\n\n"
+                "【トラブルシューティング】\n"
+                "• ネットワークドライブでは動作しない場合があります\n"
+                "• 大量のファイルがある場合は無効化されることがあります"
+            )
+
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Information)
+            msg_box.setWindowTitle("ファイル監視機能 - 詳細情報")
+            msg_box.setText(details_message)
+
+            # アクセシビリティ対応
+            msg_box.setAccessibleName("詳細情報ダイアログ: ファイル監視機能")
+            msg_box.setAccessibleDescription("ファイル監視機能の詳細な説明とトラブルシューティング情報")
+
+            # ボタンの設定
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.button(QMessageBox.StandardButton.Ok).setText("了解")
+
+            msg_box.exec()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_file_monitoring_details",
+                    "user_action": "詳細情報表示"
                 },
                 AIComponent.CURSOR
             )

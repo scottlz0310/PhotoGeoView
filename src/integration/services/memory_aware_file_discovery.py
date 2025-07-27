@@ -4,6 +4,28 @@ MemoryAwareFileDiscovery - メモリ管理機能付きファイル検出
 メモリ使用量を監視し、閾値超過時に自動キャッシュクリアを行う
 ファイル検出機能を提供する。
 
+主な機能:
+- リアルタイムメモリ使用量監視
+- 設定可能な警告・危険閾値による自動制御
+- 自動キャッシュクリアによるメモリ解放
+- 詳細なメモリ統計情報の記録
+- psutilライブラリによる正確なメモリ測定
+
+技術仕様:
+- FileDiscoveryServiceとの連携による高速ファイル検出
+- LRUキャッシュによる効率的なデータ管理
+- ガベージコレクション連携による確実なメモリ解放
+- スレッドセーフなメモリ監視機能
+- 設定可能なメモリ制限とクリーンアップ戦略
+
+使用例:
+    memory_aware = MemoryAwareFileDiscovery(
+        max_memory_mb=256,
+        warning_threshold=0.75,
+        critical_threshold=0.90
+    )
+    files = memory_aware.discover_images_with_memory_management(folder_path)
+
 Author: Kiro AI Integration System
 """
 
@@ -102,11 +124,30 @@ class MemoryAwareFileDiscovery:
         """
         メモリ管理機能付きで画像ファイルを検出する
 
+        このメソッドは通常のファイル検出に加えて、メモリ使用量を
+        継続的に監視し、必要に応じて自動的にメモリクリーンアップを実行します。
+
+        処理フロー:
+        1. 開始前のメモリ状態測定と危険レベルチェック
+        2. キャッシュからの結果確認（メモリ効率化）
+        3. FileDiscoveryServiceによるファイル検出実行
+        4. 検出中の継続的なメモリ監視
+        5. 閾値超過時の自動クリーンアップ実行
+        6. 結果のキャッシュ保存（メモリ余裕時のみ）
+        7. 詳細なパフォーマンス統計の記録
+
         Args:
-            folder_path: 検索対象のフォルダパス
+            folder_path (Path): 検索対象のフォルダパス
 
         Returns:
-            検出された画像ファイルのリスト
+            List[Path]: 検出された画像ファイルのリスト
+
+        Note:
+            - 危険レベル（90%以上）のメモリ使用時は事前クリーンアップを実行
+            - 警告レベル（75%以上）でログ警告を出力
+            - キャッシュヒット時は高速に結果を返却
+            - メモリ不足時は自動的にキャッシュをクリア
+            - 詳細なメモリ使用量変化がログに記録される
         """
         start_time = time.time()
 
@@ -465,5 +506,90 @@ class MemoryAwareFileDiscovery:
             AIComponent.KIRO,
             "memory_aware_cleanup_complete",
             "MemoryAwareFileDiscoveryクリーンアップ完了",
+            level="DEBUG"
+        )
+
+    def optimize_logging_for_production(self):
+        """
+        本番環境向けにログ出力を最適化する
+
+        本番環境では以下の最適化を実行:
+        - メモリ警告のみログ出力
+        - 詳細デバッグ情報の無効化
+        - パフォーマンス統計の定期出力
+        """
+
+        self._production_mode = True
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "memory_aware_production_optimized",
+            "メモリ管理機能の本番環境最適化が完了しました",
+            level="INFO"
+        )
+
+    def log_memory_performance_summary(self):
+        """
+        メモリパフォーマンス要約をログに出力する
+        """
+
+        current_memory = self._get_current_memory_stats()
+
+        summary = {
+            "memory_status": {
+                "current_usage_mb": current_memory.current_usage_mb,
+                "usage_percentage": current_memory.usage_percentage,
+                "available_mb": current_memory.available_mb,
+                "cache_size_mb": current_memory.cache_size_mb
+            },
+            "statistics": self._stats.copy(),
+            "thresholds": {
+                "max_memory_mb": self.max_memory_mb,
+                "warning_threshold": self.warning_threshold,
+                "critical_threshold": self.critical_threshold
+            },
+            "cache_info": {
+                "cache_entries": len(self._cache_data),
+                "cleanup_count": self._cleanup_count
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # 警告レベルのチェック
+        log_level = "INFO"
+        if current_memory.is_critical_usage:
+            log_level = "ERROR"
+        elif current_memory.is_high_usage:
+            log_level = "WARNING"
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "memory_performance_summary",
+            f"メモリパフォーマンス要約 - "
+            f"使用量: {current_memory.current_usage_mb:.1f}MB ({current_memory.usage_percentage:.1f}%), "
+            f"キャッシュ: {current_memory.cache_size_mb:.1f}MB, "
+            f"検出回数: {self._stats['total_discoveries']}, "
+            f"クリーンアップ回数: {self._stats['memory_cleanups']}",
+            level=log_level
+        )
+
+        # 詳細統計をパフォーマンスログに記録
+        self.logger_system.log_performance(
+            AIComponent.KIRO,
+            "memory_detailed_performance",
+            summary
+        )
+
+    def enable_debug_memory_logging(self):
+        """
+        メモリデバッグログを有効にする（トラブルシューティング用）
+        """
+
+        self._debug_memory_logging = True
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "memory_debug_logging_enabled",
+            "メモリデバッグログが有効になりました",
             level="DEBUG"
         )

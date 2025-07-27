@@ -4,6 +4,27 @@ PaginatedFileDiscovery - 段階的ファイル読み込み機能
 大量ファイル対応のための段階的読み込み（ページネーション）機能を提供する。
 バッチサイズを設定して、メモリ効率的にファイルを処理する。
 
+主な機能:
+- 大量ファイル（1000個以上）の効率的な処理
+- 設定可能なバッチサイズ（デフォルト100ファイル）
+- イテレータパターンによる順次処理
+- 詳細な進行状況追跡とパフォーマンス監視
+- メモリ使用量の推定と最適化
+
+技術仕様:
+- FileDiscoveryServiceとの連携による高速ファイル検出
+- バッチ単位での処理により一定のメモリ使用量を維持
+- 統計情報の自動収集とパフォーマンス分析
+- エラー耐性のある安全な処理フロー
+
+使用例:
+    paginated = PaginatedFileDiscovery(page_size=50)
+    paginated.initialize_folder(Path("/large/folder"))
+
+    while paginated.has_more_files():
+        batch = paginated.get_next_batch()
+        process_batch(batch.files)
+
 Author: Kiro AI Integration System
 """
 
@@ -87,11 +108,32 @@ class PaginatedFileDiscovery:
         """
         フォルダを初期化し、全ファイルを検出する
 
+        このメソッドは指定されたフォルダ内の全画像ファイルを検出し、
+        段階的読み込み用の内部状態を初期化します。
+
+        処理内容:
+        1. FileDiscoveryServiceによる全ファイル検出
+        2. バッチ数の計算と内部状態の初期化
+        3. メモリ使用量の推定
+        4. 初期化統計情報の記録
+
         Args:
-            folder_path: 対象フォルダパス
+            folder_path (Path): 対象フォルダパス
 
         Returns:
-            初期化結果の詳細情報
+            Dict[str, Any]: 初期化結果の詳細情報
+                - total_files: 検出されたファイル総数
+                - total_batches: 計算されたバッチ総数
+                - batch_size: 設定されたバッチサイズ
+                - initialization_time: 初期化にかかった時間
+                - estimated_memory_per_batch: バッチあたりの推定メモリ使用量
+
+        Raises:
+            Exception: フォルダアクセスエラーまたはファイル検出エラー
+
+        Note:
+            - 初期化後はhas_more_files()とget_next_batch()が使用可能
+            - 大量ファイルの場合、初期化に時間がかかる場合があります
         """
         start_time = time.time()
 
@@ -173,8 +215,29 @@ class PaginatedFileDiscovery:
         """
         次のバッチを取得する
 
+        現在のバッチインデックスに基づいて次のファイルバッチを生成し、
+        内部状態を更新します。
+
+        処理内容:
+        1. 初期化状態とバッチ可用性の確認
+        2. バッチ範囲の計算（start_index, end_index）
+        3. FileBatchオブジェクトの生成
+        4. 統計情報の更新とパフォーマンス記録
+        5. 次のバッチインデックスへの更新
+
         Returns:
-            次のファイルバッチ、または利用可能なバッチがない場合はNone
+            Optional[FileBatch]: 次のファイルバッチ、または利用可能なバッチがない場合はNone
+                FileBatch属性:
+                - files: バッチ内のファイルパスリスト
+                - batch_number: 現在のバッチ番号（0から開始）
+                - total_batches: 総バッチ数
+                - start_index, end_index: ファイルリスト内の範囲
+                - processing_time: バッチ生成にかかった時間
+
+        Note:
+            - フォルダが初期化されていない場合はNoneを返却
+            - 最後のバッチの場合、is_last_batchプロパティがTrueになる
+            - バッチ取得後は自動的に次のバッチインデックスに進む
         """
         if not self._is_initialized:
             self.logger_system.log_ai_operation(
