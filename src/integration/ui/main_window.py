@@ -26,6 +26,7 @@ from ..state_manager import StateManager
 from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
 from ..services.file_discovery_service import FileDiscoveryService
+from ..services.file_system_watcher import FileSystemWatcher
 from .theme_manager import IntegratedThemeManager
 from .thumbnail_grid import OptimizedThumbnailGrid
 from .folder_navigator import EnhancedFolderNavigator
@@ -797,6 +798,23 @@ class IntegratedMainWindow(QMainWindow):
 
             # Save configuration
             self.config_manager.save_config()
+
+            # Stop file system monitoring
+            if hasattr(self, 'folder_navigator') and self.folder_navigator:
+                self.folder_navigator.stop_monitoring()
+
+            # Stop performance monitoring
+            if hasattr(self, 'performance_timer') and self.performance_timer:
+                self.performance_timer.stop()
+
+            if hasattr(self, 'memory_monitor') and self.memory_monitor:
+                self.memory_monitor.stop()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "main_window_cleanup",
+                "Main window cleanup completed"
+            )
 
             # Stop timers
             if self.performance_timer:

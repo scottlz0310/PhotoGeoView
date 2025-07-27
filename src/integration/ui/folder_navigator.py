@@ -27,6 +27,7 @@ from ..state_manager import StateManager
 from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
 from ..services.file_discovery_service import FileDiscoveryService
+from ..services.file_system_watcher import FileSystemWatcher, FileChangeType
 
 
 class EnhancedFolderNavigator(QWidget):
@@ -74,6 +75,15 @@ class EnhancedFolderNavigator(QWidget):
         self.file_discovery_service = FileDiscoveryService(
             logger_system=self.logger_system
         )
+
+        # File system watcher for real-time updates
+        self.file_system_watcher = FileSystemWatcher(
+            logger_system=self.logger_system,
+            enable_monitoring=True
+        )
+
+        # Add change listener for file system events
+        self.file_system_watcher.add_change_listener(self._on_file_system_change)
 
         # UI components
         self.address_bar: Optional[QLineEdit] = None
@@ -481,6 +491,383 @@ class EnhancedFolderNavigator(QWidget):
                 AIComponent.CURSOR
             )
 
+    def _start_folder_monitoring(self, folder_path: Path):
+        """
+        指定されたフォルダの監視を開始する
+
+        Args:
+            folder_path: 監視対象のフォルダパス
+        """
+        try:
+            # ファイルシステム監視を開始
+            monitoring_started = self.file_system_watcher.start_watching(folder_path)
+
+            if monitoring_started:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "folder_monitoring_started",
+                    f"フォルダ監視開始: {folder_path}",
+                    level="INFO"
+                )
+            else:
+                # 監視開始に失敗した場合の処理
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "folder_monitoring_failed",
+                    f"フォルダ監視の開始に失敗しました: {folder_path}",
+                    level="WARNING"
+                )
+
+                # ユーザーに通知（オプション）
+                self._show_monitoring_fallback_message()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {
+                    "operation": "start_folder_monitoring",
+                    "folder_path": str(folder_path),
+                    "user_action": "フォルダ監視開始"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _on_file_system_change(self, file_path: Path, change_type: FileChangeType, old_path: Optional[Path] = None):
+        """
+        ファイルシステム変更イベントのハンドラー
+
+        Args:
+            file_path: 変更されたファイルのパス
+            change_type: 変更タイプ（作成、削除、変更、移動）
+            old_path: 移動前のパス（移動の場合のみ）
+        """
+        try:
+            # 現在のフォルダ内の変更のみ処理
+            if not self.current_folder or not file_path.parent == self.current_folder:
+                return
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "file_system_change_detected",
+                f"ファイル変更検出: {file_path.name} ({change_type.value})",
+                level="DEBUG"
+            )
+
+            # 変更タイプに応じた処理
+            if change_type == FileChangeType.CREATED:
+                self._handle_file_created(file_path)
+            elif change_type == FileChangeType.DELETED:
+                self._handle_file_deleted(file_path)
+            elif change_type == FileChangeType.MODIFIED:
+                self._handle_file_modified(file_path)
+            elif change_type == FileChangeType.MOVED:
+                self._handle_file_moved(file_path, old_path)
+
+            # フォルダ内容が変更されたことを通知
+            self.folder_changed.emit(self.current_folder)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {
+                    "operation": "file_system_change_handler",
+                    "file_path": str(file_path),
+                    "change_type": change_type.value,
+                    "user_action": "ファイル変更処理"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _handle_file_created(self, file_path: Path):
+        """
+        ファイル作成イベントの処理
+
+        Args:
+            file_path: 作成されたファイルのパス
+        """
+        try:
+            # 画像ファイルかどうかチェック
+            if self._is_supported_image_file(file_path):
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_file_created",
+                    f"新しい画像ファイルが追加されました: {file_path.name}",
+                    level="INFO"
+                )
+
+                # フォルダの再スキャンをトリガー（効率的な更新のため）
+                self._trigger_folder_refresh()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.FILE_ERROR,
+                {
+                    "operation": "handle_file_created",
+                    "file_path": str(file_path),
+                    "user_action": "ファイル作成処理"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _handle_file_deleted(self, file_path: Path):
+        """
+        ファイル削除イベントの処理
+
+        Args:
+            file_path: 削除されたファイルのパス
+        """
+        try:
+            # 画像ファイルかどうかチェック（拡張子ベース）
+            if self._is_supported_image_file(file_path):
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_file_deleted",
+                    f"画像ファイルが削除されました: {file_path.name}",
+                    level="INFO"
+   )
+
+                # フォルダの再スキャンをトリガー
+                self._trigger_folder_refresh()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.FILE_ERROR,
+                {
+                    "operation": "handle_file_deleted",
+                    "file_path": str(file_path),
+                    "user_action": "ファイル削除処理"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _handle_file_modified(self, file_path: Path):
+        """
+        ファイル変更イベントの処理
+
+        Args:
+            file_path: 変更されたファイルのパス
+        """
+        try:
+            # 画像ファイルかどうかチェック
+            if self._is_supported_image_file(file_path):
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_file_modified",
+                    f"画像ファイルが変更されました: {file_path.name}",
+                    level="DEBUG"
+                )
+
+                # 変更されたファイルのサムネイル更新をトリガー
+                # （サムネイルグリッドに直接通知する場合）
+                # self.image_file_modified.emit(file_path)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.FILE_ERROR,
+                {
+                    "operation": "handle_file_modified",
+                    "file_path": str(file_path),
+                    "user_action": "ファイル変更処理"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _handle_file_moved(self, new_path: Path, old_path: Optional[Path]):
+        """
+        ファイル移動イベントの処理
+
+        Args:
+            new_path: 移動後のファイルパス
+            old_path: 移動前のファイルパス
+        """
+        try:
+            # 新しいパスまたは古いパスが画像ファイルの場合
+            is_new_image = self._is_supported_image_file(new_path)
+            is_old_image = old_path and self._is_supported_image_file(old_path)
+
+            if is_new_image or is_old_image:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_file_moved",
+                    f"画像ファイルが移動されました: {old_path.name if old_path else '不明'} -> {new_path.name}",
+                    level="INFO"
+                )
+
+                # フォルダの再スキャンをトリガー
+                self._trigger_folder_refresh()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.FILE_ERROR,
+                {
+                    "operation": "handle_file_moved",
+                    "new_path": str(new_path),
+                    "old_path": str(old_path) if old_path else "None",
+                    "user_action": "ファイル移動処理"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _is_supported_image_file(self, file_path: Path) -> bool:
+        """
+        ファイルが対応する画像形式かチェックする
+
+        Args:
+            file_path: チェック対象のファイルパス
+
+        Returns:
+            対応する画像ファイルの場合True
+        """
+        try:
+            # FileDiscoveryServiceの対応拡張子を使用
+            supported_extensions = self.file_discovery_service.get_supported_extensions()
+            return file_path.suffix.lower() in supported_extensions
+
+        except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "image_file_check_error",
+                f"画像ファイルチェック中にエラー: {file_path} - {str(e)}",
+                level="ERROR"
+            )
+            return False
+
+    def _trigger_folder_refresh(self):
+        """
+        フォルダの再スキャンをトリガーする（効率的な更新）
+        """
+        try:
+            if not self.current_folder:
+                return
+
+            # 短い遅延後にフォルダを再スキャン（連続する変更をまとめて処理）
+            if not hasattr(self, '_refresh_timer'):
+                self._refresh_timer = QTimer()
+                self._refresh_timer.setSingleShot(True)
+                self._refresh_timer.timeout.connect(self._perform_folder_refresh)
+
+            # タイマーをリセット（連続する変更を効率的に処理）
+            self._refresh_timer.stop()
+            self._refresh_timer.start(500)  # 500ms後に実行
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "folder_refresh_scheduled",
+                f"フォルダ再スキャンをスケジュール: {self.current_folder}",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "trigger_folder_refresh",
+                    "current_folder": str(self.current_folder) if self.current_folder else "None",
+                    "user_action": "フォルダ更新トリガー"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _perform_folder_refresh(self):
+        """
+        実際のフォルダ再スキャンを実行する
+        """
+        try:
+            if not self.current_folder:
+                return
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "folder_refresh_start",
+                f"フォルダ再スキャン開始: {self.current_folder}",
+                level="DEBUG"
+            )
+
+            # 新しい画像リストを取得
+            discovered_images = self._discover_images_in_folder(self.current_folder)
+
+            # フォルダ変更シグナルを発行（サムネイルグリッドが更新される）
+            self.folder_changed.emit(self.current_folder)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "folder_refresh_complete",
+                f"フォルダ再スキャン完了: {self.current_folder} ({len(discovered_images)}個の画像ファイル)",
+                level="INFO"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.FILE_ERROR,
+                {
+                    "operation": "perform_folder_refresh",
+                    "current_folder": str(self.current_folder) if self.current_folder else "None",
+                    "user_action": "フォルダ再スキャン実行"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _show_monitoring_fallback_message(self):
+        """
+        監視機能が利用できない場合のフォールバックメッセージを表示
+        """
+        try:
+            message = (
+                "ファイルシステム監視機能が利用できません。\n\n"
+                "フォルダ内のファイルが変更された場合、手動でフォルダを再選択するか、\n"
+                "メニューから「更新」を選択してください。\n\n"
+                "自動監視機能を有効にするには、watchdogライブラリをインストールしてください。"
+            )
+
+            # 情報メッセージとして表示（警告ではなく）
+            QMessageBox.information(
+                self,
+                "ファイル監視機能について",
+                message
+            )
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "monitoring_fallback_message",
+                "ファイル監視フォールバックメッセージを表示",
+                level="INFO"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_monitoring_fallback_message",
+                    "user_action": "監視フォールバックメッセージ表示"
+                },
+                AIComponent.CURSOR
+            )
+
+    def stop_monitoring(self):
+        """
+        ファイルシステム監視を停止する（クリーンアップ用）
+        """
+        try:
+            if self.file_system_watcher.is_watching:
+                self.file_system_watcher.stop_watching()
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "monitoring_stopped",
+                    "ファイルシステム監視を停止しました",
+                    level="INFO"
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {
+                    "operation": "stop_monitoring",
+                    "user_action": "監視停止"
+                },
+                AIComponent.CURSOR
+            )
+
     # Public methods
 
     def navigate_to_folder(self, folder_path: Path) -> bool:
@@ -490,6 +877,10 @@ class EnhancedFolderNavigator(QWidget):
             if not folder_path.exists() or not folder_path.is_dir():
                 self.navigation_error.emit("invalid_path", f"Invalid folder: {folder_path}")
                 return False
+
+            # Stop watching previous folder
+            if self.file_system_watcher.is_watching:
+                self.file_system_watcher.stop_watching()
 
             # Clear previous folder data
             old_folder = self.current_folder
@@ -511,6 +902,9 @@ class EnhancedFolderNavigator(QWidget):
 
             # Discover images in the new folder
             discovered_images = self._discover_images_in_folder(folder_path)
+
+            # Start watching the new folder for changes
+            self._start_folder_monitoring(folder_path)
 
             # Emit signals with discovered images
             self.folder_selected.emit(folder_path)
@@ -836,6 +1230,36 @@ class EnhancedFolderNavigator(QWidget):
                 {"operation": "context_menu"},
                 AIComponent.CURSOR
             )
+
+    def closeEvent(self, event):
+        """Handle widget close event"""
+        try:
+            # Stop file system monitoring
+            self.stop_monitoring()
+
+            # Stop any running timers
+            if hasattr(self, '_refresh_timer'):
+                self._refresh_timer.stop()
+
+            if self.update_timer:
+                self.update_timer.stop()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "folder_navigator_cleanup",
+                "フォルダナビゲーターのクリーンアップ完了",
+                level="INFO"
+            )
+
+            super().closeEvent(event)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "folder_navigator_cleanup"},
+                AIComponent.CURSOR
+            )
+            super().closeEvent(event)
 
     def _open_in_file_manager(self):
         """Open current folder in system file manager"""

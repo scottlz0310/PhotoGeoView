@@ -486,7 +486,7 @@ class OptimizedThumbnailGrid(QWidget):
                 self.load_start_time = time.time()
 
             # Clear existing thumbnails
-            self.clear_thumbnails()
+            self.clear_thumbnails_safely()
 
             # Create thumbnail items
             self._create_thumbnail_items()
@@ -504,6 +504,308 @@ class OptimizedThumbnailGrid(QWidget):
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR,
                 {"operation": "set_image_list", "count": len(image_list)},
+                AIComponent.CURSOR
+            )
+
+    def update_image_list(self, image_list: List[Path]):
+        """
+        動的にファイルリストを更新する（ファイルシステム監視用）
+
+        Args:
+            image_list: 新しい画像ファイルのリスト
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "image_list_update_start",
+                f"画像リスト更新開始: {len(image_list)}個のファイル",
+                level="DEBUG"
+            )
+
+            # 現在のリストと比較して変更を検出
+            old_set = set(self.image_list)
+            new_set = set(image_list)
+
+            # 追加されたファイル
+            added_files = new_set - old_set
+            # 削除されたファイル
+            removed_files = old_set - new_set
+
+            if added_files or removed_files:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_list_changes_detected",
+                    f"変更検出 - 追加: {len(added_files)}, 削除: {len(removed_files)}",
+                    level="INFO"
+                )
+
+                # 削除されたファイルのサムネイルを削除
+                for removed_file in removed_files:
+                    self._remove_thumbnail_item(removed_file)
+
+                # 新しいファイルのサムネイルを追加
+                for added_file in added_files:
+                    self._add_thumbnail_item(added_file)
+
+                # リストを更新
+                with QMutexLocker(self.load_mutex):
+                    self.image_list = image_list
+                    self.total_count = len(image_list)
+
+                # レイアウトを再構成
+                self._reorganize_grid()
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_list_update_complete",
+                    f"画像リスト更新完了: {len(image_list)}個のファイル",
+                    level="INFO"
+                )
+            else:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "image_list_no_changes",
+                    "画像リストに変更はありませんでした",
+                    level="DEBUG"
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "update_image_list",
+                    "new_count": len(image_list),
+                    "old_count": len(self.image_list),
+                    "user_action": "画像リスト動的更新"
+                },
+                AIComponent.CURSOR
+            )
+
+    def clear_thumbnails_safely(self):
+        """
+        既存のサムネイルを安全にクリアする
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnails_clear_start",
+                f"サムネイルクリア開始: {len(self.thumbnail_items)}個のアイテム",
+                level="DEBUG"
+            )
+
+            # 既存のサムネイルアイテムを削除
+            for image_path, thumbnail_item in self.thumbnail_items.items():
+                try:
+                    # レイアウトから削除
+                    self.grid_layout.removeWidget(thumbnail_item)
+                    # ウィジェットを削除
+                    thumbnail_item.deleteLater()
+                except Exception as item_error:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.CURSOR,
+                        "thumbnail_item_clear_error",
+                        f"サムネイルアイテム削除エラー: {image_path} - {str(item_error)}",
+                        level="WARNING"
+                    )
+
+            # 辞書をクリア
+            self.thumbnail_items.clear()
+
+            # EXIFキャッシュもクリア
+            self.exif_cache.clear()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnails_clear_complete",
+                "サムネイルクリア完了",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "clear_thumbnails_safely",
+                    "user_action": "サムネイル安全クリア"
+                },
+                AIComponent.CURSOR
+            )
+
+    def show_loading_state(self, message: str):
+        """
+        ローディング状態を表示する
+
+        Args:
+            message: 表示するメッセージ
+        """
+        try:
+            # パフォーマンスラベルにローディングメッセージを表示
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText(f"🔄 {message}")
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "loading_state_shown",
+                f"ローディング状態表示: {message}",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_loading_state",
+                    "message": message,
+                    "user_action": "ローディング状態表示"
+                },
+                AIComponent.CURSOR
+            )
+
+    def show_error_state(self, error_message: str):
+        """
+        エラー状態を表示する
+
+        Args:
+            error_message: エラーメッセージ
+        """
+        try:
+            # パフォーマンスラベルにエラーメッセージを表示
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText(f"❌ エラー: {error_message}")
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "error_state_shown",
+                f"エラー状態表示: {error_message}",
+                level="INFO"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_error_state",
+                    "error_message": error_message,
+                    "user_action": "エラー状態表示"
+                },
+                AIComponent.CURSOR
+            )
+
+    def show_empty_state(self):
+        """
+        空の状態（画像なし）を表示する
+        """
+        try:
+            # パフォーマンスラベルに空状態メッセージを表示
+            if hasattr(self, 'performance_label'):
+                self.performance_label.setText("📁 画像ファイルがありません")
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "empty_state_shown",
+                "空状態表示",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_empty_state",
+                    "user_action": "空状態表示"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _add_thumbnail_item(self, image_path: Path):
+        """
+        新しいサムネイルアイテムを追加する
+
+        Args:
+            image_path: 追加する画像ファイルのパス
+        """
+        try:
+            if image_path in self.thumbnail_items:
+                # 既に存在する場合はスキップ
+                return
+
+            # サムネイルアイテムを作成
+            thumbnail_item = ThumbnailItem(image_path, self.thumbnail_size)
+
+            # シグナルを接続
+            thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
+            thumbnail_item.context_menu_requested.connect(self._on_context_menu_requested)
+            thumbnail_item.exif_info_requested.connect(self._on_exif_info_requested)
+
+            # 辞書に追加
+            self.thumbnail_items[image_path] = thumbnail_item
+
+            # サムネイル読み込みを開始
+            self._load_single_thumbnail(image_path)
+
+            # EXIFデータ読み込みを開始
+            self._load_single_exif(image_path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_item_added",
+                f"サムネイルアイテム追加: {image_path.name}",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "add_thumbnail_item",
+                    "image_path": str(image_path),
+                    "user_action": "サムネイルアイテム追加"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _remove_thumbnail_item(self, image_path: Path):
+        """
+        サムネイルアイテムを削除する
+
+        Args:
+            image_path: 削除する画像ファイルのパス
+        """
+        try:
+            if image_path not in self.thumbnail_items:
+                # 存在しない場合はスキップ
+                return
+
+            thumbnail_item = self.thumbnail_items[image_path]
+
+            # レイアウトから削除
+            self.grid_layout.removeWidget(thumbnail_item)
+
+            # ウィジェットを削除
+            thumbnail_item.deleteLater()
+
+            # 辞書から削除
+            del self.thumbnail_items[image_path]
+
+            # EXIFキャッシュからも削除
+            if image_path in self.exif_cache:
+                del self.exif_cache[image_path]
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_item_removed",
+                f"サムネイルアイテム削除: {image_path.name}",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "remove_thumbnail_item",
+                    "image_path": str(image_path),
+                    "user_action": "サムネイルアイテム削除"
+                },
                 AIComponent.CURSOR
             )
 
