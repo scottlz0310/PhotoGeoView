@@ -9,8 +9,9 @@ Author: Kiro AI Integration System
 """
 
 import time
+import asyncio
 from pathlib import Path
-from typing import List, Set, Optional, Dict, Any
+from typing import List, Set, Optional, Dict, Any, AsyncIterator, Callable
 from datetime import datetime
 
 from ..models import AIComponent, ProcessingStatus
@@ -1443,3 +1444,279 @@ class FileDiscoveryService:
                 "memory_usage_mb": self._get_memory_usage()
             }
         )
+
+    async def discover_images_async(self,
+                                  folder_path: Path,
+                                  progress_callback: Optional[Callable[[int, int, str], None]] = None,
+                                  batch_size: int = 50) -> AsyncIterator[Path]:
+        """
+        非同期で画像ファイルを検出する
+
+        UIスレッドをブロックしない非同期ファイル検出を提供する。
+        プログレスバー表示との連携も可能。
+
+        Args:
+            folder_path: 検索対象のフォルダパス
+            progress_callback: 進行状況コールバック関数 (current, total, message)
+            batch_size: 一度に処理するファイル数
+
+        Yields:
+            検出された画像ファイルのパス
+        """
+
+        with self.logger_system.operation_context(AIComponent.KIRO, "async_image_discovery") as ctx:
+            start_time = time.time()
+            total_processed = 0
+            total_found = 0
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "async_discovery_start",
+                f"非同期画像検出開始: {folder_path}, バッチサイズ: {batch_size}"
+            )
+
+            try:
+                # フォルダの存在確認
+                if not folder_path.exists() or not folder_path.is_dir():
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "async_discovery_error",
+                        f"無効なフォルダパス: {folder_path}",
+                        level="WARNING"
+                    )
+                    return
+
+                # 全ファイルリストを取得
+                try:
+                    all_files = list(folder_path.iterdir())
+                    total_files = len(all_files)
+
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "async_discovery_info",
+                        f"総ファイル数: {total_files}個",
+                        level="DEBUG"
+                    )
+
+                    if progress_callback:
+                        progress_callback(0, total_files, "ファイルスキャン開始...")
+
+                except PermissionError as e:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "async_discovery_error",
+                        f"フォルダアクセス権限エラー: {folder_path} - {str(e)}",
+                        level="ERROR"
+                    )
+                    return
+
+                # バッチ処理でファイルを検証
+                for i in range(0, len(all_files), batch_size):
+                    batch_files = all_files[i:i + batch_size]
+                    batch_start_time = time.time()
+
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "async_batch_start",
+                        f"バッチ処理開始: {i//batch_size + 1}/{(len(all_files) + batch_size - 1)//batch_size} "
+                        f"({len(batch_files)}ファイル)",
+                        level="DEBUG"
+                    )
+
+                    # バッチ内の各ファイルを処理
+                    for file_path in batch_files:
+                        total_processed += 1
+
+                        if file_path.is_file():
+                            # 拡張子チェック
+                            if file_path.suffix.lower() in self.SUPPORTED_EXTENSIONS:
+                                # 非同期でファイル検証
+                                if await self._validate_image_file_async(file_path):
+                                    total_found += 1
+
+                                    self.logger_system.log_ai_operation(
+                                        AIComponent.KIRO,
+                                        "async_file_found",
+                                        f"有効な画像ファイル発見: {file_path.name}",
+                                        level="DEBUG"
+                                    )
+
+                                    yield file_path
+
+                        # 進行状況を更新
+                        if progress_callback and total_processed % 10 == 0:
+                            progress_message = f"処理中... {total_found}個の画像を発見"
+                            progress_callback(total_processed, total_files, progress_message)
+
+                    # バッチ処理完了
+                    batch_duration = time.time() - batch_start_time
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "async_batch_complete",
+                        f"バッチ処理完了: {batch_duration:.2f}秒, "
+                        f"発見ファイル数: {total_found}個",
+                        level="DEBUG"
+                    )
+
+                    # UIスレッドに制御を戻すため短時間待機
+                    await asyncio.sleep(0.001)
+
+                # 最終進行状況を更新
+                if progress_callback:
+                    progress_callback(total_files, total_files, f"完了: {total_found}個の画像を発見")
+
+                # 完了ログ
+                total_duration = time.time() - start_time
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "async_discovery_complete",
+                    f"非同期画像検出完了: {total_found}個のファイルを{total_duration:.2f}秒で検出"
+                )
+
+                # パフォーマンス情報をログに記録
+                self.logger_system.log_performance(
+                    AIComponent.KIRO,
+                    "async_image_discovery",
+                    {
+                        "folder_path": str(folder_path),
+                        "total_files_processed": total_processed,
+                        "total_images_found": total_found,
+                        "processing_duration": total_duration,
+                        "batch_size": batch_size,
+                        "files_per_second": total_processed / total_duration if total_duration > 0 else 0,
+                        "success_rate": total_found / total_processed if total_processed > 0 else 0,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                )
+
+            except Exception as e:
+                error_duration = time.time() - start_time
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "async_discovery_error",
+                    f"非同期画像検出エラー: {str(e)}",
+                    level="ERROR"
+                )
+
+                self.error_handler.handle_error(
+                    e, ErrorCategory.CORE_ERROR,
+                    {
+                        "operation": "async_image_discovery",
+                        "folder_path": str(folder_path),
+                        "processing_duration": error_duration,
+                        "user_action": "非同期フォルダ内画像検出"
+                    },
+                    AIComponent.KIRO
+                )
+
+                if progress_callback:
+                    # 変数が初期化されていない場合のフォールバック
+                    processed = locals().get('total_processed', 0)
+                    progress_callback(processed, processed, f"エラー: {str(e)}")
+
+    async def _validate_image_file_async(self, file_path: Path) -> bool:
+        """
+        非同期で画像ファイルの有効性をチェックする
+
+        Args:
+            file_path: 検証対象のファイルパス
+
+        Returns:
+            ファイルが有効な画像の場合True
+        """
+
+        try:
+            # 基本的なファイル検証（同期）
+            if not self._basic_file_validation(file_path):
+                return False
+
+            # 重い処理を非同期で実行
+            loop = asyncio.get_event_loop()
+
+            # CS4CodingImageProcessorの検証を別スレッドで実行
+            is_valid = await loop.run_in_executor(
+                None,
+                self.image_processor.validate_image,
+                file_path
+            )
+
+            if is_valid:
+                # 実際の画像読み込みテストも非同期で実行
+                try:
+                    test_image = await loop.run_in_executor(
+                        None,
+                        self.image_processor.load_image,
+                        file_path
+                    )
+
+                    if test_image is None:
+                        self.logger_system.log_ai_operation(
+                            AIComponent.COPILOT,
+                            "async_validation_failed",
+                            f"非同期画像読み込み失敗: {file_path.name}",
+                            level="DEBUG"
+                        )
+                        return False
+
+                except Exception as validation_error:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.COPILOT,
+                        "async_validation_error",
+                        f"非同期バリデーションエラー: {file_path.name} - {str(validation_error)}",
+                        level="DEBUG"
+                    )
+                    return False
+
+            return is_valid
+
+        except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.COPILOT,
+                "async_validation_exception",
+                f"非同期バリデーション例外: {file_path.name} - {str(e)}",
+                level="WARNING"
+            )
+            return False
+
+    async def scan_folder_async(self,
+                              folder_path: Path,
+                              progress_callback: Optional[Callable[[int, int, str], None]] = None) -> List[Path]:
+        """
+        フォルダを非同期でスキャンし、すべての画像ファイルを取得する
+
+        Args:
+            folder_path: スキャン対象のフォルダパス
+            progress_callback: 進行状況コールバック関数
+
+        Returns:
+            検出された画像ファイルのリスト
+        """
+
+        discovered_files = []
+
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "async_scan_start",
+            f"非同期フォルダスキャン開始: {folder_path}"
+        )
+
+        try:
+            async for image_path in self.discover_images_async(folder_path, progress_callback):
+                discovered_files.append(image_path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "async_scan_complete",
+                f"非同期フォルダスキャン完了: {len(discovered_files)}個のファイルを発見"
+            )
+
+            return discovered_files
+
+        except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "async_scan_error",
+                f"非同期フォルダスキャンエラー: {str(e)}",
+                level="ERROR"
+            )
+            return discovered_files
