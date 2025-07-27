@@ -26,6 +26,7 @@ from ..config_manager import ConfigManager
 from ..state_manager import StateManager
 from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
+from ..services.file_discovery_service import FileDiscoveryService
 
 
 class EnhancedFolderNavigator(QWidget):
@@ -68,6 +69,11 @@ class EnhancedFolderNavigator(QWidget):
         self.folder_history: List[Path] = []
         self.bookmarks: List[Path] = []
         self.max_history = 20
+
+        # File discovery service for image detection
+        self.file_discovery_service = FileDiscoveryService(
+            logger_system=self.logger_system
+        )
 
         # UI components
         self.address_bar: Optional[QLineEdit] = None
@@ -263,6 +269,218 @@ class EnhancedFolderNavigator(QWidget):
         # Connect state manager changes
         self.state_manager.add_change_listener("current_folder", self._on_current_folder_changed)
 
+    # File discovery methods
+
+    def _discover_images_in_folder(self, folder_path: Path) -> List[Path]:
+        """
+        指定されたフォルダ内の画像ファイルを検出する
+
+        Args:
+            folder_path: 検索対象のフォルダパス
+
+        Returns:
+            検出された画像ファイルのパスリスト
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "folder_image_discovery",
+                f"フォルダ内画像検出開始: {folder_path}",
+                level="DEBUG"
+            )
+
+            # FileDiscoveryServiceを使用してファイル検出
+            discovered_images = self.file_discovery_service.discover_images(folder_path)
+
+            # 画像が見つからない場合の処理
+            if not discovered_images:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "no_images_found",
+                    f"画像ファイルが見つかりませんでした: {folder_path}",
+                    level="INFO"
+                )
+                self._show_no_images_message()
+            else:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "folder_image_discovery_complete",
+                    f"画像検出完了: {len(discovered_images)}個のファイルを検出 - {folder_path}"
+                )
+
+            return discovered_images
+
+        except Exception as e:
+            # エラーハンドリングメソッドを使用
+            self._handle_discovery_error(e, folder_path)
+
+            # 統合エラーハンドラーにも記録
+            self.error_handler.handle_error(
+                e, ErrorCategory.FILE_ERROR,
+                {
+                    "operation": "discover_images_in_folder",
+                    "folder_path": str(folder_path),
+                    "user_action": "フォルダ内画像検出"
+                },
+                AIComponent.CURSOR
+            )
+            return []
+
+    def _clear_previous_folder_data(self, previous_folder: Optional[Path]):
+        """
+        前のフォルダのデータをクリアする
+
+        Args:
+            previous_folder: 前のフォルダのパス
+        """
+        try:
+            if previous_folder:
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "folder_data_clear",
+                    f"前のフォルダのデータをクリア: {previous_folder}",
+                    level="DEBUG"
+                )
+
+                # 前のフォルダのキャッシュデータをクリア
+                # (FileDiscoveryServiceが内部的にキャッシュを持っている場合の対応)
+                # 現在の実装では特別なクリア処理は不要だが、将来の拡張に備えて準備
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "folder_data_clear_complete",
+                    f"フォルダデータクリア完了: {previous_folder}",
+                    level="DEBUG"
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "clear_previous_folder_data",
+                    "previous_folder": str(previous_folder) if previous_folder else "None",
+                    "user_action": "フォルダ変更時のデータクリア"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _handle_discovery_error(self, error: Exception, folder_path: Path):
+        """
+        ファイル検出エラーを処理し、ユーザーに分かりやすいメッセージを表示する
+
+        Args:
+            error: 発生したエラー
+            folder_path: エラーが発生したフォルダのパス
+        """
+        try:
+            # エラーの種類に応じて適切な日本語メッセージを生成
+            error_type = type(error).__name__
+            folder_name = folder_path.name if folder_path else "不明なフォルダ"
+
+            if "Permission" in error_type or "Access" in error_type:
+                error_message = f"フォルダ '{folder_name}' へのアクセス権限がありません。\n管理者権限で実行するか、フォルダの権限設定を確認してください。"
+                user_message = "アクセス権限エラー"
+            elif "FileNotFound" in error_type or "NotFound" in error_type:
+                error_message = f"フォルダ '{folder_name}' が見つかりません。\nフォルダが移動または削除された可能性があります。"
+                user_message = "フォルダが見つかりません"
+            elif "Timeout" in error_type:
+                error_message = f"フォルダ '{folder_name}' の読み込みがタイムアウトしました。\nネットワークドライブの場合は接続を確認してください。"
+                user_message = "読み込みタイムアウト"
+            else:
+                error_message = f"フォルダ '{folder_name}' の画像検出中にエラーが発生しました。\n詳細: {str(error)}"
+                user_message = "画像検出エラー"
+
+            # ログにエラー詳細を記録
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "discovery_error_handling",
+                f"ファイル検出エラー処理: {folder_path} - {error_type}: {str(error)}",
+                level="ERROR"
+            )
+
+            # ユーザーにエラーメッセージを表示
+            QMessageBox.warning(
+                self,
+                user_message,
+                error_message
+            )
+
+            # エラー発生をシグナルで通知
+            self.navigation_error.emit(error_type.lower(), error_message)
+
+            # エラー統計を更新（将来の改善のため）
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "error_statistics",
+                f"エラー統計更新: {error_type} - フォルダ: {folder_path}",
+                level="DEBUG"
+            )
+
+        except Exception as handling_error:
+            # エラーハンドリング中のエラー（メタエラー）
+            self.error_handler.handle_error(
+                handling_error, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "handle_discovery_error",
+                    "original_error": str(error),
+                    "folder_path": str(folder_path),
+                    "user_action": "エラー処理"
+                },
+                AIComponent.CURSOR
+            )
+
+    def _show_no_images_message(self):
+        """
+        画像ファイルが見つからない場合のメッセージを表示する
+        """
+        try:
+            folder_name = self.current_folder.name if self.current_folder else "選択されたフォルダ"
+
+            # 日本語でのわかりやすいメッセージ
+            message = f"フォルダ '{folder_name}' には画像ファイルが見つかりませんでした。\n\n" \
+                     f"対応している画像形式:\n" \
+                     f"• JPEG (.jpg, .jpeg)\n" \
+                     f"• PNG (.png)\n" \
+                     f"• GIF (.gif)\n" \
+                     f"• BMP (.bmp)\n" \
+                     f"• TIFF (.tiff)\n" \
+                     f"• WebP (.webp)\n\n" \
+                     f"別のフォルダを選択してください。"
+
+            # ログに記録
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "no_images_message",
+                f"画像なしメッセージ表示: {self.current_folder}",
+                level="INFO"
+            )
+
+            # ユーザーに情報メッセージを表示
+            QMessageBox.information(
+                self,
+                "画像ファイルが見つかりません",
+                message
+            )
+
+            # 統計情報を更新
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "empty_folder_statistics",
+                f"空フォルダ統計更新: {self.current_folder}",
+                level="DEBUG"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {
+                    "operation": "show_no_images_message",
+                    "current_folder": str(self.current_folder) if self.current_folder else "None",
+                    "user_action": "画像なしメッセージ表示"
+                },
+                AIComponent.CURSOR
+            )
+
     # Public methods
 
     def navigate_to_folder(self, folder_path: Path) -> bool:
@@ -273,8 +491,12 @@ class EnhancedFolderNavigator(QWidget):
                 self.navigation_error.emit("invalid_path", f"Invalid folder: {folder_path}")
                 return False
 
-            # Update current folder
+            # Clear previous folder data
             old_folder = self.current_folder
+            if old_folder and old_folder != folder_path:
+                self._clear_previous_folder_data(old_folder)
+
+            # Update current folder
             self.current_folder = folder_path
 
             # Add to history
@@ -287,9 +509,19 @@ class EnhancedFolderNavigator(QWidget):
             # Update configuration
             self.config_manager.set_setting("ui.current_folder", str(folder_path))
 
-            # Emit signals
+            # Discover images in the new folder
+            discovered_images = self._discover_images_in_folder(folder_path)
+
+            # Emit signals with discovered images
             self.folder_selected.emit(folder_path)
             self.folder_changed.emit(folder_path)
+
+            # Log folder change with image count
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "folder_change_complete",
+                f"フォルダ変更完了: {folder_path} ({len(discovered_images)}個の画像ファイル)"
+            )
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,

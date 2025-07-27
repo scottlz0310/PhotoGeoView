@@ -835,7 +835,9 @@ class FileDiscoveryService:
                     "is_valid": False,
                     "timestamp": datetime.now().isoformat()
                 }
-            )formance(
+            )
+
+            self.logger_system.log_performance(
                 AIComponent.KIRO,
                 "basic_file_validation",
                 {
