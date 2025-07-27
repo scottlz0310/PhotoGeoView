@@ -7,6 +7,7 @@ qt-theme-manager>=0.1.0
 requests>=2.25.0
 numpy>=1.20.0
 psutil>=5.8.0
+watchdog>=3.0.0
 
 # テスト関連
 pytest>=7.0.0
