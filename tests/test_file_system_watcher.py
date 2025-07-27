@@ -207,6 +207,124 @@ class TestFileSystemWatcher:
         # 統計にエラーが記録されることを確認
         assert watcher.watch_stats['errors'] > 0
 
+    def test_image_file_filtering(self):
+        """画像ファイルフィルタリングテスト"""
+        from src.integration.services.file_system_watcher import ImageFileEventHandler, WATCHDOG_AVAILABLE
+
+        if not WATCHDOG_AVAILABLE:
+            pytest.skip("watchdog not available")
+
+        watcher = FileSystemWatcher(logger_system=self.logger_system)
+        handler = ImageFileEventHandler(
+            watcher=watcher,
+            supported_extensions=watcher.SUPPORTED_EXTENSIONS,
+            logger_system=self.logger_system
+        )
+
+        # 画像ファイルのテスト
+        image_files = [
+            Path("/test/image.jpg"),
+            Path("/test/photo.jpeg"),
+            Path("/test/picture.png"),
+            Path("/test/graphic.gif"),
+            Path("/test/bitmap.bmp"),
+            Path("/test/tiff_file.tiff"),
+            Path("/test/webp_file.webp")
+        ]
+
+        for image_file in image_files:
+            assert handler._is_image_file(image_file), f"{image_file.suffix} should be recognized as image file"
+
+        # 非画像ファイルのテスト
+        non_image_files = [
+            Path("/test/document.txt"),
+            Path("/test/video.mp4"),
+            Path("/test/audio.mp3"),
+            Path("/test/archive.zip"),
+            Path("/test/executable.exe")
+        ]
+
+        for non_image_file in non_image_files:
+            assert not handler._is_image_file(non_image_file), f"{non_image_file.suffix} should not be recognized as image file"
+
+    def test_change_notification_system(self):
+        """変更通知システムの統合テスト"""
+        watcher = FileSystemWatcher(logger_system=self.logger_system)
+
+        # コールバック結果を記録するリスト
+        notifications = []
+
+        def change_callback(file_path, change_type, old_path=None):
+            notifications.append({
+                'file_path': file_path,
+                'change_type': change_type,
+                'old_path': old_path,
+                'timestamp': time.time()
+            })
+
+        # リスナーを追加
+        watcher.add_change_listener(change_callback)
+
+        # 各種変更タイプをテスト
+        test_cases = [
+            (Path("/test/new_image.jpg"), FileChangeType.CREATED, None),
+            (Path("/test/modified_image.png"), FileChangeType.MODIFIED, None),
+            (Path("/test/deleted_image.gif"), FileChangeType.DELETED, None),
+            (Path("/test/moved_image.bmp"), FileChangeType.MOVED, Path("/test/old_image.bmp"))
+        ]
+
+        for file_path, change_type, old_path in test_cases:
+            watcher._notify_listeners(file_path, change_type, old_path)
+
+        # 通知が正しく記録されたことを確認
+        assert len(notifications) == len(test_cases)
+
+        for i, (expected_path, expected_type, expected_old_path) in enumerate(test_cases):
+            notification = notifications[i]
+            assert notification['file_path'] == expected_path
+            assert notification['change_type'] == expected_type
+            assert notification['old_path'] == expected_old_path
+            assert 'timestamp' in notification
+
+    def test_debounce_functionality(self):
+        """デバウンス機能のテスト"""
+        watcher = FileSystemWatcher(logger_system=self.logger_system)
+        watcher.debounce_interval = 0.2  # 200ms のデバウンス間隔（より長めに設定）
+
+        notifications = []
+
+        def change_callback(file_path, change_type, old_path=None):
+            notifications.append((file_path, change_type))
+
+        watcher.add_change_listener(change_callback)
+
+        # 同じファイルに対して短時間で複数の通知を送信
+        test_path = Path("/test/rapid_changes.jpg")
+
+        # 最初の通知
+        watcher._notify_listeners(test_path, FileChangeType.MODIFIED)
+        assert len(notifications) == 1, "最初の通知は処理されるべき"
+
+        # デバウンス間隔より短い時間で追加の通知
+        time.sleep(0.05)  # デバウンス間隔より短い時間
+        watcher._notify_listeners(test_path, FileChangeType.MODIFIED)
+        assert len(notifications) == 1, "デバウンス間隔内の通知はスキップされるべき"
+
+        time.sleep(0.05)  # デバウンス間隔より短い時間
+        watcher._notify_listeners(test_path, FileChangeType.MODIFIED)
+        assert len(notifications) == 1, "デバウンス間隔内の通知はスキップされるべき"
+
+        # デバウンス間隔後に再度通知を送信
+        time.sleep(0.25)  # デバウンス間隔より長い時間
+        watcher._notify_listeners(test_path, FileChangeType.MODIFIED)
+
+        # 新しい通知が処理されることを確認
+        assert len(notifications) == 2, "デバウンス間隔後の通知は処理されるべき"
+        assert notifications[0][0] == test_path
+        assert notifications[0][1] == FileChangeType.MODIFIED
+        assert notifications[1][0] == test_path
+        assert notifications[1][1] == FileChangeType.MODIFIED
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
