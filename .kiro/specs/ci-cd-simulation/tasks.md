@@ -76,19 +76,24 @@
     - _要件: 3.1, 3.3_
 
 - [ ] 5. 包括的テストランナーシステムの作成
-  - [ ] 5.1 pytest統合付きTestRunnerの実装
+  - [ ] 5.1 pytest統合付きTestRunnerクラスの実装
+    - tools/ci/checkers/test_runner.py にTestRunnerクラスを作成
     - 適切な環境セットアップ付きpytest実行ラッパーを実装
     - テスト発見と分類 (unit, integration, performance) を追加
     - テスト結果の解析とレポートを作成
+    - CheckerInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 5.1, 5.2_
 
-  - [ ] 5.2 AIコンポーネントテスト機能の実装
+  - [x] 5.2 AIコンポーネントテスト機能の実装
+    - tools/ci/checkers/ai_component_tester.py にAIComponentTesterクラスを作成
     - AI固有のテスト実行 (Copilot, Cursor, Kiroコンポーネント) を実装
     - デモスクリプトテスト機能を追加
     - AI互換性検証を作成
+    - CheckerInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 5.1, 5.2, 5.3_
 
-  - [ ] 5.3 複数Pythonバージョン用マトリックステストの作成
+  - [x] 5.3 複数Pythonバージョン用マトリックステストの作成
+    - TestRunnerクラスに複数Pythonバージョンサポートを追加
     - Pythonバージョン間での並列テスト実行を実装
     - バージョン固有のエラー検出とレポートを追加
     - テスト結果の集約と比較を実装
@@ -96,44 +101,53 @@
 
 - [ ] 6. セキュリティスキャンシステムの実装
   - [ ] 6.1 safety統合付きSecurityScannerの作成
+    - tools/ci/checkers/security_scanner.py にSecurityScannerクラスを作成
     - safety脆弱性スキャン機能を実装
     - 依存関係脆弱性レポートを追加
     - 修正提案付きセキュリティレポート生成を作成
+    - CheckerInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 6.1, 6.2_
 
   - [ ] 6.2 banditセキュリティリンティングの実装
-    - banditコードセキュリティ分析を実装
+    - SecurityScannerクラスにbanditコードセキュリティ分析を実装
     - セキュリティ問題の分類と重要度評価を追加
     - 詳細なセキュリティ発見レポートを作成
     - _要件: 6.1, 6.2, 6.3_
 
 - [ ] 7. パフォーマンス分析と回帰検出の作成
   - [ ] 7.1 ベンチマーク実行付きPerformanceAnalyzerの実装
+    - tools/ci/checkers/performance_analyzer.py にPerformanceAnalyzerクラスを作成
     - ベンチマークテスト実行とタイミング測定を実装
     - メモリ使用量監視とレポートを追加
     - パフォーマンスメトリクス収集と保存を作成
+    - CheckerInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 7.1, 7.3_
 
   - [ ] 7.2 パフォーマンス回帰検出の実装
-    - ベースライン比較ロジックを実装
+    - PerformanceAnalyzerクラスにベースライン比較ロジックを実装
     - 回帰閾値設定と検出を追加
     - パフォーマンス傾向分析とレポートを作成
     - _要件: 7.1, 7.2, 7.3_
 
 - [ ] 8. 包括的レポートシステムの作成
   - [ ] 8.1 Markdownレポート生成の実装
+    - tools/ci/reporters/markdown_reporter.py にMarkdownReporterクラスを作成
     - 詳細なMarkdownレポートテンプレートを実装
     - チェック結果のフォーマットと可視化を追加
     - エラーサマリーと修正提案を作成
+    - ReporterInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 8.1, 8.2, 8.3_
 
   - [ ] 8.2 機械処理用JSONレポート生成の実装
+    - tools/ci/reporters/json_reporter.py にJSONReporterクラスを作成
     - CI統合用の構造化JSON出力を実装
     - 機械可読結果フォーマットを追加
     - API互換結果構造を作成
+    - ReporterInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 8.1, 8.2, 8.3_
 
   - [ ] 8.3 履歴追跡と傾向分析の作成
+    - tools/ci/reporters/history_tracker.py にHistoryTrackerクラスを作成
     - 実行履歴の保存と取得を実装
     - 傾向分析と品質メトリクス追跡を追加
     - 改善提案生成を作成
@@ -141,26 +155,29 @@
 
 - [ ] 9. チェック統制と並列実行の実装
   - [ ] 9.1 依存関係管理付きCheckOrchestratorの作成
+    - tools/ci/check_orchestrator.py にCheckOrchestratorクラスを作成
     - チェック依存関係解決ロジックを実装
     - 並列実行調整を追加
     - リソース管理とスロットリングを作成
+    - OrchestratorInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 9.2, 1.1_
 
   - [ ] 9.2 選択的チェック実行の実装
-    - チェックフィルタリングと選択ロジックを実装
+    - CheckOrchestratorクラスにチェックフィルタリングと選択ロジックを実装
     - チェック選択用コマンドライン引数解析を追加
     - チェック可用性検証を作成
     - _要件: 9.1, 9.3_
 
 - [ ] 10. メインCLIインターフェースとGitフック統合の作成
   - [ ] 10.1 CISimulatorメインCLIインターフェースの実装
+    - tools/ci/simulator.py にCISimulatorクラスを作成
     - コマンドライン引数解析と検証を実装
     - ヘルプシステムと使用方法ドキュメントを追加
     - チェック選択用インタラクティブモードを作成
     - _要件: 1.1, 1.2, 9.1_
 
   - [ ] 10.2 Gitフックセットアップと統合の実装
-    - pre-commitフックのインストールと設定を実装
+    - CISimulatorクラスにpre-commitフックのインストールと設定を実装
     - フックテンプレート生成とカスタマイズを追加
     - フック実行と結果処理を作成
     - _要件: 11.3, 1.1_
