@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-07-26T11:18:46.292916",
+  "build_status": "✅ 成功",
+  "test_results": [],
+  "quality_metrics": {
+    "total_files": 0,
+    "total_issues": 0,
+    "coverage_percentage": 0.0,
+    "quality_score": 0.0,
+    "issues_by_severity": {}
+  },
+  "performance_metrics": {
+    "total_tests": 0,
+    "regressions": 0,
+    "improvements": 0,
+    "average_execution_time": 0.0,
+    "memory_usage_mb": 0.0
+  },
+  "ai_component_status": {
+    "copilot": "⚠️ テスト未実装",
+    "cursor": "⚠️ テスト未実装",
+    "kiro": "⚠️ テスト未実装"
+  },
+  "recommendations": [
+    "⚠️ 品質スコア(0.0)が低いため、コード品質の改善が必要です",
+    "📊 テストカバレッジ(0.0%)を向上させてください"
+  ]
+}

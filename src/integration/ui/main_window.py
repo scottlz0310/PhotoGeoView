@@ -25,6 +25,8 @@ from ..config_manager import ConfigManager
 from ..state_manager import StateManager
 from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
+from ..services.file_discovery_service import FileDiscoveryService
+from ..services.file_system_watcher import FileSystemWatcher
 from .theme_manager import IntegratedThemeManager
 from .thumbnail_grid import OptimizedThumbnailGrid
 from .folder_navigator import EnhancedFolderNavigator
@@ -71,6 +73,11 @@ class IntegratedMainWindow(QMainWindow):
         self.theme_manager: Optional[IntegratedThemeManager] = None
         self.thumbnail_grid: Optional[OptimizedThumbnailGrid] = None
         self.folder_navigator: Optional[EnhancedFolderNavigator] = None
+
+        # Services
+        self.file_discovery_service = FileDiscoveryService(
+            logger_system=self.logger_system
+        )
 
         # Layout components
         self.central_widget: Optional[QWidget] = None
@@ -152,7 +159,7 @@ class IntegratedMainWindow(QMainWindow):
         exit_action = QAction("E&xit", self)
         exit_action.setShortcut(QKeySequence.StandardKey.Quit)
         exit_action.setStatusTip("Exit the application")
-        exit_actiel.triggered.connect(self.close)
+        exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
         # View menu
@@ -368,6 +375,8 @@ class IntegratedMainWindow(QMainWindow):
         # Connect thumbnail grid signals
         if self.thumbnail_grid:
             self.thumbnail_grid.image_selected.connect(self._on_image_selected)
+            # Connect folder changes to thumbnail grid
+            self.folder_changed.connect(self._update_thumbnail_grid)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -534,21 +543,173 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.CURSOR
             )
 
+    def _update_thumbnail_grid(self, folder_path: Path):
+        """
+        Update thumbnail grid with images from the selected folder using FileDiscoveryService
+
+        Args:
+            folder_path: Path to the folder to scan for images
+        """
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "thumbnail_update_start",
+                f"Starting thumbnail update for folder: {folder_path}"
+            )
+
+            # Validate folder path
+            if not folder_path.exists() or not folder_path.is_dir():
+                error_msg = f"フォルダが存在しないか、アクセスできません: {folder_path}"
+                self.logger_system.log_error(
+                    AIComponent.KIRO,
+                    Exception(error_msg),
+                    "folder_validation",
+                    {"folder_path": str(folder_path)}
+                )
+
+                if self.thumbnail_grid:
+                    self.thumbnail_grid.show_error_state(error_msg)
+                return
+
+            # Show loading state
+            if self.thumbnail_grid:
+                self.thumbnail_grid.show_loading_state("フォルダをスキャン中...")
+
+            # Use FileDiscoveryService to discover images
+            try:
+                image_files = self.file_discovery_service.discover_images(folder_path)
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "file_discovery_complete",
+                    f"Discovered {len(image_files)} images in {folder_path}"
+                )
+
+                # Update thumbnail grid based on results
+                if self.thumbnail_grid:
+                    if image_files:
+                        # Update with discovered images
+                        self.thumbnail_grid.update_image_list(image_files)
+
+                        # Update status bar
+                        if hasattr(self, 'status_bar') and self.status_bar:
+                            self.status_bar.showMessage(
+                                f"{len(image_files)}個の画像ファイルが見つかりました - {folder_path.name}",
+                                3000
+                            )
+                    else:
+                        # Show empty state
+                        self.thumbnail_grid.show_empty_state()
+
+                        # Update status bar
+                        if hasattr(self, 'status_bar') and self.status_bar:
+                            self.status_bar.showMessage(
+                                f"画像ファイルが見つかりませんでした - {folder_path.name}",
+                                3000
+                            )
+
+                # Update state manager
+                self.state_manager.update_state(
+                    current_folder=folder_path,
+                    image_count=len(image_files)
+                )
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "thumbnail_update_complete",
+                    f"Successfully updated thumbnails for {len(image_files)} images"
+                )
+
+            except Exception as discovery_error:
+                # Handle FileDiscoveryService errors
+                error_msg = f"ファイル検出中にエラーが発生しました: {str(discovery_error)}"
+
+                self.logger_system.log_error(
+                    AIComponent.KIRO,
+                    discovery_error,
+                    "file_discovery_error",
+                    {"folder_path": str(folder_path)}
+                )
+
+                if self.thumbnail_grid:
+                    self.thumbnail_grid.show_error_state(error_msg)
+
+                # Update status bar with error
+                if hasattr(self, 'status_bar') and self.status_bar:
+                    self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
+
+                # Show user-friendly error dialog
+                self._show_error_dialog(
+                    "ファイル検出エラー",
+                    f"フォルダ '{folder_path.name}' の画像ファイル検出中にエラーが発生しました。\n\n"
+                    f"詳細: {str(discovery_error)}\n\n"
+                    "フォルダの権限を確認するか、別のフォルダを選択してください。"
+                )
+
+        except Exception as e:
+            # Handle unexpected errors
+            error_msg = f"サムネイル更新中に予期しないエラーが発生しました: {str(e)}"
+
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "thumbnail_grid_update", "folder": str(folder_path)},
+                AIComponent.KIRO
+            )
+
+            if self.thumbnail_grid:
+                self.thumbnail_grid.show_error_state("予期しないエラーが発生しました")
+
+            # Update status bar with error
+            if hasattr(self, 'status_bar') and self.status_bar:
+                self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
+
+    def _show_error_dialog(self, title: str, message: str):
+        """
+        Show error dialog to user
+
+        Args:
+            title: Dialog title
+            message: Error message
+        """
+        try:
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Icon.Warning)
+            msg_box.setWindowTitle(title)
+            msg_box.setText(message)
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg_box.exec()
+
+        except Exception as e:
+            # Fallback if dialog fails
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "error_dialog_failure",
+                {"title": title, "message": message}
+            )
+
     def _on_performance_alert(self, level: str, message: str):
         """Handle performance alerts (Kiro enhancement)"""
 
+        # UI要素の存在確認
+        if not hasattr(self, 'performance_label') or self.performance_label is None:
+            return
+
         if level == "warning":
             self.performance_label.setStyleSheet("color: orange; font-weight: bold;")
-            self.status_performance.setStyleSheet("color: orange;")
-            self.status_performance.setText(f"Performance: {message}")
+            if hasattr(self, 'status_performance') and self.status_performance is not None:
+                self.status_performance.setStyleSheet("color: orange;")
+                self.status_performance.setText(f"Performance: {message}")
         elif level == "critical":
             self.performance_label.setStyleSheet("color: red; font-weight: bold;")
-            self.status_performance.setStyleSheet("color: red;")
-            self.status_performance.setText(f"Performance: {message}")
+            if hasattr(self, 'status_performance') and self.status_performance is not None:
+                self.status_performance.setStyleSheet("color: red;")
+                self.status_performance.setText(f"Performance: {message}")
         else:
             self.performance_label.setStyleSheet("color: green; font-weight: bold;")
-            self.status_performance.setStyleSheet("color: green;")
-            self.status_performance.setText("Performance: Good")
+            if hasattr(self, 'status_performance') and self.status_performance is not None:
+                self.status_performance.setStyleSheet("color: green;")
+                self.status_performance.setText("Performance: Good")
 
     # Monitoring methods (Kiro enhancements)
 
@@ -556,6 +717,10 @@ class IntegratedMainWindow(QMainWindow):
         """Update performance metrics display"""
 
         try:
+            # UI要素が初期化されているかチェック
+            if not hasattr(self, 'performance_label') or self.performance_label is None:
+                return
+
             # Get performance summary from state manager
             perf_summary = self.state_manager.get_performance_summary()
 
@@ -585,6 +750,10 @@ class IntegratedMainWindow(QMainWindow):
         """Update memory usage display"""
 
         try:
+            # UI要素が初期化されているかチェック
+            if not hasattr(self, 'memory_label') or self.memory_label is None:
+                return
+
             import psutil
             import os
 
@@ -594,7 +763,8 @@ class IntegratedMainWindow(QMainWindow):
 
             # Update memory labels
             self.memory_label.setText(f"Memory: {memory_mb:.1f} MB")
-            self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
+            if hasattr(self, 'status_memory') and self.status_memory is not None:
+                self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
 
             # Check for memory alerts
             max_memory = self.config_manager.get_setting("performance.max_memory_mb", 512)
@@ -628,6 +798,23 @@ class IntegratedMainWindow(QMainWindow):
 
             # Save configuration
             self.config_manager.save_config()
+
+            # Stop file system monitoring
+            if hasattr(self, 'folder_navigator') and self.folder_navigator:
+                self.folder_navigator.stop_monitoring()
+
+            # Stop performance monitoring
+            if hasattr(self, 'performance_timer') and self.performance_timer:
+                self.performance_timer.stop()
+
+            if hasattr(self, 'memory_monitor') and self.memory_monitor:
+                self.memory_monitor.stop()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "main_window_cleanup",
+                "Main window cleanup completed"
+            )
 
             # Stop timers
             if self.performance_timer:

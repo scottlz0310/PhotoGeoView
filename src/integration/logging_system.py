@@ -66,7 +66,7 @@ class PerformanceLogHandler(logging.Handler):
     def __init__(self, metrics_file: Path):
         super().__init__()
         self.metrics_file = metrics_file
-        ses_buffer: List[Dict[str, Any]] = []
+        self.metrics_buffer: List[Dict[str, Any]] = []
         self.buffer_size = 100
 
     def emit(self, record):
@@ -435,6 +435,26 @@ class LoggerSystem:
 
         if self.performance_handler:
             self.performance_handler.flush_metrics()
+
+    def info(self, message: str, **kwargs):
+        """Log info message"""
+        logger = self.get_logger("system")
+        logger.info(message, extra=kwargs)
+
+    def warning(self, message: str, **kwargs):
+        """Log warning message"""
+        logger = self.get_logger("system")
+        logger.warning(message, extra=kwargs)
+
+    def error(self, message: str, **kwargs):
+        """Log error message"""
+        logger = self.get_logger("system")
+        logger.error(message, extra=kwargs)
+
+    def debug(self, message: str, **kwargs):
+        """Log debug message"""
+        logger = self.get_logger("system")
+        logger.debug(message, extra=kwargs)
 
     def shutdown(self):
         """Shutdown logging system"""

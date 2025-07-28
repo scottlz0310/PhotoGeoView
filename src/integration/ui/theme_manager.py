@@ -14,7 +14,6 @@ from pathlib import Path
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
-from ..interfaces import IThemeManager
 from ..models import ThemeConfiguration, AIComponent
 from ..config_manager import ConfigManager
 from ..state_manager import StateManager
@@ -22,7 +21,7 @@ from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..logging_system import LoggerSystem
 
 
-class IntegratedThemeManager(QObject, IThemeManager):
+class IntegratedThemeManager(QObject):
     """
     Integrated theme manager combining CursorBLD's theme system with Kiro enhancements
 
@@ -35,7 +34,10 @@ class IntegratedThemeManager(QObject, IThemeManager):
 
     # Signals
     theme_changed = pyqtSignal(str)
+    theme_change_requested = pyqtSignal(str, str)  # old_theme, new_theme
+    theme_applied = pyqtSignal(str)  # theme_name
     theme_error = pyqtSignal(str, str)  # theme_name, error_message
+    theme_transition_progress = pyqtSignal(int)  # progress percentage
 
     def __init__(self,
                  config_manager: ConfigManager,
@@ -100,8 +102,9 @@ class IntegratedThemeManager(QObject, IThemeManager):
             # Load accessibility settings
             self._load_accessibility_settings()
 
-            # Load performance settings
-            self._load_performance_settings()
+            # Apply current theme
+            current_theme = self.state_manager.get_state().current_theme
+            self.apply_theme(current_theme)
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -115,6 +118,589 @@ class IntegratedThemeManager(QObject, IThemeManager):
                 {"operation": "theme_manager_init"},
                 AIComponent.CURSOR
             )
+
+    def _initialize_qt_theme_manager(self):
+        """Initialize Qt-Theme-Manager integration (CursorBLD)"""
+        try:
+            # Import Qt-Theme-Manager if available
+            try:
+                import qt_theme_manager
+                self.qt_theme_manager = qt_theme_manager.ThemeManager()
+                self.qt_themes_available = self.qt_theme_manager.get_available_themes()
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "qt_theme_manager_init",
+                    f"Qt-Theme-Manager initialized with {len(self.qt_themes_available)} themes"
+                )
+            except ImportError:
+                self.logger_system.warning("Qt-Theme-Manager not available, using fallback themes")
+                self.qt_themes_available = ["default", "dark", "light"]
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "initialize_qt_theme_manager"},
+                AIComponent.CURSOR
+            )
+
+    def _load_buil(self):
+        """Load built-in themes (CursorBLD 16 theme variations)"""
+        try:
+            builtin_themes = [
+                # Light themes
+                {"name": "default", "display_name": "Default Light", "base": "light"},
+                {"name": "light_blue", "display_name": "Light Blue", "base": "light"},
+                {"name": "light_green", "display_name": "Light Green", "base": "light"},
+                {"name": "light_purple", "display_name": "Light Purple", "base": "light"},
+
+                # Dark themes
+                {"name": "dark", "display_name": "Default Dark", "base": "dark"},
+                {"name": "dark_blue", "display_name": "Dark Blue", "base": "dark"},
+                {"name": "dark_green", "display_name": "Dark Green", "base": "dark"},
+                {"name": "dark_purple", "display_name": "Dark Purple", "base": "dark"},
+
+                # High contrast themes (Kiro accessibility)
+                {"name": "high_contrast_light", "display_name": "High Contrast Light", "base": "light", "high_contrast": True},
+                {"name": "high_contrast_dark", "display_name": "High Contrast Dark", "base": "dark", "high_contrast": True},
+
+                # Specialized themes
+                {"name": "photography", "display_name": "Photography", "base": "dark"},
+                {"name": "minimal", "display_name": "Minimal", "base": "light"},
+                {"name": "vibrant", "display_name": "Vibrant", "base": "light"},
+                {"name": "professional", "display_name": "Professional", "base": "dark"},
+                {"name": "accessibility", "display_name": "Accessibility", "base": "light", "accessibility": True},
+                {"name": "performance", "display_name": "Performance", "base": "light", "performance": True}
+            ]
+
+            for theme_info in builtin_themes:
+                theme_config = self._create_builtin_theme_config(theme_info)
+                self.themes[theme_config.name] = theme_config
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "builtin_themes_loaded",
+                f"Loaded {len(builtin_themes)} built-in themes"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "load_builtin_themes"},
+                AIComponent.CURSOR
+            )
+
+    def _create_builtin_theme_config(self, theme_info: Dict[str, Any]) -> ThemeConfiguration:
+        """Create theme configuration from theme info"""
+        base_colors = self._get_base_colors(theme_info["base"])
+
+        # Apply theme-specific modifications
+        if theme_info.get("high_contrast"):
+            base_colors = self._apply_high_contrast(base_colors)
+
+        # Create theme configuration
+        return ThemeConfiguration(
+            name=theme_info["name"],
+            display_name=theme_info["display_name"],
+            description=f"Built-in {theme_info['display_name']} theme",
+            version="1.0.0",
+            author="CursorBLD + Kiro Integration",
+            qt_theme_name=theme_info.get("qt_theme", theme_info["base"]),
+            color_scheme=base_colors,
+            accessibility_features={
+                "high_contrast": theme_info.get("high_contrast", False),
+                "large_fonts": theme_info.get("accessibility", False),
+                "screen_reader_support": True,
+                "keyboard_navigation": True,
+                "focus_indicators": True
+            },
+            performance_settings={
+                "animation_enabled": not theme_info.get("performance", False),
+                "transparency_enabled": not theme_info.get("performance", False),
+                "shadow_effects": not theme_info.get("performance", False),
+                "gradient_rendering": True,
+                "anti_aliasing": True
+            }
+        )
+
+    def _get_base_colors(self, base: str) -> Dict[str, str]:
+        """Get base color scheme"""
+        if base == "dark":
+            return {
+                "background": "#2b2b2b",
+                "foreground": "#ffffff",
+                "primary": "#007acc",
+                "secondary": "#6c757d",
+                "accent": "#17a2b8",
+                "success": "#28a745",
+                "warning": "#ffc107",
+                "error": "#dc3545",
+                "info": "#17a2b8",
+                "border": "#495057",
+                "hover": "#3a3a3a",
+                "selected": "#0d7377",
+                "disabled": "#6c757d"
+            }
+        else:  # light
+            return {
+                "background": "#ffffff",
+                "foreground": "#000000",
+                "primary": "#007acc",
+                "secondary": "#6c757d",
+                "accent": "#17a2b8",
+                "success": "#28a745",
+                "warning": "#ffc107",
+                "error": "#dc3545",
+                "info": "#17a2b8",
+                "border": "#dee2e6",
+                "hover": "#f8f9fa",
+                "selected": "#e3f2fd",
+                "disabled": "#6c757d"
+            }
+
+    def _apply_high_contrast(self, colors: Dict[str, str]) -> Dict[str, str]:
+        """Apply high contrast modifications"""
+        if colors["background"] == "#ffffff":  # Light theme
+            colors.update({
+                "background": "#ffffff",
+                "foreground": "#000000",
+                "border": "#000000",
+                "hover": "#e0e0e0",
+                "selected": "#0000ff"
+            })
+        else:  # Dark theme
+            colors.update({
+                "background": "#000000",
+                "foreground": "#ffffff",
+                "border": "#ffffff",
+                "hover": "#333333",
+                "selected": "#ffff00"
+            })
+        return colors
+
+    def _load_custom_themes(self):
+        """Load custom themes from directory"""
+        try:
+            if not self.custom_theme_dir.exists():
+                return
+
+            for theme_file in self.custom_theme_dir.glob("*.json"):
+                try:
+                    with open(theme_file, 'r', encoding='utf-8') as f:
+                        theme_data = json.load(f)
+
+                    theme_config = ThemeConfiguration(**theme_data)
+                    self.themes[theme_config.name] = theme_config
+
+                except Exception as e:
+                    self.logger_system.error(f"Failed to load custom theme {theme_file}: {e}")
+
+            custom_count = len([t for t in self.themes.values() if t.author != "CursorBLD + Kiro Integration"])
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "custom_themes_loaded",
+                f"Loaded {custom_count} custom themes"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "load_custom_themes"},
+                AIComponent.CURSOR
+            )
+
+    def _load_accessibility_settings(self):
+        """Load accessibility settings"""
+        try:
+            self.accessibility_enabled = self.config_manager.get_setting("ui.accessibility_enabled", True)
+            self.high_contrast_mode = self.config_manager.get_setting("ui.high_contrast_mode", False)
+            self.large_fonts_mode = self.config_manager.get_setting("ui.large_fonts_mode", False)
+
+            # Performance settings
+            self.animation_enabled = self.config_manager.get_setting("ui.animation_enabled", True)
+            self.transparency_enabled = self.config_manager.get_setting("ui.transparency_enabled", True)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "load_accessibility_settings"},
+                AIComponent.CURSOR
+            )
+
+    # IThemeManager implementation
+
+    def get_available_themes(self) -> List[str]:
+        """Get list of available theme names"""
+        return list(self.themes.keys())
+
+    def apply_theme(self, theme_name: str) -> bool:
+        """Apply theme with seamless transition"""
+        try:
+            if theme_name not in self.themes:
+                self.theme_error.emit(theme_name, f"Theme '{theme_name}' not found")
+                return False
+
+            old_theme = self.current_theme
+            theme_config = self.themes[theme_name]
+
+            # Emit transition request signal
+            self.theme_change_requested.emit(old_theme, theme_name)
+
+            # Start transition process
+            self._apply_theme_transition(theme_config)
+
+            # Update current theme
+            self.current_theme = theme_name
+
+            # Update application state
+            self.state_manager.update_state(current_theme=theme_name)
+
+            # Save to configuration
+            self.config_manager.set_setting("ui.theme", theme_name)
+
+            # Emit signals
+            self.theme_applied.emit(theme_name)
+            self.theme_changed.emit(theme_name)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "theme_applied",
+                f"Theme applied: {old_theme} -> {theme_name}"
+            )
+
+            return True
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "apply_theme", "theme": theme_name},
+                AIComponent.CURSOR
+            )
+            self.theme_error.emit(theme_name, str(e))
+            return False
+
+    def _apply_theme_transition(self, theme_config: ThemeConfiguration):
+        """Apply theme with smooth transition"""
+        try:
+            app = QApplication.instance()
+            if not app:
+                return
+
+            # Progress tracking
+            progress = 0
+            self.theme_transition_progress.emit(progress)
+
+            # Step 1: Apply Qt theme (if available)
+            if self.qt_theme_manager and theme_config.qt_theme_name in self.qt_themes_available:
+                self.qt_theme_manager.apply_theme(theme_config.qt_theme_name)
+                progress = 25
+                self.theme_transition_progress.emit(progress)
+
+            # Step 2: Apply color scheme
+            if theme_config.color_scheme:
+                self._apply_color_scheme(theme_config.color_scheme)
+                progress = 50
+                self.theme_transition_progress.emit(progress)
+
+            # Step 3: Apply accessibility features
+            if self.accessibility_enabled:
+                self._apply_accessibility_features(theme_config.accessibility_features)
+                progress = 75
+                self.theme_transition_progress.emit(progress)
+
+            # Step 4: Apply performance settings
+            self._apply_performance_settings(theme_config.performance_settings)
+            progress = 100
+            self.theme_transition_progress.emit(progress)
+
+            # Apply custom stylesheet if available
+            if theme_config.style_sheet:
+                app.setStyleSheet(theme_config.style_sheet)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "apply_theme_transition", "theme": theme_config.name},
+                AIComponent.CURSOR
+            )
+
+    def _apply_color_scheme(self, color_scheme: Dict[str, str]):
+        """Apply color scheme to application"""
+        try:
+            app = QApplication.instance()
+            if not app:
+                return
+
+            # Generate stylesheet from color scheme
+            stylesheet = self._generate_stylesheet(color_scheme)
+
+            # Apply with smooth transition
+            current_stylesheet = app.styleSheet()
+
+            # Merge stylesheets for smooth transition
+            if current_stylesheet:
+                # Gradually transition colors (simplified approach)
+                app.setStyleSheet(stylesheet)
+            else:
+                app.setStyleSheet(stylesheet)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "apply_color_scheme"},
+                AIComponent.CURSOR
+            )
+
+    def _generate_stylesheet(self, color_scheme: Dict[str, str]) -> str:
+        """Generate Qt stylesheet from color scheme"""
+        return f"""
+        QMainWindow {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            color: {color_scheme.get('foreground', '#000000')};
+        }}
+
+        QWidget {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            color: {color_scheme.get('foreground', '#000000')};
+            border: 1px solid {color_scheme.get('border', '#dee2e6')};
+        }}
+
+        QPushButton {{
+            background-color: {color_scheme.get('primary', '#007acc')};
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+        }}
+
+        QPushButton:hover {{
+            background-color: {color_scheme.get('hover', '#0056b3')};
+        }}
+
+        QPushButton:pressed {{
+            background-color: {color_scheme.get('selected', '#004085')};
+        }}
+
+        QListWidget {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            color: {color_scheme.get('foreground', '#000000')};
+            border: 1px solid {color_scheme.get('border', '#dee2e6')};
+        }}
+
+        QListWidget::item:selected {{
+            background-color: {color_scheme.get('selected', '#e3f2fd')};
+        }}
+
+        QListWidget::item:hover {{
+            background-color: {color_scheme.get('hover', '#f8f9fa')};
+        }}
+
+        QScrollBar:vertical {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            border: 1px solid {color_scheme.get('border', '#dee2e6')};
+            width: 12px;
+        }}
+
+        QScrollBar::handle:vertical {{
+            background-color: {color_scheme.get('secondary', '#6c757d')};
+            border-radius: 6px;
+        }}
+
+        QScrollBar::handle:vertical:hover {{
+            background-color: {color_scheme.get('primary', '#007acc')};
+        }}
+
+        QStatusBar {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            color: {color_scheme.get('foreground', '#000000')};
+            border-top: 1px solid {color_scheme.get('border', '#dee2e6')};
+        }}
+
+        QToolBar {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            border-bottom: 1px solid {color_scheme.get('border', '#dee2e6')};
+        }}
+
+        QMenuBar {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            color: {color_scheme.get('foreground', '#000000')};
+        }}
+
+        QMenuBar::item:selected {{
+            background-color: {color_scheme.get('hover', '#f8f9fa')};
+        }}
+
+        QMenu {{
+            background-color: {color_scheme.get('background', '#ffffff')};
+            color: {color_scheme.get('foreground', '#000000')};
+            border: 1px solid {color_scheme.get('border', '#dee2e6')};
+        }}
+
+        QMenu::item:selected {{
+            background-color: {color_scheme.get('selected', '#e3f2fd')};
+        }}
+        """
+
+    def _apply_accessibility_features(self, accessibility_features: Dict[str, bool]):
+        """Apply accessibility features"""
+        try:
+            app = QApplication.instance()
+            if not app:
+                return
+
+            # High contrast mode
+            if accessibility_features.get("high_contrast", False):
+                self.high_contrast_mode = True
+                # Apply high contrast styles
+
+            # Large fonts mode
+            if accessibility_features.get("large_fonts", False):
+                self.large_fonts_mode = True
+                font = app.font()
+                font.setPointSize(font.pointSize() + 2)
+                app.setFont(font)
+
+            # Focus indicators
+            if accessibility_features.get("focus_indicators", True):
+                # Ensure focus indicators are visible
+                pass
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "apply_accessibility_features"},
+                AIComponent.CURSOR
+            )
+
+    def _apply_performance_settings(self, performance_settings: Dict[str, Any]):
+        """Apply performance settings"""
+        try:
+            # Animation settings
+            self.animation_enabled = performance_settings.get("animation_enabled", True)
+
+            # Transparency settings
+            self.transparency_enabled = performance_settings.get("transparency_enabled", True)
+
+            # Update configuration
+            self.config_manager.set_setting("ui.animation_enabled", self.animation_enabled)
+            self.config_manager.set_setting("ui.transparency_enabled", self.transparency_enabled)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "apply_performance_settings"},
+                AIComponent.CURSOR
+            )
+
+    def get_theme_config(self, theme_name: str) -> Optional[ThemeConfiguration]:
+        """Get theme configuration"""
+        return self.themes.get(theme_name)
+
+    def create_custom_theme(self, theme_config: ThemeConfiguration) -> bool:
+        """Create custom theme"""
+        try:
+            # Validate theme configuration
+            if not theme_config.name or not theme_config.display_name:
+                return False
+
+            # Save theme configuration
+            theme_file = self.custom_theme_dir / f"{theme_config.name}.json"
+
+            theme_data = {
+                "name": theme_config.name,
+                "display_name": theme_config.display_name,
+                "description": theme_config.description,
+                "version": theme_config.version,
+                "author": theme_config.author,
+                "qt_theme_name": theme_config.qt_theme_name,
+                "style_sheet": theme_config.style_sheet,
+                "color_scheme": theme_config.color_scheme,
+                "accessibility_features": theme_config.accessibility_features,
+                "performance_settings": theme_config.performance_settings,
+                "custom_properties": theme_config.custom_properties
+            }
+
+            with open(theme_file, 'w', encoding='utf-8') as f:
+                json.dump(theme_data, f, indent=2)
+
+            # Add to themes
+            self.themes[theme_config.name] = theme_config
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "custom_theme_created",
+                f"Custom theme created: {theme_config.name}"
+            )
+
+            return True
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "create_custom_theme", "theme": theme_config.name},
+                AIComponent.CURSOR
+            )
+            return False
+
+    def delete_custom_theme(self, theme_name: str) -> bool:
+        """Delete custom theme"""
+        try:
+            if theme_name not in self.themes:
+                return False
+
+            theme_config = self.themes[theme_name]
+
+            # Don't delete built-in themes
+            if theme_config.author == "CursorBLD + Kiro Integration":
+                return False
+
+            # Delete theme file
+            theme_file = self.custom_theme_dir / f"{theme_name}.json"
+            if theme_file.exists():
+                theme_file.unlink()
+
+            # Remove from themes
+            del self.themes[theme_name]
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "custom_theme_deleted",
+                f"Custom theme deleted: {theme_name}"
+            )
+
+            return True
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR,
+                {"operation": "delete_custom_theme", "theme": theme_name},
+                AIComponent.CURSOR
+            )
+            return False
+
+    def get_current_theme(self) -> str:
+        """Get current theme name"""
+        return self.current_theme
+
+    def is_dark_theme(self, theme_name: str = None) -> bool:
+        """Check if theme is dark"""
+        if theme_name is None:
+            theme_name = self.current_theme
+
+        if theme_name in self.themes:
+            return self.themes[theme_name].is_dark_theme
+
+        return False
+
+    def get_accessibility_score(self, theme_name: str = None) -> float:
+        """Get accessibility score for theme"""
+        if theme_name is None:
+            theme_name = self.current_theme
+
+        if theme_name in self.themes:
+            return self.themes[theme_name].accessibility_score
+
+        return 0.0
 
     def _initialize_qt_theme_manager(self):
         """Initialize Qt-Theme-Manager integration (CursorBLD feature)"""

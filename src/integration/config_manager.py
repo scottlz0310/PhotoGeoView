@@ -18,9 +18,10 @@ import threading
 from copy import deepcopy
 
 from .interfaces import IConfigManager
-from .models import AIComponent, ThemeConfiguration
+from .models import AIComponent, ThemeConfiguration, ApplicationState
 from .error_handling import IntegratedErrorHandler, ErrorCategory
 from .logging_system import LoggerSystem
+from .config_migration import ConfigMigrationManager
 
 
 class ConfigManager(IConfigManager):
@@ -56,6 +57,10 @@ class ConfigManager(IConfigManager):
         self.default_config: Dict[str, Any] = {}
         self.ai_configs: Dict[AIComponent, Dict[str, Any]] = {}
 
+        # Application state management
+        self.application_state: ApplicationState = ApplicationState()
+        self.state_file = self.config_dir / "application_state.json"
+
         # File paths
         self.main_config_file = self.config_dir / "app_config.json"
         self.user_config_file = self.config_dir / "user_config.json"
@@ -74,6 +79,12 @@ class ConfigManager(IConfigManager):
 
         # Validation schemas
         self.validation_schemas: Dict[str, Dict[str, Any]] = {}
+
+        # Migration manager
+        self.migration_manager = ConfigMigrationManager(
+            config_dir=self.config_dir,
+            logger_system=self.logger_system
+        )
 
         # Initialize
         self._initialize()
@@ -102,6 +113,9 @@ class ConfigManager(IConfigManager):
 
             # Setup validation schemas
             self._setup_validation_schemas()
+
+            # Load application state
+            self._load_application_state()
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
@@ -492,6 +506,102 @@ class ConfigManager(IConfigManager):
         except ValueError:
             return {}
 
+    def set_ai_config(self, ai_name: str, config: Dict[str, Any]) -> bool:
+        """
+        Set configuration for specific AI implementation
+
+        Args:
+            ai_name: Name of AI implementation (copilot, cursor, kiro)
+            config: Configuration dictionary to set
+
+        Returns:
+            True if configuration was set successfully
+        """
+        try:
+            ai_component = AIComponent(ai_name.lower())
+
+            with self._lock:
+                old_config = self.ai_configs.get(ai_component, {})
+                self.ai_configs[ai_component] = config
+
+                # Update merged configuration
+                self._merge_configurations()
+
+                # Save AI-specific configuration
+                self._save_ai_config(ai_component)
+
+                # Notify change listeners
+                self._notify_change_listeners(f"ai_{ai_name}", old_config, config)
+
+                self.logger_system.log_ai_operation(
+                    ai_component,
+                    "config_update",
+                    f"AI configuration updated with {len(config)} settings"
+                )
+
+                return True
+
+        except ValueError:
+            self.logger_system.error(f"Invalid AI component name: {ai_name}")
+            return False
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "set_ai_config", "ai_name": ai_name},
+                AIComponent.KIRO
+            )
+            return False
+
+    def update_ai_config(self, ai_name: str, updates: Dict[str, Any]) -> bool:
+        """
+        Update specific settings in AI configuration
+
+        Args:
+            ai_name: Name of AI implementation (copilot, cursor, kiro)
+            updates: Dictionary of settings to update
+
+        Returns:
+            True if configuration was updated successfully
+        """
+        try:
+            ai_component = AIComponent(ai_name.lower())
+
+            with self._lock:
+                if ai_component not in self.ai_configs:
+                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
+
+                # Deep merge updates into existing config
+                self._deep_merge(self.ai_configs[ai_component], updates)
+
+                # Update merged configuration
+                self._merge_configurations()
+
+                # Save AI-specific configuration
+                self._save_ai_config(ai_component)
+
+                # Notify change listeners
+                for key, value in updates.items():
+                    self._notify_change_listeners(f"ai_{ai_name}.{key}", None, value)
+
+                self.logger_system.log_ai_operation(
+                    ai_component,
+                    "config_update",
+                    f"AI configuration updated: {list(updates.keys())}"
+                )
+
+                return True
+
+        except ValueError:
+            self.logger_system.error(f"Invalid AI component name: {ai_name}")
+            return False
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "update_ai_config", "ai_name": ai_name, "updates": str(updates)},
+                AIComponent.KIRO
+            )
+            return False
+
     def save_config(self) -> bool:
         """
         Save current configuration to persistent storage
@@ -804,3 +914,386 @@ class ConfigManager(IConfigManager):
             else:
                 count += 1
         return count
+
+    # Configuration migration methods
+
+    def migrate_existing_configurations(self) -> Dict[str, Any]:
+        """
+        Migrate existing configuration files to unified system
+
+        Returns:
+            Migration summary dictionary
+        """
+
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "config_migration",
+                "Starting configuration migration"
+            )
+
+            # Run migration
+            migration_result = self.migration_manager.migrate_all_configurations()
+
+            # Reload configuration after migration
+            if migration_result["status"] in ["success", "partial"]:
+                self.load_config()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "config_migration",
+                f"Configuration migration completed: {migration_result['status']}"
+            )
+
+            return migration_result
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "migrate_existing_configurations"},
+                AIComponent.KIRO
+            )
+            return {"status": "failed", "error": str(e)}
+
+    def rollback_migration(self, migration_timestamp: str = None) -> bool:
+        """
+        Rollback configuration migration
+
+        Args:
+            migration_timestamp: Specific migration timestamp to rollback
+
+        Returns:
+            True if rollback was successful
+        """
+
+        try:
+            success = self.migration_manager.rollback_migration(migration_timestamp)
+
+            if success:
+                # Reload configuration after rollback
+                self.load_config()
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "config_rollback",
+                    "Configuration migration rollback completed"
+                )
+
+            return success
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "rollback_migration"},
+                AIComponent.KIRO
+            )
+            return False
+
+    def validate_configuration(self) -> Dict[str, Any]:
+        """
+        Validate current configuration
+
+        Returns:
+            Validation results dictionary
+        """
+
+        try:
+            return self.migration_manager.validate_migrated_configuration()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "validate_configuration"},
+                AIComponent.KIRO
+            )
+            return {"status": "error", "error": str(e)}
+
+    def get_migration_status(self) -> Dict[str, Any]:
+        """Get current migration status"""
+
+        try:
+            return self.migration_manager.get_migration_status()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "get_migration_status"},
+                AIComponent.KIRO
+            )
+            return {"status": "error", "error": str(e)}
+
+    def has_legacy_configurations(self) -> bool:
+        """
+        Check if legacy configuration files exist that need migration
+
+        Returns:
+            True if legacy configurations are found
+        """
+
+        try:
+            legacy_files = [
+                "qt_theme_settings.json",
+                "qt_theme_user_settings.json",
+                "cursor_ui_config.json",
+                "copilot_config.json",
+                "image_processing_config.json",
+                "map_config.json",
+                "kiro_config.json",
+                "integration_config.json",
+                "performance_config.json",
+                "photogeoview_config.json",
+                "app_settings.json",
+                "user_preferences.json"
+            ]
+
+            for filename in legacy_files:
+                if (self.config_dir / filename).exists():
+                    return True
+
+            return False
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "has_legacy_configurations"},
+                AIComponent.KIRO
+            )
+            return False
+
+    # ApplicationState management methods
+
+    def get_application_state(self) -> ApplicationState:
+        """
+        Get current application state
+
+        Returns:
+            Current ApplicationState instance
+        """
+        return self.application_state
+
+    def update_application_state(self, **kwargs) -> bool:
+        """
+        Update application state with provided values
+
+        Args:
+            **kwargs: State values to update
+
+        Returns:
+            True if state was updated successfully
+        """
+        try:
+            with self._lock:
+                for key, value in kwargs.items():
+                    if hasattr(self.application_state, key):
+                        setattr(self.application_state, key, value)
+                        self.logger_system.log_ai_operation(
+                            AIComponent.KIRO,
+                            "state_update",
+                            f"Application state updated: {key} = {value}"
+                        )
+
+                # Update activity timestamp
+                self.application_state.update_activity()
+
+                # Save state to file
+                self._save_application_state()
+
+                return True
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "update_application_state", "kwargs": str(kwargs)},
+                AIComponent.KIRO
+            )
+            return False
+
+    def save_application_state(self) -> bool:
+        """
+        Save current application state to persistent storage
+
+        Returns:
+            True if saved successfully
+        """
+        try:
+            return self._save_application_state()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "save_application_state"},
+                AIComponent.KIRO
+            )
+            return False
+
+    def load_application_state(self) -> bool:
+        """
+        Load application state from persistent storage
+
+        Returns:
+            True if loaded successfully
+        """
+        try:
+            return self._load_application_state()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "load_application_state"},
+                AIComponent.KIRO
+            )
+            return False
+
+    def reset_application_state(self) -> bool:
+        """
+        Reset application state to defaults
+
+        Returns:
+            True if reset successfully
+        """
+        try:
+            with self._lock:
+                # Backup current state
+                backup_file = self.config_dir / f"state_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                self._save_application_state_to_file(backup_file)
+
+                # Reset to default state
+                self.application_state = ApplicationState()
+
+                # Save reset state
+                self._save_application_state()
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "state_reset",
+                    f"Application state reset to defaults (backup saved: {backup_file})"
+                )
+
+                return True
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.CONFIGURATION_ERROR,
+                {"operation": "reset_application_state"},
+                AIComponent.KIRO
+            )
+            return False
+
+    def _save_application_state(self) -> bool:
+        """Save application state to default file"""
+        return self._save_application_state_to_file(self.state_file)
+
+    def _save_application_state_to_file(self, file_path: Path) -> bool:
+        """Save application state to specified file"""
+        try:
+            # Convert ApplicationState to dictionary
+            state_dict = {
+                "current_folder": str(self.application_state.current_folder) if self.application_state.current_folder else None,
+                "selected_image": str(self.application_state.selected_image) if self.application_state.selected_image else None,
+                "loaded_images": [str(path) for path in self.application_state.loaded_images],
+                "current_theme": self.application_state.current_theme,
+                "thumbnail_size": self.application_state.thumbnail_size,
+                "folder_history": [str(path) for path in self.application_state.folder_history],
+                "ui_layout": self.application_state.ui_layout,
+                "window_geometry": self.application_state.window_geometry,
+                "splitter_states": {k: v.hex() if isinstance(v, bytes) else v for k, v in self.application_state.splitter_states.items()},
+                "map_center": self.application_state.map_center,
+                "map_zoom": self.application_state.map_zoom,
+                "exif_display_mode": self.application_state.exif_display_mode,
+                "image_sort_mode": self.application_state.image_sort_mode,
+                "image_sort_ascending": self.application_state.image_sort_ascending,
+                "current_zoom": self.application_state.current_zoom,
+                "current_pan": self.application_state.current_pan,
+                "fit_mode": self.application_state.fit_mode,
+                "performance_mode": self.application_state.performance_mode,
+                "cache_status": self.application_state.cache_status,
+                "ai_component_status": self.application_state.ai_component_status,
+                "session_start": self.application_state.session_start.isoformat(),
+                "last_activity": self.application_state.last_activity.isoformat(),
+                "images_processed": self.application_state.images_processed,
+                "operations_performed": self.application_state.operations_performed,
+                "recent_errors": self.application_state.recent_errors,
+                "error_count": self.application_state.error_count,
+                "memory_usage_history": [(dt.isoformat(), usage) for dt, usage in self.application_state.memory_usage_history],
+                "operation_times": self.application_state.operation_times
+            }
+
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(state_dict, f, indent=2, default=str)
+
+            return True
+
+        except Exception as e:
+            self.logger_system.error(f"Failed to save application state: {e}")
+            return False
+
+    def _load_application_state(self) -> bool:
+        """Load application state from file"""
+        try:
+            if not self.state_file.exists():
+                # No state file exists, use default state
+                self.application_state = ApplicationState()
+                return True
+
+            with open(self.state_file, 'r', encoding='utf-8') as f:
+                state_dict = json.load(f)
+
+            # Convert dictionary back to ApplicationState
+            self.application_state = ApplicationState(
+                current_folder=Path(state_dict["current_folder"]) if state_dict.get("current_folder") else None,
+                selected_image=Path(state_dict["selected_image"]) if state_dict.get("selected_image") else None,
+                loaded_images=[Path(path) for path in state_dict.get("loaded_images", [])],
+                current_theme=state_dict.get("current_theme", "default"),
+                thumbnail_size=state_dict.get("thumbnail_size", 150),
+                folder_history=[Path(path) for path in state_dict.get("folder_history", [])],
+                ui_layout=state_dict.get("ui_layout", {}),
+                window_geometry=tuple(state_dict["window_geometry"]) if state_dict.get("window_geometry") else None,
+                splitter_states={k: bytes.fromhex(v) if isinstance(v, str) else v for k, v in state_dict.get("splitter_states", {}).items()},
+                map_center=tuple(state_dict["map_center"]) if state_dict.get("map_center") else None,
+                map_zoom=state_dict.get("map_zoom", 10),
+                exif_display_mode=state_dict.get("exif_display_mode", "detailed"),
+                image_sort_mode=state_dict.get("image_sort_mode", "name"),
+                image_sort_ascending=state_dict.get("image_sort_ascending", True),
+                current_zoom=state_dict.get("current_zoom", 1.0),
+                current_pan=tuple(state_dict.get("current_pan", (0, 0))),
+                fit_mode=state_dict.get("fit_mode", "fit_window"),
+                performance_mode=state_dict.get("performance_mode", "balanced"),
+                cache_status=state_dict.get("cache_status", {}),
+                ai_component_status=state_dict.get("ai_component_status", {"copilot": "active", "cursor": "active", "kiro": "active"}),
+                session_start=datetime.fromisoformat(state_dict.get("session_start", datetime.now().isoformat())),
+                last_activity=datetime.fromisoformat(state_dict.get("last_activity", datetime.now().isoformat())),
+                images_processed=state_dict.get("images_processed", 0),
+                operations_performed=state_dict.get("operations_performed", []),
+                recent_errors=state_dict.get("recent_errors", []),
+                error_count=state_dict.get("error_count", 0),
+                memory_usage_history=[(datetime.fromisoformat(dt), usage) for dt, usage in state_dict.get("memory_usage_history", [])],
+                operation_times=state_dict.get("operation_times", {})
+            )
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "state_loading",
+                "Application state loaded from storage"
+            )
+
+            return True
+
+        except Exception as e:
+            self.logger_system.error(f"Failed to load application state: {e}")
+            # Use default state on error
+            self.application_state = ApplicationState()
+            return False
+
+    def get_state_summary(self) -> Dict[str, Any]:
+        """Get summary of current application state"""
+        return {
+            "current_folder": str(self.application_state.current_folder) if self.application_state.current_folder else None,
+            "selected_image": str(self.application_state.selected_image) if self.application_state.selected_image else None,
+            "loaded_images_count": len(self.application_state.loaded_images),
+            "current_theme": self.application_state.current_theme,
+            "session_duration": self.application_state.session_duration,
+            "images_processed": self.application_state.images_processed,
+            "error_count": self.application_state.error_count,
+            "ai_component_status": self.application_state.ai_component_status,
+            "performance_mode": self.application_state.performance_mode
+        }

@@ -1,322 +1,440 @@
 """
-Application State Manager for AI Integration
+Unified State Manager for AI Integration
 
-Manages centralized application state across all AI implementations:
-- GitHub Copilot (CS4Coding): Core functionality state
-- Cursor (CursorBLD): UI state and user preferences
-- Kiro: Integration state and performance metrics
+Provides centralized state coordination across AI components:
+- Application state persistence and restoration
+- State change notifications and event handling
+- Cross-component state synchronization
+- State validation and migration
 
 Author: Kiro AI Integration System
 """
 
-import asyncio
 import threading
-from typing import Dict, Any, Optional, List, Callable
-from datetime import datetime, timedelta
-from pathlib import Path
-from dataclasses import asdict
 import json
+import asyncio
+from typing import Dict, Any, Optional, List, Callable, Union
+from datetime import datetime
+from pathlib import Path
+from dataclasses import dataclass, field, asdict
+from collections import defaultdict
+import copy
 
-from .models import ApplicationState, ImageMetadata, AIComponent, PerformanceMetrics
+from .models import ApplicationState, AIComponent, ImageMetadata, ThemeConfiguration
 from .config_manager import ConfigManager
 from .error_handling import IntegratedErrorHandler, ErrorCategory
 from .logging_system import LoggerSystem
 
 
+@dataclass
+class StateChangeEvent:
+    """State change event data structure"""
+    key: str
+    old_value: Any
+    new_value: Any
+    component: AIComponent
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
 class StateManager:
     """
-    Centralized application state manager that coordinates state across AI implementations
+    Unified state manager for AI integration
 
     Features:
-    - Thread-safe state management
-    - State persistence and recovery
-    - Change notifications and event handling
-    - State validation and rollback
-    - Performance state tracking
+    - Centralized state storage and management
+    - State change notifications
+    - Persistence and restoration
+    - Cross-component synchronization
+    - State validation and migration
     """
 
     def __init__(self,
-                 config_manager: ConfigManager,
-                 logger_system: LoggerSystem = None,
-                 error_handler: IntegratedErrorHandler = None):
+                 config_manager: ConfigManager = None,
+                 logger_system: LoggerSystem = None):
         """
         Initialize the state manager
 
         Args:
             config_manager: Configuration manager instance
             logger_system: Logging system instance
-            error_handler: Error handler instance
         """
 
         self.config_manager = config_manager
-        self.logger_system = log or LoggerSystem()
-        self.error_handler = error_handler or IntegratedErrorHandler(self.logger_system)
+        self.logger_system = logger_system or LoggerSystem()
+        self.error_handler = IntegratedErrorHandler(self.logger_system)
 
-        # Application state
+        # State storage
         self.app_state = ApplicationState()
-        self.state_history: List[ApplicationState] = []
-        self.max_history_size = 100
+        self.state_lock = threading.RLock()
+
+        # Change listeners
+        self.change_listeners: Dict[str, List[Callable]] = defaultdict(list)
+        self.global_listeners: List[Callable] = []
+
+        # State history for undo/redo functionality
+        self.state_history: List[Dict[str, Any]] = []
+        self.max_history_size = 50
+        self.current_history_index = -1
 
         # State persistence
-        self.state_file = Path("config/app_state.json")
+        self.state_file = Path("state/app_state.json")
+        self.backup_file = Path("state/app_state_backup.json")
         self.auto_save_enabled = True
-        self.auto_save_interval = 30  # seconds
+        self.auto_save_interval = 30.0  # seconds
         self.last_save_time = datetime.now()
 
-        # Thread safety
-        self._lock = threading.RLock()
-        self._shutdown_event = threading.Event()
-
-        # Change tracking
-        self.change_listeners: Dict[str, List[Callable]] = {}
-        self.state_validators: Dict[str, Callable] = {}
+        # State validation
+        self.validators: Dict[str, Callable[[Any], bool]] = {}
+        self.migrations: Dict[str, Callable[[Any], Any]] = {}
 
         # Performance tracking
-        self.performance_history: List[PerformanceMetrics] = []
-        self.performance_window = timedelta(hours=1)  # Keep 1 hour of metrics
+        self.state_access_count = 0
+        self.state_change_count = 0
+        self.last_performance_check = datetime.now()
 
-        # AI component states
-        self.ai_states: Dict[AIComponent, Dict[str, Any]] = {
-            AIComponent.COPILOT: {"active": True, "last_operation": None, "error_count": 0},
-            AIComponent.CURSOR: {"active": True, "last_operation": None, "error_count": 0},
-            AIComponent.KIRO: {"active": True, "last_operation": None, "error_count": 0}
-        }
+        # Initialize state directories
+        self._initialize_directories()
 
-        # Initialize
-        self._initialize()
+        # Load initial state
+        self._load_state()
 
-        # Start background tasks
-        self._start_background_tasks()
+        # Setup default validators
+        self._setup_default_validators()
 
-    def _initialize(self):
-        """Initialize the state manager"""
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO,
+            "state_manager_init",
+            "State manager initialized"
+        )
+
+    def _initialize_directories(self):
+        """Initialize state storage directories"""
 
         try:
-            # Load persisted state
-            self._load_state()
-
-            # Setup state validators
-            self._setup_validators()
-
-            # Register configuration change listener
-            self.config_manager.add_change_listener(self._on_config_change)
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "state_initialization",
-                "State manager initialized successfully"
-            )
-
+            self.state_file.parent.mkdir(parents=True, exist_ok=True)
+            self.backup_file.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "state_initialization"},
+                {"operation": "directory_initialization"},
                 AIComponent.KIRO
             )
 
-    def _setup_validators(self):
-        """Setup state validation functions"""
+    def _setup_default_validators(self):
+        """Setup default state validators"""
 
-        self.state_validators = {
-            "current_folder": self._validate_folder_path,
-            "selected_image": self._validate_image_path,
-            "thumbnail_size": self._validate_thumbnail_size,
-            "current_theme": self._validate_theme_name,
-            "performance_mode": self._validate_performance_mode
-        }
+        # Path validators
+        self.validators["current_folder"] = lambda x: x is None or isinstance(x, Path)
+        self.validators["selected_image"] = lambda x: x is None or isinstance(x, Path)
 
-    def _start_background_tasks(self):
-        """Start background tasks for state management"""
+        # Numeric validators
+        self.validators["thumbnail_size"] = lambda x: isinstance(x, int) and 50 <= x <= 500
+        self.validators["map_zoom"] = lambda x: isinstance(x, int) and 1 <= x <= 20
+        self.validators["current_zoom"] = lambda x: isinstance(x, (int, float)) and 0.1 <= x <= 10.0
 
-        # Auto-save task
-        if self.auto_save_enabled:
-            threading.Thread(
-                target=self._auto_save_worker,
-                daemon=True,
-                name="StateManager-AutoSave"
-            ).start()
+        # String validators
+        self.validators["current_theme"] = lambda x: isinstance(x, str) and len(x) > 0
+        self.validators["performance_mode"] = lambda x: x in ["performance", "balanced", "quality"]
+        self.validators["image_sort_mode"] = lambda x: x in ["name", "date", "size", "type"]
 
-        # Performance cleanup task
-        threading.Thread(
-            target=self._performance_cleanup_worker,
-            daemon=True,
-            name="StateManager-PerformanceCleanup"
-        ).start()
-
-    def _auto_save_worker(self):
-        """Background worker for automatic state saving"""
-
-        while not self._shutdown_event.is_set():
-            try:
-                # Wait for the save interval
-                if self._shutdown_event.wait(self.auto_save_interval):
-                    break
-
-                # Check if state has changed since last save
-                if datetime.now() - self.last_save_time > timedelta(seconds=self.auto_save_interval):
-                    self._save_state()
-
-            except Exception as e:
-                self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "auto_save"},
-                    AIComponent.KIRO
-                )
-
-    def _performance_cleanup_worker(self):
-        """Background worker for performance metrics cleanup"""
-
-        while not self._shutdown_event.is_set():
-            try:
-                # Wait for cleanup interval (every 10 minutes)
-                if self._shutdown_event.wait(600):
-                    break
-
-                # Clean old performance metrics
-                cutoff_time = datetime.now() - self.performance_window
-                self.performance_history = [
-                    metric for metric in self.performance_history
-                    if metric.timestamp > cutoff_time
-                ]
-
-            except Exception as e:
-                self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "performance_cleanup"},
-                    AIComponent.KIRO
-                )
-
-    # State access methods
-
-    def get_state(self) -> ApplicationState:
-        """
-        Get the current application state
-
-        Returns:
-            Current ApplicationState instance
-        """
-
-        with self._lock:
-            return self.app_state
-
-    def update_state(self, **kwargs) -> bool:
-        """
-        Update application state with new values
-
-        Args:
-            **kwargs: State attributes to update
-
-        Returns:
-            True if update successful, False otherwise
-        """
-
-        with self._lock:
-            try:
-                # Validate changes
-                for key, value in kwargs.items():
-                    if not self._validate_state_change(key, value):
-                        self.logger_system.log_ai_operation(
-                            AIComponent.KIRO,
-                            "state_validation",
-                            f"State validation failed for {key} = {value}",
-                            level="WARNING"
-                        )
-                        return False
-
-                # Save current state to history
-                self._save_to_history()
-
-                # Apply changes
-                old_values = {}
-                for key, value in kwargs.items():
-                    if hasattr(self.app_state, key):
-                        old_values[key] = getattr(self.app_state, key)
-                        setattr(self.app_state, key, value)
-
-                # Update activity timestamp
-                self.app_state.update_activity()
-
-                # Notify change listeners
-                for key, value in kwargs.items():
-                    self._notify_change_listeners(key, old_values.get(key), value)
-
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "state_update",
-                    f"State updated: {list(kwargs.keys())}"
-                )
-
-                return True
-
-            except Exception as e:
-                self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "state_update", "changes": str(kwargs)},
-                    AIComponent.KIRO
-                )
-                return False
+    # Core state management
 
     def get_state_value(self, key: str, default: Any = None) -> Any:
         """
-        Get a specific state value
+        Get a state value
 
         Args:
-            key: State attribute name
-            default: Default value if attribute not found
+            key: State key (supports dot notation)
+            default: Default value if key not found
 
         Returns:
             State value or default
         """
 
-        with self._lock:
-            return getattr(self.app_state, key, default)
-
-    def set_state_value(self, key: str, value: Any) -> bool:
-        """
-        Set a specific state value
-
-        Args:
-            key: State attribute name
-            value: Value to set
-
-        Returns:
-            True if set successfully, False otherwise
-        """
-
-        return self.update_state(**{key: value})
-
-    # AI component state management
-
-    def update_ai_state(self, ai_component: AIComponent, **kwargs) -> bool:
-        """
-        Update AI component-specific state
-
-        Args:
-            ai_component: AI component to update
-            **kwargs: State values to update
-
-        Returns:
-            True if updated successfully, False otherwise
-        """
-
-        with self._lock:
+        with self.state_lock:
             try:
-                if ai_component not in self.ai_states:
-                    self.ai_states[ai_component] = {}
+                self.state_access_count += 1
 
-                # Update AI state
-                old_values = {}
-                for key, value in kwargs.items():
-                    old_values[key] = self.ai_states[ai_component].get(key)
-                    self.ai_states[ai_component][key] = value
+                # Handle dot notation
+                keys = key.split('.')
+                value = self.app_state
 
-                # Update main application state
-                self.app_state.ai_component_status[ai_component.value] = kwargs.get("status", "active")
+                for k in keys:
+                    if hasattr(value, k):
+                        value = getattr(value, k)
+                    else:
+                        return default
+
+                return value
+
+            except Exception as e:
+                self.error_handler.handle_error(
+                    e, ErrorCategory.INTEGRATION_ERROR,
+                    {"operation": "get_state_value", "key": key},
+                    AIComponent.KIRO
+                )
+                return default
+
+    def set_state_value(self, key: str, value: Any, component: AIComponent = AIComponent.KIRO) -> bool:
+        """
+        Set a state value
+
+        Args:
+            key: State key (supports dot notation)
+            value: Value to set
+            component: AI component making the change
+
+        Returns:
+            True if value was set successfully
+        """
+
+        with self.state_lock:
+            try:
+                # Validate the value
+                if not self._validate_state_value(key, value):
+                    return False
+
+                # Get old value for change notification
+                old_value = self.get_state_value(key)
+
+                # Handle dot notation
+                keys = key.split('.')
+                target = self.app_state
+
+                # Navigate to parent of target key
+                for k in keys[:-1]:
+                    if not hasattr(target, k):
+                        return False
+                    target = getattr(target, k)
+
+                # Set the value
+                final_key = keys[-1]
+                if hasattr(target, final_key):
+                    setattr(target, final_key, value)
+
+                    # Update activity timestamp
+                    self.app_state.update_activity()
+                    self.state_change_count += 1
+
+                    # Add to history
+                    self._add_to_history()
+
+                    # Notify listeners
+                    self._notify_change_listeners(key, old_value, value, component)
+
+                    # Auto-save if enabled
+                    if self.auto_save_enabled:
+                        self._auto_save_if_needed()
+
+                    self.logger_system.log_ai_operation(
+                        component,
+                        "state_change",
+                        f"State changed: {key} = {value}"
+                    )
+
+                    return True
+
+                return False
+
+            except Exception as e:
+                self.error_handler.handle_error(
+                    e, ErrorCategory.INTEGRATION_ERROR,
+                    {"operation": "set_state_value", "key": key},
+                    component
+                )
+                return False
+
+    def update_state(self, component: AIComponent = AIComponent.KIRO, **kwargs) -> bool:
+        """
+        Update multiple state values at once
+
+        Args:
+            component: AI component making the changes
+            **kwargs: Key-value pairs to update
+
+        Returns:
+            True if all updates were successful
+        """
+
+        success = True
+
+        for key, value in kwargs.items():
+            if not self.set_state_value(key, value, component):
+                success = False
+
+        return success
+
+    def _validate_state_value(self, key: str, value: Any) -> bool:
+        """Validate a state value"""
+
+        try:
+            # Check if we have a validator for this key
+            if key in self.validators:
+                return self.validators[key](value)
+
+            # Default validation (allow anything)
+            return True
+
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "state_validation",
+                {"key": key, "value": str(value)}
+            )
+            return False
+
+    # Change notification system
+
+    def add_change_listener(self, key: str, listener: Callable[[str, Any, Any], None]):
+        """
+        Add a change listener for a specific key
+
+        Args:
+            key: State key to listen for changes
+            listener: Callback function (key, old_value, new_value)
+        """
+
+        with self.state_lock:
+            if listener not in self.change_listeners[key]:
+                self.change_listeners[key].append(listener)
+
+    def remove_change_listener(self, key: str, listener: Callable[[str, Any, Any], None]):
+        """
+        Remove a change listener
+
+        Args:
+            key: State key
+            listener: Callback function to remove
+        """
+
+        with self.state_lock:
+            if listener in self.change_listeners[key]:
+                self.change_listeners[key].remove(listener)
+
+    def add_global_listener(self, listener: Callable[[StateChangeEvent], None]):
+        """
+        Add a global change listener
+
+        Args:
+            listener: Callback function that receives StateChangeEvent
+        """
+
+        with self.state_lock:
+            if listener not in self.global_listeners:
+                self.global_listeners.append(listener)
+
+    def remove_global_listener(self, listener: Callable[[StateChangeEvent], None]):
+        """
+        Remove a global change listener
+
+        Args:
+            listener: Callback function to remove
+        """
+
+        with self.state_lock:
+            if listener in self.global_listeners:
+                self.global_listeners.remove(listener)
+
+    def _notify_change_listeners(self, key: str, old_value: Any, new_value: Any, component: AIComponent):
+        """Notify all relevant change listeners"""
+
+        try:
+            # Create change event
+            event = StateChangeEvent(
+                key=key,
+                old_value=old_value,
+                new_value=new_value,
+                component=component
+            )
+
+            # Notify key-specific listeners
+            for listener in self.change_listeners.get(key, []):
+                try:
+                    listener(key, old_value, new_value)
+                except Exception as e:
+                    self.logger_system.log_error(
+                        AIComponent.KIRO,
+                        e,
+                        "change_listener_error",
+                        {"key": key, "listener": str(listener)}
+                    )
+
+            # Notify global listeners
+            for listener in self.global_listeners:
+                try:
+                    listener(event)
+                except Exception as e:
+                    self.logger_system.log_error(
+                        AIComponent.KIRO,
+                        e,
+                        "global_listener_error",
+                        {"key": key, "listener": str(listener)}
+                    )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "change_notification", "key": key},
+                AIComponent.KIRO
+            )
+
+    # State history and undo/redo
+
+    def _add_to_history(self):
+        """Add current state to history"""
+
+        try:
+            # Convert state to dictionary
+            state_dict = self._state_to_dict()
+
+            # Remove future history if we're not at the end
+            if self.current_history_index < len(self.state_history) - 1:
+                self.state_history = self.state_history[:self.current_history_index + 1]
+
+            # Add new state
+            self.state_history.append(copy.deepcopy(state_dict))
+            self.current_history_index = len(self.state_history) - 1
+
+            # Limit history size
+            if len(self.state_history) > self.max_history_size:
+                self.state_history.pop(0)
+                self.current_history_index -= 1
+
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "history_management",
+                {}
+            )
+
+    def can_undo(self) -> bool:
+        """Check if undo is possible"""
+        return self.current_history_index > 0
+
+    def can_redo(self) -> bool:
+        """Check if redo is possible"""
+        return self.current_history_index < len(self.state_history) - 1
+
+    def undo(self) -> bool:
+        """Undo last state change"""
+
+        with self.state_lock:
+            if not self.can_undo():
+                return False
+
+            try:
+                self.current_history_index -= 1
+                previous_state = self.state_history[self.current_history_index]
+
+                # Restore state without adding to history
+                self._restore_state_from_dict(previous_state, add_to_history=False)
 
                 self.logger_system.log_ai_operation(
-                    ai_component,
-                    "ai_state_update",
-                    f"AI state updated: {list(kwargs.keys())}"
+                    AIComponent.KIRO,
+                    "state_undo",
+                    f"State undone to index {self.current_history_index}"
                 )
 
                 return True
@@ -324,393 +442,84 @@ class StateManager:
             except Exception as e:
                 self.error_handler.handle_error(
                     e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "ai_state_update", "ai_component": ai_component.value},
-                    ai_component
+                    {"operation": "state_undo"},
+                    AIComponent.KIRO
                 )
                 return False
 
-    def get_ai_state(self, ai_component: AIComponent) -> Dict[str, Any]:
-        """
-        Get AI component-specific state
+    def redo(self) -> bool:
+        """Redo next state change"""
 
-        Args:
-            ai_component: AI component
+        with self.state_lock:
+            if not self.can_redo():
+                return False
 
-        Returns:
-            AI component state dictionary
-        """
+            try:
+                self.current_history_index += 1
+                next_state = self.state_history[self.current_history_index]
 
-        with self._lock:
-            return self.ai_states.get(ai_component, {}).copy()
+                # Restore state without adding to history
+                self._restore_state_from_dict(next_state, add_to_history=False)
 
-    # Performance metrics management
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "state_redo",
+                    f"State redone to index {self.current_history_index}"
+                )
 
-    def add_performance_metrics(self, metrics: PerformanceMetrics):
-        """
-        Add performance metrics to history
+                return True
 
-        Args:
-            metrics: Performance metrics to add
-        """
-
-        with self._lock:
-            self.performance_history.append(metrics)
-
-            # Update application state with latest metrics
-            self.app_state.memory_usage_history.append(
-                (metrics.timestamp, metrics.memory_usage_mb)
-            )
-
-            # Keep only recent memory usage history
-            cutoff_time = datetime.now() - timedelta(hours=1)
-            self.app_state.memory_usage_history = [
-                (timestamp, usage) for timestamp, usage in self.app_state.memory_usage_history
-                if timestamp > cutoff_time
-            ]
-
-    def get_performance_summary(self) -> Dict[str, Any]:
-        """
-        Get performance metrics summary
-
-        Returns:
-            Performance summary dictionary
-        """
-
-        with self._lock:
-            if not self.performance_history:
-                return {"status": "no_data"}
-
-            recent_metrics = self.performance_history[-10:]  # Last 10 metrics
-
-            avg_memory = sum(m.memory_usage_mb for m in recent_metrics) / len(recent_metrics)
-            avg_cpu = sum(m.cpu_usage_percent for m in recent_metrics) / len(recent_metrics)
-
-            total_operations = sum(m.total_operations for m in recent_metrics)
-
-            return {
-                "average_memory_mb": avg_memory,
-                "average_cpu_percent": avg_cpu,
-                "total_operations": total_operations,
-                "metrics_count": len(self.performance_history),
-                "latest_timestamp": recent_metrics[-1].timestamp.isoformat(),
-                "ai_operations": {
-                    "copilot": sum(m.copilot_operations for m in recent_metrics),
-                    "cursor": sum(m.cursor_operations for m in recent_metrics),
-                    "kiro": sum(m.kiro_operations for m in recent_metrics)
-                }
-            }
+            except Exception as e:
+                self.error_handler.handle_error(
+                    e, ErrorCategory.INTEGRATION_ERROR,
+                    {"operation": "state_redo"},
+                    AIComponent.KIRO
+                )
+                return False
 
     # State persistence
 
-    def _save_state(self):
-        """Save current state to persistent storage"""
+    def save_state(self, file_path: Optional[Path] = None) -> bool:
+        """
+        Save current state to file
 
-        try:
-            with self._lock:
-                # Prepare state data for serialization
-                state_data = {
-                    "app_state": self._serialize_app_state(),
-                    "ai_states": {
-                        ai.value: state for ai, state in self.ai_states.items()
-                    },
-                    "performance_summary": self.get_performance_summary(),
-                    "save_timestamp": datetime.now().isoformat(),
-                    "session_duration": self.app_state.session_duration
+        Args:
+            file_path: Optional custom file path
+
+        Returns:
+            True if saved successfully
+        """
+
+        with self.state_lock:
+            try:
+                target_file = file_path or self.state_file
+
+                # Create backup of existing file
+                if target_file.exists():
+                    backup_path = target_file.with_suffix('.backup')
+                    target_file.rename(backup_path)
+
+                # Convert state to dictionary
+                state_dict = self._state_to_dict()
+
+                # Add metadata
+                state_dict["_metadata"] = {
+                    "version": "1.0",
+                    "saved_at": datetime.now().isoformat(),
+                    "state_changes": self.state_change_count,
+                    "state_accesses": self.state_access_count
                 }
 
-                # Ensure config directory exists
-                self.state_file.parent.mkdir(parents=True, exist_ok=True)
-
                 # Save to file
-                with open(self.state_file, 'w', encoding='utf-8') as f:
-                    json.dump(state_data, f, indent=2, default=str)
+                with open(target_file, 'w', encoding='utf-8') as f:
+                    json.dump(state_dict, f, indent=2, default=str)
 
                 self.last_save_time = datetime.now()
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_save",
-                    f"Application state saved to {self.state_file}"
-                )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "state_save"},
-                AIComponent.KIRO
-            )
-
-    def _load_state(self):
-        """Load state from persistent storage"""
-
-        try:
-            if not self.state_file.exists():
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "state_load",
-                    "No saved state file found, using defaults"
-                )
-                return
-
-            with open(self.state_file, 'r', encoding='utf-8') as f:
-                state_data = json.load(f)
-
-            # Restore application state
-            if "app_state" in state_data:
-                self._deserialize_app_state(state_data["app_state"])
-
-            # Restore AI states
-            if "ai_states" in state_data:
-                for ai_name, ai_state in state_data["ai_states"].items():
-                    try:
-                        ai_component = AIComponent(ai_name)
-                        self.ai_states[ai_component] = ai_state
-                    except ValueError:
-                        continue
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "state_load",
-                f"Application state loaded from {self.state_file}"
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "state_load"},
-                AIComponent.KIRO
-            )
-
-    def _serialize_app_state(self) -> Dict[str, Any]:
-        """Serialize application state for storage"""
-
-        # Convert ApplicationState to dictionary
-        state_dict = asdict(self.app_state)
-
-        # Convert Path objects to strings
-        if state_dict.get("current_folder"):
-            state_dict["current_folder"] = str(state_dict["current_folder"])
-
-        if state_dict.get("selected_image"):
-            state_dict["selected_image"] = str(state_dict["selected_image"])
-
-        if state_dict.get("loaded_images"):
-            state_dict["loaded_images"] = [str(p) for p in state_dict["loaded_images"]]
-
-        if state_dict.get("folder_history"):
-            state_dict["folder_history"] = [str(p) for p in state_dict["folder_history"]]
-
-        # Convert datetime objects to ISO strings
-        if state_dict.get("session_start"):
-            state_dict["session_start"] = state_dict["session_start"].isoformat()
-
-        if state_dict.get("last_activity"):
-            state_dict["last_activity"] = state_dict["last_activity"].isoformat()
-
-        # Convert memory usage history
-        if state_dict.get("memory_usage_history"):
-            state_dict["memory_usage_history"] = [
-                (timestamp.isoformat(), usage)
-                for timestamp, usage in state_dict["memory_usage_history"]
-            ]
-
-        return state_dict
-
-    def _deserialize_app_state(self, state_dict: Dict[str, Any]):
-        """Deserialize application state from storage"""
-
-        # Convert string paths back to Path objects
-        if state_dict.get("current_folder"):
-            self.app_state.current_folder = Path(state_dict["current_folder"])
-
-        if state_dict.get("selected_image"):
-            self.app_state.selected_image = Path(state_dict["selected_image"])
-
-        if state_dict.get("loaded_images"):
-            self.app_state.loaded_images = [Path(p) for p in state_dict["loaded_images"]]
-
-        if state_dict.get("folder_history"):
-            self.app_state.folder_history = [Path(p) for p in state_dict["folder_history"]]
-
-        # Convert ISO strings back to datetime objects
-        if state_dict.get("session_start"):
-            self.app_state.session_start = datetime.fromisoformat(state_dict["session_start"])
-
-        if state_dict.get("last_activity"):
-            self.app_state.last_activity = datetime.fromisoformat(state_dict["last_activity"])
-
-        # Convert memory usage history
-        if state_dict.get("memory_usage_history"):
-            self.app_state.memory_usage_history = [
-                (datetime.fromisoformat(timestamp), usage)
-                for timestamp, usage in state_dict["memory_usage_history"]
-            ]
-
-        # Restore other simple attributes
-        simple_attrs = [
-            "current_theme", "thumbnail_size", "map_center", "map_zoom",
-            "exif_display_mode", "image_sort_mode", "image_sort_ascending",
-            "current_zoom", "current_pan", "fit_mode", "performance_mode",
-            "images_processed", "error_count"
-        ]
-
-        for attr in simple_attrs:
-            if attr in state_dict:
-                setattr(self.app_state, attr, state_dict[attr])
-
-    # State validation
-
-    def _validate_state_change(self, key: str, value: Any) -> bool:
-        """Validate a state change"""
-
-        validator = self.state_validators.get(key)
-        if validator:
-            return validator(value)
-
-        # If no specific validator, allow the change
-        return True
-
-    def _validate_folder_path(self, path: Any) -> bool:
-        """Validate folder path"""
-
-        if path is None:
-            return True
-
-        if isinstance(path, (str, Path)):
-            path_obj = Path(path)
-            return path_obj.exists() and path_obj.is_dir()
-
-        return False
-
-    def _validate_image_path(self, path: Any) -> bool:
-        """Validate image path"""
-
-        if path is None:
-            return True
-
-        if isinstance(path, (str, Path)):
-            path_obj = Path(path)
-            return path_obj.exists() and path_obj.is_file()
-
-        return False
-
-    def _validate_thumbnail_size(self, size: Any) -> bool:
-        """Validate thumbnail size"""
-
-        if isinstance(size, int):
-            return 50 <= size <= 500
-
-        return False
-
-    def _validate_theme_name(self, theme: Any) -> bool:
-        """Validate theme name"""
-
-        if isinstance(theme, str):
-            # Get available themes from config
-            available_themes = self.config_manager.get_setting("ui.available_themes", [])
-            return theme in available_themes or theme == "default"
-
-        return False
-
-    def _validate_performance_mode(self, mode: Any) -> bool:
-        """Validate performance mode"""
-
-        valid_modes = ["performance", "balanced", "quality"]
-        return mode in valid_modes
-
-    # Event handling
-
-    def add_change_listener(self, key: str, listener: Callable):
-        """Add a state change listener for specific key"""
-
-        if key not in self.change_listeners:
-            self.change_listeners[key] = []
-
-        if listener not in self.change_listeners[key]:
-            self.change_listeners[key].append(listener)
-
-    def remove_change_listener(self, key: str, listener: Callable):
-        """Remove a state change listener"""
-
-        if key in self.change_listeners:
-            try:
-                self.change_listeners[key].remove(listener)
-            except ValueError:
-                pass
-
-    def _notify_change_listeners(self, key: str, old_value: Any, new_value: Any):
-        """Notify change listeners for a specific key"""
-
-        listeners = self.change_listeners.get(key, [])
-        for listener in listeners:
-            try:
-                listener(key, old_value, new_value)
-            except Exception as e:
-                self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "change_notification", "key": key},
-                    AIComponent.KIRO
-                )
-
-    def _on_config_change(self, key: str, old_value: Any, new_value: Any):
-        """Handle configuration changes"""
-
-        # Update application state based on configuration changes
-        if key == "ui.theme":
-            self.update_state(current_theme=new_value)
-        elif key == "ui.thumbnail_size":
-            self.update_state(thumbnail_size=new_value)
-        elif key == "performance.mode":
-            self.update_state(performance_mode=new_value)
-
-    # History management
-
-    def _save_to_history(self):
-        """Save current state to history"""
-
-        # Create a copy of current state
-        state_copy = ApplicationState(
-            current_folder=self.app_state.current_folder,
-            selected_image=self.app_state.selected_image,
-            current_theme=self.app_state.current_theme,
-            thumbnail_size=self.app_state.thumbnail_size,
-            performance_mode=self.app_state.performance_mode
-        )
-
-        self.state_history.append(state_copy)
-
-        # Limit history size
-        if len(self.state_history) > self.max_history_size:
-            self.state_history = self.state_history[-self.max_history_size:]
-
-    def get_state_history(self, count: int = 10) -> List[ApplicationState]:
-        """Get recent state history"""
-
-        with self._lock:
-            return self.state_history[-count:]
-
-    def rollback_state(self, steps: int = 1) -> bool:
-        """Rollback state to previous version"""
-
-        with self._lock:
-            if len(self.state_history) < steps:
-                return False
-
-            try:
-                # Get previous state
-                previous_state = self.state_history[-(steps + 1)]
-
-                # Restore key attributes
-                self.app_state.current_folder = previous_state.current_folder
-                self.app_state.selected_image = previous_state.selected_image
-                self.app_state.current_theme = previous_state.current_theme
-                self.app_state.thumbnail_size = previous_state.thumbnail_size
-                self.app_state.performance_mode = previous_state.performance_mode
-
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "state_rollback",
-                    f"State rolled back {steps} steps"
+                    f"State saved to {target_file}"
                 )
 
                 return True
@@ -718,35 +527,253 @@ class StateManager:
             except Exception as e:
                 self.error_handler.handle_error(
                     e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "state_rollback", "steps": steps},
+                    {"operation": "state_save", "file_path": str(file_path or self.state_file)},
                     AIComponent.KIRO
                 )
                 return False
 
-    # Shutdown
+    def _load_state(self, file_path: Optional[Path] = None) -> bool:
+        """Load state from file"""
+
+        with self.state_lock:
+            try:
+                source_file = file_path or self.state_file
+
+                if not source_file.exists():
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "state_load",
+                        "No existing state file found, using defaults"
+                    )
+                    return True
+
+                with open(source_file, 'r', encoding='utf-8') as f:
+                    state_dict = json.load(f)
+
+                # Check for metadata and version
+                metadata = state_dict.pop("_metadata", {})
+                version = metadata.get("version", "1.0")
+
+                # Apply migrations if needed
+                state_dict = self._migrate_state(state_dict, version)
+
+                # Restore state
+                self._restore_state_from_dict(state_dict)
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "state_load",
+                    f"State loaded from {source_file} (version: {version})"
+                )
+
+                return True
+
+            except Exception as e:
+                self.error_handler.handle_error(
+                    e, ErrorCategory.INTEGRATION_ERROR,
+                    {"operation": "state_load", "file_path": str(file_path or self.state_file)},
+                    AIComponent.KIRO
+                )
+                return False
+
+    def _auto_save_if_needed(self):
+        """Auto-save state if interval has passed"""
+
+        if not self.auto_save_enabled:
+            return
+
+        now = datetime.now()
+        if (now - self.last_save_time).total_seconds() >= self.auto_save_interval:
+            self.save_state()
+
+    def _state_to_dict(self) -> Dict[str, Any]:
+        """Convert application state to dictionary"""
+
+        try:
+            # Convert dataclass to dict
+            state_dict = asdict(self.app_state)
+
+            # Handle Path objects
+            for key, value in state_dict.items():
+                if isinstance(value, Path):
+                    state_dict[key] = str(value)
+                elif isinstance(value, list) and value and isinstance(value[0], Path):
+                    state_dict[key] = [str(p) for p in value]
+
+            return state_dict
+
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "state_to_dict_conversion",
+                {}
+            )
+            return {}
+
+    def _restore_state_from_dict(self, state_dict: Dict[str, Any], add_to_history: bool = True):
+        """Restore state from dictionary"""
+
+        try:
+            # Convert string paths back to Path objects
+            if "current_folder" in state_dict and state_dict["current_folder"]:
+                state_dict["current_folder"] = Path(state_dict["current_folder"])
+
+            if "selected_image" in state_dict and state_dict["selected_image"]:
+                state_dict["selected_image"] = Path(state_dict["selected_image"])
+
+            if "folder_history" in state_dict:
+                state_dict["folder_history"] = [Path(p) for p in state_dict["folder_history"]]
+
+            if "loaded_images" in state_dict:
+                state_dict["loaded_images"] = [Path(p) for p in state_dict["loaded_images"]]
+
+            # Convert datetime strings back to datetime objects
+            for key in ["session_start", "last_activity"]:
+                if key in state_dict and isinstance(state_dict[key], str):
+                    try:
+                        state_dict[key] = datetime.fromisoformat(state_dict[key])
+                    except ValueError:
+                        state_dict[key] = datetime.now()
+
+            # Update application state
+            for key, value in state_dict.items():
+                if hasattr(self.app_state, key):
+                    setattr(self.app_state, key, value)
+
+            # Add to history if requested
+            if add_to_history:
+                self._add_to_history()
+
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "state_restoration",
+                {}
+            )
+
+    def _migrate_state(self, state_dict: Dict[str, Any], version: str) -> Dict[str, Any]:
+        """Migrate state from older versions"""
+
+        try:
+            # Apply migrations based on version
+            for migration_version, migration_func in self.migrations.items():
+                if version < migration_version:
+                    state_dict = migration_func(state_dict)
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "state_migration",
+                        f"Applied migration for version {migration_version}"
+                    )
+
+            return state_dict
+
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "state_migration",
+                {"version": version}
+            )
+            return state_dict
+
+    # Performance and monitoring
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get performance summary of state management"""
+
+        try:
+            return {
+                "state_accesses": self.state_access_count,
+                "state_changes": self.state_change_count,
+                "history_size": len(self.state_history),
+                "current_history_index": self.current_history_index,
+                "can_undo": self.can_undo(),
+                "can_redo": self.can_redo(),
+                "change_listeners": sum(len(listeners) for listeners in self.change_listeners.values()),
+                "global_listeners": len(self.global_listeners),
+                "auto_save_enabled": self.auto_save_enabled,
+                "last_save_time": self.last_save_time.isoformat(),
+                "session_duration": (datetime.now() - self.app_state.session_start).total_seconds()
+            }
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "performance_summary"},
+                AIComponent.KIRO
+            )
+            return {"status": "error"}
+
+    def get_state_summary(self) -> Dict[str, Any]:
+        """Get summary of current application state"""
+
+        try:
+            return {
+                "current_folder": str(self.app_state.current_folder) if self.app_state.current_folder else None,
+                "selected_image": str(self.app_state.selected_image) if self.app_state.selected_image else None,
+                "loaded_images_count": len(self.app_state.loaded_images),
+                "current_theme": self.app_state.current_theme,
+                "thumbnail_size": self.app_state.thumbnail_size,
+                "folder_history_count": len(self.app_state.folder_history),
+                "performance_mode": self.app_state.performance_mode,
+                "session_start": self.app_state.session_start.isoformat(),
+                "last_activity": self.app_state.last_activity.isoformat(),
+                "images_processed": self.app_state.images_processed,
+                "error_count": self.app_state.error_count,
+                "session_duration": self.app_state.session_duration
+            }
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "state_summary"},
+                AIComponent.KIRO
+            )
+            return {"status": "error"}
+
+    # Cleanup and shutdown
+
+    def clear_history(self):
+        """Clear state history"""
+
+        with self.state_lock:
+            self.state_history.clear()
+            self.current_history_index = -1
+
+    def reset_state(self):
+        """Reset to default state"""
+
+        with self.state_lock:
+            self.app_state = ApplicationState()
+            self.clear_history()
+            self._add_to_history()
 
     def shutdown(self):
         """Shutdown the state manager"""
 
         try:
-            # Signal shutdown to background workers
-            self._shutdown_event.set()
+            # Save current state
+            self.save_state()
 
-            # Save final state
-            self._save_state()
+            # Clear listeners
+            self.change_listeners.clear()
+            self.global_listeners.clear()
 
-            # Remove configuration change listener
-            self.config_manager.remove_change_listener(self._on_config_change)
+            # Clear history
+            self.clear_history()
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
-                "state_shutdown",
-                "State manager shutdown completed"
+                "state_manager_shutdown",
+                "State manager shutdown complete"
             )
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "state_shutdown"},
-                AIComponent.KIRO
+            self.logger_system.log_error(
+                AIComponent.KIRO,
+                e,
+                "state_manager_shutdown",
+                {}
             )
