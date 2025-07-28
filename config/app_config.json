@@ -1,52 +1,53 @@
 {
-  "app": {
+  "application": {
     "name": "PhotoGeoView",
     "version": "1.0.0",
+    "environment": "production",
     "debug_mode": false,
-    "auto_save": true,
-    "backup_enabled": true,
-    "telemetry_enabled": false
+    "development_mode": false
   },
-  "ui": {
-    "theme": "default",
-    "thumbnail_size": 150,
-    "window_geometry": null,
-    "splitter_states": {},
-    "show_toolbar": true,
-    "show_statusbar": true,
-    "animation_enabled": true
-  },
-  "core": {
-    "image_formats": [
+  "file_discovery": {
+    "supported_formats": [
       ".jpg",
       ".jpeg",
       ".png",
-      ".tiff",
+      ".gif",
       ".bmp",
-      ".gif"
+      ".tiff",
+      ".webp"
     ],
-    "exif_parsing_enabled": true,
-    "map_provider": "folium",
-    "map_zoom_default": 10,
-    "thumbnail_quality": 85,
+    "max_files_per_batch": 100,
     "cache_enabled": true,
-    "cache_size_mb": 100
+    "cache_size_mb": 256,
+    "validation_enabled": true,
+    "async_processing": true
   },
   "performance": {
-    "mode": "balanced",
-    "max_memory_mb": 512,
-    "thread_pool_size": 4,
-    "async_loading": true,
-    "preload_thumbnails": true,
+    "memory_limit_mb": 512,
+    "max_concurrent_operations": 4,
+    "thumbnail_cache_size": 1000,
+    "file_watcher_enabled": true,
     "performance_monitoring": true
   },
-  "logging": {
-    "level": "INFO",
-    "file_logging": true,
-    "console_logging": true,
-    "performance_logging": true,
-    "ai_operation_logging": true,
-    "max_log_size_mb": 10,
-    "log_retention_days": 30
+  "ui": {
+    "theme": "system",
+    "language": "ja",
+    "thumbnail_size": 150,
+    "grid_columns": "auto",
+    "show_file_info": true,
+    "animation_enabled": true
+  },
+  "error_handling": {
+    "show_detailed_errors": false,
+    "log_all_errors": true,
+    "user_friendly_messages": true,
+    "error_reporting_enabled": true,
+    "crash_recovery_enabled": true
+  },
+  "security": {
+    "restrict_file_access": true,
+    "allowed_directories": [],
+    "scan_for_malware": false,
+    "validate_file_signatures": true
   }
 }
