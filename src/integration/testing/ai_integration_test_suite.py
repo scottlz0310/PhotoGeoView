@@ -31,6 +31,7 @@ from ..controllers import AppController
 @dataclass
 class TestResult:
     """Test result data structure"""
+
     test_name: str
     ai_component: AIComponent
     status: str  # passed, failed, error, skipped
@@ -43,6 +44,7 @@ class TestResult:
 @dataclass
 class IntegrationTestResult:
     """Integration test result with multi-AI coordination"""
+
     test_name: str
     components_involved: List[AIComponent]
     status: str

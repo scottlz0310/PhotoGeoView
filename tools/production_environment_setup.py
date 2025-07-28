@@ -62,7 +62,7 @@ class ProductionEnvironmentSetup:
             "app_config.json",
             "logging_config.json",
             "performance_config.json",
-            "error_monitoring_config.json"
+            "error_monitoring_config.json",
         ]
 
         backed_up_files = []
@@ -87,22 +87,30 @@ class ProductionEnvironmentSetup:
                 "version": "1.0.0",
                 "environment": "production",
                 "debug_mode": False,
-                "development_mode": False
+                "development_mode": False,
             },
             "file_discovery": {
-                "supported_formats": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"],
+                "supported_formats": [
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                    ".gif",
+                    ".bmp",
+                    ".tiff",
+                    ".webp",
+                ],
                 "max_files_per_batch": 100,
                 "cache_enabled": True,
                 "cache_size_mb": 256,
                 "validation_enabled": True,
-                "async_processing": True
+                "async_processing": True,
             },
             "performance": {
                 "memory_limit_mb": 512,
                 "max_concurrent_operations": 4,
                 "thumbnail_cache_size": 1000,
                 "file_watcher_enabled": True,
-                "performance_monitoring": True
+                "performance_monitoring": True,
             },
             "ui": {
                 "theme": "system",
@@ -110,25 +118,25 @@ class ProductionEnvironmentSetup:
                 "thumbnail_size": 150,
                 "grid_columns": "auto",
                 "show_file_info": True,
-                "animation_enabled": True
+                "animation_enabled": True,
             },
             "error_handling": {
                 "show_detailed_errors": False,
                 "log_all_errors": True,
                 "user_friendly_messages": True,
                 "error_reporting_enabled": True,
-                "crash_recovery_enabled": True
+                "crash_recovery_enabled": True,
             },
             "security": {
                 "restrict_file_access": True,
                 "allowed_directories": [],
                 "scan_for_malware": False,
-                "validate_file_signatures": True
-            }
+                "validate_file_signatures": True,
+            },
         }
 
         config_path = self.config_dir / "app_config.json"
-        with open(config_path, 'w', encoding='utf-8') as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(production_config, f, indent=2, ensure_ascii=False)
 
         print(f"   ✅ 本番環境用設定を作成: {config_path}")
@@ -144,23 +152,23 @@ class ProductionEnvironmentSetup:
             "formatters": {
                 "standard": {
                     "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-                    "datefmt": "%Y-%m-%d %H:%M:%S"
+                    "datefmt": "%Y-%m-%d %H:%M:%S",
                 },
                 "detailed": {
                     "format": "%(asctime)s [%(levelname)s] %(name)s:%(lineno)d: %(message)s",
-                    "datefmt": "%Y-%m-%d %H:%M:%S"
+                    "datefmt": "%Y-%m-%d %H:%M:%S",
                 },
                 "json": {
                     "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
-                    "class": "pythonjsonlogger.jsonlogger.JsonFormatter"
-                }
+                    "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+                },
             },
             "handlers": {
                 "console": {
                     "class": "logging.StreamHandler",
                     "level": "INFO",
                     "formatter": "standard",
-                    "stream": "ext://sys.stdout"
+                    "stream": "ext://sys.stdout",
                 },
                 "file_info": {
                     "class": "logging.handlers.RotatingFileHandler",
@@ -169,7 +177,7 @@ class ProductionEnvironmentSetup:
                     "filename": str(self.logs_dir / "app_info.log"),
                     "maxBytes": 10485760,  # 10MB
                     "backupCount": 5,
-                    "encoding": "utf-8"
+                    "encoding": "utf-8",
                 },
                 "file_error": {
                     "class": "logging.handlers.RotatingFileHandler",
@@ -178,7 +186,7 @@ class ProductionEnvironmentSetup:
                     "filename": str(self.logs_dir / "app_error.log"),
                     "maxBytes": 10485760,  # 10MB
                     "backupCount": 10,
-                    "encoding": "utf-8"
+                    "encoding": "utf-8",
                 },
                 "file_performance": {
                     "class": "logging.handlers.TimedRotatingFileHandler",
@@ -188,39 +196,39 @@ class ProductionEnvironmentSetup:
                     "when": "midnight",
                     "interval": 1,
                     "backupCount": 30,
-                    "encoding": "utf-8"
-                }
+                    "encoding": "utf-8",
+                },
             },
             "loggers": {
                 "file_discovery": {
                     "level": "INFO",
                     "handlers": ["console", "file_info", "file_error"],
-                    "propagate": False
+                    "propagate": False,
                 },
                 "performance": {
                     "level": "DEBUG",
                     "handlers": ["file_performance"],
-                    "propagate": False
+                    "propagate": False,
                 },
                 "error_handler": {
                     "level": "ERROR",
                     "handlers": ["console", "file_error"],
-                    "propagate": False
+                    "propagate": False,
                 },
                 "ui_integration": {
                     "level": "INFO",
                     "handlers": ["console", "file_info"],
-                    "propagate": False
-                }
+                    "propagate": False,
+                },
             },
             "root": {
                 "level": "INFO",
-                "handlers": ["console", "file_info", "file_error"]
-            }
+                "handlers": ["console", "file_info", "file_error"],
+            },
         }
 
         config_path = self.config_dir / "logging_config.json"
-        with open(config_path, 'w', encoding='utf-8') as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(logging_config, f, indent=2, ensure_ascii=False)
 
         print(f"   ✅ 本番環境用ログ設定を作成: {config_path}")
@@ -236,53 +244,53 @@ class ProductionEnvironmentSetup:
                 "check_interval_seconds": 60,
                 "error_threshold_per_minute": 10,
                 "memory_threshold_mb": 1024,
-                "cpu_threshold_percent": 80
+                "cpu_threshold_percent": 80,
             },
             "alerts": {
                 "email_enabled": False,
                 "email_recipients": [],
                 "log_alerts": True,
                 "console_alerts": True,
-                "alert_cooldown_minutes": 5
+                "alert_cooldown_minutes": 5,
             },
             "error_categories": {
                 "file_access_error": {
                     "severity": "medium",
                     "auto_recovery": True,
-                    "user_notification": True
+                    "user_notification": True,
                 },
                 "memory_error": {
                     "severity": "high",
                     "auto_recovery": True,
-                    "user_notification": False
+                    "user_notification": False,
                 },
                 "ui_error": {
                     "severity": "low",
                     "auto_recovery": False,
-                    "user_notification": True
+                    "user_notification": True,
                 },
                 "critical_error": {
                     "severity": "critical",
                     "auto_recovery": False,
-                    "user_notification": True
-                }
+                    "user_notification": True,
+                },
             },
             "recovery_actions": {
                 "clear_cache": True,
                 "restart_file_watcher": True,
                 "garbage_collection": True,
-                "reset_ui_state": True
+                "reset_ui_state": True,
             },
             "reporting": {
                 "daily_summary": True,
                 "weekly_report": True,
                 "error_statistics": True,
-                "performance_metrics": True
-            }
+                "performance_metrics": True,
+            },
         }
 
         config_path = self.config_dir / "error_monitoring_config.json"
-        with open(config_path, 'w', encoding='utf-8') as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(error_monitoring_config, f, indent=2, ensure_ascii=False)
 
         print(f"   ✅ エラー監視設定を作成: {config_path}")
@@ -297,7 +305,7 @@ class ProductionEnvironmentSetup:
                 "enabled": True,
                 "sample_interval_seconds": 30,
                 "metrics_retention_days": 30,
-                "detailed_profiling": False
+                "detailed_profiling": False,
             },
             "metrics": {
                 "memory_usage": True,
@@ -306,7 +314,7 @@ class ProductionEnvironmentSetup:
                 "thumbnail_generation_time": True,
                 "ui_response_time": True,
                 "cache_hit_rate": True,
-                "error_rate": True
+                "error_rate": True,
             },
             "thresholds": {
                 "memory_warning_mb": 512,
@@ -314,24 +322,24 @@ class ProductionEnvironmentSetup:
                 "cpu_warning_percent": 70,
                 "cpu_critical_percent": 90,
                 "response_time_warning_ms": 2000,
-                "response_time_critical_ms": 5000
+                "response_time_critical_ms": 5000,
             },
             "optimization": {
                 "auto_cache_cleanup": True,
                 "memory_pressure_handling": True,
                 "adaptive_batch_size": True,
-                "background_processing": True
+                "background_processing": True,
             },
             "reporting": {
                 "console_output": False,
                 "log_output": True,
                 "metrics_file": str(self.logs_dir / "performance_metrics.json"),
-                "summary_interval_minutes": 60
-            }
+                "summary_interval_minutes": 60,
+            },
         }
 
         config_path = self.config_dir / "performance_config.json"
-        with open(config_path, 'w', encoding='utf-8') as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(performance_config, f, indent=2, ensure_ascii=False)
 
         print(f"   ✅ パフォーマンス監視設定を作成: {config_path}")
@@ -452,11 +460,11 @@ if __name__ == "__main__":
 '''
 
         script_path = self.project_root / "start_production.py"
-        with open(script_path, 'w', encoding='utf-8') as f:
+        with open(script_path, "w", encoding="utf-8") as f:
             f.write(startup_script_content)
 
         # 実行権限を付与（Unix系システムの場合）
-        if os.name != 'nt':
+        if os.name != "nt":
             os.chmod(script_path, 0o755)
 
         print(f"   ✅ 本番環境用起動スクリプトを作成: {script_path}")
@@ -547,7 +555,7 @@ if __name__ == "__main__":
 """
 
         checklist_path = self.project_root / "DEPLOYMENT_CHECKLIST.md"
-        with open(checklist_path, 'w', encoding='utf-8') as f:
+        with open(checklist_path, "w", encoding="utf-8") as f:
             f.write(checklist_content)
 
         print(f"   ✅ デプロイメントチェックリストを作成: {checklist_path}")

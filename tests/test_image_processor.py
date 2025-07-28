@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.image_processor import CS4CodingImageProcessor
@@ -43,7 +44,7 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         # Create ImageProcessor instance
         self.processor = CS4CodingImageProcessor(
             config_manager=self.mock_config_manager,
-            logger_system=self.mock_logger_system
+            logger_system=self.mock_logger_system,
         )
 
     def tearDown(self):
@@ -65,9 +66,9 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         self.assertGreater(len(self.processor.supported_formats), 0)
 
         # Check that common image formats are supported
-        self.assertIn('.jpg', self.processor.supported_formats)
-        self.assertIn('.png', self.processor.supported_formats)
-        self.assertIn('.tiff', self.processor.supported_formats)
+        self.assertIn(".jpg", self.processor.supported_formats)
+        self.assertIn(".png", self.processor.supported_formats)
+        self.assertIn(".tiff", self.processor.supported_formats)
 
     def test_get_supported_formats(self):
         """Test getting supported image formats"""
@@ -79,7 +80,7 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
 
         # Check that formats start with dot
         for fmt in formats:
-            self.assertTrue(fmt.startswith('.'))
+            self.assertTrue(fmt.startswith("."))
             self.assertEqual(fmt, fmt.lower())
 
     def test_validate_image_nonexistent_file(self):
@@ -106,31 +107,43 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         """Test GPS coordinate validation"""
 
         # Valid coordinates
-        self.assertTrue(self.processor.validate_coordinates(40.7128, -74.0060))  # New York
-        self.assertTrue(self.processor.validate_coordinates(0, 0))  # Equator/Prime Meridian
+        self.assertTrue(
+            self.processor.validate_coordinates(40.7128, -74.0060)
+        )  # New York
+        self.assertTrue(
+            self.processor.validate_coordinates(0, 0)
+        )  # Equator/Prime Meridian
         self.assertTrue(self.processor.validate_coordinates(90, 180))  # Extremes
         self.assertTrue(self.processor.validate_coordinates(-90, -180))  # Extremes
 
         # Invalid coordinates
-        self.assertFalse(self.processor.validate_coordinates(91, 0))  # Latitude too high
-        self.assertFalse(self.processor.validate_coordinates(-91, 0))  # Latitude too low
-        self.assertFalse(self.processor.validate_coordinates(0, 181))  # Longitude too high
-        self.assertFalse(self.processor.validate_coordinates(0, -181))  # Longitude too low
+        self.assertFalse(
+            self.processor.validate_coordinates(91, 0)
+        )  # Latitude too high
+        self.assertFalse(
+            self.processor.validate_coordinates(-91, 0)
+        )  # Latitude too low
+        self.assertFalse(
+            self.processor.validate_coordinates(0, 181)
+        )  # Longitude too high
+        self.assertFalse(
+            self.processor.validate_coordinates(0, -181)
+        )  # Longitude too low
 
     def test_format_coordinates(self):
         """Test GPS coordinate formatting"""
 
         # Test positive coordinates
         result = self.processor._format_coordinates(40.7128, -74.0060)
-        self.assertIn('N', result)
-        self.assertIn('W', result)
-        self.assertIn('40.712800', result)
-        self.assertIn('74.006000', result)
+        self.assertIn("N", result)
+        self.assertIn("W", result)
+        self.assertIn("40.712800", result)
+        self.assertIn("74.006000", result)
 
         # Test negative coordinates
         result = self.processor._format_coordinates(-33.8688, 151.2093)
-        self.assertIn('S', result)
-        self.assertIn('E', result)
+        self.assertIn("S", result)
+        self.assertIn("E", result)
 
     def test_format_file_size(self):
         """Test file size formatting"""
@@ -179,8 +192,8 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         result_west = self.processor._convert_gps_to_decimal(gps_coord, "W")
         self.assertAlmostEqual(result_west, -40.7128, places=4)
 
-    @patch('integration.image_processor.PIL_AVAILABLE', True)
-    @patch('integration.image_processor.Image')
+    @patch("integration.image_processor.PIL_AVAILABLE", True)
+    @patch("integration.image_processor.Image")
     def test_load_with_pil(self, mock_image):
         """Test image loading with PIL"""
 
@@ -193,7 +206,7 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         mock_image.open.return_value = mock_img
 
         # Mock ImageOps.exif_transpose
-        with patch('integration.image_processor.ImageOps') as mock_imageops:
+        with patch("integration.image_processor.ImageOps") as mock_imageops:
             mock_imageops.exif_transpose.return_value = mock_img
 
             result = self.processor._load_with_pil(test_image_path)
@@ -213,28 +226,28 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         result = self.processor._get_file_info(test_file)
 
         self.assertIsInstance(result, dict)
-        self.assertEqual(result['File Name'], 'test.jpg')
-        self.assertEqual(result['Extension'], '.jpg')
-        self.assertEqual(result['Size Bytes'], len(test_content))
-        self.assertIn('Modified', result)
-        self.assertIn('Full Path', result)
+        self.assertEqual(result["File Name"], "test.jpg")
+        self.assertEqual(result["Extension"], ".jpg")
+        self.assertEqual(result["Size Bytes"], len(test_content))
+        self.assertIn("Modified", result)
+        self.assertIn("Full Path", result)
 
     def test_cache_functionality(self):
         """Test caching system"""
 
         # Check initial cache state
         stats = self.processor.get_performance_stats()
-        self.assertEqual(stats['image_cache_size'], 0)
-        self.assertEqual(stats['metadata_cache_size'], 0)
-        self.assertEqual(stats['cache_hits'], 0)
-        self.assertEqual(stats['cache_misses'], 0)
+        self.assertEqual(stats["image_cache_size"], 0)
+        self.assertEqual(stats["metadata_cache_size"], 0)
+        self.assertEqual(stats["cache_hits"], 0)
+        self.assertEqual(stats["cache_misses"], 0)
 
         # Test cache clearing
         self.processor.clear_cache()
 
         stats_after_clear = self.processor.get_performance_stats()
-        self.assertEqual(stats_after_clear['cache_hits'], 0)
-        self.assertEqual(stats_after_clear['cache_misses'], 0)
+        self.assertEqual(stats_after_clear["cache_hits"], 0)
+        self.assertEqual(stats_after_clear["cache_misses"], 0)
 
     def test_performance_stats(self):
         """Test performance statistics"""
@@ -243,19 +256,25 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
 
         # Check that all expected keys are present
         expected_keys = [
-            'image_cache_size', 'metadata_cache_size', 'cache_hits', 'cache_misses',
-            'cache_hit_rate', 'average_processing_time', 'recent_processing_times',
-            'supported_formats_count', 'libraries_available'
+            "image_cache_size",
+            "metadata_cache_size",
+            "cache_hits",
+            "cache_misses",
+            "cache_hit_rate",
+            "average_processing_time",
+            "recent_processing_times",
+            "supported_formats_count",
+            "libraries_available",
         ]
 
         for key in expected_keys:
             self.assertIn(key, stats)
 
         # Check library availability info
-        self.assertIsInstance(stats['libraries_available'], dict)
-        self.assertIn('exifread', stats['libraries_available'])
-        self.assertIn('pil', stats['libraries_available'])
-        self.assertIn('cv2', stats['libraries_available'])
+        self.assertIsInstance(stats["libraries_available"], dict)
+        self.assertIn("exifread", stats["libraries_available"])
+        self.assertIn("pil", stats["libraries_available"])
+        self.assertIn("cv2", stats["libraries_available"])
 
     def test_create_image_metadata(self):
         """Test ImageMetadata creation"""
@@ -266,22 +285,22 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
 
         # Mock EXIF data
         exif_data = {
-            'Camera Make': 'Canon',
-            'Camera Model': 'EOS 5D Mark IV',
-            'F-Number': 'f/2.8',
-            'ISO Speed': '400',
-            'Focal Length': '85mm',
-            'Image Width': '6720',
-            'Image Height': '4480',
-            'gps_coordinates': (40.7128, -74.0060)
+            "Camera Make": "Canon",
+            "Camera Model": "EOS 5D Mark IV",
+            "F-Number": "f/2.8",
+            "ISO Speed": "400",
+            "Focal Length": "85mm",
+            "Image Width": "6720",
+            "Image Height": "4480",
+            "gps_coordinates": (40.7128, -74.0060),
         }
 
         metadata = self.processor._create_image_metadata(test_file, exif_data)
 
         self.assertIsInstance(metadata, ImageMetadata)
         self.assertEqual(metadata.file_path, test_file)
-        self.assertEqual(metadata.camera_make, 'Canon')
-        self.assertEqual(metadata.camera_model, 'EOS 5D Mark IV')
+        self.assertEqual(metadata.camera_make, "Canon")
+        self.assertEqual(metadata.camera_model, "EOS 5D Mark IV")
         self.assertEqual(metadata.aperture, 2.8)
         self.assertEqual(metadata.iso, 400)
         self.assertEqual(metadata.focal_length, 85.0)
@@ -305,32 +324,32 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
             file_size=1024,
             created_date=datetime.now(),
             modified_date=datetime.now(),
-            file_format='.jpg',
-            camera_make='Canon',
-            camera_model='EOS 5D',
+            file_format=".jpg",
+            camera_make="Canon",
+            camera_model="EOS 5D",
             aperture=2.8,
             iso=400,
             latitude=40.7128,
             longitude=-74.0060,
             processing_status=ProcessingStatus.COMPLETED,
-            ai_processor=AIComponent.COPILOT
+            ai_processor=AIComponent.COPILOT,
         )
 
         result = self.processor._metadata_to_dict(metadata)
 
         self.assertIsInstance(result, dict)
-        self.assertEqual(result['File Name'], 'test.jpg')
-        self.assertEqual(result['Camera Make'], 'Canon')
-        self.assertEqual(result['Camera Model'], 'EOS 5D')
-        self.assertEqual(result['F-Number'], 'f/2.8')
-        self.assertEqual(result['ISO Speed'], '400')
-        self.assertIn('GPS Latitude', result)
-        self.assertIn('GPS Longitude', result)
-        self.assertIn('GPS Coordinates', result)
-        self.assertIn('gps_coordinates', result)
+        self.assertEqual(result["File Name"], "test.jpg")
+        self.assertEqual(result["Camera Make"], "Canon")
+        self.assertEqual(result["Camera Model"], "EOS 5D")
+        self.assertEqual(result["F-Number"], "f/2.8")
+        self.assertEqual(result["ISO Speed"], "400")
+        self.assertIn("GPS Latitude", result)
+        self.assertIn("GPS Longitude", result)
+        self.assertIn("GPS Coordinates", result)
+        self.assertIn("gps_coordinates", result)
 
-    @patch('integration.image_processor.EXIFREAD_AVAILABLE', False)
-    @patch('integration.image_processor.PIL_AVAILABLE', False)
+    @patch("integration.image_processor.EXIFREAD_AVAILABLE", False)
+    @patch("integration.image_processor.PIL_AVAILABLE", False)
     def test_extract_exif_no_libraries(self):
         """Test EXIF extraction when no libraries are available"""
 
@@ -342,15 +361,15 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
 
         # Should still return basic file info
         self.assertIsInstance(result, dict)
-        self.assertIn('File Name', result)
-        self.assertIn('File Size', result)
+        self.assertIn("File Name", result)
+        self.assertIn("File Size", result)
 
     def test_shutdown(self):
         """Test processor shutdown"""
 
         # Add some data to caches
-        self.processor.image_cache['test'] = 'data'
-        self.processor.metadata_cache['test'] = 'metadata'
+        self.processor.image_cache["test"] = "data"
+        self.processor.metadata_cache["test"] = "metadata"
 
         # Shutdown processor
         self.processor.shutdown()
@@ -373,8 +392,7 @@ class TestImageProcessorIntegration(unittest.TestCase):
         self.logger_system = LoggerSystem()
 
         self.processor = CS4CodingImageProcessor(
-            config_manager=self.config_manager,
-            logger_system=self.logger_system
+            config_manager=self.config_manager, logger_system=self.logger_system
         )
 
     def tearDown(self):
@@ -426,10 +444,10 @@ class TestImageProcessorIntegration(unittest.TestCase):
         stats = self.processor.get_performance_stats()
 
         self.assertIsInstance(stats, dict)
-        self.assertIn('average_processing_time', stats)
+        self.assertIn("average_processing_time", stats)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create test directory if it doesn't exist
     test_dir = Path(__file__).parent
     test_dir.mkdir(exist_ok=True)

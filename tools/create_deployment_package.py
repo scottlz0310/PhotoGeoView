@@ -39,16 +39,19 @@ class DeploymentPackageCreator:
         if pyproject_path.exists():
             try:
                 import tomllib
-                with open(pyproject_path, 'rb') as f:
+
+                with open(pyproject_path, "rb") as f:
                     pyproject_data = tomllib.load(f)
 
-                project_info = pyproject_da.get('project', {})
+                project_info = pyproject_da.get("project", {})
                 return {
-                    'name': project_info.get('name', 'photogeoview'),
-                    'version': project_info.get('version', '1.0.0'),
-                    'description': project_info.get('description', 'AI統合写真地理情報ビューア'),
-                    'authors': project_info.get('authors', []),
-                    'dependencies': project_info.get('dependencies', [])
+                    "name": project_info.get("name", "photogeoview"),
+                    "version": project_info.get("version", "1.0.0"),
+                    "description": project_info.get(
+                        "description", "AI統合写真地理情報ビューア"
+                    ),
+                    "authors": project_info.get("authors", []),
+                    "dependencies": project_info.get("dependencies", []),
                 }
             except ImportError:
                 print("tomllib not available, using fallback")
@@ -57,11 +60,11 @@ class DeploymentPackageCreator:
 
         # フォールバック情報
         return {
-            'name': 'photogeoview',
-            'version': '1.0.0',
-            'description': 'AI統合写真地理情報ビューア',
-            'authors': [{'name': 'AI Integration Team'}],
-            'dependencies': []
+            "name": "photogeoview",
+            "version": "1.0.0",
+            "description": "AI統合写真地理情報ビューア",
+            "authors": [{"name": "AI Integration Team"}],
+            "dependencies": [],
         }
 
     def clean_build_directories(self) -> None:
@@ -79,12 +82,18 @@ class DeploymentPackageCreator:
 
         try:
             # AI品質チェック
-            result = subprocess.run([
-                sys.executable,
-                "tools/ai_quality_checker.py",
-                "--json",
-                "--output", str(self.build_dir / "quality_report.json")
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/ai_quality_checker.py",
+                    "--json",
+                    "--output",
+                    str(self.build_dir / "quality_report.json"),
+                ],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode != 0:
                 print(f"品質チェック警告: {result.stderr}")
@@ -92,11 +101,13 @@ class DeploymentPackageCreator:
             # 品質レポートを確認
             quality_report_path = self.build_dir / "quality_report.json"
             if quality_report_path.exists():
-                with open(quality_report_path, 'r', encoding='utf-8') as f:
+                with open(quality_report_path, "r", encoding="utf-8") as f:
                     quality_data = json.load(f)
 
-                quality_score = quality_data.get('overall_score', 0)
-                critical_issues = quality_data.get('issues_by_severity', {}).get('critical', 0)
+                quality_score = quality_data.get("overall_score", 0)
+                critical_issues = quality_data.get("issues_by_severity", {}).get(
+                    "critical", 0
+                )
 
                 print(f"品質スコア: {quality_score}/100")
                 print(f"重大な問題: {critical_issues}件")
@@ -118,12 +129,20 @@ class DeploymentPackageCreator:
 
         try:
             # 包括的統合テスト
-            result = subprocess.run([
-                sys.executable, "-m", "pytest",
-                "tests/integration_tests/comprehensive_integration_test.py",
-                "-v", "--tb=short",
-                "--junitxml=" + str(self.build_dir / "test_results.xml")
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    "tests/integration_tests/comprehensive_integration_test.py",
+                    "-v",
+                    "--tb=short",
+                    "--junitxml=" + str(self.build_dir / "test_results.xml"),
+                ],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             print(f"テスト結果: {result.returncode}")
             if result.stdout:
@@ -155,7 +174,7 @@ class DeploymentPackageCreator:
             "requirements.txt",
             "pyproject.toml",
             "README.md",
-            "LICENSE"
+            "LICENSE",
         ]
 
         for file_pattern in files_to_include:
@@ -167,34 +186,44 @@ class DeploymentPackageCreator:
                         source_path,
                         source_dir / file_pattern,
                         ignore=shutil.ignore_patterns(
-                            '__pycache__', '*.pyc', '*.pyo', '.pytest_cache',
-                            '.mypy_cache', '.coverage', 'htmlcov'
-                        )
+                            "__pycache__",
+                            "*.pyc",
+                            "*.pyo",
+                            ".pytest_cache",
+                            ".mypy_cache",
+                            ".coverage",
+                            "htmlcov",
+                        ),
                     )
                 else:
                     shutil.copy2(source_path, source_dir / file_pattern)
 
         # パッケージ情報ファイルを作成
         package_info_file = source_dir / "PACKAGE_INFO.json"
-        with open(package_info_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                **self.package_info,
-                'build_date': datetime.now().isoformat(),
-                'ai_components': {
-                    'copilot': 'GitHub Copilot (CS4Coding) - コア機能実装',
-                    'cursor': 'Cursor (CursorBLD) - UI/UX設計',
-                    'kiro': 'Kiro - 統合・品質管理'
-                }
-            }, f, ensure_ascii=False, indent=2)
+        with open(package_info_file, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    **self.package_info,
+                    "build_date": datetime.now().isoformat(),
+                    "ai_components": {
+                        "copilot": "GitHub Copilot (CS4Coding) - コア機能実装",
+                        "cursor": "Cursor (CursorBLD) - UI/UX設計",
+                        "kiro": "Kiro - 統合・品質管理",
+                    },
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
 
         # インストールスクリプトを作成
         install_script = source_dir / "install.py"
-        with open(install_script, 'w', encoding='utf-8') as f:
+        with open(install_script, "w", encoding="utf-8") as f:
             f.write(self._generate_install_script())
 
         # 実行スクリプトを作成
         run_script = source_dir / "run.py"
-        with open(run_script, 'w', encoding='utf-8') as f:
+        with open(run_script, "w", encoding="utf-8") as f:
             f.write(self._generate_run_script())
 
         return source_dir
@@ -287,23 +316,35 @@ if __name__ == "__main__":
 
         try:
             # PyInstallerがインストールされているか確認
-            subprocess.check_call([
-                sys.executable, "-c", "import PyInstaller"
-            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.check_call(
+                [sys.executable, "-c", "import PyInstaller"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         except subprocess.CalledProcessError:
             print("PyInstallerがインストールされていません。スキップします。")
             return None
 
         try:
             # PyInstallerでバイナリを作成
-            result = subprocess.run([
-                sys.executable, "-m", "PyInstaller",
-                "--onefile",
-                "--name", f"photogeoview-{self.package_info['version']}",
-                "--distpath", str(self.dist_dir),
-                "--workpath", str(self.build_dir / "pyinstaller"),
-                "src/main.py"
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "PyInstaller",
+                    "--onefile",
+                    "--name",
+                    f"photogeoview-{self.package_info['version']}",
+                    "--distpath",
+                    str(self.dist_dir),
+                    "--workpath",
+                    str(self.build_dir / "pyinstaller"),
+                    "src/main.py",
+                ],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode == 0:
                 binary_files = list(self.dist_dir.glob("photogeoview-*"))
@@ -327,8 +368,8 @@ if __name__ == "__main__":
 
         # ZIP形式
         zip_path = self.dist_dir / f"{package_name}.zip"
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for file_path in source_dir.rglob('*'):
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for file_path in source_dir.rglob("*"):
                 if file_path.is_file():
                     arcname = file_path.relative_to(source_dir.parent)
                     zipf.write(file_path, arcname)
@@ -338,7 +379,7 @@ if __name__ == "__main__":
 
         # TAR.GZ形式
         tar_path = self.dist_dir / f"{package_name}.tar.gz"
-        with tarfile.open(tar_path, 'w:gz') as tarf:
+        with tarfile.open(tar_path, "w:gz") as tarf:
             tarf.add(source_dir, arcname=package_name)
 
         archives.append(tar_path)
@@ -351,64 +392,74 @@ if __name__ == "__main__":
         print("デプロイメントマニフェストを生成中...")
 
         manifest = {
-            'package_info': self.package_info,
-            'build_date': datetime.now().isoformat(),
-            'ai_integration': {
-                'components': {
-                    'copilot': {
-                        'name': 'GitHub Copilot (CS4Coding)',
-                        'focus': 'コア機能実装',
-                        'contributions': ['EXIF解析', '地図表示', '画像処理']
+            "package_info": self.package_info,
+            "build_date": datetime.now().isoformat(),
+            "ai_integration": {
+                "components": {
+                    "copilot": {
+                        "name": "GitHub Copilot (CS4Coding)",
+                        "focus": "コア機能実装",
+                        "contributions": ["EXIF解析", "地図表示", "画像処理"],
                     },
-                    'cursor': {
-                        'name': 'Cursor (CursorBLD)',
-                        'focus': 'UI/UX設計',
-                        'contributions': ['テーマシステム', 'サムネイル表示', 'インターフェース']
+                    "cursor": {
+                        "name": "Cursor (CursorBLD)",
+                        "focus": "UI/UX設計",
+                        "contributions": [
+                            "テーマシステム",
+                            "サムネイル表示",
+                            "インターフェース",
+                        ],
                     },
-                    'kiro': {
-                        'name': 'Kiro',
-                        'focus': '統合・品質管理',
-                        'contributions': ['パフォーマンス最適化', '統合制御', 'ドキュメント生成']
-                    }
+                    "kiro": {
+                        "name": "Kiro",
+                        "focus": "統合・品質管理",
+                        "contributions": [
+                            "パフォーマンス最適化",
+                            "統合制御",
+                            "ドキュメント生成",
+                        ],
+                    },
                 }
             },
-            'packages': [
+            "packages": [
                 {
-                    'name': pkg.name,
-                    'path': str(pkg.relative_to(self.project_root)),
-                    'size': pkg.stat().st_size,
-                    'type': pkg.suffix[1:] if pkg.suffix else 'binary'
+                    "name": pkg.name,
+                    "path": str(pkg.relative_to(self.project_root)),
+                    "size": pkg.stat().st_size,
+                    "type": pkg.suffix[1:] if pkg.suffix else "binary",
                 }
                 for pkg in packages
             ],
-            'system_requirements': {
-                'python_version': '>=3.9',
-                'operating_systems': ['Windows', 'macOS', 'Linux'],
-                'memory': '4GB以上推奨',
-                'storage': '100MB以上'
+            "system_requirements": {
+                "python_version": ">=3.9",
+                "operating_systems": ["Windows", "macOS", "Linux"],
+                "memory": "4GB以上推奨",
+                "storage": "100MB以上",
             },
-            'installation_instructions': {
-                'source': [
-                    '1. パッケージを展開',
-                    '2. python install.py を実行',
-                    '3. python run.py でアプリケーションを起動'
+            "installation_instructions": {
+                "source": [
+                    "1. パッケージを展開",
+                    "2. python install.py を実行",
+                    "3. python run.py でアプリケーションを起動",
                 ],
-                'binary': [
-                    '1. バイナリファイルをダウンロード',
-                    '2. 実行権限を付与（Linux/macOS）',
-                    '3. ファイルを実行'
-                ]
-            }
+                "binary": [
+                    "1. バイナリファイルをダウンロード",
+                    "2. 実行権限を付与（Linux/macOS）",
+                    "3. ファイルを実行",
+                ],
+            },
         }
 
         manifest_path = self.dist_dir / "deployment_manifest.json"
-        with open(manifest_path, 'w', encoding='utf-8') as f:
+        with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest, f, ensure_ascii=False, indent=2)
 
         print(f"✅ デプロイメントマニフェスト: {manifest_path}")
         return manifest_path
 
-    def create_deployment_package(self, skip_tests: bool = False, skip_quality: bool = False) -> bool:
+    def create_deployment_package(
+        self, skip_tests: bool = False, skip_quality: bool = False
+    ) -> bool:
         """デプロイメントパッケージを作成"""
         print("=" * 60)
         print("PhotoGeoView AI統合デプロイメントパッケージ作成")
@@ -468,10 +519,12 @@ def main():
     """メイン実行関数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='AI統合デプロイメントパッケージ作成')
-    parser.add_argument('--skip-tests', action='store_true', help='テストをスキップ')
-    parser.add_argument('--skip-quality', action='store_true', help='品質チェックをスキップ')
-    parser.add_argument('--project-root', type=Path, help='プロジェクトルートパス')
+    parser = argparse.ArgumentParser(description="AI統合デプロイメントパッケージ作成")
+    parser.add_argument("--skip-tests", action="store_true", help="テストをスキップ")
+    parser.add_argument(
+        "--skip-quality", action="store_true", help="品質チェックをスキップ"
+    )
+    parser.add_argument("--project-root", type=Path, help="プロジェクトルートパス")
 
     args = parser.parse_args()
 
@@ -479,8 +532,7 @@ def main():
     creator = DeploymentPackageCreator(project_root)
 
     success = creator.create_deployment_package(
-        skip_tests=args.skip_tests,
-        skip_quality=args.skip_quality
+        skip_tests=args.skip_tests, skip_quality=args.skip_quality
     )
 
     sys.exit(0 if success else 1)

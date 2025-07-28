@@ -12,8 +12,18 @@ from pathlib import Path
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from src.integration.data_validation import DataValidator, ValidationResult, ValidationSeverity
-from src.integration.models import ImageMetadata, ThemeConfiguration, ApplicationState, ProcessingStatus, AIComponent
+from src.integration.data_validation import (
+    DataValidator,
+    ValidationResult,
+    ValidationSeverity,
+)
+from src.integration.models import (
+    ImageMetadata,
+    ThemeConfiguration,
+    ApplicationState,
+    ProcessingStatus,
+    AIComponent,
+)
 from src.integration.logging_system import LoggerSystem
 from src.integration.error_handling import IntegratedErrorHandler
 
@@ -53,7 +63,7 @@ class TestDataValidator:
             width=1920,
             height=1080,
             processing_status=ProcessingStatus.COMPLETED,
-            ai_processor=AIComponent.COPILOT
+            ai_processor=AIComponent.COPILOT,
         )
 
     @pytest.fixture
@@ -68,13 +78,13 @@ class TestDataValidator:
                 "background": "#ffffff",
                 "foreground": "#000000",
                 "primary": "#007acc",
-                "secondary": "#6c757d"
+                "secondary": "#6c757d",
             },
             accessibility_features={
                 "keyboard_navigation": True,
                 "focus_indicators": True,
-                "high_contrast": False
-            }
+                "high_contrast": False,
+            },
         )
 
     @pytest.fixture
@@ -91,7 +101,7 @@ class TestDataValidator:
             image_sort_mode="name",
             fit_mode="fit_window",
             exif_display_mode="detailed",
-            image_sort_ascending=True
+            image_sort_ascending=True,
         )
 
     def test_validator_initialization(self, validator):
@@ -117,7 +127,7 @@ class TestDataValidator:
             file_path=None,  # Missing required field
             file_size=None,  # Missing required field
             created_date=datetime.now(),
-            modified_date=datetime.now()
+            modified_date=datetime.now(),
         )
 
         result = validator.validate_image_metadata(metadata)
@@ -127,7 +137,9 @@ class TestDataValidator:
         assert any("file_path" in error["field"] for error in result.errors)
         assert any("file_size" in error["field"] for error in result.errors)
 
-    def test_validate_image_metadata_invalid_gps(self, validator, sample_image_metadata):
+    def test_validate_image_metadata_invalid_gps(
+        self, validator, sample_image_metadata
+    ):
         """Test validation with invalid GPS coordinates"""
         # Set invalid GPS coordinates
         sample_image_metadata.latitude = 95.0  # Invalid latitude (> 90)
@@ -148,14 +160,16 @@ class TestDataValidator:
             file_path=nonexistent_file,
             file_size=1024,
             created_date=datetime.now(),
-            modified_date=datetime.now()
+            modified_date=datetime.now(),
         )
 
         result = validator.validate_image_metadata(metadata)
 
         # Should have warnings about non-existent file
         assert len(result.warnings) > 0
-        assert any("does not exist" in warning["message"] for warning in result.warnings)
+        assert any(
+            "does not exist" in warning["message"] for warning in result.warnings
+        )
 
     def test_validate_image_metadata_unsupported_format(self, validator, temp_dir):
         """Test validation with unsupported image format"""
@@ -166,16 +180,21 @@ class TestDataValidator:
             file_path=unsupported_file,
             file_size=1024,
             created_date=datetime.now(),
-            modified_date=datetime.now()
+            modified_date=datetime.now(),
         )
 
         result = validator.validate_image_metadata(metadata)
 
         # Should have warnings about unsupported format
         assert len(result.warnings) > 0
-        assert any("Unsupported image format" in warning["message"] for warning in result.warnings)
+        assert any(
+            "Unsupported image format" in warning["message"]
+            for warning in result.warnings
+        )
 
-    def test_validate_theme_configuration_valid(self, validator, sample_theme_configuration):
+    def test_validate_theme_configuration_valid(
+        self, validator, sample_theme_configuration
+    ):
         """Test validation of valid ThemeConfiguration"""
         result = validator.validate_theme_configuration(sample_theme_configuration)
 
@@ -188,7 +207,7 @@ class TestDataValidator:
         theme = ThemeConfiguration(
             name="",  # Empty required field
             display_name="",  # Empty required field
-            color_scheme={}
+            color_scheme={},
         )
 
         result = validator.validate_theme_configuration(theme)
@@ -203,14 +222,17 @@ class TestDataValidator:
         theme = ThemeConfiguration(
             name="invalid name with spaces!",  # Invalid characters
             display_name="Valid Display Name",
-            color_scheme={}
+            color_scheme={},
         )
 
         result = validator.validate_theme_configuration(theme)
 
         assert not result.is_valid
         assert len(result.errors) > 0
-        assert any("name" in error["field"] and "alphanumeric" in error["message"] for error in result.errors)
+        assert any(
+            "name" in error["field"] and "alphanumeric" in error["message"]
+            for error in result.errors
+        )
 
     def test_validate_theme_configuration_invalid_colors(self, validator):
         """Test validation with invalid color formats"""
@@ -221,15 +243,19 @@ class TestDataValidator:
                 "background": "invalid_color",  # Invalid color format
                 "foreground": "#gggggg",  # Invalid hex color
                 "primary": "#007acc",  # Valid color
-                "secondary": "rgb(255, 0, 0)"  # Valid RGB color
-            }
+                "secondary": "rgb(255, 0, 0)",  # Valid RGB color
+            },
         )
 
         result = validator.validate_theme_configuration(theme)
 
         assert not result.is_valid
         assert len(result.errors) >= 2
-        assert any("color_scheme" in error["field"] and "Invalid color format" in error["message"] for error in result.errors)
+        assert any(
+            "color_scheme" in error["field"]
+            and "Invalid color format" in error["message"]
+            for error in result.errors
+        )
 
     def test_validate_theme_configuration_missing_required_colors(self, validator):
         """Test validation with missing required colors"""
@@ -239,16 +265,21 @@ class TestDataValidator:
             color_scheme={
                 "background": "#ffffff",
                 # Missing required colors: foreground, primary, secondary
-            }
+            },
         )
 
         result = validator.validate_theme_configuration(theme)
 
         # Should have warnings about missing required colors
         assert len(result.warnings) >= 3
-        assert any("Missing required color" in warning["message"] for warning in result.warnings)
+        assert any(
+            "Missing required color" in warning["message"]
+            for warning in result.warnings
+        )
 
-    def test_validate_application_state_valid(self, validator, sample_application_state):
+    def test_validate_application_state_valid(
+        self, validator, sample_application_state
+    ):
         """Test validation of valid ApplicationState"""
         result = validator.validate_application_state(sample_application_state)
 
@@ -256,7 +287,9 @@ class TestDataValidator:
         assert result.is_valid
         assert len(result.errors) == 0
 
-    def test_validate_application_state_invalid_thumbnail_size(self, validator, sample_application_state):
+    def test_validate_application_state_invalid_thumbnail_size(
+        self, validator, sample_application_state
+    ):
         """Test validation with invalid thumbnail size"""
         sample_application_state.thumbnail_size = 1000  # Outside recommended range
 
@@ -266,7 +299,9 @@ class TestDataValidator:
         assert len(result.warnings) > 0
         assert any("thumbnail_size" in warning["field"] for warning in result.warnings)
 
-    def test_validate_application_state_invalid_performance_mode(self, validator, sample_application_state):
+    def test_validate_application_state_invalid_performance_mode(
+        self, validator, sample_application_state
+    ):
         """Test validation with invalid performance mode"""
         sample_application_state.performance_mode = "invalid_mode"
 
@@ -276,7 +311,9 @@ class TestDataValidator:
         assert len(result.errors) > 0
         assert any("performance_mode" in error["field"] for error in result.errors)
 
-    def test_validate_application_state_invalid_sort_mode(self, validator, sample_application_state):
+    def test_validate_application_state_invalid_sort_mode(
+        self, validator, sample_application_state
+    ):
         """Test validation with invalid sort mode"""
         sample_application_state.image_sort_mode = "invalid_sort"
 
@@ -293,21 +330,29 @@ class TestDataValidator:
         state = ApplicationState(
             current_folder=nonexistent_folder,
             current_theme="default",
-            performance_mode="balanced"
+            performance_mode="balanced",
         )
 
         result = validator.validate_application_state(state)
 
         # Should have warnings about non-existent folder
         assert len(result.warnings) > 0
-        assert any("does not exist" in warning["message"] for warning in result.warnings)
+        assert any(
+            "does not exist" in warning["message"] for warning in result.warnings
+        )
 
-    def test_validate_all_models(self, validator, sample_image_metadata, sample_theme_configuration, sample_application_state):
+    def test_validate_all_models(
+        self,
+        validator,
+        sample_image_metadata,
+        sample_theme_configuration,
+        sample_application_state,
+    ):
         """Test validation of multiple models at once"""
         results = validator.validate_all_models(
             image_metadata=sample_image_metadata,
             theme_config=sample_theme_configuration,
-            app_state=sample_application_state
+            app_state=sample_application_state,
         )
 
         assert isinstance(results, dict)
@@ -393,7 +438,9 @@ class TestValidationResult:
         """Test adding error issues"""
         result = ValidationResult(is_valid=True)
 
-        result.add_issue(ValidationSeverity.ERROR, "test_field", "Test error", "test_value")
+        result.add_issue(
+            ValidationSeverity.ERROR, "test_field", "Test error", "test_value"
+        )
 
         assert not result.is_valid  # Should become False
         assert len(result.errors) == 1

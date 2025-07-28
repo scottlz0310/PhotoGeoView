@@ -21,10 +21,10 @@ def test_default_config():
     config_manager = ConfigManager()
     config = config_manager.get_config()
 
-    assert config['python_versions'] == ["3.9", "3.10", "3.11"]
-    assert 'code_quality' in config['enabled_checks']
-    assert config['timeout_seconds'] == 1800
-    assert config['parallel_execution'] is True
+    assert config["python_versions"] == ["3.9", "3.10", "3.11"]
+    assert "code_quality" in config["enabled_checks"]
+    assert config["timeout_seconds"] == 1800
+    assert config["parallel_execution"] is True
 
     print("✓ Default configuration test passed")
 
@@ -34,12 +34,12 @@ def test_yaml_config():
     print("Testing YAML configuration loading...")
 
     test_config = {
-        'python_versions': ['3.9', '3.10'],
-        'timeout_seconds': 900,
-        'auto_fix': True
+        "python_versions": ["3.9", "3.10"],
+        "timeout_seconds": 900,
+        "auto_fix": True,
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
         yaml.dump(test_config, f)
         temp_path = f.name
 
@@ -47,9 +47,9 @@ def test_yaml_config():
         config_manager = ConfigManager(temp_path)
         config = config_manager.get_config()
 
-        assert config['python_versions'] == ['3.9', '3.10']
-        assert config['timeout_seconds'] == 900
-        assert config['auto_fix'] is True
+        assert config["python_versions"] == ["3.9", "3.10"]
+        assert config["timeout_seconds"] == 900
+        assert config["auto_fix"] is True
 
         print("✓ YAML configuration test passed")
     finally:
@@ -61,12 +61,12 @@ def test_json_config():
     print("Testing JSON configuration loading...")
 
     test_config = {
-        'python_versions': ['3.11'],
-        'performance_threshold': 25.0,
-        'parallel_execution': False
+        "python_versions": ["3.11"],
+        "performance_threshold": 25.0,
+        "parallel_execution": False,
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(test_config, f)
         temp_path = f.name
 
@@ -74,9 +74,9 @@ def test_json_config():
         config_manager = ConfigManager(temp_path)
         config = config_manager.get_config()
 
-        assert config['python_versions'] == ['3.11']
-        assert config['performance_threshold'] == 25.0
-        assert config['parallel_execution'] is False
+        assert config["python_versions"] == ["3.11"]
+        assert config["performance_threshold"] == 25.0
+        assert config["parallel_execution"] is False
 
         print("✓ JSON configuration test passed")
     finally:
@@ -88,24 +88,24 @@ def test_env_overrides():
     print("Testing environment variable overrides...")
 
     # Set environment variables
-    os.environ['CI_PYTHON_VERSIONS'] = '3.9,3.11'
-    os.environ['CI_TIMEOUT'] = '600'
-    os.environ['CI_AUTO_FIX'] = 'true'
-    os.environ['CI_PARALLEL'] = 'false'
+    os.environ["CI_PYTHON_VERSIONS"] = "3.9,3.11"
+    os.environ["CI_TIMEOUT"] = "600"
+    os.environ["CI_AUTO_FIX"] = "true"
+    os.environ["CI_PARALLEL"] = "false"
 
     try:
         config_manager = ConfigManager()
         config = config_manager.get_config()
 
-        assert config['python_versions'] == ['3.9', '3.11']
-        assert config['timeout_seconds'] == 600
-        assert config['auto_fix'] is True
-        assert config['parallel_execution'] is False
+        assert config["python_versions"] == ["3.9", "3.11"]
+        assert config["timeout_seconds"] == 600
+        assert config["auto_fix"] is True
+        assert config["parallel_execution"] is False
 
         print("✓ Environment variable override test passed")
     finally:
         # Clean up environment variables
-        for var in ['CI_PYTHON_VERSIONS', 'CI_TIMEOUT', 'CI_AUTO_FIX', 'CI_PARALLEL']:
+        for var in ["CI_PYTHON_VERSIONS", "CI_TIMEOUT", "CI_AUTO_FIX", "CI_PARALLEL"]:
             if var in os.environ:
                 del os.environ[var]
 
@@ -128,8 +128,8 @@ def test_config_methods():
     assert isinstance(config_manager.get_report_formats(), list)
 
     # Test check enablement
-    assert config_manager.is_check_enabled('code_quality')
-    assert not config_manager.is_check_enabled('nonexistent_check')
+    assert config_manager.is_check_enabled("code_quality")
+    assert not config_manager.is_check_enabled("nonexistent_check")
 
     print("✓ Configuration accessor methods test passed")
 
@@ -140,12 +140,12 @@ def test_config_validation():
 
     # Test invalid configuration
     invalid_config = {
-        'python_versions': [],  # Empty list should fail
-        'timeout_seconds': -1,  # Negative timeout should fail
-        'performance_threshold': 150  # > 100 should fail
+        "python_versions": [],  # Empty list should fail
+        "timeout_seconds": -1,  # Negative timeout should fail
+        "performance_threshold": 150,  # > 100 should fail
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(invalid_config, f)
         temp_path = f.name
 
@@ -175,8 +175,8 @@ def test_default_config_creation():
         new_config_manager = ConfigManager(str(config_path))
         config = new_config_manager.get_config()
 
-        assert 'python_versions' in config
-        assert 'enabled_checks' in config
+        assert "python_versions" in config
+        assert "enabled_checks" in config
 
         print("✓ Default configuration file creation test passed")
 

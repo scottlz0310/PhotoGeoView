@@ -42,6 +42,7 @@ from .file_discovery_service import FileDiscoveryService
 @dataclass
 class FileBatch:
     """ファイルバッチ情報"""
+
     files: List[Path]
     batch_number: int
     total_batches: int
@@ -64,10 +65,12 @@ class PaginatedFileDiscovery:
     段階的読み込み（ページネーション）を提供する。
     """
 
-    def __init__(self,
-                 file_discovery_service: Optional[FileDiscoveryService] = None,
-                 page_size: int = 100,
-                 logger_system: Optional[LoggerSystem] = None):
+    def __init__(
+        self,
+        file_discovery_service: Optional[FileDiscoveryService] = None,
+        page_size: int = 100,
+        logger_system: Optional[LoggerSystem] = None,
+    ):
         """
         PaginatedFileDiscoveryの初期化
 
@@ -89,11 +92,11 @@ class PaginatedFileDiscovery:
 
         # 統計情報
         self._stats = {
-            'total_files_discovered': 0,
-            'total_batches_processed': 0,
-            'total_processing_time': 0.0,
-            'avg_batch_processing_time': 0.0,
-            'last_folder_scan_time': None
+            "total_files_discovered": 0,
+            "total_batches_processed": 0,
+            "total_processing_time": 0.0,
+            "avg_batch_processing_time": 0.0,
+            "last_folder_scan_time": None,
         }
 
         # 初期化完了をログに記録
@@ -101,7 +104,7 @@ class PaginatedFileDiscovery:
             AIComponent.KIRO,
             "paginated_discovery_init",
             f"PaginatedFileDiscovery初期化完了 - バッチサイズ: {self.page_size}",
-            level="INFO"
+            level="INFO",
         )
 
     def initialize_folder(self, folder_path: Path) -> Dict[str, Any]:
@@ -137,22 +140,28 @@ class PaginatedFileDiscovery:
         """
         start_time = time.time()
 
-        with self.logger_system.operation_context(AIComponent.KIRO, "paginated_folder_init") as ctx:
+        with self.logger_system.operation_context(
+            AIComponent.KIRO, "paginated_folder_init"
+        ) as ctx:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "folder_init_start",
-                f"段階的読み込み用フォルダ初期化開始: {folder_path}"
+                f"段階的読み込み用フォルダ初期化開始: {folder_path}",
             )
 
             try:
                 # 全ファイルを検出
-                self._all_files = self.file_discovery_service.discover_images(folder_path)
+                self._all_files = self.file_discovery_service.discover_images(
+                    folder_path
+                )
                 self._current_folder = folder_path
                 self._current_batch_index = 0
 
                 # バッチ数を計算
                 if self._all_files:
-                    self._total_batches = (len(self._all_files) + self.page_size - 1) // self.page_size
+                    self._total_batches = (
+                        len(self._all_files) + self.page_size - 1
+                    ) // self.page_size
                 else:
                     self._total_batches = 0
 
@@ -160,34 +169,34 @@ class PaginatedFileDiscovery:
 
                 # 初期化時間を記録
                 init_duration = time.time() - start_time
-                self._stats['last_folder_scan_time'] = datetime.now()
-                self._stats['total_files_discovered'] = len(self._all_files)
+                self._stats["last_folder_scan_time"] = datetime.now()
+                self._stats["total_files_discovered"] = len(self._all_files)
 
                 # 初期化結果
                 init_result = {
-                    'folder_path': str(folder_path),
-                    'total_files': len(self._all_files),
-                    'total_batches': self._total_batches,
-                    'batch_size': self.page_size,
-                    'initialization_time': init_duration,
-                    'files_per_batch': self.page_size,
-                    'last_batch_size': len(self._all_files) % self.page_size if self._all_files else 0,
-                    'estimated_memory_per_batch': self._estimate_memory_per_batch(),
-                    'initialization_timestamp': datetime.now().isoformat()
+                    "folder_path": str(folder_path),
+                    "total_files": len(self._all_files),
+                    "total_batches": self._total_batches,
+                    "batch_size": self.page_size,
+                    "initialization_time": init_duration,
+                    "files_per_batch": self.page_size,
+                    "last_batch_size": (
+                        len(self._all_files) % self.page_size if self._all_files else 0
+                    ),
+                    "estimated_memory_per_batch": self._estimate_memory_per_batch(),
+                    "initialization_timestamp": datetime.now().isoformat(),
                 }
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "folder_init_complete",
                     f"フォルダ初期化完了: {len(self._all_files)}ファイル, "
-                    f"{self._total_batches}バッチ, {init_duration:.2f}秒"
+                    f"{self._total_batches}バッチ, {init_duration:.2f}秒",
                 )
 
                 # パフォーマンス情報をログに記録
                 self.logger_system.log_performance(
-                    AIComponent.KIRO,
-                    "paginated_folder_initialization",
-                    init_result
+                    AIComponent.KIRO, "paginated_folder_initialization", init_result
                 )
 
                 return init_result
@@ -195,17 +204,17 @@ class PaginatedFileDiscovery:
             except Exception as e:
                 init_duration = time.time() - start_time
                 error_details = {
-                    'folder_path': str(folder_path),
-                    'error': str(e),
-                    'error_type': type(e).__name__,
-                    'initialization_time': init_duration
+                    "folder_path": str(folder_path),
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "initialization_time": init_duration,
                 }
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "folder_init_error",
                     f"フォルダ初期化エラー: {folder_path} - {str(e)}",
-                    level="ERROR"
+                    level="ERROR",
                 )
 
                 self._is_initialized = False
@@ -244,7 +253,7 @@ class PaginatedFileDiscovery:
                 AIComponent.KIRO,
                 "batch_request_error",
                 "フォルダが初期化されていません",
-                level="WARNING"
+                level="WARNING",
             )
             return None
 
@@ -253,7 +262,7 @@ class PaginatedFileDiscovery:
                 AIComponent.KIRO,
                 "batch_request_complete",
                 "すべてのバッチが処理済みです",
-                level="DEBUG"
+                level="DEBUG",
             )
             return None
 
@@ -277,14 +286,15 @@ class PaginatedFileDiscovery:
             start_index=start_index,
             end_index=end_index,
             batch_size=len(batch_files),
-            processing_time=batch_processing_time
+            processing_time=batch_processing_time,
         )
 
         # 統計情報を更新
-        self._stats['total_batches_processed'] += 1
-        self._stats['total_processing_time'] += batch_processing_time
-        self._stats['avg_batch_processing_time'] = (
-            self._stats['total_processing_time'] / self._stats['total_batches_processed']
+        self._stats["total_batches_processed"] += 1
+        self._stats["total_processing_time"] += batch_processing_time
+        self._stats["avg_batch_processing_time"] = (
+            self._stats["total_processing_time"]
+            / self._stats["total_batches_processed"]
         )
 
         # バッチ情報をログに記録
@@ -293,26 +303,24 @@ class PaginatedFileDiscovery:
             "batch_retrieved",
             f"バッチ {self._current_batch_index + 1}/{self._total_batches} 取得完了: "
             f"{len(batch_files)}ファイル ({start_index}-{end_index-1})",
-            level="DEBUG"
+            level="DEBUG",
         )
 
         # 詳細なバッチ情報をログに記録
         batch_details = {
-            'batch_number': file_batch.batch_number,
-            'total_batches': file_batch.total_batches,
-            'batch_size': file_batch.batch_size,
-            'start_index': file_batch.start_index,
-            'end_index': file_batch.end_index,
-            'processing_time': file_batch.processing_time,
-            'is_last_batch': file_batch.is_last_batch,
-            'folder_path': str(self._current_folder),
-            'timestamp': datetime.now().isoformat()
+            "batch_number": file_batch.batch_number,
+            "total_batches": file_batch.total_batches,
+            "batch_size": file_batch.batch_size,
+            "start_index": file_batch.start_index,
+            "end_index": file_batch.end_index,
+            "processing_time": file_batch.processing_time,
+            "is_last_batch": file_batch.is_last_batch,
+            "folder_path": str(self._current_folder),
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.logger_system.log_performance(
-            AIComponent.KIRO,
-            "batch_processing",
-            batch_details
+            AIComponent.KIRO, "batch_processing", batch_details
         )
 
         # 次のバッチインデックスに進む
@@ -337,7 +345,7 @@ class PaginatedFileDiscovery:
             "has_more_check",
             f"残りバッチ確認: {has_more} "
             f"(現在: {self._current_batch_index}/{self._total_batches})",
-            level="DEBUG"
+            level="DEBUG",
         )
 
         return has_more
@@ -350,7 +358,7 @@ class PaginatedFileDiscovery:
             AIComponent.KIRO,
             "pagination_reset",
             f"ページネーションリセット - 総バッチ数: {self._total_batches}",
-            level="DEBUG"
+            level="DEBUG",
         )
 
     def get_pagination_status(self) -> Dict[str, Any]:
@@ -361,29 +369,29 @@ class PaginatedFileDiscovery:
             ページネーション状態の詳細情報
         """
         if not self._is_initialized:
-            return {
-                'initialized': False,
-                'error': 'フォルダが初期化されていません'
-            }
+            return {"initialized": False, "error": "フォルダが初期化されていません"}
 
         progress_percentage = (
             (self._current_batch_index / self._total_batches * 100)
-            if self._total_batches > 0 else 0
+            if self._total_batches > 0
+            else 0
         )
 
         status = {
-            'initialized': self._is_initialized,
-            'folder_path': str(self._current_folder) if self._current_folder else None,
-            'total_files': len(self._all_files),
-            'total_batches': self._total_batches,
-            'current_batch_index': self._current_batch_index,
-            'processed_batches': self._current_batch_index,
-            'remaining_batches': max(0, self._total_batches - self._current_batch_index),
-            'progress_percentage': progress_percentage,
-            'batch_size': self.page_size,
-            'has_more_files': self.has_more_files(),
-            'stats': self._stats.copy(),
-            'status_timestamp': datetime.now().isoformat()
+            "initialized": self._is_initialized,
+            "folder_path": str(self._current_folder) if self._current_folder else None,
+            "total_files": len(self._all_files),
+            "total_batches": self._total_batches,
+            "current_batch_index": self._current_batch_index,
+            "processed_batches": self._current_batch_index,
+            "remaining_batches": max(
+                0, self._total_batches - self._current_batch_index
+            ),
+            "progress_percentage": progress_percentage,
+            "batch_size": self.page_size,
+            "has_more_files": self.has_more_files(),
+            "stats": self._stats.copy(),
+            "status_timestamp": datetime.now().isoformat(),
         }
 
         return status
@@ -400,7 +408,7 @@ class PaginatedFileDiscovery:
                 AIComponent.KIRO,
                 "iterator_error",
                 "フォルダが初期化されていないためイテレータを作成できません",
-                level="WARNING"
+                level="WARNING",
             )
             return
 
@@ -408,7 +416,7 @@ class PaginatedFileDiscovery:
             AIComponent.KIRO,
             "iterator_start",
             f"バッチイテレータ開始 - 総バッチ数: {self._total_batches}",
-            level="DEBUG"
+            level="DEBUG",
         )
 
         # ページネーションをリセット
@@ -423,7 +431,7 @@ class PaginatedFileDiscovery:
             AIComponent.KIRO,
             "iterator_complete",
             f"バッチイテレータ完了 - 処理済みバッチ数: {self._stats['total_batches_processed']}",
-            level="DEBUG"
+            level="DEBUG",
         )
 
     def _estimate_memory_per_batch(self) -> float:
@@ -446,7 +454,7 @@ class PaginatedFileDiscovery:
             "paginated_cleanup",
             f"PaginatedFileDiscoveryクリーンアップ開始 - "
             f"処理済みバッチ数: {self._stats['total_batches_processed']}",
-            level="DEBUG"
+            level="DEBUG",
         )
 
         # 状態をリセット
@@ -458,17 +466,15 @@ class PaginatedFileDiscovery:
 
         # 最終統計をログに記録
         final_stats = self._stats.copy()
-        final_stats['cleanup_timestamp'] = datetime.now().isoformat()
+        final_stats["cleanup_timestamp"] = datetime.now().isoformat()
 
         self.logger_system.log_performance(
-            AIComponent.KIRO,
-            "paginated_discovery_final_stats",
-            final_stats
+            AIComponent.KIRO, "paginated_discovery_final_stats", final_stats
         )
 
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "paginated_cleanup_complete",
             "PaginatedFileDiscoveryクリーンアップ完了",
-            level="DEBUG"
+            level="DEBUG",
         )

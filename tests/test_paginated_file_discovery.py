@@ -10,7 +10,10 @@ import shutil
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from src.integration.services.paginated_file_discovery import PaginatedFileDiscovery, FileBatch
+from src.integration.services.paginated_file_discovery import (
+    PaginatedFileDiscovery,
+    FileBatch,
+)
 from src.integration.services.file_discovery_service import FileDiscoveryService
 from src.integration.logging_system import LoggerSystem
 
@@ -40,7 +43,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         self.assertEqual(paginated_discovery.page_size, 10)
@@ -55,7 +58,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # フォルダを初期化
@@ -63,9 +66,9 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
 
         # 結果の検証
         self.assertTrue(paginated_discovery._is_initialized)
-        self.assertEqual(result['total_files'], 25)
-        self.assertEqual(result['total_batches'], 3)  # 25ファイル ÷ 10 = 3バッチ
-        self.assertEqual(result['batch_size'], 10)
+        self.assertEqual(result["total_files"], 25)
+        self.assertEqual(result["total_batches"], 3)  # 25ファイル ÷ 10 = 3バッチ
+        self.assertEqual(result["batch_size"], 10)
         self.mock_file_discovery.discover_images.assert_called_once_with(self.temp_dir)
 
     def test_get_next_batch(self):
@@ -75,7 +78,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # フォルダを初期化
@@ -111,7 +114,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # 初期化前はFalse
@@ -140,7 +143,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # フォルダを初期化してバッチを取得
@@ -165,29 +168,29 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # 初期化前の状態
         status = paginated_discovery.get_pagination_status()
-        self.assertFalse(status['initialized'])
+        self.assertFalse(status["initialized"])
 
         # フォルダを初期化
         paginated_discovery.initialize_folder(self.temp_dir)
 
         # 初期化後の状態
         status = paginated_discovery.get_pagination_status()
-        self.assertTrue(status['initialized'])
-        self.assertEqual(status['total_files'], 25)
-        self.assertEqual(status['total_batches'], 3)
-        self.assertEqual(status['current_batch_index'], 0)
-        self.assertEqual(status['progress_percentage'], 0.0)
+        self.assertTrue(status["initialized"])
+        self.assertEqual(status["total_files"], 25)
+        self.assertEqual(status["total_batches"], 3)
+        self.assertEqual(status["current_batch_index"], 0)
+        self.assertEqual(status["progress_percentage"], 0.0)
 
         # バッチを1つ取得後の状態
         paginated_discovery.get_next_batch()
         status = paginated_discovery.get_pagination_status()
-        self.assertEqual(status['current_batch_index'], 1)
-        self.assertAlmostEqual(status['progress_percentage'], 33.33, places=1)
+        self.assertEqual(status["current_batch_index"], 1)
+        self.assertAlmostEqual(status["progress_percentage"], 33.33, places=1)
 
     def test_batch_iterator(self):
         """バッチイテレータのテスト"""
@@ -196,7 +199,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # フォルダを初期化
@@ -226,15 +229,15 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # 空フォルダを初期化
         result = paginated_discovery.initialize_folder(self.temp_dir)
 
         # 結果の確認
-        self.assertEqual(result['total_files'], 0)
-        self.assertEqual(result['total_batches'], 0)
+        self.assertEqual(result["total_files"], 0)
+        self.assertEqual(result["total_batches"], 0)
         self.assertFalse(paginated_discovery.has_more_files())
         self.assertIsNone(paginated_discovery.get_next_batch())
 
@@ -247,15 +250,15 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # フォルダを初期化
         result = paginated_discovery.initialize_folder(self.temp_dir)
 
         # 結果の確認
-        self.assertEqual(result['total_files'], 5)
-        self.assertEqual(result['total_batches'], 1)
+        self.assertEqual(result["total_files"], 5)
+        self.assertEqual(result["total_batches"], 1)
 
         # バッチを取得
         batch = paginated_discovery.get_next_batch()
@@ -272,7 +275,7 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         paginated_discovery = PaginatedFileDiscovery(
             file_discovery_service=self.mock_file_discovery,
             page_size=10,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # フォルダを初期化してバッチを取得
@@ -293,5 +296,5 @@ class TestPaginatedFileDiscovery(unittest.TestCase):
         self.assertEqual(paginated_discovery._current_batch_index, 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

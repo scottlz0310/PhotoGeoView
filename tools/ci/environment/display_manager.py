@@ -23,21 +23,20 @@ except ImportError:
     # Fallback for direct execution
     import sys
     import os
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from models import CheckResult, CheckStatus
     from utils import run_command
+
 
 # Create a wrapper for timeout functionality
 def run_command_with_timeout(command, timeout=30, env=None):
     """Wrapper to provide timeout functionality."""
     import subprocess
+
     try:
         result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env=env
+            command, capture_output=True, text=True, timeout=timeout, env=env
         )
         return result
     except subprocess.TimeoutExpired:
@@ -47,6 +46,7 @@ def run_command_with_timeout(command, timeout=30, env=None):
                 self.returncode = -1
                 self.stdout = ""
                 self.stderr = f"Command timed out after {timeout} seconds"
+
         return MockResult()
 
 
@@ -65,19 +65,19 @@ class DisplayManager:
     def is_virtual_display_needed(self) -> bool:
         """Check if virtual display is needed for the current environment."""
         # Virtual display is only needed on Linux systems
-        if self.platform != 'linux':
+        if self.platform != "linux":
             logger.debug(f"Virtual display not needed on {self.platform}")
             return False
 
         # Check if we're in a headless environment
-        display = os.environ.get('DISPLAY')
+        display = os.environ.get("DISPLAY")
         if not display:
             logger.debug("No DISPLAY environment variable, virtual display needed")
             return True
 
         # Check if X11 is accessible
         try:
-            result = run_command_with_timeout(['xset', 'q'], timeout=5)
+            result = run_command_with_timeout(["xset", "q"], timeout=5)
             if result.returncode == 0:
                 logger.debug("X11 display accessible, virtual display not needed")
                 return False
@@ -85,7 +85,9 @@ class DisplayManager:
                 logger.debug("X11 display not accessible, virtual display needed")
                 return True
         except Exception as e:
-            logger.debug(f"Cannot check X11 accessibility: {e}, assuming virtual display needed")
+            logger.debug(
+                f"Cannot check X11 accessibility: {e}, assuming virtual display needed"
+            )
             return True
 
     def check_xvfb_availability(self) -> CheckResult:
@@ -99,12 +101,12 @@ class DisplayManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={'xvfb_needed': False}
+                metadata={"xvfb_needed": False},
             )
 
         # Check for xvfb-run (wrapper script)
-        xvfb_run_path = shutil.which('xvfb-run')
-        xvfb_path = shutil.which('Xvfb')
+        xvfb_run_path = shutil.which("xvfb-run")
+        xvfb_path = shutil.which("Xvfb")
 
         if xvfb_run_path:
             return CheckResult(
@@ -116,12 +118,12 @@ class DisplayManager:
                 warnings=[],
                 suggestions=[],
                 metadata={
-                    'xvfb_needed': True,
-                    'xvfb_run_available': True,
-                    'xvfb_run_path': xvfb_run_path,
-                    'xvfb_available': bool(xvfb_path),
-                    'xvfb_path': xvfb_path
-                }
+                    "xvfb_needed": True,
+                    "xvfb_run_available": True,
+                    "xvfb_run_path": xvfb_run_path,
+                    "xvfb_available": bool(xvfb_path),
+                    "xvfb_path": xvfb_path,
+                },
             )
         elif xvfb_path:
             return CheckResult(
@@ -133,11 +135,11 @@ class DisplayManager:
                 warnings=["xvfb-run wrapper not available, using Xvfb directly"],
                 suggestions=["Consider installing xvfb package for xvfb-run wrapper"],
                 metadata={
-                    'xvfb_needed': True,
-                    'xvfb_run_available': False,
-                    'xvfb_available': True,
-                    'xvfb_path': xvfb_path
-                }
+                    "xvfb_needed": True,
+                    "xvfb_run_available": False,
+                    "xvfb_available": True,
+                    "xvfb_path": xvfb_path,
+                },
             )
         else:
             return CheckResult(
@@ -149,26 +151,28 @@ class DisplayManager:
                 warnings=[],
                 suggestions=self._get_xvfb_installation_suggestions(),
                 metadata={
-                    'xvfb_needed': True,
-                    'xvfb_run_available': False,
-                    'xvfb_available': False
-                }
+                    "xvfb_needed": True,
+                    "xvfb_run_available": False,
+                    "xvfb_available": False,
+                },
             )
 
     def _get_xvfb_installation_suggestions(self) -> list:
         """Get platform-specific Xvfb installation suggestions."""
-        if self.platform == 'linux':
+        if self.platform == "linux":
             return [
                 "Install Xvfb:",
                 "  Ubuntu/Debian: sudo apt-get install xvfb",
                 "  CentOS/RHEL: sudo yum install xorg-x11-server-Xvfb",
                 "  Fedora: sudo dnf install xorg-x11-server-Xvfb",
-                "  Arch Linux: sudo pacman -S xorg-server-xvfb"
+                "  Arch Linux: sudo pacman -S xorg-server-xvfb",
             ]
         else:
             return ["Xvfb is only available on Linux systems"]
 
-    def start_virtual_display(self, width: int = 1024, height: int = 768, depth: int = 24) -> CheckResult:
+    def start_virtual_display(
+        self, width: int = 1024, height: int = 768, depth: int = 24
+    ) -> CheckResult:
         """
         Start virtual display using Xvfb.
 
@@ -189,7 +193,7 @@ class DisplayManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={'display_needed': False}
+                metadata={"display_needed": False},
             )
 
         if self.is_running:
@@ -202,10 +206,10 @@ class DisplayManager:
                 warnings=[],
                 suggestions=[],
                 metadata={
-                    'display_needed': True,
-                    'already_running': True,
-                    'display_number': self.display_number
-                }
+                    "display_needed": True,
+                    "already_running": True,
+                    "display_number": self.display_number,
+                },
             )
 
         # Check Xvfb availability first
@@ -226,21 +230,25 @@ class DisplayManager:
 
             # Start Xvfb
             cmd = [
-                'Xvfb',
-                f':{self.display_number}',
-                '-screen', '0', f'{width}x{height}x{depth}',
-                '-ac',  # Disable access control
-                '+extension', 'GLX',  # Enable GLX extension
-                '+render',  # Enable RENDER extension
-                '-noreset',  # Don't reset after last client exits
-                '-nolisten', 'tcp'  # Don't listen on TCP
+                "Xvfb",
+                f":{self.display_number}",
+                "-screen",
+                "0",
+                f"{width}x{height}x{depth}",
+                "-ac",  # Disable access control
+                "+extension",
+                "GLX",  # Enable GLX extension
+                "+render",  # Enable RENDER extension
+                "-noreset",  # Don't reset after last client exits
+                "-nolisten",
+                "tcp",  # Don't listen on TCP
             ]
 
             self.xvfb_process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                preexec_fn=os.setsid  # Create new process group
+                preexec_fn=os.setsid,  # Create new process group
             )
 
             # Wait a moment for Xvfb to start
@@ -249,7 +257,7 @@ class DisplayManager:
             # Check if process is still running
             if self.xvfb_process.poll() is None:
                 self.is_running = True
-                os.environ['DISPLAY'] = f':{self.display_number}'
+                os.environ["DISPLAY"] = f":{self.display_number}"
 
                 # Verify display is working
                 verify_result = self._verify_display()
@@ -267,11 +275,11 @@ class DisplayManager:
                     warnings=[],
                     suggestions=[],
                     metadata={
-                        'display_needed': True,
-                        'display_number': self.display_number,
-                        'display_env': f':{self.display_number}',
-                        'resolution': f'{width}x{height}x{depth}'
-                    }
+                        "display_needed": True,
+                        "display_number": self.display_number,
+                        "display_env": f":{self.display_number}",
+                        "resolution": f"{width}x{height}x{depth}",
+                    },
                 )
             else:
                 # Process died
@@ -288,9 +296,9 @@ class DisplayManager:
                     suggestions=[
                         "Check if display number is available",
                         "Verify Xvfb installation",
-                        "Check system resources and permissions"
+                        "Check system resources and permissions",
                     ],
-                    metadata={'display_needed': True}
+                    metadata={"display_needed": True},
                 )
 
         except Exception as e:
@@ -302,19 +310,19 @@ class DisplayManager:
                 errors=[f"Failed to start virtual display: {str(e)}"],
                 warnings=[],
                 suggestions=["Check Xvfb installation and system resources"],
-                metadata={'display_needed': True}
+                metadata={"display_needed": True},
             )
 
     def _is_display_in_use(self, display_num: int) -> bool:
         """Check if a display number is already in use."""
-        lock_file = f'/tmp/.X{display_num}-lock'
+        lock_file = f"/tmp/.X{display_num}-lock"
         return os.path.exists(lock_file)
 
     def _verify_display(self) -> CheckResult:
         """Verify that the virtual display is working."""
         try:
             # Try to query the display
-            result = run_command_with_timeout(['xset', 'q'], timeout=10)
+            result = run_command_with_timeout(["xset", "q"], timeout=10)
             if result.returncode == 0:
                 return CheckResult(
                     name="verify_display",
@@ -324,7 +332,7 @@ class DisplayManager:
                     errors=[],
                     warnings=[],
                     suggestions=[],
-                    metadata={}
+                    metadata={},
                 )
             else:
                 return CheckResult(
@@ -335,7 +343,7 @@ class DisplayManager:
                     errors=[f"Display verification failed: {result.stderr}"],
                     warnings=[],
                     suggestions=["Check Xvfb process and display configuration"],
-                    metadata={}
+                    metadata={},
                 )
         except Exception as e:
             return CheckResult(
@@ -346,7 +354,7 @@ class DisplayManager:
                 errors=[f"Display verification error: {str(e)}"],
                 warnings=[],
                 suggestions=["Install xset utility or check X11 tools"],
-                metadata={}
+                metadata={},
             )
 
     def stop_virtual_display(self) -> CheckResult:
@@ -360,7 +368,7 @@ class DisplayManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={}
+                metadata={},
             )
 
         try:
@@ -382,11 +390,14 @@ class DisplayManager:
             self.xvfb_process = None
 
             # Clean up environment variable
-            if 'DISPLAY' in os.environ and os.environ['DISPLAY'] == f':{self.display_number}':
-                del os.environ['DISPLAY']
+            if (
+                "DISPLAY" in os.environ
+                and os.environ["DISPLAY"] == f":{self.display_number}"
+            ):
+                del os.environ["DISPLAY"]
 
             # Clean up lock file if it exists
-            lock_file = f'/tmp/.X{self.display_number}-lock'
+            lock_file = f"/tmp/.X{self.display_number}-lock"
             if os.path.exists(lock_file):
                 try:
                     os.remove(lock_file)
@@ -401,7 +412,7 @@ class DisplayManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={}
+                metadata={},
             )
 
         except Exception as e:
@@ -413,19 +424,21 @@ class DisplayManager:
                 errors=[f"Failed to stop virtual display: {str(e)}"],
                 warnings=[],
                 suggestions=["Check process status manually with 'ps aux | grep Xvfb'"],
-                metadata={}
+                metadata={},
             )
 
     def get_display_environment(self) -> Dict[str, str]:
         """Get environment variables for the virtual display."""
         if self.is_running:
             return {
-                'DISPLAY': f':{self.display_number}',
-                'XAUTHORITY': '',  # Disable X authority for headless testing
+                "DISPLAY": f":{self.display_number}",
+                "XAUTHORITY": "",  # Disable X authority for headless testing
             }
         return {}
 
-    def run_with_display(self, command: list, timeout: int = 60) -> subprocess.CompletedProcess:
+    def run_with_display(
+        self, command: list, timeout: int = 60
+    ) -> subprocess.CompletedProcess:
         """
         Run a command with the virtual display environment.
 

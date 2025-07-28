@@ -19,9 +19,14 @@ from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, timedelta
 
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.performance_monitor import KiroPerformanceMonitor, PerformanceAlert, ResourceThresholds
+from integration.performance_monitor import (
+    KiroPerformanceMonitor,
+    PerformanceAlert,
+    ResourceThresholds,
+)
 from integration.unified_cache import UnifiedCacheSystem, LRUCache, CacheStats
 from integration.state_manager import StateManager, StateChangeEvent
 from integration.config_manager import ConfigManager
@@ -43,7 +48,7 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
 
         self.monitor = KiroPerformanceMonitor(
             config_manager=self.mock_config_manager,
-            logger_system=self.mock_logger_system
+            logger_system=self.mock_logger_system,
         )
 
     def tearDown(self):
@@ -101,7 +106,9 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
         self.monitor.log_operation_time("ui_update", 0.1)
 
         # Check that component response times were updated
-        copilot_times = self.monitor.ai_components[AIComponent.COPILOT]["response_times"]
+        copilot_times = self.monitor.ai_components[AIComponent.COPILOT][
+            "response_times"
+        ]
         cursor_times = self.monitor.ai_components[AIComponent.CURSOR]["response_times"]
 
         self.assertGreater(len(copilot_times), 0)
@@ -145,14 +152,10 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
     def test_threshold_updates(self):
         """Test updating performance thresholds"""
 
-        new_thresholds = {
-            "memory_warning_mb": 500.0,
-            "cpu_warning_percent": 80.0
-        }
+        new_thresholds = {"memory_warning_mb": 500.0, "cpu_warning_percent": 80.0}
 
         self.monitor.update_thresholds(
-            memory_warning_mb=500.0,
-            cpu_warning_percent=80.0
+            memory_warning_mb=500.0, cpu_warning_percent=80.0
         )
 
         self.assertEqual(self.monitor.thresholds.memory_warning_mb, 500.0)
@@ -195,12 +198,14 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
         self.monitor.clear_alerts()
 
         # Create multiple alerts of the same type
-        self.monitor._create_alert("warning", "Test alert", AIComponent.KIRO,
-                                 "test_metric", 100.0, 50.0)
+        self.monitor._create_alert(
+            "warning", "Test alert", AIComponent.KIRO, "test_metric", 100.0, 50.0
+        )
 
         # Second alert should be blocked by cooldown
-        self.monitor._create_alert("warning", "Test alert", AIComponent.KIRO,
-                                 "test_metric", 100.0, 50.0)
+        self.monitor._create_alert(
+            "warning", "Test alert", AIComponent.KIRO, "test_metric", 100.0, 50.0
+        )
 
         # Should only have one alert due to cooldown
         self.assertLessEqual(len(self.monitor.recent_alerts), 1)
@@ -243,7 +248,7 @@ class TestLRUCache(unittest.TestCase):
         self.cache.put("key4", "value4")
 
         self.assertIsNotNone(self.cache.get("key1"))  # Should still exist
-        self.assertIsNone(self.cache.get("key2"))     # Should be evicted
+        self.assertIsNone(self.cache.get("key2"))  # Should be evicted
         self.assertIsNotNone(self.cache.get("key3"))  # Should still exist
         self.assertIsNotNone(self.cache.get("key4"))  # Should exist
 
@@ -307,7 +312,7 @@ class TestUnifiedCacheSystem(unittest.TestCase):
 
         self.cache_system = UnifiedCacheSystem(
             config_manager=self.mock_config_manager,
-            logger_system=self.mock_logger_system
+            logger_system=self.mock_logger_system,
         )
 
     def tearDown(self):
@@ -319,7 +324,9 @@ class TestUnifiedCacheSystem(unittest.TestCase):
         """Test cache system initialization"""
 
         self.assertIsNotNone(self.cache_system)
-        self.assertEqual(len(self.cache_system.caches), 4)  # image, thumbnail, metadata, map
+        self.assertEqual(
+            len(self.cache_system.caches), 4
+        )  # image, thumbnail, metadata, map
         self.assertIn("image", self.cache_system.caches)
         self.assertIn("thumbnail", self.cache_system.caches)
         self.assertIn("metadata", self.cache_system.caches)
@@ -351,7 +358,9 @@ class TestUnifiedCacheSystem(unittest.TestCase):
 
         # Test thumbnail caching
         size = (150, 150)
-        self.assertTrue(self.cache_system.cache_thumbnail(test_path, size, test_thumbnail_data))
+        self.assertTrue(
+            self.cache_system.cache_thumbnail(test_path, size, test_thumbnail_data)
+        )
         cached_thumbnail = self.cache_system.get_cached_thumbnail(test_path, size)
         self.assertEqual(cached_thumbnail, test_thumbnail_data)
 
@@ -456,7 +465,7 @@ class TestStateManager(unittest.TestCase):
 
         self.state_manager = StateManager(
             config_manager=self.mock_config_manager,
-            logger_system=self.mock_logger_system
+            logger_system=self.mock_logger_system,
         )
 
     def tearDown(self):
@@ -481,7 +490,9 @@ class TestStateManager(unittest.TestCase):
         self.assertEqual(self.state_manager.get_state_value("current_theme"), "dark")
 
         # Test default values
-        self.assertEqual(self.state_manager.get_state_value("nonexistent", "default"), "default")
+        self.assertEqual(
+            self.state_manager.get_state_value("nonexistent", "default"), "default"
+        )
 
     def test_state_validation(self):
         """Test state value validation"""
@@ -499,14 +510,16 @@ class TestStateManager(unittest.TestCase):
         updates = {
             "current_theme": "blue",
             "thumbnail_size": 200,
-            "performance_mode": "performance"
+            "performance_mode": "performance",
         }
 
         self.assertTrue(self.state_manager.update_state(**updates))
 
         self.assertEqual(self.state_manager.get_state_value("current_theme"), "blue")
         self.assertEqual(self.state_manager.get_state_value("thumbnail_size"), 200)
-        self.assertEqual(self.state_manager.get_state_value("performance_mode"), "performance")
+        self.assertEqual(
+            self.state_manager.get_state_value("performance_mode"), "performance"
+        )
 
     def test_change_listeners(self):
         """Test state change listeners"""
@@ -571,7 +584,9 @@ class TestStateManager(unittest.TestCase):
 
         # Undo last change
         self.assertTrue(self.state_manager.undo())
-        self.assertEqual(self.state_manager.get_state_value("thumbnail_size"), initial_thumbnail_size)  # Back to initial
+        self.assertEqual(
+            self.state_manager.get_state_value("thumbnail_size"), initial_thumbnail_size
+        )  # Back to initial
 
         # Should be able to redo
         self.assertTrue(self.state_manager.can_redo())
@@ -595,7 +610,7 @@ class TestStateManager(unittest.TestCase):
         # Create new state manager and load state
         new_state_manager = StateManager(
             config_manager=self.mock_config_manager,
-            logger_system=self.mock_logger_system
+            logger_system=self.mock_logger_system,
         )
 
         self.assertTrue(new_state_manager._load_state(test_file))
@@ -657,18 +672,15 @@ class TestKiroComponentsIntegration(unittest.TestCase):
         self.config_manager.get_setting.return_value = {}
 
         self.performance_monitor = KiroPerformanceMonitor(
-            config_manager=self.config_manager,
-            logger_system=self.logger_system
+            config_manager=self.config_manager, logger_system=self.logger_system
         )
 
         self.cache_system = UnifiedCacheSystem(
-            config_manager=self.config_manager,
-            logger_system=self.logger_system
+            config_manager=self.config_manager, logger_system=self.logger_system
         )
 
         self.state_manager = StateManager(
-            config_manager=self.config_manager,
-            logger_system=self.logger_system
+            config_manager=self.config_manager, logger_system=self.logger_system
         )
 
     def tearDown(self):
@@ -743,7 +755,7 @@ class TestKiroComponentsIntegration(unittest.TestCase):
         self.performance_monitor.stop_monitoring()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create test directory if it doesn't exist
     test_dir = Path(__file__).parent
     test_dir.mkdir(exist_ok=True)

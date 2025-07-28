@@ -22,8 +22,8 @@ try:
     from models import CheckStatus
 except ImportError:
     # Fallback to direct imports
-    sys.path.insert(0, os.path.join(ci_dir, 'environment'))
-    sys.path.insert(0, os.path.join(ci_dir, '..'))
+    sys.path.insert(0, os.path.join(ci_dir, "environment"))
+    sys.path.insert(0, os.path.join(ci_dir, ".."))
 
     from python_manager import PythonVersionManager
     from qt_manager import QtEnvironmentManager
@@ -31,7 +31,7 @@ except ImportError:
     from models import CheckStatus
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 

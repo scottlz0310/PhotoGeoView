@@ -45,6 +45,7 @@ from ..error_handling import IntegratedErrorHandler, ErrorCategory
 @dataclass
 class FileDiscoveryResult:
     """ファイル検出結果のデータ構造"""
+
     file_path: Path
     is_valid: bool
     file_size: int
@@ -75,6 +76,7 @@ class FileDiscoveryResult:
 @dataclass
 class FolderScanCache:
     """フォルダスキャン結果のキャッシュ"""
+
     folder_path: Path
     scan_time: datetime
     file_results: List[FileDiscoveryResult]
@@ -99,7 +101,7 @@ class FolderScanCache:
         """フォルダキャッシュが期限切れかチェック"""
         try:
             current_mtime = self.folder_path.stat().st_mtime
-            expected_mtime = int(self.cache_key.split('_')[-1])
+            expected_mtime = int(self.cache_key.split("_")[-1])
             return current_mtime != expected_mtime
         except (OSError, FileNotFoundError, ValueError):
             return True
@@ -108,6 +110,7 @@ class FolderScanCache:
 @dataclass
 class CacheMetrics:
     """キャッシュメトリクス"""
+
     hits: int = 0
     misses: int = 0
     evictions: int = 0
@@ -128,7 +131,7 @@ class CacheMetrics:
             "evictions": self.evictions,
             "entries": self.entries,
             "memory_usage_mb": self.memory_usage_bytes / 1024 / 1024,
-            "hit_rate": self.hit_rate
+            "hit_rate": self.hit_rate,
         }
 
 
@@ -143,11 +146,13 @@ class FileDiscoveryCache:
     - キャッシュヒット率の監視
     """
 
-    def __init__(self,
-                 max_file_entries: int = 2000,
-                 max_folder_entries: int = 100,
-                 max_memory_mb: float = 50.0,
-                 logger_system: Optional[LoggerSystem] = None):
+    def __init__(
+        self,
+        max_file_entries: int = 2000,
+        max_folder_entries: int = 100,
+        max_memory_mb: float = 50.0,
+        logger_system: Optional[LoggerSystem] = None,
+    ):
         """
         FileDiscoveryCacheの初期化
 
@@ -190,12 +195,16 @@ class FileDiscoveryCache:
             f"FileDiscoveryCache初期化完了 - "
             f"ファイルエントリ上限: {max_file_entries}, "
             f"フォルダエントリ上限: {max_folder_entries}, "
-            f"メモリ上限: {max_memory_mb}MB"
+            f"メモリ上限: {max_memory_mb}MB",
         )
 
-    def cache_file_result(self, file_path: Path, is_valid: bool,
-                         validation_time: Optional[float] = None,
-                         error_message: Optional[str] = None) -> bool:
+    def cache_file_result(
+        self,
+        file_path: Path,
+        is_valid: bool,
+        validation_time: Optional[float] = None,
+        error_message: Optional[str] = None,
+    ) -> bool:
         """
         ファイル検出結果をキャッシュに保存する
 
@@ -238,7 +247,7 @@ class FileDiscoveryCache:
                         AIComponent.KIRO,
                         "cache_file_stat_error",
                         f"ファイル情報取得エラー: {file_path} - {str(e)}",
-                        level="WARNING"
+                        level="WARNING",
                     )
                     return False
 
@@ -250,7 +259,7 @@ class FileDiscoveryCache:
                     modified_time=modified_time,
                     discovery_time=datetime.now(),
                     validation_time=validation_time,
-                    error_message=error_message
+                    error_message=error_message,
                 )
 
                 # 既存エントリがあれば削除
@@ -272,20 +281,21 @@ class FileDiscoveryCache:
                     AIComponent.KIRO,
                     "file_cache_add",
                     f"ファイル結果をキャッシュ: {file_path.name} - 有効: {is_valid}",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {
                     "operation": "cache_file_result",
                     "file_path": str(file_path),
-                    "is_valid": is_valid
+                    "is_valid": is_valid,
                 },
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -326,7 +336,7 @@ class FileDiscoveryCache:
                             AIComponent.KIRO,
                             "file_cache_expired",
                             f"期限切れキャッシュエントリを削除: {file_path.name}",
-                            level="DEBUG"
+                            level="DEBUG",
                         )
                         return None
 
@@ -341,7 +351,7 @@ class FileDiscoveryCache:
                         AIComponent.KIRO,
                         "file_cache_hit",
                         f"ファイルキャッシュヒット: {file_path.name} - 有効: {result.is_valid}",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                     return result
@@ -354,24 +364,27 @@ class FileDiscoveryCache:
                     AIComponent.KIRO,
                     "file_cache_miss",
                     f"ファイルキャッシュミス: {file_path.name}",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
                 return None
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {
-                    "operation": "get_cached_file_result",
-                    "file_path": str(file_path)
-                },
-                AIComponent.KIRO
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "get_cached_file_result", "file_path": str(file_path)},
+                AIComponent.KIRO,
             )
             return None
 
-    def cache_folder_scan(self, folder_path: Path, file_results: List[FileDiscoveryResult],
-                         total_files_scanned: int, scan_duration: float) -> bool:
+    def cache_folder_scan(
+        self,
+        folder_path: Path,
+        file_results: List[FileDiscoveryResult],
+        total_files_scanned: int,
+        scan_duration: float,
+    ) -> bool:
         """
         フォルダスキャン結果をキャッシュ
 
@@ -393,7 +406,7 @@ class FileDiscoveryCache:
                     scan_time=datetime.now(),
                     file_results=file_results,
                     total_files_scanned=total_files_scanned,
-                    scan_duration=scan_duration
+                    scan_duration=scan_duration,
                 )
 
                 # 既存エントリがあれば削除
@@ -415,20 +428,21 @@ class FileDiscoveryCache:
                     AIComponent.KIRO,
                     "folder_cache_add",
                     f"フォルダスキャン結果をキャッシュ: {folder_path} - "
-                    f"{len(file_results)}個のファイル, {scan_duration:.2f}秒"
+                    f"{len(file_results)}個のファイル, {scan_duration:.2f}秒",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {
                     "operation": "cache_folder_scan",
                     "folder_path": str(folder_path),
-                    "file_count": len(file_results)
+                    "file_count": len(file_results),
                 },
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -448,7 +462,9 @@ class FileDiscoveryCache:
                 # キャッシュキーを生成
                 try:
                     folder_stat = folder_path.stat()
-                    cache_key = f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
+                    cache_key = (
+                        f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
+                    )
                 except (OSError, FileNotFoundError):
                     self.folder_metrics.misses += 1
                     self.folder_metrics.update_hit_rate()
@@ -469,7 +485,7 @@ class FileDiscoveryCache:
                             AIComponent.KIRO,
                             "folder_cache_expired",
                             f"期限切れフォルダキャッシュエントリを削除: {folder_path}",
-                            level="DEBUG"
+                            level="DEBUG",
                         )
                         return None
 
@@ -484,7 +500,7 @@ class FileDiscoveryCache:
                         AIComponent.KIRO,
                         "folder_cache_hit",
                         f"フォルダキャッシュヒット: {folder_path} - "
-                        f"{len(folder_cache.file_results)}個のファイル"
+                        f"{len(folder_cache.file_results)}個のファイル",
                     )
 
                     return folder_cache
@@ -497,19 +513,20 @@ class FileDiscoveryCache:
                     AIComponent.KIRO,
                     "folder_cache_miss",
                     f"フォルダキャッシュミス: {folder_path}",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
                 return None
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {
                     "operation": "get_cached_folder_scan",
-                    "folder_path": str(folder_path)
+                    "folder_path": str(folder_path),
                 },
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return None
 
@@ -552,20 +569,21 @@ class FileDiscoveryCache:
                     AIComponent.KIRO,
                     "validation_cache_add",
                     f"バリデーション結果をキャッシュ: {file_path.name} - 有効: {is_valid}",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {
                     "operation": "cache_validation_result",
                     "file_path": str(file_path),
-                    "is_valid": is_valid
+                    "is_valid": is_valid,
                 },
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -606,7 +624,7 @@ class FileDiscoveryCache:
                         AIComponent.KIRO,
                         "validation_cache_hit",
                         f"バリデーションキャッシュヒット: {file_path.name} - 有効: {is_valid}",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                     return is_valid
@@ -619,19 +637,20 @@ class FileDiscoveryCache:
                     AIComponent.KIRO,
                     "validation_cache_miss",
                     f"バリデーションキャッシュミス: {file_path.name}",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
                 return None
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {
                     "operation": "get_cached_validation_result",
-                    "file_path": str(file_path)
+                    "file_path": str(file_path),
                 },
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return None
 
@@ -650,7 +669,7 @@ class FileDiscoveryCache:
                 AIComponent.KIRO,
                 "file_cache_evict",
                 f"ファイルキャッシュエントリを削除: {oldest_entry.file_path.name}",
-                level="DEBUG"
+                level="DEBUG",
             )
 
     def _evict_folder_entries_if_needed(self):
@@ -668,7 +687,7 @@ class FileDiscoveryCache:
                 AIComponent.KIRO,
                 "folder_cache_evict",
                 f"フォルダキャッシュエントリを削除: {oldest_entry.folder_path}",
-                level="DEBUG"
+                level="DEBUG",
             )
 
     def _evict_validation_entries_if_needed(self):
@@ -692,7 +711,9 @@ class FileDiscoveryCache:
             # 概算メモリ使用量を計算
             file_memory = len(self._file_cache) * 1024  # 1KB per entry estimate
             folder_memory = len(self._folder_cache) * 10240  # 10KB per entry estimate
-            validation_memory = len(self._validation_cache) * 100  # 100B per entry estimate
+            validation_memory = (
+                len(self._validation_cache) * 100
+            )  # 100B per entry estimate
 
             total_memory = file_memory + folder_memory + validation_memory
 
@@ -707,7 +728,7 @@ class FileDiscoveryCache:
                     "cache_memory_warning",
                     f"キャッシュメモリ使用量が制限を超過: {total_memory / 1024 / 1024:.1f}MB / "
                     f"{self.max_memory_bytes / 1024 / 1024:.1f}MB",
-                    level="WARNING"
+                    level="WARNING",
                 )
 
         except Exception as e:
@@ -715,7 +736,7 @@ class FileDiscoveryCache:
                 AIComponent.KIRO,
                 "cache_memory_update_error",
                 f"メモリ使用量更新エラー: {str(e)}",
-                level="WARNING"
+                level="WARNING",
             )
 
     def cleanup_expired_entries(self):
@@ -761,14 +782,15 @@ class FileDiscoveryCache:
                         AIComponent.KIRO,
                         "cache_cleanup",
                         f"期限切れキャッシュエントリを削除: "
-                        f"ファイル {len(expired_files)}個, フォルダ {len(expired_folders)}個"
+                        f"ファイル {len(expired_files)}個, フォルダ {len(expired_folders)}個",
                     )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cleanup_expired_entries"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def clear_cache(self, cache_type: Optional[str] = None):
@@ -797,14 +819,15 @@ class FileDiscoveryCache:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "cache_clear",
-                    f"キャッシュをクリア: {cache_type or 'all'}"
+                    f"キャッシュをクリア: {cache_type or 'all'}",
                 )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "clear_cache", "cache_type": cache_type},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def get_cache_stats(self) -> Dict[str, Any]:
@@ -825,41 +848,51 @@ class FileDiscoveryCache:
                     "folder_cache": self.folder_metrics.to_dict(),
                     "validation_cache": self.validation_metrics.to_dict(),
                     "total_memory_mb": (
-                        self.file_metrics.memory_usage_bytes +
-                        self.folder_metrics.memory_usage_bytes +
-                        self.validation_metrics.memory_usage_bytes
-                    ) / 1024 / 1024,
+                        self.file_metrics.memory_usage_bytes
+                        + self.folder_metrics.memory_usage_bytes
+                        + self.validation_metrics.memory_usage_bytes
+                    )
+                    / 1024
+                    / 1024,
                     "total_entries": (
-                        self.file_metrics.entries +
-                        self.folder_metrics.entries +
-                        self.validation_metrics.entries
+                        self.file_metrics.entries
+                        + self.folder_metrics.entries
+                        + self.validation_metrics.entries
                     ),
                     "overall_hit_rate": self._calculate_overall_hit_rate(),
                     "last_cleanup": self.last_cleanup.isoformat(),
                     "cache_config": {
                         "max_file_entries": self.max_file_entries,
                         "max_folder_entries": self.max_folder_entries,
-                        "max_memory_mb": self.max_memory_bytes / 1024 / 1024
-                    }
+                        "max_memory_mb": self.max_memory_bytes / 1024 / 1024,
+                    },
                 }
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "get_cache_stats"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"error": str(e)}
 
     def _calculate_overall_hit_rate(self) -> float:
         """全体のヒット率を計算"""
 
-        total_hits = (self.file_metrics.hits +
-                     self.folder_metrics.hits +
-                     self.validation_metrics.hits)
-        total_requests = (self.file_metrics.hits + self.file_metrics.misses +
-                         self.folder_metrics.hits + self.folder_metrics.misses +
-                         self.validation_metrics.hits + self.validation_metrics.misses)
+        total_hits = (
+            self.file_metrics.hits
+            + self.folder_metrics.hits
+            + self.validation_metrics.hits
+        )
+        total_requests = (
+            self.file_metrics.hits
+            + self.file_metrics.misses
+            + self.folder_metrics.hits
+            + self.folder_metrics.misses
+            + self.validation_metrics.hits
+            + self.validation_metrics.misses
+        )
 
         return total_hits / total_requests if total_requests > 0 else 0.0
 
@@ -901,7 +934,7 @@ class FileDiscoveryCache:
             AIComponent.KIRO,
             "cache_production_optimized",
             "キャッシュシステムの本番環境最適化が完了しました",
-            level="INFO"
+            level="INFO",
         )
 
     def log_cache_performance_summary(self):
@@ -912,9 +945,9 @@ class FileDiscoveryCache:
         stats = self.get_cache_stats()
 
         # 全体的なパフォーマンス評価
-        overall_hit_rate = stats['overall_hit_rate']
-        total_memory_mb = stats['total_memory_mb']
-        total_entries = stats['total_entries']
+        overall_hit_rate = stats["overall_hit_rate"]
+        total_memory_mb = stats["total_memory_mb"]
+        total_entries = stats["total_entries"]
 
         # ログレベルの決定
         log_level = "INFO"
@@ -932,14 +965,12 @@ class FileDiscoveryCache:
             f"メモリ使用量: {total_memory_mb:.1f}MB, "
             f"ファイルキャッシュ: {stats['file_cache']['hit_rate']:.1%}, "
             f"フォルダキャッシュ: {stats['folder_cache']['hit_rate']:.1%}",
-            level=log_level
+            level=log_level,
         )
 
         # 詳細統計をパフォーマンスログに記録
         self.logger_system.log_performance(
-            AIComponent.KIRO,
-            "cache_detailed_performance",
-            stats
+            AIComponent.KIRO, "cache_detailed_performance", stats
         )
 
     def enable_debug_cache_logging(self):
@@ -953,7 +984,7 @@ class FileDiscoveryCache:
             AIComponent.KIRO,
             "cache_debug_logging_enabled",
             "キャッシュデバッグログが有効になりました",
-            level="DEBUG"
+            level="DEBUG",
         )
 
     def get_cache_health_status(self) -> Dict[str, Any]:
@@ -972,7 +1003,7 @@ class FileDiscoveryCache:
         recommendations = []
 
         # ヒット率の評価
-        overall_hit_rate = stats['overall_hit_rate']
+        overall_hit_rate = stats["overall_hit_rate"]
         if overall_hit_rate >= 0.8:
             health_score += 40
         elif overall_hit_rate >= 0.6:
@@ -984,7 +1015,9 @@ class FileDiscoveryCache:
             recommendations.append("キャッシュ戦略の見直しが必要です")
 
         # メモリ使用量の評価
-        memory_usage_ratio = stats['total_memory_mb'] / (self.max_memory_bytes / 1024 / 1024)
+        memory_usage_ratio = stats["total_memory_mb"] / (
+            self.max_memory_bytes / 1024 / 1024
+        )
         if memory_usage_ratio <= 0.7:
             health_score += 30
         elif memory_usage_ratio <= 0.9:
@@ -996,8 +1029,12 @@ class FileDiscoveryCache:
             recommendations.append("キャッシュサイズの調整が必要です")
 
         # エントリ数の評価
-        total_entries = stats['total_entries']
-        max_total_entries = self.max_file_entries + self.max_folder_entries + (self.max_file_entries * 2)
+        total_entries = stats["total_entries"]
+        max_total_entries = (
+            self.max_file_entries
+            + self.max_folder_entries
+            + (self.max_file_entries * 2)
+        )
         entry_usage_ratio = total_entries / max_total_entries
         if entry_usage_ratio <= 0.8:
             health_score += 30
@@ -1032,7 +1069,7 @@ class FileDiscoveryCache:
                 "memory_usage_ratio": memory_usage_ratio,
                 "entry_usage_ratio": entry_usage_ratio,
                 "total_entries": total_entries,
-                "total_memory_mb": stats['total_memory_mb']
+                "total_memory_mb": stats["total_memory_mb"],
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }

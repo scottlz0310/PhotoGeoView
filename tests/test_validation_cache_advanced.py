@@ -13,7 +13,8 @@ from pathlib import Path
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from integration.services.file_discovery_cache import FileDiscoveryCache
 from integration.logging_system import LoggerSystem
@@ -29,7 +30,7 @@ class TestValidationCacheAdvanced(unittest.TestCase):
             max_file_entries=50,
             max_folder_entries=10,
             max_memory_mb=5.0,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # テスト用の一時ディレクトリとファイルを作成
@@ -51,6 +52,7 @@ class TestValidationCacheAdvanced(unittest.TestCase):
     def tearDown(self):
         """テストクリーンアップ"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_invalid_file_caching(self):
@@ -88,7 +90,7 @@ class TestValidationCacheAdvanced(unittest.TestCase):
         """重複チェック回避のテスト"""
         # 初期状態の統計を取得
         initial_stats = self.cache.get_cache_stats()
-        initial_misses = initial_stats['validation_cache']['misses']
+        initial_misses = initial_stats["validation_cache"]["misses"]
 
         # 最初のアクセス（キャッシュミス）
         result1 = self.cache.get_cached_validation_result(self.invalid_file)
@@ -96,7 +98,9 @@ class TestValidationCacheAdvanced(unittest.TestCase):
 
         # ミス数が増加していることを確認
         stats_after_miss = self.cache.get_cache_stats()
-        self.assertEqual(stats_after_miss['validation_cache']['misses'], initial_misses + 1)
+        self.assertEqual(
+            stats_after_miss["validation_cache"]["misses"], initial_misses + 1
+        )
 
         # 結果をキャッシュ
         self.cache.cache_validation_result(self.invalid_file, False)
@@ -111,10 +115,10 @@ class TestValidationCacheAdvanced(unittest.TestCase):
 
         # ヒット数が増加していることを確認
         final_stats = self.cache.get_cache_stats()
-        self.assertGreaterEqual(final_stats['validation_cache']['hits'], 2)
+        self.assertGreaterEqual(final_stats["validation_cache"]["hits"], 2)
 
         # ミス数は変わらないことを確認（重複チェック回避）
-        self.assertEqual(final_stats['validation_cache']['misses'], initial_misses + 1)
+        self.assertEqual(final_stats["validation_cache"]["misses"], initial_misses + 1)
 
     def test_file_size_mtime_cache_key(self):
         """ファイルサイズ+mtime基準のキャッシュキーテスト"""
@@ -150,17 +154,21 @@ class TestValidationCacheAdvanced(unittest.TestCase):
             test_files.append(test_file)
 
             # バリデーション結果をキャッシュ
-            self.cache.cache_validation_result(test_file, i % 2 == 0)  # 偶数は有効、奇数は無効
+            self.cache.cache_validation_result(
+                test_file, i % 2 == 0
+            )  # 偶数は有効、奇数は無効
 
         # 統計を確認
         stats = self.cache.get_cache_stats()
 
         # エントリ数がmax_file_entries * 2（バリデーションキャッシュの制限）を超えていないことを確認
         max_validation_entries = self.cache.max_file_entries * 2
-        self.assertLessEqual(stats['validation_cache']['entries'], max_validation_entries)
+        self.assertLessEqual(
+            stats["validation_cache"]["entries"], max_validation_entries
+        )
 
         # 削除が発生していることを確認
-        self.assertGreater(stats['validation_cache']['evictions'], 0)
+        self.assertGreater(stats["validation_cache"]["evictions"], 0)
 
     def test_cache_performance_with_invalid_files(self):
         """無効ファイルでのキャッシュパフォーマンステスト"""
@@ -190,14 +198,14 @@ class TestValidationCacheAdvanced(unittest.TestCase):
         # 2回目の方が高速であることを確認（キャッシュ効果）
         # 注意: 実際の環境では必ずしも成立しないため、統計での確認に変更
         stats = self.cache.get_cache_stats()
-        self.assertEqual(stats['validation_cache']['hits'], 20)  # 20回のヒット
-        self.assertEqual(stats['validation_cache']['misses'], 20)  # 20回のミス
+        self.assertEqual(stats["validation_cache"]["hits"], 20)  # 20回のヒット
+        self.assertEqual(stats["validation_cache"]["misses"], 20)  # 20回のミス
 
     def test_cache_memory_usage_tracking(self):
         """キャッシュメモリ使用量追跡のテスト"""
         # 初期メモリ使用量
         initial_stats = self.cache.get_cache_stats()
-        initial_memory = initial_stats['total_memory_mb']
+        initial_memory = initial_stats["total_memory_mb"]
 
         # 多数のバリデーション結果をキャッシュ
         for i in range(50):
@@ -207,11 +215,11 @@ class TestValidationCacheAdvanced(unittest.TestCase):
 
         # メモリ使用量が増加していることを確認
         final_stats = self.cache.get_cache_stats()
-        final_memory = final_stats['total_memory_mb']
+        final_memory = final_stats["total_memory_mb"]
 
         self.assertGreater(final_memory, initial_memory)
-        self.assertGreater(final_stats['validation_cache']['memory_usage_mb'], 0)
+        self.assertGreater(final_stats["validation_cache"]["memory_usage_mb"], 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

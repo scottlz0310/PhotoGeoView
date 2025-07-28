@@ -35,13 +35,28 @@ import threading
 import time
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QLabel,
-    QGridLayout, QPushButton, QSlider, QSpinBox, QFrame,
-    QMenu, QSizePolicy
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QScrollArea,
+    QLabel,
+    QGridLayout,
+    QPushButton,
+    QSlider,
+    QSpinBox,
+    QFrame,
+    QMenu,
+    QSizePolicy,
 )
 from PyQt6.QtCore import (
-    Qt, QSize, pyqtSignal, QTimer, QThread, QObject,
-    QMutex, QMutexLocker
+    Qt,
+    QSize,
+    pyqtSignal,
+    QTimer,
+    QThread,
+    QObject,
+    QMutex,
+    QMutexLocker,
 )
 from PyQt6.QtGui import QPixmap, QIcon, QPainter, QColor, QFont
 
@@ -72,7 +87,8 @@ class ThumbnailItem(QLabel):
         # Setup UI
         self.setFixedSize(thumbnail_size + 20, thumbnail_size + 40)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QLabel {
                 border: 2px solid transparent;
                 border-radius: 4px;
@@ -83,7 +99,8 @@ class ThumbnailItem(QLabel):
                 border-color: #007acc;
                 background-color: #e3f2fd;
             }
-        """)
+        """
+        )
 
         # Show placeholder
         self._show_placeholder()
@@ -110,9 +127,10 @@ class ThumbnailItem(QLabel):
         if pixmap and not pixmap.isNull():
             # Scale pixmap to fit
             scaled_pixmap = pixmap.scaled(
-                self.thumbnail_size, self.thumbnail_size,
+                self.thumbnail_size,
+                self.thumbnail_size,
                 Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
+                Qt.TransformationMode.SmoothTransformation,
             )
 
             self.setPixmap(scaled_pixmap)
@@ -143,7 +161,9 @@ class ThumbnailItem(QLabel):
 
         # Camera information
         if exif_data.get("camera_make") and exif_data.get("camera_model"):
-            tooltip_lines.append(f"Camera: {exif_data['camera_make']} {exif_data['camera_model']}")
+            tooltip_lines.append(
+                f"Camera: {exif_data['camera_make']} {exif_data['camera_model']}"
+            )
 
         # Lens information
         if exif_data.get("lens_model"):
@@ -165,7 +185,9 @@ class ThumbnailItem(QLabel):
 
         # GPS information
         if exif_data.get("latitude") and exif_data.get("longitude"):
-            tooltip_lines.append(f"GPS: {exif_data['latitude']:.6f}, {exif_data['longitude']:.6f}")
+            tooltip_lines.append(
+                f"GPS: {exif_data['latitude']:.6f}, {exif_data['longitude']:.6f}"
+            )
 
         # Image dimensions
         if exif_data.get("width") and exif_data.get("height"):
@@ -249,10 +271,12 @@ class ThumbnailLoader(QObject):
                 image_path,
                 thumbnail_size,
                 i,
-                len(image_paths)
+                len(image_paths),
             )
 
-    def _load_single_thumbnail(self, image_path: Path, size: int, index: int, total: int):
+    def _load_single_thumbnail(
+        self, image_path: Path, size: int, index: int, total: int
+    ):
         """Load a single thumbnail"""
 
         start_time = time.time()
@@ -276,9 +300,10 @@ class ThumbnailLoader(QObject):
             if not pixmap.isNull():
                 # Scale to thumbnail size
                 thumbnail = pixmap.scaled(
-                    size, size,
+                    size,
+                    size,
                     Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation
+                    Qt.TransformationMode.SmoothTransformation,
                 )
 
                 # Cache the thumbnail
@@ -314,7 +339,7 @@ class ThumbnailLoader(QObject):
                 AIComponent.CURSOR,
                 e,
                 "thumbnail_load",
-                {"image_path": str(image_path), "size": size}
+                {"image_path": str(image_path), "size": size},
             )
 
             # Emit error
@@ -328,7 +353,9 @@ class ThumbnailLoader(QObject):
             total_requests = self.cache_hits + self.cache_misses
             hit_rate = self.cache_hits / total_requests if total_requests > 0 else 0
 
-            avg_load_time = sum(self.load_times) / len(self.load_times) if self.load_times else 0
+            avg_load_time = (
+                sum(self.load_times) / len(self.load_times) if self.load_times else 0
+            )
 
             return {
                 "cache_size": len(self.cache),
@@ -336,7 +363,7 @@ class ThumbnailLoader(QObject):
                 "cache_misses": self.cache_misses,
                 "hit_rate": hit_rate,
                 "average_load_time": avg_load_time,
-                "recent_load_times": self.load_times[-10:]
+                "recent_load_times": self.load_times[-10:],
             }
 
     def clear_cache(self):
@@ -364,10 +391,12 @@ class OptimizedThumbnailGrid(QWidget):
     exif_display_requested = pyqtSignal(Path)
     performance_warning = pyqtSignal(str)
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 state_manager: StateManager,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        state_manager: StateManager,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize optimized thumbnail grid
 
@@ -401,12 +430,16 @@ class OptimizedThumbnailGrid(QWidget):
         self.performance_metrics = {
             "avg_load_time": 0.0,
             "cache_hit_rate": 0.0,
-            "memory_usage": 0
+            "memory_usage": 0,
         }
 
         # Threading
-        self.thumbnail_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="thumbnail")
-        self.exif_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="exif")
+        self.thumbnail_executor = ThreadPoolExecutor(
+            max_workers=4, thread_name_prefix="thumbnail"
+        )
+        self.exif_executor = ThreadPoolExecutor(
+            max_workers=2, thread_name_prefix="exif"
+        )
         self.load_mutex = QMutex()
 
         # UI components
@@ -429,7 +462,7 @@ class OptimizedThumbnailGrid(QWidget):
         self.logger_system.log_ai_operation(
             AIComponent.CURSOR,
             "thumbnail_grid_init",
-            "Optimized thumbnail grid initialized"
+            "Optimized thumbnail grid initialized",
         )
 
     def show_progress_indicator(self, message: str, maximum: int = 0):
@@ -471,7 +504,8 @@ class OptimizedThumbnailGrid(QWidget):
             progress_layout.addWidget(progress_bar)
 
             # スタイル設定
-            self.progress_indicator.setStyleSheet("""
+            self.progress_indicator.setStyleSheet(
+                """
                 QWidget {
                     background-color: rgba(255, 255, 255, 240);
                     border: 1px solid #e0e0e0;
@@ -487,13 +521,13 @@ class OptimizedThumbnailGrid(QWidget):
                     background-color: #2196f3;
                     border-radius: 3px;
                 }
-            """)
+            """
+            )
 
             # 位置とサイズの設定
             self.progress_indicator.resize(300, 100)
             self.progress_indicator.move(
-                (self.width() - 300) // 2,
-                (self.height() - 100) // 2
+                (self.width() - 300) // 2, (self.height() - 100) // 2
             )
 
             self.progress_indicator.show()
@@ -505,13 +539,14 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "show_progress_indicator",
                     "message": message,
-                    "user_action": "進行状況表示"
+                    "user_action": "進行状況表示",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def update_progress(self, value: int, message: str = None):
@@ -523,7 +558,7 @@ class OptimizedThumbnailGrid(QWidget):
             message: 更新するメッセージ（オプション）
         """
         try:
-            if hasattr(self, '_progress_bar') and self._progress_bar:
+            if hasattr(self, "_progress_bar") and self._progress_bar:
                 self._progress_bar.setValue(value)
 
                 # アクセシビリティ用の説明更新
@@ -534,16 +569,22 @@ class OptimizedThumbnailGrid(QWidget):
                         f"進行状況: {value}/{total} ({percentage:.0f}%)"
                     )
 
-            if message and hasattr(self, '_progress_message') and self._progress_message:
+            if (
+                message
+                and hasattr(self, "_progress_message")
+                and self._progress_message
+            ):
                 self._progress_message.setText(message)
-                self._progress_message.setAccessibleDescription(f"現在の処理状況: {message}")
+                self._progress_message.setAccessibleDescription(
+                    f"現在の処理状況: {message}"
+                )
 
         except Exception as e:
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "progress_update_error",
                 f"進行状況更新エラー: {str(e)}",
-                level="WARNING"
+                level="WARNING",
             )
 
     def hide_progress_indicator(self):
@@ -563,7 +604,7 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "progress_hide_error",
                 f"進行状況非表示エラー: {str(e)}",
-                level="WARNING"
+                level="WARNING",
             )
 
     def _setup_ui(self):
@@ -580,23 +621,27 @@ class OptimizedThumbnailGrid(QWidget):
             # Scroll area for thumbnails
             self.scroll_area = QScrollArea()
             self.scroll_area.setWidgetResizable(True)
-            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.scroll_area.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
+            self.scroll_area.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
 
             # Grid widget
             self.grid_widget = QWidget()
             self.grid_layout = QGridLayout(self.grid_widget)
             self.grid_layout.setSpacing(self.spacing)
-            self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+            self.grid_layout.setAlignment(
+                Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+            )
 
             self.scroll_area.setWidget(self.grid_widget)
             layout.addWidget(self.scroll_area)
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
-                {"operation": "setup_ui"},
-                AIComponent.CURSOR
+                e, ErrorCategory.UI_ERROR, {"operation": "setup_ui"}, AIComponent.CURSOR
             )
 
     def _create_controls(self) -> QWidget:
@@ -653,14 +698,15 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "image_list_set",
-                f"Image list set with {len(image_list)} images"
+                f"Image list set with {len(image_list)} images",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "set_image_list", "count": len(image_list)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def update_image_list(self, image_list: List[Path]):
@@ -692,7 +738,7 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "image_list_update_start",
                 f"画像リスト更新開始: {len(image_list)}個のファイル",
-                level="DEBUG"
+                level="DEBUG",
             )
 
             # 現在のリストと比較して変更を検出
@@ -709,7 +755,7 @@ class OptimizedThumbnailGrid(QWidget):
                     AIComponent.CURSOR,
                     "image_list_changes_detected",
                     f"変更検出 - 追加: {len(added_files)}, 削除: {len(removed_files)}",
-                    level="INFO"
+                    level="INFO",
                 )
 
                 # 削除されたファイルのサムネイルを削除
@@ -732,26 +778,27 @@ class OptimizedThumbnailGrid(QWidget):
                     AIComponent.CURSOR,
                     "image_list_update_complete",
                     f"画像リスト更新完了: {len(image_list)}個のファイル",
-                    level="INFO"
+                    level="INFO",
                 )
             else:
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
                     "image_list_no_changes",
                     "画像リストに変更はありませんでした",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "update_image_list",
                     "new_count": len(image_list),
                     "old_count": len(self.image_list),
-                    "user_action": "画像リスト動的更新"
+                    "user_action": "画像リスト動的更新",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def clear_thumbnails_safely(self):
@@ -779,7 +826,7 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "thumbnails_clear_start",
                 f"サムネイルクリア開始: {len(self.thumbnail_items)}個のアイテム",
-                level="DEBUG"
+                level="DEBUG",
             )
 
             # 既存のサムネイルアイテムを削除
@@ -794,7 +841,7 @@ class OptimizedThumbnailGrid(QWidget):
                         AIComponent.CURSOR,
                         "thumbnail_item_clear_error",
                         f"サムネイルアイテム削除エラー: {image_path} - {str(item_error)}",
-                        level="WARNING"
+                        level="WARNING",
                     )
 
             # 辞書をクリア
@@ -807,17 +854,18 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "thumbnails_clear_complete",
                 "サムネイルクリア完了",
-                level="DEBUG"
+                level="DEBUG",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "clear_thumbnails_safely",
-                    "user_action": "サムネイル安全クリア"
+                    "user_action": "サムネイル安全クリア",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def show_loading_state(self, message: str):
@@ -829,13 +877,15 @@ class OptimizedThumbnailGrid(QWidget):
         """
         try:
             # パフォーマンスラベルにローディングメッセージを表示
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 loading_text = f"🔄 {message}"
                 self.performance_label.setText(loading_text)
 
                 # アクセシビリティ対応
                 self.performance_label.setAccessibleName("読み込み状態")
-                self.performance_label.setAccessibleDescription(f"現在の状態: {message}")
+                self.performance_label.setAccessibleDescription(
+                    f"現在の状態: {message}"
+                )
 
                 # スクリーンリーダー用の追加情報
                 self.setAccessibleDescription(f"サムネイルグリッド: {message}")
@@ -844,18 +894,19 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "loading_state_shown",
                 f"ローディング状態表示: {message}",
-                level="DEBUG"
+                level="DEBUG",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "show_loading_state",
                     "message": message,
-                    "user_action": "ローディング状態表示"
+                    "user_action": "ローディング状態表示",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def show_error_state(self, error_message: str):
@@ -867,16 +918,19 @@ class OptimizedThumbnailGrid(QWidget):
         """
         try:
             # パフォーマンスラベルにエラーメッセージを表示
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 error_text = f"❌ エラー: {error_message}"
                 self.performance_label.setText(error_text)
 
                 # アクセシビリティ対応
                 self.performance_label.setAccessibleName("エラー状態")
-                self.performance_label.setAccessibleDescription(f"エラーが発生しました: {error_message}")
+                self.performance_label.setAccessibleDescription(
+                    f"エラーが発生しました: {error_message}"
+                )
 
                 # 高コントラストモード対応
-                self.performance_label.setStyleSheet("""
+                self.performance_label.setStyleSheet(
+                    """
                     QLabel {
                         color: #d32f2f;
                         background-color: #ffebee;
@@ -884,27 +938,31 @@ class OptimizedThumbnailGrid(QWidget):
                         border-radius: 4px;
                         padding: 4px;
                     }
-                """)
+                """
+                )
 
                 # スクリーンリーダー用の追加情報
-                self.setAccessibleDescription(f"サムネイルグリッド: エラー - {error_message}")
+                self.setAccessibleDescription(
+                    f"サムネイルグリッド: エラー - {error_message}"
+                )
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "error_state_shown",
                 f"エラー状態表示: {error_message}",
-                level="INFO"
+                level="INFO",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "show_error_state",
                     "error_message": error_message,
-                    "user_action": "エラー状態表示"
+                    "user_action": "エラー状態表示",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def show_empty_state(self):
@@ -913,22 +971,26 @@ class OptimizedThumbnailGrid(QWidget):
         """
         try:
             # パフォーマンスラベルに空状態メッセージを表示
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 empty_text = "📁 画像ファイルがありません"
                 self.performance_label.setText(empty_text)
 
                 # アクセシビリティ対応
                 self.performance_label.setAccessibleName("空の状態")
-                self.performance_label.setAccessibleDescription("選択されたフォルダに画像ファイルがありません")
+                self.performance_label.setAccessibleDescription(
+                    "選択されたフォルダに画像ファイルがありません"
+                )
 
                 # スタイル調整（視認性向上）
-                self.performance_label.setStyleSheet("""
+                self.performance_label.setStyleSheet(
+                    """
                     QLabel {
                         color: #757575;
                         font-style: italic;
                         padding: 8px;
                     }
-                """)
+                """
+                )
 
                 # スクリーンリーダー用の追加情報
                 self.setAccessibleDescription("サムネイルグリッド: 画像ファイルなし")
@@ -937,20 +999,15 @@ class OptimizedThumbnailGrid(QWidget):
             self._show_empty_placeholder()
 
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR,
-                "empty_state_shown",
-                "空状態表示",
-                level="DEBUG"
+                AIComponent.CURSOR, "empty_state_shown", "空状態表示", level="DEBUG"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
-                {
-                    "operation": "show_empty_state",
-                    "user_action": "空状態表示"
-                },
-                AIComponent.CURSOR
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_empty_state", "user_action": "空状態表示"},
+                AIComponent.CURSOR,
             )
 
     def _show_empty_placeholder(self):
@@ -959,7 +1016,7 @@ class OptimizedThumbnailGrid(QWidget):
         """
         try:
             # 既存のプレースホルダーを削除
-            if hasattr(self, '_empty_placeholder'):
+            if hasattr(self, "_empty_placeholder"):
                 self._empty_placeholder.deleteLater()
 
             # 新しいプレースホルダーを作成
@@ -980,7 +1037,8 @@ class OptimizedThumbnailGrid(QWidget):
             font.setPointSize(14)
             self._empty_placeholder.setFont(font)
             self._empty_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self._empty_placeholder.setStyleSheet("""
+            self._empty_placeholder.setStyleSheet(
+                """
                 QLabel {
                     color: #9e9e9e;
                     background-color: #fafafa;
@@ -989,7 +1047,8 @@ class OptimizedThumbnailGrid(QWidget):
                     padding: 40px;
                     margin: 20px;
                 }
-            """)
+            """
+            )
 
             # アクセシビリティ対応
             self._empty_placeholder.setAccessibleName("空状態プレースホルダー")
@@ -1006,7 +1065,7 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "empty_placeholder_error",
                 f"空状態プレースホルダー表示エラー: {str(e)}",
-                level="WARNING"
+                level="WARNING",
             )
 
     def _add_thumbnail_item(self, image_path: Path):
@@ -1026,7 +1085,9 @@ class OptimizedThumbnailGrid(QWidget):
 
             # シグナルを接続
             thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
-            thumbnail_item.context_menu_requested.connect(self._on_context_menu_requested)
+            thumbnail_item.context_menu_requested.connect(
+                self._on_context_menu_requested
+            )
             thumbnail_item.exif_info_requested.connect(self._on_exif_info_requested)
 
             # 辞書に追加
@@ -1042,18 +1103,19 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "thumbnail_item_added",
                 f"サムネイルアイテム追加: {image_path.name}",
-                level="DEBUG"
+                level="DEBUG",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "add_thumbnail_item",
                     "image_path": str(image_path),
-                    "user_action": "サムネイルアイテム追加"
+                    "user_action": "サムネイルアイテム追加",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _remove_thumbnail_item(self, image_path: Path):
@@ -1087,18 +1149,19 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
                 "thumbnail_item_removed",
                 f"サムネイルアイテム削除: {image_path.name}",
-                level="DEBUG"
+                level="DEBUG",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {
                     "operation": "remove_thumbnail_item",
                     "image_path": str(image_path),
-                    "user_action": "サムネイルアイテム削除"
+                    "user_action": "サムネイルアイテム削除",
                 },
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _create_thumbnail_items(self):
@@ -1113,7 +1176,9 @@ class OptimizedThumbnailGrid(QWidget):
 
                 # Connect signals
                 thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
-                thumbnail_item.context_menu_requested.connect(self._on_context_menu_requested)
+                thumbnail_item.context_menu_requested.connect(
+                    self._on_context_menu_requested
+                )
                 thumbnail_item.exif_info_requested.connect(self._on_exif_info_requested)
 
                 # Add to layout
@@ -1130,9 +1195,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "create_thumbnail_items"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _load_thumbnails_async(self):
@@ -1140,16 +1206,21 @@ class OptimizedThumbnailGrid(QWidget):
         try:
             for image_path in self.image_list:
                 # Submit thumbnail loading task
-                future = self.thumbnail_executor.submit(self._load_single_thumbnail, image_path)
+                future = self.thumbnail_executor.submit(
+                    self._load_single_thumbnail, image_path
+                )
 
                 # Submit EXIF loading task
-                exif_future = self.exif_executor.submit(self._load_single_exif, image_path)
+                exif_future = self.exif_executor.submit(
+                    self._load_single_exif, image_path
+                )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_thumbnails_async"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_single_thumbnail(self, image_path: Path):
@@ -1160,9 +1231,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_single_thumbnail", "image": str(image_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_single_exif(self, image_path: Path):
@@ -1179,9 +1251,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_single_exif", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def set_thumbnail(self, image_path: Path, pixmap: QPixmap):
@@ -1198,9 +1271,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "set_thumbnail", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def set_exif_data(self, image_path: Path, exif_data: Dict[str, Any]):
@@ -1214,9 +1288,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "set_exif_data", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _update_thumbnail_exif(self, image_path: Path, exif_data: Dict[str, Any]):
@@ -1228,9 +1303,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "update_thumbnail_exif", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _on_thumbnail_clicked(self, image_path: Path):
@@ -1241,14 +1317,15 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "thumbnail_clicked",
-                f"Thumbnail clicked: {image_path}"
+                f"Thumbnail clicked: {image_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "thumbnail_clicked", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_context_menu_requested(self, image_path: Path, position):
@@ -1261,21 +1338,26 @@ class OptimizedThumbnailGrid(QWidget):
             view_action.triggered.connect(lambda: self.image_selected.emit(image_path))
 
             exif_action = menu.addAction("Show EXIF Data")
-            exif_action.triggered.connect(lambda: self._on_exif_info_requested(image_path))
+            exif_action.triggered.connect(
+                lambda: self._on_exif_info_requested(image_path)
+            )
 
             menu.addSeparator()
 
             refresh_action = menu.addAction("Refresh Thumbnail")
-            refresh_action.triggered.connect(lambda: self._refresh_thumbnail(image_path))
+            refresh_action.triggered.connect(
+                lambda: self._refresh_thumbnail(image_path)
+            )
 
             # Show menu
             menu.exec(position.toPoint())
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "context_menu_requested", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_exif_info_requested(self, image_path: Path):
@@ -1285,9 +1367,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "exif_info_requested", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _refresh_thumbnail(self, image_path: Path):
@@ -1302,9 +1385,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "refresh_thumbnail", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_size_changed(self, size: int):
@@ -1328,14 +1412,15 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "thumbnail_size_changed",
-                f"Thumbnail size changed to: {size}"
+                f"Thumbnail size changed to: {size}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "size_changed", "size": size},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _update_grid_layout(self):
@@ -1353,9 +1438,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "update_grid_layout"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _reorganize_grid(self):
@@ -1383,9 +1469,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "reorganize_grid"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _update_performance_metrics(self):
@@ -1408,9 +1495,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "update_performance_metrics"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _monitor_performance(self):
@@ -1418,6 +1506,7 @@ class OptimizedThumbnailGrid(QWidget):
         try:
             # Check memory usage
             import psutil
+
             process = psutil.Process()
             memory_mb = process.memory_info().rss / 1024 / 1024
 
@@ -1428,9 +1517,11 @@ class OptimizedThumbnailGrid(QWidget):
                 self.performance_warning.emit(f"High memory usage: {memory_mb:.1f}MB")
 
             # Check loading performance
-            if (self.total_count > 0 and
-                self.loaded_count < self.total_count and
-                self.performance_metrics["avg_load_time"] > 30):  # 30 seconds threshold
+            if (
+                self.total_count > 0
+                and self.loaded_count < self.total_count
+                and self.performance_metrics["avg_load_time"] > 30
+            ):  # 30 seconds threshold
 
                 self.performance_warning.emit("Slow thumbnail loading detected")
 
@@ -1459,9 +1550,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "clear_thumbnails"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def refresh_theme(self):
@@ -1473,7 +1565,8 @@ class OptimizedThumbnailGrid(QWidget):
             for thumbnail_item in self.thumbnail_items.values():
                 # Apply theme-specific styling
                 if "dark" in current_theme:
-                    thumbnail_item.setStyleSheet("""
+                    thumbnail_item.setStyleSheet(
+                        """
                         QLabel {
                             border: 2px solid transparent;
                             border-radius: 4px;
@@ -1485,9 +1578,11 @@ class OptimizedThumbnailGrid(QWidget):
                             border-color: #007acc;
                             background-color: #4a4a4a;
                         }
-                    """)
+                    """
+                    )
                 else:
-                    thumbnail_item.setStyleSheet("""
+                    thumbnail_item.setStyleSheet(
+                        """
                         QLabel {
                             border: 2px solid transparent;
                             border-radius: 4px;
@@ -1499,13 +1594,15 @@ class OptimizedThumbnailGrid(QWidget):
                             border-color: #007acc;
                             background-color: #e3f2fd;
                         }
-                    """)
+                    """
+                    )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "refresh_theme"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def set_thumbnail_size(self, size: int):
@@ -1527,7 +1624,7 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "update_image_list",
-                f"Updating image list with {len(image_list)} images"
+                f"Updating image list with {len(image_list)} images",
             )
 
             # Clear existing thumbnails safely
@@ -1556,14 +1653,15 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "update_image_list_complete",
-                f"Image list updated successfully with {len(image_list)} images"
+                f"Image list updated successfully with {len(image_list)} images",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "update_image_list", "count": len(image_list)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def clear_thumbnails_safely(self):
@@ -1574,7 +1672,7 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "clear_thumbnails_safely",
-                "Safely clearing thumbnails"
+                "Safely clearing thumbnails",
             )
 
             # Stop any ongoing loading operations
@@ -1598,24 +1696,26 @@ class OptimizedThumbnailGrid(QWidget):
             self.exif_cache.clear()
 
             # Reset performance label
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 self.performance_label.setText("準備完了")
 
             # Force garbage collection to free memory
             import gc
+
             gc.collect()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "clear_thumbnails_safely_complete",
-                "Thumbnails cleared safely"
+                "Thumbnails cleared safely",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "clear_thumbnails_safely"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def show_loading_state(self, message: str):
@@ -1629,7 +1729,7 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "show_loading_state",
-                f"Showing loading state: {message}"
+                f"Showing loading state: {message}",
             )
 
             # Clear existing thumbnails
@@ -1643,46 +1743,51 @@ class OptimizedThumbnailGrid(QWidget):
             # Loading icon/animation placeholder
             loading_icon = QLabel("🔄")
             loading_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            loading_icon.setStyleSheet("""
+            loading_icon.setStyleSheet(
+                """
                 QLabel {
                     font-size: 48px;
                     color: #007acc;
                     margin: 20px;
                 }
-            """)
+            """
+            )
             loading_layout.addWidget(loading_icon)
 
             # Loading message
             loading_label = QLabel(message)
             loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            loading_label.setStyleSheet("""
+            loading_label.setStyleSheet(
+                """
                 QLabel {
                     font-size: 16px;
                     color: #333333;
                     margin: 10px;
                     padding: 10px;
                 }
-            """)
+            """
+            )
             loading_layout.addWidget(loading_label)
 
             # Add to grid layout
             self.grid_layout.addWidget(loading_widget, 0, 0, 1, self.columns)
 
             # Update performance label
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 self.performance_label.setText(message)
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "show_loading_state_complete",
-                f"Loading state displayed: {message}"
+                f"Loading state displayed: {message}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "show_loading_state", "message": message},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def show_error_state(self, error_message: str):
@@ -1696,7 +1801,7 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "show_error_state",
-                f"Showing error state: {error_message}"
+                f"Showing error state: {error_message}",
             )
 
             # Clear existing thumbnails
@@ -1710,20 +1815,23 @@ class OptimizedThumbnailGrid(QWidget):
             # Error icon
             error_icon = QLabel("⚠️")
             error_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            error_icon.setStyleSheet("""
+            error_icon.setStyleSheet(
+                """
                 QLabel {
                     font-size: 48px;
                     color: #dc3545;
                     margin: 20px;
                 }
-            """)
+            """
+            )
             error_layout.addWidget(error_icon)
 
             # Error message
             error_label = QLabel(error_message)
             error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             error_label.setWordWrap(True)
-            error_label.setStyleSheet("""
+            error_label.setStyleSheet(
+                """
                 QLabel {
                     font-size: 14px;
                     color: #dc3545;
@@ -1734,41 +1842,47 @@ class OptimizedThumbnailGrid(QWidget):
                     border-radius: 4px;
                     max-width: 400px;
                 }
-            """)
+            """
+            )
             error_layout.addWidget(error_label)
 
             # Retry suggestion
-            retry_label = QLabel("フォルダを再選択するか、アプリケーションを再起動してください。")
+            retry_label = QLabel(
+                "フォルダを再選択するか、アプリケーションを再起動してください。"
+            )
             retry_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             retry_label.setWordWrap(True)
-            retry_label.setStyleSheet("""
+            retry_label.setStyleSheet(
+                """
                 QLabel {
                     font-size: 12px;
                     color: #6c757d;
                     margin: 5px;
                     padding: 10px;
                 }
-            """)
+            """
+            )
             error_layout.addWidget(retry_label)
 
             # Add to grid layout
             self.grid_layout.addWidget(error_widget, 0, 0, 1, self.columns)
 
             # Update performance label
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 self.performance_label.setText(f"エラー: {error_message}")
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "show_error_state_complete",
-                f"Error state displayed: {error_message}"
+                f"Error state displayed: {error_message}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "show_error_state", "error_message": error_message},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def show_empty_state(self):
@@ -1777,9 +1891,7 @@ class OptimizedThumbnailGrid(QWidget):
         """
         try:
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR,
-                "show_empty_state",
-                "Showing empty state"
+                AIComponent.CURSOR, "show_empty_state", "Showing empty state"
             )
 
             # Clear existing thumbnails
@@ -1793,33 +1905,40 @@ class OptimizedThumbnailGrid(QWidget):
             # Empty state icon
             empty_icon = QLabel("📁")
             empty_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty_icon.setStyleSheet("""
+            empty_icon.setStyleSheet(
+                """
                 QLabel {
                     font-size: 64px;
                     color: #6c757d;
                     margin: 30px;
                 }
-            """)
+            """
+            )
             empty_layout.addWidget(empty_icon)
 
             # Empty state message
             empty_title = QLabel("画像ファイルが見つかりません")
             empty_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            empty_title.setStyleSheet("""
+            empty_title.setStyleSheet(
+                """
                 QLabel {
                     font-size: 18px;
                     font-weight: bold;
                     color: #495057;
                     margin: 10px;
                 }
-            """)
+            """
+            )
             empty_layout.addWidget(empty_title)
 
             # Helpful message
-            empty_message = QLabel("このフォルダには対応する画像ファイル（JPG、PNG、GIF、BMP、TIFF、WEBP）がありません。\n別のフォルダを選択してください。")
+            empty_message = QLabel(
+                "このフォルダには対応する画像ファイル（JPG、PNG、GIF、BMP、TIFF、WEBP）がありません。\n別のフォルダを選択してください。"
+            )
             empty_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty_message.setWordWrap(True)
-            empty_message.setStyleSheet("""
+            empty_message.setStyleSheet(
+                """
                 QLabel {
                     font-size: 14px;
                     color: #6c757d;
@@ -1828,13 +1947,17 @@ class OptimizedThumbnailGrid(QWidget):
                     max-width: 500px;
                     line-height: 1.4;
                 }
-            """)
+            """
+            )
             empty_layout.addWidget(empty_message)
 
             # Supported formats info
-            formats_label = QLabel("対応形式: .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp")
+            formats_label = QLabel(
+                "対応形式: .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp"
+            )
             formats_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            formats_label.setStyleSheet("""
+            formats_label.setStyleSheet(
+                """
                 QLabel {
                     font-size: 12px;
                     color: #868e96;
@@ -1842,27 +1965,27 @@ class OptimizedThumbnailGrid(QWidget):
                     padding: 5px;
                     font-style: italic;
                 }
-            """)
+            """
+            )
             empty_layout.addWidget(formats_label)
 
             # Add to grid layout
             self.grid_layout.addWidget(empty_widget, 0, 0, 1, self.columns)
 
             # Update performance label
-            if hasattr(self, 'performance_label'):
+            if hasattr(self, "performance_label"):
                 self.performance_label.setText("画像ファイルがありません")
 
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR,
-                "show_empty_state_complete",
-                "Empty state displayed"
+                AIComponent.CURSOR, "show_empty_state_complete", "Empty state displayed"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "show_empty_state"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def cleanup(self):
@@ -1882,15 +2005,14 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "thumbnail_grid_cleanup",
-                "Thumbnail grid cleaned up"
+                "Thumbnail grid cleaned up",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
-                {"operation": "cleanup"},
-                AIComponent.CURSOR
+                e, ErrorCategory.UI_ERROR, {"operation": "cleanup"}, AIComponent.CURSOR
             )
+
     """
     Optimized thumbnail grid combining CursorBLD speed with Kiro optimization
 
@@ -1906,10 +2028,12 @@ class OptimizedThumbnailGrid(QWidget):
     loading_progress = pyqtSignal(int, int)  # current, total
     loading_finished = pyqtSignal()
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 state_manager: StateManager,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        state_manager: StateManager,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize the optimized thumbnail grid
 
@@ -1955,7 +2079,7 @@ class OptimizedThumbnailGrid(QWidget):
         self.logger_system.log_ai_operation(
             AIComponent.CURSOR,
             "thumbnail_grid_init",
-            "Optimized thumbnail grid initialized"
+            "Optimized thumbnail grid initialized",
         )
 
     def _initialize_ui(self):
@@ -1974,23 +2098,30 @@ class OptimizedThumbnailGrid(QWidget):
             # Create scroll area
             self.scroll_area = QScrollArea()
             self.scroll_area.setWidgetResizable(True)
-            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.scroll_area.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
+            self.scroll_area.setVerticalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
 
             # Create grid widget
             self.grid_widget = QWidget()
             self.grid_layout = QGridLayout(self.grid_widget)
             self.grid_layout.setSpacing(self.spacing)
-            self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+            self.grid_layout.setAlignment(
+                Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+            )
 
             self.scroll_area.setWidget(self.grid_widget)
             main_layout.addWidget(self.scroll_area, 1)
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "thumbnail_grid_ui_init"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _create_controls(self):
@@ -2046,7 +2177,9 @@ class OptimizedThumbnailGrid(QWidget):
         self.thumbnail_loader.loading_progress.connect(self._on_loading_progress)
 
         # Connect state manager changes
-        self.state_manager.add_change_listener("thumbnail_size", self._on_thumbnail_size_changed)
+        self.state_manager.add_change_listener(
+            "thumbnail_size", self._on_thumbnail_size_changed
+        )
 
     def _setup_monitoring(self):
         """Setup performance monitoring (Kiro enhancement)"""
@@ -2080,14 +2213,15 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "thumbnail_load_start",
-                f"Loading {len(image_paths)} thumbnails"
+                f"Loading {len(image_paths)} thumbnails",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "load_images", "count": len(image_paths)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _create_thumbnail_items(self):
@@ -2116,9 +2250,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "create_thumbnail_items"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _clear_thumbnails(self):
@@ -2136,9 +2271,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "clear_thumbnails"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     # Event handlers
@@ -2156,14 +2292,15 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "thumbnail_click",
-                f"Thumbnail clicked: {image_path.name}"
+                f"Thumbnail clicked: {image_path.name}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "thumbnail_click", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_thumbnail_loaded(self, image_path: Path, pixmap: QPixmap):
@@ -2176,9 +2313,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "thumbnail_loaded", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_loading_progress(self, current: int, total: int):
@@ -2192,7 +2330,7 @@ class OptimizedThumbnailGrid(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "thumbnail_load_complete",
-                f"Loaded {total} thumbnails"
+                f"Loaded {total} thumbnails",
             )
 
     def _on_size_changed(self, size: int):
@@ -2219,9 +2357,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "size_change", "size": size},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_thumbnail_size_changed(self, key: str, old_value: Any, new_value: Any):
@@ -2240,16 +2379,15 @@ class OptimizedThumbnailGrid(QWidget):
             self._update_cache_info()
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "cache_clear",
-                "Thumbnail cache cleared"
+                AIComponent.KIRO, "cache_clear", "Thumbnail cache cleared"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cache_clear"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _update_cache_info(self):
@@ -2261,13 +2399,16 @@ class OptimizedThumbnailGrid(QWidget):
             cache_size = cache_stats.get("cache_size", 0)
             hit_rate = cache_stats.get("hit_rate", 0)
 
-            self.cache_label.setText(f"Cache: {cache_size} items ({hit_rate:.1%} hit rate)")
+            self.cache_label.setText(
+                f"Cache: {cache_size} items ({hit_rate:.1%} hit rate)"
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cache_info_update"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _update_performance_metrics(self):
@@ -2287,15 +2428,16 @@ class OptimizedThumbnailGrid(QWidget):
                     "thumbnail_count": len(self.thumbnail_items),
                     "cache_size": cache_stats.get("cache_size", 0),
                     "cache_hit_rate": cache_stats.get("hit_rate", 0),
-                    "average_load_time": cache_stats.get("average_load_time", 0)
-                }
+                    "average_load_time": cache_stats.get("average_load_time", 0),
+                },
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "performance_metrics_update"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Context menu (CursorBLD feature)
@@ -2312,7 +2454,9 @@ class OptimizedThumbnailGrid(QWidget):
             sizes = [75, 100, 150, 200, 250, 300]
             for size in sizes:
                 action = size_menu.addAction(f"{size}px")
-                action.triggered.connect(lambda checked, s=size: self._on_size_changed(s))
+                action.triggered.connect(
+                    lambda checked, s=size: self._on_size_changed(s)
+                )
                 action.setCheckable(True)
                 action.setChecked(size == self.thumbnail_size)
 
@@ -2331,9 +2475,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "context_menu"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _show_cache_info(self):
@@ -2360,9 +2505,10 @@ class OptimizedThumbnailGrid(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "cache_info_dialog"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     # Resize handling

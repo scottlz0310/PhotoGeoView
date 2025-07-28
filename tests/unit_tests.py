@@ -15,6 +15,7 @@ from datetime import datetime
 import json
 
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.config_manager import ConfigManager
@@ -42,12 +43,12 @@ class TestConfigManager(unittest.TestCase):
             "ai_components": {
                 "cursor_bld": {"enabled": True},
                 "cs4_coding": {"enabled": True},
-                "kiro": {"enabled": True}
+                "kiro": {"enabled": True},
             }
         }
 
         config_path = Path(self.temp_dir) / "test_config.json"
-        with open(config_path, 'w') as f:
+        with open(config_path, "w") as f:
             json.dump(config_data, f)
 
         # 設定読み込みのテスト
@@ -79,13 +80,13 @@ class TestLoggerSystem(unittest.TestCase):
 
     def test_log_message(self):
         """ログメッセージのテスト"""
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             self.logger.info("テストメッセージ")
             mock_print.assert_called()
 
     def test_error_logging(self):
         """エラーログのテスト"""
-        with patch('builtins.print') as mock_print:
+        with patch("builtins.print") as mock_print:
             self.logger.error("エラーメッセージ")
             mock_print.assert_called()
 
@@ -155,7 +156,9 @@ class TestStateManager(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
-        self.state_manager = StateManager(state_file=Path(self.temp_dir) / "test_state.json")
+        self.state_manager = StateManager(
+            state_file=Path(self.temp_dir) / "test_state.json"
+        )
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
@@ -173,7 +176,9 @@ class TestStateManager(unittest.TestCase):
         self.state_manager.save_state()
 
         # 新しいStateManagerインスタンスで読み込み
-        new_state_manager = StateManager(state_file=Path(self.temp_dir) / "test_state.json")
+        new_state_manager = StateManager(
+            state_file=Path(self.temp_dir) / "test_state.json"
+        )
         new_state_manager.load_state()
 
         loaded_value = new_state_manager.get_state("test_key")
@@ -192,11 +197,9 @@ class TestIntegratedErrorHandler(unittest.TestCase):
         test_error = ValueError("テストエラー")
         context = {"component": "test", "operation": "test_op"}
 
-        with patch.object(self.logger, 'error') as mock_error:
+        with patch.object(self.logger, "error") as mock_error:
             result = self.error_handler.handle_error(
-                test_error,
-                ErrorCategory.INTEGRATION_ERROR,
-                context
+                test_error, ErrorCategory.INTEGRATION_ERROR, context
             )
 
             mock_error.assert_called()
@@ -208,7 +211,7 @@ class TestIntegratedErrorHandler(unittest.TestCase):
             ErrorCategory.UI_ERROR,
             ErrorCategory.CORE_ERROR,
             ErrorCategory.INTEGRATION_ERROR,
-            ErrorCategory.SYSTEM_ERROR
+            ErrorCategory.SYSTEM_ERROR,
         ]
 
         for category in categories:
@@ -219,6 +222,6 @@ class TestIntegratedErrorHandler(unittest.TestCase):
             self.assertIsNotNone(result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # テストスイートの実行
     unittest.main(verbosity=2)

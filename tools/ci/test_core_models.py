@@ -14,7 +14,13 @@ from pathlib import Path
 # Add the tools directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ci.models import CheckResult, CheckStatus, SimulationResult, RegressionIssue, SeverityLevel
+from ci.models import (
+    CheckResult,
+    CheckStatus,
+    SimulationResult,
+    RegressionIssue,
+    SeverityLevel,
+)
 from ci.interfaces import CheckerFactory, CISimulationError
 
 
@@ -32,7 +38,7 @@ def test_check_result():
         warnings=["Minor warning"],
         suggestions=["Consider optimization"],
         metadata={"test_count": 10},
-        python_version="3.9"
+        python_version="3.9",
     )
 
     # Test properties
@@ -65,7 +71,7 @@ def test_regression_issue():
         severity=SeverityLevel.HIGH,
         description="Performance degraded significantly",
         metric_type="performance",
-        threshold_exceeded=True
+        threshold_exceeded=True,
     )
 
     # Test serialization
@@ -101,7 +107,7 @@ def test_simulation_result():
         check_results={"check1": check1, "check2": check2},
         python_versions_tested=["3.9", "3.10"],
         summary="Mixed results",
-        regression_issues=[regression]
+        regression_issues=[regression],
     )
 
     # Test properties
@@ -183,6 +189,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

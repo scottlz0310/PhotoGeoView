@@ -24,21 +24,20 @@ except ImportError:
     # Fallback for direct execution
     import sys
     import os
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from models import CheckResult, CheckStatus
     from utils import run_command
+
 
 # Create a wrapper for timeout functionality
 def run_command_with_timeout(command, timeout=30, env=None):
     """Wrapper to provide timeout functionality."""
     import subprocess
+
     try:
         result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env=env
+            command, capture_output=True, text=True, timeout=timeout, env=env
         )
         return result
     except subprocess.TimeoutExpired:
@@ -48,6 +47,7 @@ def run_command_with_timeout(command, timeout=30, env=None):
                 self.returncode = -1
                 self.stdout = ""
                 self.stderr = f"Command timed out after {timeout} seconds"
+
         return MockResult()
 
 
@@ -57,7 +57,9 @@ logger = logging.getLogger(__name__)
 class PythonVersionInfo:
     """Information about a Python version installation."""
 
-    def __init__(self, version: str, executable: str, source: str, is_available: bool = True):
+    def __init__(
+        self, version: str, executable: str, source: str, is_available: bool = True
+    ):
         self.version = version
         self.executable = executable
         self.source = source  # 'system', 'pyenv', 'conda'
@@ -69,27 +71,27 @@ class PythonVersionInfo:
 
     def to_dict(self) -> Dict:
         return {
-            'version': self.version,
-            'executable': self.executable,
-            'source': self.source,
-            'is_available': self.is_available,
-            'venv_path': self.venv_path
+            "version": self.version,
+            "executable": self.executable,
+            "source": self.source,
+            "is_available": self.is_available,
+            "venv_path": self.venv_path,
         }
 
 
 class PythonVersionManager:
     """Manages Python version detection and virtual environment creation."""
 
-    SUPPORTED_VERSIONS = ['3.9', '3.10', '3.11']
-    VENV_BASE_DIR = Path('.ci-venvs')
+    SUPPORTED_VERSIONS = ["3.9", "3.10", "3.11"]
+    VENV_BASE_DIR = Path(".ci-venvs")
 
     def __init__(self):
         self.discovered_versions: Dict[str, PythonVersionInfo] = {}
         self.current_python = PythonVersionInfo(
             version=f"{sys.version_info.major}.{sys.version_info.minor}",
             executable=sys.executable,
-            source='current',
-            is_available=True
+            source="current",
+            is_available=True,
         )
 
     def discover_python_versions(self) -> Dict[str, PythonVersionInfo]:
@@ -128,42 +130,48 @@ class PythonVersionManager:
         """Discover Python versions managed by pyenv."""
         try:
             # Check if pyenv is available
-            result = run_command_with_timeout(['pyenv', '--version'], timeout=10)
+            result = run_command_with_timeout(["pyenv", "--version"], timeout=10)
             if result.returncode != 0:
                 logger.debug("pyenv not available")
                 return
 
             # Get list of installed versions
-            result = run_command_with_timeout(['pyenv', 'versions', '--bare'], timeout=30)
+            result = run_command_with_timeout(
+                ["pyenv", "versions", "--bare"], timeout=30
+            )
             if result.returncode != 0:
                 logger.warning("Failed to get pyenv versions")
                 return
 
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if not line.strip():
                     continue
 
                 version_name = line.strip()
                 # Extract major.minor version
-                version_parts = version_name.split('.')
+                version_parts = version_name.split(".")
                 if len(version_parts) >= 2:
                     major_minor = f"{version_parts[0]}.{version_parts[1]}"
 
                     if major_minor in self.SUPPORTED_VERSIONS:
                         # Get the executable path
                         executable_result = run_command_with_timeout(
-                            ['pyenv', 'prefix', version_name], timeout=10
+                            ["pyenv", "prefix", version_name], timeout=10
                         )
                         if executable_result.returncode == 0:
                             prefix = executable_result.stdout.strip()
-                            executable = os.path.join(prefix, 'bin', 'python')
+                            executable = os.path.join(prefix, "bin", "python")
                             if os.path.exists(executable):
-                                self.discovered_versions[major_minor] = PythonVersionInfo(
-                                    version=major_minor,
-                                    executable=executable,
-                                    source='pyenv'
+                                self.discovered_versions[major_minor] = (
+                                    PythonVersionInfo(
+                                        version=major_minor,
+                                        executable=executable,
+                                        source="pyenv",
+                                    )
                                 )
-                                logger.debug(f"Found pyenv Python {major_minor} at {executable}")
+                                logger.debug(
+                                    f"Found pyenv Python {major_minor} at {executable}"
+                                )
 
         except Exception as e:
             logger.debug(f"Error discovering pyenv versions: {e}")
@@ -172,46 +180,52 @@ class PythonVersionManager:
         """Discover Python versions managed by conda."""
         try:
             # Check if conda is available
-            result = run_command_with_timeout(['conda', '--version'], timeout=10)
+            result = run_command_with_timeout(["conda", "--version"], timeout=10)
             if result.returncode != 0:
                 logger.debug("conda not available")
                 return
 
             # Get list of environments
-            result = run_command_with_timeout(['conda', 'env', 'list', '--json'], timeout=30)
+            result = run_command_with_timeout(
+                ["conda", "env", "list", "--json"], timeout=30
+            )
             if result.returncode != 0:
                 logger.warning("Failed to get conda environments")
                 return
 
             env_data = json.loads(result.stdout)
-            for env_path in env_data.get('envs', []):
+            for env_path in env_data.get("envs", []):
                 # Check for python executable in environment
-                python_exe = os.path.join(env_path, 'bin', 'python')
+                python_exe = os.path.join(env_path, "bin", "python")
                 if not os.path.exists(python_exe):
-                    python_exe = os.path.join(env_path, 'python.exe')  # Windows
+                    python_exe = os.path.join(env_path, "python.exe")  # Windows
 
                 if os.path.exists(python_exe):
                     # Get version
                     version_result = run_command_with_timeout(
-                        [python_exe, '--version'], timeout=10
+                        [python_exe, "--version"], timeout=10
                     )
                     if version_result.returncode == 0:
                         version_output = version_result.stdout.strip()
-                        if version_output.startswith('Python '):
+                        if version_output.startswith("Python "):
                             version_str = version_output[7:]  # Remove 'Python '
-                            version_parts = version_str.split('.')
+                            version_parts = version_str.split(".")
                             if len(version_parts) >= 2:
                                 major_minor = f"{version_parts[0]}.{version_parts[1]}"
 
                                 if major_minor in self.SUPPORTED_VERSIONS:
                                     # Only add if not already found from a better source
                                     if major_minor not in self.discovered_versions:
-                                        self.discovered_versions[major_minor] = PythonVersionInfo(
-                                            version=major_minor,
-                                            executable=python_exe,
-                                            source='conda'
+                                        self.discovered_versions[major_minor] = (
+                                            PythonVersionInfo(
+                                                version=major_minor,
+                                                executable=python_exe,
+                                                source="conda",
+                                            )
                                         )
-                                        logger.debug(f"Found conda Python {major_minor} at {python_exe}")
+                                        logger.debug(
+                                            f"Found conda Python {major_minor} at {python_exe}"
+                                        )
 
         except Exception as e:
             logger.debug(f"Error discovering conda versions: {e}")
@@ -224,10 +238,10 @@ class PythonVersionManager:
 
             # Try common executable names
             executables = [
-                f'python{version}',
+                f"python{version}",
                 f'python{version.replace(".", "")}',
-                'python3',
-                'python'
+                "python3",
+                "python",
             ]
 
             for exe_name in executables:
@@ -235,22 +249,30 @@ class PythonVersionManager:
                     exe_path = shutil.which(exe_name)
                     if exe_path:
                         # Verify version
-                        result = run_command_with_timeout([exe_path, '--version'], timeout=10)
+                        result = run_command_with_timeout(
+                            [exe_path, "--version"], timeout=10
+                        )
                         if result.returncode == 0:
                             version_output = result.stdout.strip()
-                            if version_output.startswith('Python '):
+                            if version_output.startswith("Python "):
                                 version_str = version_output[7:]
-                                version_parts = version_str.split('.')
+                                version_parts = version_str.split(".")
                                 if len(version_parts) >= 2:
-                                    major_minor = f"{version_parts[0]}.{version_parts[1]}"
+                                    major_minor = (
+                                        f"{version_parts[0]}.{version_parts[1]}"
+                                    )
 
                                     if major_minor == version:
-                                        self.discovered_versions[version] = PythonVersionInfo(
-                                            version=version,
-                                            executable=exe_path,
-                                            source='system'
+                                        self.discovered_versions[version] = (
+                                            PythonVersionInfo(
+                                                version=version,
+                                                executable=exe_path,
+                                                source="system",
+                                            )
                                         )
-                                        logger.debug(f"Found system Python {version} at {exe_path}")
+                                        logger.debug(
+                                            f"Found system Python {version} at {exe_path}"
+                                        )
                                         break
                 except Exception as e:
                     logger.debug(f"Error checking {exe_name}: {e}")
@@ -267,7 +289,9 @@ class PythonVersionManager:
         supported = set(self.SUPPORTED_VERSIONS)
         return list(supported - available)
 
-    def check_version_compatibility(self, required_versions: List[str] = None) -> CheckResult:
+    def check_version_compatibility(
+        self, required_versions: List[str] = None
+    ) -> CheckResult:
         """
         Check Python version compatibility.
 
@@ -289,15 +313,19 @@ class PythonVersionManager:
 
         if missing_versions:
             errors.append(f"Missing Python versions: {', '.join(missing_versions)}")
-            suggestions.extend([
-                "Install missing Python versions using:",
-                "  - pyenv: pyenv install <version>",
-                "  - conda: conda create -n py<version> python=<version>",
-                "  - System package manager (apt, yum, brew, etc.)"
-            ])
+            suggestions.extend(
+                [
+                    "Install missing Python versions using:",
+                    "  - pyenv: pyenv install <version>",
+                    "  - conda: conda create -n py<version> python=<version>",
+                    "  - System package manager (apt, yum, brew, etc.)",
+                ]
+            )
 
         if len(available_versions) < len(required_versions):
-            warnings.append(f"Only {len(available_versions)}/{len(required_versions)} required Python versions available")
+            warnings.append(
+                f"Only {len(available_versions)}/{len(required_versions)} required Python versions available"
+            )
 
         status = CheckStatus.SUCCESS if not missing_versions else CheckStatus.FAILURE
         if missing_versions and available_versions:
@@ -312,13 +340,17 @@ class PythonVersionManager:
             warnings=warnings,
             suggestions=suggestions,
             metadata={
-                'available_versions': available_versions,
-                'missing_versions': missing_versions,
-                'discovered_versions': {v: info.to_dict() for v, info in self.discovered_versions.items()}
-            }
+                "available_versions": available_versions,
+                "missing_versions": missing_versions,
+                "discovered_versions": {
+                    v: info.to_dict() for v, info in self.discovered_versions.items()
+                },
+            },
         )
 
-    def create_virtual_environment(self, python_version: str, force_recreate: bool = False) -> CheckResult:
+    def create_virtual_environment(
+        self, python_version: str, force_recreate: bool = False
+    ) -> CheckResult:
         """
         Create a virtual environment for the specified Python version.
 
@@ -337,8 +369,12 @@ class PythonVersionManager:
                 output="",
                 errors=[f"Python {python_version} not available"],
                 warnings=[],
-                suggestions=["Install Python {python_version} first".format(python_version=python_version)],
-                metadata={}
+                suggestions=[
+                    "Install Python {python_version} first".format(
+                        python_version=python_version
+                    )
+                ],
+                metadata={},
             )
 
         python_info = self.discovered_versions[python_version]
@@ -355,7 +391,7 @@ class PythonVersionManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={'venv_path': str(venv_path)}
+                metadata={"venv_path": str(venv_path)},
             )
 
         # Create directory
@@ -367,7 +403,9 @@ class PythonVersionManager:
 
         try:
             # Create virtual environment
-            logger.info(f"Creating virtual environment for Python {python_version} at {venv_path}")
+            logger.info(
+                f"Creating virtual environment for Python {python_version} at {venv_path}"
+            )
             venv.create(venv_path, with_pip=True)
 
             python_info.venv_path = str(venv_path)
@@ -380,7 +418,7 @@ class PythonVersionManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={'venv_path': str(venv_path)}
+                metadata={"venv_path": str(venv_path)},
             )
 
         except Exception as e:
@@ -392,7 +430,7 @@ class PythonVersionManager:
                 errors=[f"Failed to create virtual environment: {str(e)}"],
                 warnings=[],
                 suggestions=["Check Python installation and permissions"],
-                metadata={}
+                metadata={},
             )
 
     def get_venv_python_executable(self, python_version: str) -> Optional[str]:
@@ -408,9 +446,9 @@ class PythonVersionManager:
 
         # Try different possible paths
         possible_paths = [
-            venv_path / 'bin' / 'python',  # Unix-like
-            venv_path / 'Scripts' / 'python.exe',  # Windows
-            venv_path / 'Scripts' / 'python',  # Windows alternative
+            venv_path / "bin" / "python",  # Unix-like
+            venv_path / "Scripts" / "python.exe",  # Windows
+            venv_path / "Scripts" / "python",  # Windows alternative
         ]
 
         for path in possible_paths:
@@ -419,7 +457,9 @@ class PythonVersionManager:
 
         return None
 
-    def install_requirements_in_venv(self, python_version: str, requirements_file: str = 'requirements.txt') -> CheckResult:
+    def install_requirements_in_venv(
+        self, python_version: str, requirements_file: str = "requirements.txt"
+    ) -> CheckResult:
         """Install requirements in the virtual environment."""
         venv_python = self.get_venv_python_executable(python_version)
         if not venv_python:
@@ -430,8 +470,10 @@ class PythonVersionManager:
                 output="",
                 errors=[f"Virtual environment for Python {python_version} not found"],
                 warnings=[],
-                suggestions=[f"Create virtual environment for Python {python_version} first"],
-                metadata={}
+                suggestions=[
+                    f"Create virtual environment for Python {python_version} first"
+                ],
+                metadata={},
             )
 
         if not os.path.exists(requirements_file):
@@ -443,14 +485,17 @@ class PythonVersionManager:
                 errors=[f"Requirements file {requirements_file} not found"],
                 warnings=[],
                 suggestions=["Create requirements.txt file"],
-                metadata={}
+                metadata={},
             )
 
         try:
-            logger.info(f"Installing requirements in Python {python_version} virtual environment")
-            result = run_command_with_timeout([
-                venv_python, '-m', 'pip', 'install', '-r', requirements_file
-            ], timeout=300)  # 5 minutes timeout
+            logger.info(
+                f"Installing requirements in Python {python_version} virtual environment"
+            )
+            result = run_command_with_timeout(
+                [venv_python, "-m", "pip", "install", "-r", requirements_file],
+                timeout=300,
+            )  # 5 minutes timeout
 
             if result.returncode == 0:
                 return CheckResult(
@@ -461,7 +506,7 @@ class PythonVersionManager:
                     errors=[],
                     warnings=[],
                     suggestions=[],
-                    metadata={}
+                    metadata={},
                 )
             else:
                 return CheckResult(
@@ -469,10 +514,12 @@ class PythonVersionManager:
                     status=CheckStatus.FAILURE,
                     duration=0.0,
                     output=result.stdout,
-                    errors=[result.stderr] if result.stderr else ["Installation failed"],
+                    errors=(
+                        [result.stderr] if result.stderr else ["Installation failed"]
+                    ),
                     warnings=[],
                     suggestions=["Check requirements.txt for compatibility issues"],
-                    metadata={}
+                    metadata={},
                 )
 
         except Exception as e:
@@ -484,7 +531,7 @@ class PythonVersionManager:
                 errors=[f"Failed to install requirements: {str(e)}"],
                 warnings=[],
                 suggestions=["Check virtual environment and requirements file"],
-                metadata={}
+                metadata={},
             )
 
     def cleanup_virtual_environments(self) -> CheckResult:
@@ -498,7 +545,7 @@ class PythonVersionManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={}
+                metadata={},
             )
 
         try:
@@ -516,7 +563,7 @@ class PythonVersionManager:
                 errors=[],
                 warnings=[],
                 suggestions=[],
-                metadata={}
+                metadata={},
             )
 
         except Exception as e:
@@ -528,5 +575,5 @@ class PythonVersionManager:
                 errors=[f"Failed to clean up virtual environments: {str(e)}"],
                 warnings=[],
                 suggestions=["Check permissions and try manual cleanup"],
-                metadata={}
+                metadata={},
             )

@@ -18,8 +18,11 @@ import threading
 import time
 
 from .interfaces import (
-    IImageProcessor, IThemeManager, IMapProvider,
-    IConfigManager, IPerformanceMonitor
+    IImageProcessor,
+    IThemeManager,
+    IMapProvider,
+    IConfigManager,
+    IPerformanceMonitor,
 )
 from .image_processor import CS4CodingImageProcessor
 from .performance_monitor import KiroPerformanceMonitor
@@ -29,8 +32,12 @@ from .performance_monitor import KiroPerformanceMonitor
 from .unified_cache import UnifiedCacheSystem
 from .state_manager import StateManager
 from .models import (
-    ImageMetadata, ThemeConfiguration, ApplicationState,
-    AIComponent, ProcessingStatus, PerformanceMetrics
+    ImageMetadata,
+    ThemeConfiguration,
+    ApplicationState,
+    AIComponent,
+    ProcessingStatus,
+    PerformanceMetrics,
 )
 from .error_handling import IntegratedErrorHandler, ErrorCategory
 from .logging_system import LoggerSystem
@@ -46,9 +53,9 @@ class AppController:
     - Kiro optimization and monitoring
     """
 
-    def __init__(self,
-                 config_manager: IConfigManager = None,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self, config_manager: IConfigManager = None, logger_system: LoggerSystem = None
+    ):
         """
         Initialize the application controller
 
@@ -85,7 +92,7 @@ class AppController:
         self.ai_components: Dict[AIComponent, Dict[str, Any]] = {
             AIComponent.COPILOT: {"status": "inactive", "last_operation": None},
             AIComponent.CURSOR: {"status": "inactive", "last_operation": None},
-            AIComponent.KIRO: {"status": "active", "last_operation": "initialization"}
+            AIComponent.KIRO: {"status": "active", "last_operation": "initialization"},
         }
 
         # Event system
@@ -101,9 +108,7 @@ class AppController:
         self.cache_stats = {"hits": 0, "misses": 0, "size": 0}
 
         self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "initialization",
-            "AppController initialized"
+            AIComponent.KIRO, "initialization", "AppController initialized"
         )
 
     async def initialize(self) -> bool:
@@ -115,7 +120,9 @@ class AppController:
         """
 
         try:
-            with self.logger_system.operation_context(AIComponent.KIRO, "app_initialization"):
+            with self.logger_system.operation_context(
+                AIComponent.KIRO, "app_initialization"
+            ):
 
                 # Initialize AI components
                 await self._initialize_ai_components()
@@ -136,16 +143,17 @@ class AppController:
                 self.logger_system.log_integration_event(
                     "Application initialized",
                     [AIComponent.COPILOT, AIComponent.CURSOR, AIComponent.KIRO],
-                    {"initialization_time": datetime.now().isoformat()}
+                    {"initialization_time": datetime.now().isoformat()},
                 )
 
                 return True
 
         except Exception as e:
             error_context = self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "app_initialization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -155,24 +163,20 @@ class AppController:
         try:
             # Initialize Kiro integration components first
             self.cache_system = UnifiedCacheSystem(
-                config_manager=self.config_manager,
-                logger_system=self.logger_system
+                config_manager=self.config_manager, logger_system=self.logger_system
             )
 
             self.state_manager = StateManager(
-                config_manager=self.config_manager,
-                logger_system=self.logger_system
+                config_manager=self.config_manager, logger_system=self.logger_system
             )
 
             self.performance_monitor = KiroPerformanceMonitor(
-                config_manager=self.config_manager,
-                logger_system=self.logger_system
+                config_manager=self.config_manager, logger_system=self.logger_system
             )
 
             # Initialize CS4Coding ImageProcessor
             self.image_processor = CS4CodingImageProcessor(
-                config_manager=self.config_manager,
-                logger_system=self.logger_system
+                config_manager=self.config_manager, logger_system=self.logger_system
             )
 
             # Start performance monitoring
@@ -181,7 +185,7 @@ class AppController:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "component_initialization",
-                "All AI component interfaces initialized"
+                "All AI component interfaces initialized",
             )
 
             # Mark components as initialized
@@ -191,9 +195,10 @@ class AppController:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "ai_component_initialization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _setup_event_system(self):
@@ -206,9 +211,7 @@ class AppController:
         self.register_event_handler("error_occurred", self._on_error_occurred)
 
         self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "event_system",
-            "Event system initialized"
+            AIComponent.KIRO, "event_system", "Event system initialized"
         )
 
     async def _load_application_state(self):
@@ -234,14 +237,15 @@ class AppController:
                 self.lcomer_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_loading",
-                    f"Application state loaded: {len(saved_state)} settings"
+                    f"Application state loaded: {len(saved_state)} settings",
                 )
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "state_loading"},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
 
     async def save_application_state(self):
@@ -257,23 +261,22 @@ class AppController:
                 "folder_history": [str(p) for p in self.app_state.folder_history],
                 "window_geometry": self.app_state.window_geometry,
                 "performance_mode": self.app_state.performance_mode,
-                "last_saved": datetime.now().isoformat()
+                "last_saved": datetime.now().isoformat(),
             }
 
             self.config_manager.set_setting("app_state", state_data)
             await asyncio.to_thread(self.config_manager.save_config)
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "state_saving",
-                "Application state saved"
+                AIComponent.KIRO, "state_saving", "Application state saved"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "state_saving"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Event system methods
@@ -307,7 +310,7 @@ class AppController:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "event_emission",
-                f"Emitting event: {event_name} to {len(handlers)} handlers"
+                f"Emitting event: {event_name} to {len(handlers)} handlers",
             )
 
             for handler in handlers:
@@ -318,9 +321,10 @@ class AppController:
                         handler(data or {})
                 except Exception as e:
                     self.error_handler.handle_error(
-                        e, ErrorCategory.INTEGRATION_ERROR,
+                        e,
+                        ErrorCategory.INTEGRATION_ERROR,
                         {"operation": "event_handling", "event": event_name},
-                        AIComponent.KIRO
+                        AIComponent.KIRO,
                     )
 
     # Core event handlers
@@ -363,14 +367,15 @@ class AppController:
                     self.logger_system.log_ai_operation(
                         AIComponent.CURSOR,
                         "theme_change",
-                        f"Theme changed to: {theme_name}"
+                        f"Theme changed to: {theme_name}",
                     )
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.UI_ERROR,
+                    e,
+                    ErrorCategory.UI_ERROR,
                     {"operation": "theme_change", "theme": theme_name},
-                    AIComponent.CURSOR
+                    AIComponent.CURSOR,
                 )
 
     async def _on_error_occurred(self, data: Dict[str, Any]):
@@ -379,12 +384,18 @@ class AppController:
         error_context = data.get("error_context")
         if error_context:
             # Update application state with error information
-            self.app_state.add_error({
-                "category": error_context.category.value,
-                "severity": error_context.severity.value,
-                "message": error_context.user_message,
-                "ai_component": error_context.ai_component.value if error_context.ai_component else None
-            })
+            self.app_state.add_error(
+                {
+                    "category": error_context.category.value,
+                    "severity": error_context.severity.value,
+                    "message": error_context.user_message,
+                    "ai_component": (
+                        error_context.ai_component.value
+                        if error_context.ai_component
+                        else None
+                    ),
+                }
+            )
 
     # Core operations
 
@@ -405,7 +416,9 @@ class AppController:
         start_time = time.time()
 
         try:
-            with self.logger_system.operation_context(AIComponent.COPILOT, "image_processing"):
+            with self.logger_system.operation_context(
+                AIComponent.COPILOT, "image_processing"
+            ):
 
                 # Check cache first
                 cache_key = f"image_{image_path.stem}_{image_path.stat().st_mtime}"
@@ -433,7 +446,7 @@ class AppController:
                     created_date=datetime.fromtimestamp(file_stat.st_ctime),
                     modified_date=datetime.fromtimestamp(file_stat.st_mtime),
                     processing_status=ProcessingStatus.COMPLETED,
-                    ai_processor=AIComponent.COPILOT
+                    ai_processor=AIComponent.COPILOT,
                 )
 
                 # Populate EXIF data
@@ -441,14 +454,18 @@ class AppController:
 
                 # Generate thumbnail
                 thumbnail = self.image_processor.generate_thumbnail(
-                    image, (self.app_state.thumbnail_size, self.app_state.thumbnail_size)
+                    image,
+                    (self.app_state.thumbnail_size, self.app_state.thumbnail_size),
                 )
 
                 if thumbnail:
                     # Save thumbnail and update metadata
                     thumbnail_path = self._save_thumbnail(image_path, thumbnail)
                     metadata.thumbnail_path = thumbnail_path
-                    metadata.thumbnail_size = (self.app_state.thumbnail_size, self.app_state.thumbnail_size)
+                    metadata.thumbnail_size = (
+                        self.app_state.thumbnail_size,
+                        self.app_state.thumbnail_size,
+                    )
 
                 # Cache the metadata
                 self.add_to_cache(cache_key, metadata)
@@ -466,21 +483,24 @@ class AppController:
                         "duration": processing_time,
                         "file_size": metadata.file_size,
                         "has_exif": bool(exif_data),
-                        "has_gps": metadata.has_gps
-                    }
+                        "has_gps": metadata.has_gps,
+                    },
                 )
 
                 return metadata
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CORE_ERROR,
+                e,
+                ErrorCategory.CORE_ERROR,
                 {"operation": "image_processing", "file_path": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
             return None
 
-    def _populate_exif_metadata(self, metadata: ImageMetadata, exif_data: Dict[str, Any]):
+    def _populate_exif_metadata(
+        self, metadata: ImageMetadata, exif_data: Dict[str, Any]
+    ):
         """Populate metadata with EXIF information"""
 
         # Camera information
@@ -524,9 +544,10 @@ class AppController:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "thumbnail_save", "image_path": str(image_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return None
 
@@ -545,7 +566,9 @@ class AppController:
             return []
 
         try:
-            with self.logger_system.operation_context(AIComponent.CURSOR, "folder_loading"):
+            with self.logger_system.operation_context(
+                AIComponent.CURSOR, "folder_loading"
+            ):
 
                 # Get supported formats
                 supported_formats = self.image_processor.get_supported_formats()
@@ -553,17 +576,29 @@ class AppController:
                 # Find image files
                 image_files = []
                 for file_path in folder_path.iterdir():
-                    if file_path.is_file() and file_path.suffix.lower() in supported_formats:
+                    if (
+                        file_path.is_file()
+                        and file_path.suffix.lower() in supported_formats
+                    ):
                         if self.image_processor.validate_image(file_path):
                             image_files.append(file_path)
 
                 # Sort files
                 if self.app_state.image_sort_mode == "name":
-                    image_files.sort(key=lambda p: p.name, reverse=not self.app_state.image_sort_ascending)
+                    image_files.sort(
+                        key=lambda p: p.name,
+                        reverse=not self.app_state.image_sort_ascending,
+                    )
                 elif self.app_state.image_sort_mode == "date":
-                    image_files.sort(key=lambda p: p.stat().st_mtime, reverse=not self.app_state.image_sort_ascending)
+                    image_files.sort(
+                        key=lambda p: p.stat().st_mtime,
+                        reverse=not self.app_state.image_sort_ascending,
+                    )
                 elif self.app_state.image_sort_mode == "size":
-                    image_files.sort(key=lambda p: p.stat().st_size, reverse=not self.app_state.image_sort_ascending)
+                    image_files.sort(
+                        key=lambda p: p.stat().st_size,
+                        reverse=not self.app_state.image_sort_ascending,
+                    )
 
                 # Update application state
                 self.app_state.loaded_images = image_files
@@ -571,16 +606,17 @@ class AppController:
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
                     "folder_loading",
-                    f"Loaded {len(image_files)} images from {folder_path}"
+                    f"Loaded {len(image_files)} images from {folder_path}",
                 )
 
                 return image_files
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "folder_loading", "folder_path": str(folder_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return []
 
@@ -609,9 +645,7 @@ class AppController:
         self.cache_stats = {"hits": 0, "misses": 0, "size": 0}
 
         self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "cache_management",
-            "Cache cleared"
+            AIComponent.KIRO, "cache_management", "Cache cleared"
         )
 
     # Performance monitoring
@@ -626,7 +660,7 @@ class AppController:
         return PerformanceMetrics(
             images_loaded=self.app_state.images_processed,
             cache_hits=self.cache_stats["hits"],
-            cache_misses=self.cache_stats["misses"]
+            cache_misses=self.cache_stats["misses"],
         )
 
     def get_ai_component_status(self) -> Dict[str, str]:
@@ -667,7 +701,7 @@ class AppController:
                     self.state_manager.shutdown()
 
                 # Shutdown image processor
-                if self.image_processor and hasattr(self.image_processor, 'shutdown'):
+                if self.image_processor and hasattr(self.image_processor, "shutdown"):
                     self.image_processor.shutdown()
 
                 # Clear cache
@@ -678,7 +712,7 @@ class AppController:
 
                 self.logger_system.log_integration_event(
                     "Application shutdown",
-                    [AIComponent.COPILOT, AIComponent.CURSOR, AIComponent.KIRO]
+                    [AIComponent.COPILOT, AIComponent.CURSOR, AIComponent.KIRO],
                 )
 
         except Exception as e:

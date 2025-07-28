@@ -39,10 +39,12 @@ class IntegratedThemeManager(QObject):
     theme_error = pyqtSignal(str, str)  # theme_name, error_message
     theme_transition_progress = pyqtSignal(int)  # progress percentage
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 state_manager: StateManager,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        state_manager: StateManager,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize the integrated theme manager
 
@@ -109,14 +111,15 @@ class IntegratedThemeManager(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "theme_manager_init",
-                f"Theme manager initialized with {len(self.themes)} themes"
+                f"Theme manager initialized with {len(self.themes)} themes",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_manager_init"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _initialize_qt_theme_manager(self):
@@ -125,23 +128,27 @@ class IntegratedThemeManager(QObject):
             # Import Qt-Theme-Manager if available
             try:
                 import qt_theme_manager
+
                 self.qt_theme_manager = qt_theme_manager.ThemeManager()
                 self.qt_themes_available = self.qt_theme_manager.get_available_themes()
 
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
                     "qt_theme_manager_init",
-                    f"Qt-Theme-Manager initialized with {len(self.qt_themes_available)} themes"
+                    f"Qt-Theme-Manager initialized with {len(self.qt_themes_available)} themes",
                 )
             except ImportError:
-                self.logger_system.warning("Qt-Theme-Manager not available, using fallback themes")
+                self.logger_system.warning(
+                    "Qt-Theme-Manager not available, using fallback themes"
+                )
                 self.qt_themes_available = ["default", "dark", "light"]
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "initialize_qt_theme_manager"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _load_buil(self):
@@ -152,25 +159,50 @@ class IntegratedThemeManager(QObject):
                 {"name": "default", "display_name": "Default Light", "base": "light"},
                 {"name": "light_blue", "display_name": "Light Blue", "base": "light"},
                 {"name": "light_green", "display_name": "Light Green", "base": "light"},
-                {"name": "light_purple", "display_name": "Light Purple", "base": "light"},
-
+                {
+                    "name": "light_purple",
+                    "display_name": "Light Purple",
+                    "base": "light",
+                },
                 # Dark themes
                 {"name": "dark", "display_name": "Default Dark", "base": "dark"},
                 {"name": "dark_blue", "display_name": "Dark Blue", "base": "dark"},
                 {"name": "dark_green", "display_name": "Dark Green", "base": "dark"},
                 {"name": "dark_purple", "display_name": "Dark Purple", "base": "dark"},
-
                 # High contrast themes (Kiro accessibility)
-                {"name": "high_contrast_light", "display_name": "High Contrast Light", "base": "light", "high_contrast": True},
-                {"name": "high_contrast_dark", "display_name": "High Contrast Dark", "base": "dark", "high_contrast": True},
-
+                {
+                    "name": "high_contrast_light",
+                    "display_name": "High Contrast Light",
+                    "base": "light",
+                    "high_contrast": True,
+                },
+                {
+                    "name": "high_contrast_dark",
+                    "display_name": "High Contrast Dark",
+                    "base": "dark",
+                    "high_contrast": True,
+                },
                 # Specialized themes
                 {"name": "photography", "display_name": "Photography", "base": "dark"},
                 {"name": "minimal", "display_name": "Minimal", "base": "light"},
                 {"name": "vibrant", "display_name": "Vibrant", "base": "light"},
-                {"name": "professional", "display_name": "Professional", "base": "dark"},
-                {"name": "accessibility", "display_name": "Accessibility", "base": "light", "accessibility": True},
-                {"name": "performance", "display_name": "Performance", "base": "light", "performance": True}
+                {
+                    "name": "professional",
+                    "display_name": "Professional",
+                    "base": "dark",
+                },
+                {
+                    "name": "accessibility",
+                    "display_name": "Accessibility",
+                    "base": "light",
+                    "accessibility": True,
+                },
+                {
+                    "name": "performance",
+                    "display_name": "Performance",
+                    "base": "light",
+                    "performance": True,
+                },
             ]
 
             for theme_info in builtin_themes:
@@ -180,17 +212,20 @@ class IntegratedThemeManager(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "builtin_themes_loaded",
-                f"Loaded {len(builtin_themes)} built-in themes"
+                f"Loaded {len(builtin_themes)} built-in themes",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "load_builtin_themes"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
-    def _create_builtin_theme_config(self, theme_info: Dict[str, Any]) -> ThemeConfiguration:
+    def _create_builtin_theme_config(
+        self, theme_info: Dict[str, Any]
+    ) -> ThemeConfiguration:
         """Create theme configuration from theme info"""
         base_colors = self._get_base_colors(theme_info["base"])
 
@@ -212,15 +247,15 @@ class IntegratedThemeManager(QObject):
                 "large_fonts": theme_info.get("accessibility", False),
                 "screen_reader_support": True,
                 "keyboard_navigation": True,
-                "focus_indicators": True
+                "focus_indicators": True,
             },
             performance_settings={
                 "animation_enabled": not theme_info.get("performance", False),
                 "transparency_enabled": not theme_info.get("performance", False),
                 "shadow_effects": not theme_info.get("performance", False),
                 "gradient_rendering": True,
-                "anti_aliasing": True
-            }
+                "anti_aliasing": True,
+            },
         )
 
     def _get_base_colors(self, base: str) -> Dict[str, str]:
@@ -239,7 +274,7 @@ class IntegratedThemeManager(QObject):
                 "border": "#495057",
                 "hover": "#3a3a3a",
                 "selected": "#0d7377",
-                "disabled": "#6c757d"
+                "disabled": "#6c757d",
             }
         else:  # light
             return {
@@ -255,27 +290,31 @@ class IntegratedThemeManager(QObject):
                 "border": "#dee2e6",
                 "hover": "#f8f9fa",
                 "selected": "#e3f2fd",
-                "disabled": "#6c757d"
+                "disabled": "#6c757d",
             }
 
     def _apply_high_contrast(self, colors: Dict[str, str]) -> Dict[str, str]:
         """Apply high contrast modifications"""
         if colors["background"] == "#ffffff":  # Light theme
-            colors.update({
-                "background": "#ffffff",
-                "foreground": "#000000",
-                "border": "#000000",
-                "hover": "#e0e0e0",
-                "selected": "#0000ff"
-            })
+            colors.update(
+                {
+                    "background": "#ffffff",
+                    "foreground": "#000000",
+                    "border": "#000000",
+                    "hover": "#e0e0e0",
+                    "selected": "#0000ff",
+                }
+            )
         else:  # Dark theme
-            colors.update({
-                "background": "#000000",
-                "foreground": "#ffffff",
-                "border": "#ffffff",
-                "hover": "#333333",
-                "selected": "#ffff00"
-            })
+            colors.update(
+                {
+                    "background": "#000000",
+                    "foreground": "#ffffff",
+                    "border": "#ffffff",
+                    "hover": "#333333",
+                    "selected": "#ffff00",
+                }
+            )
         return colors
 
     def _load_custom_themes(self):
@@ -286,45 +325,65 @@ class IntegratedThemeManager(QObject):
 
             for theme_file in self.custom_theme_dir.glob("*.json"):
                 try:
-                    with open(theme_file, 'r', encoding='utf-8') as f:
+                    with open(theme_file, "r", encoding="utf-8") as f:
                         theme_data = json.load(f)
 
                     theme_config = ThemeConfiguration(**theme_data)
                     self.themes[theme_config.name] = theme_config
 
                 except Exception as e:
-                    self.logger_system.error(f"Failed to load custom theme {theme_file}: {e}")
+                    self.logger_system.error(
+                        f"Failed to load custom theme {theme_file}: {e}"
+                    )
 
-            custom_count = len([t for t in self.themes.values() if t.author != "CursorBLD + Kiro Integration"])
+            custom_count = len(
+                [
+                    t
+                    for t in self.themes.values()
+                    if t.author != "CursorBLD + Kiro Integration"
+                ]
+            )
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "custom_themes_loaded",
-                f"Loaded {custom_count} custom themes"
+                f"Loaded {custom_count} custom themes",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "load_custom_themes"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _load_accessibility_settings(self):
         """Load accessibility settings"""
         try:
-            self.accessibility_enabled = self.config_manager.get_setting("ui.accessibility_enabled", True)
-            self.high_contrast_mode = self.config_manager.get_setting("ui.high_contrast_mode", False)
-            self.large_fonts_mode = self.config_manager.get_setting("ui.large_fonts_mode", False)
+            self.accessibility_enabled = self.config_manager.get_setting(
+                "ui.accessibility_enabled", True
+            )
+            self.high_contrast_mode = self.config_manager.get_setting(
+                "ui.high_contrast_mode", False
+            )
+            self.large_fonts_mode = self.config_manager.get_setting(
+                "ui.large_fonts_mode", False
+            )
 
             # Performance settings
-            self.animation_enabled = self.config_manager.get_setting("ui.animation_enabled", True)
-            self.transparency_enabled = self.config_manager.get_setting("ui.transparency_enabled", True)
+            self.animation_enabled = self.config_manager.get_setting(
+                "ui.animation_enabled", True
+            )
+            self.transparency_enabled = self.config_manager.get_setting(
+                "ui.transparency_enabled", True
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "load_accessibility_settings"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     # IThemeManager implementation
@@ -365,16 +424,17 @@ class IntegratedThemeManager(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "theme_applied",
-                f"Theme applied: {old_theme} -> {theme_name}"
+                f"Theme applied: {old_theme} -> {theme_name}",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "apply_theme", "theme": theme_name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             self.theme_error.emit(theme_name, str(e))
             return False
@@ -391,7 +451,10 @@ class IntegratedThemeManager(QObject):
             self.theme_transition_progress.emit(progress)
 
             # Step 1: Apply Qt theme (if available)
-            if self.qt_theme_manager and theme_config.qt_theme_name in self.qt_themes_available:
+            if (
+                self.qt_theme_manager
+                and theme_config.qt_theme_name in self.qt_themes_available
+            ):
                 self.qt_theme_manager.apply_theme(theme_config.qt_theme_name)
                 progress = 25
                 self.theme_transition_progress.emit(progress)
@@ -419,9 +482,10 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "apply_theme_transition", "theme": theme_config.name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _apply_color_scheme(self, color_scheme: Dict[str, str]):
@@ -446,9 +510,10 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "apply_color_scheme"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _generate_stylesheet(self, color_scheme: Dict[str, str]) -> str:
@@ -567,9 +632,10 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "apply_accessibility_features"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _apply_performance_settings(self, performance_settings: Dict[str, Any]):
@@ -579,17 +645,24 @@ class IntegratedThemeManager(QObject):
             self.animation_enabled = performance_settings.get("animation_enabled", True)
 
             # Transparency settings
-            self.transparency_enabled = performance_settings.get("transparency_enabled", True)
+            self.transparency_enabled = performance_settings.get(
+                "transparency_enabled", True
+            )
 
             # Update configuration
-            self.config_manager.set_setting("ui.animation_enabled", self.animation_enabled)
-            self.config_manager.set_setting("ui.transparency_enabled", self.transparency_enabled)
+            self.config_manager.set_setting(
+                "ui.animation_enabled", self.animation_enabled
+            )
+            self.config_manager.set_setting(
+                "ui.transparency_enabled", self.transparency_enabled
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "apply_performance_settings"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def get_theme_config(self, theme_name: str) -> Optional[ThemeConfiguration]:
@@ -617,10 +690,10 @@ class IntegratedThemeManager(QObject):
                 "color_scheme": theme_config.color_scheme,
                 "accessibility_features": theme_config.accessibility_features,
                 "performance_settings": theme_config.performance_settings,
-                "custom_properties": theme_config.custom_properties
+                "custom_properties": theme_config.custom_properties,
             }
 
-            with open(theme_file, 'w', encoding='utf-8') as f:
+            with open(theme_file, "w", encoding="utf-8") as f:
                 json.dump(theme_data, f, indent=2)
 
             # Add to themes
@@ -629,16 +702,17 @@ class IntegratedThemeManager(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "custom_theme_created",
-                f"Custom theme created: {theme_config.name}"
+                f"Custom theme created: {theme_config.name}",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "create_custom_theme", "theme": theme_config.name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -665,16 +739,17 @@ class IntegratedThemeManager(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "custom_theme_deleted",
-                f"Custom theme deleted: {theme_name}"
+                f"Custom theme deleted: {theme_name}",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "delete_custom_theme", "theme": theme_name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -711,22 +786,36 @@ class IntegratedThemeManager(QObject):
 
             # Simulate CursorBLD's 16 available themes
             self.qt_themes_available = [
-                "default", "dark", "blue", "green", "purple", "orange",
-                "red", "pink", "cyan", "yellow", "brown", "gray",
-                "light_blue", "light_green", "light_purple", "high_contrast"
+                "default",
+                "dark",
+                "blue",
+                "green",
+                "purple",
+                "orange",
+                "red",
+                "pink",
+                "cyan",
+                "yellow",
+                "brown",
+                "gray",
+                "light_blue",
+                "light_green",
+                "light_purple",
+                "high_contrast",
             ]
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "qt_theme_init",
-                f"Qt-Theme-Manager initialized with {len(self.qt_themes_available)} themes"
+                f"Qt-Theme-Manager initialized with {len(self.qt_themes_available)} themes",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "qt_theme_init"},
-  AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             # Fallback to basic themes
             self.qt_themes_available = ["default", "dark"]
@@ -748,22 +837,22 @@ class IntegratedThemeManager(QObject):
                 "accent": "#007acc",
                 "border": "#dee2e6",
                 "hover": "#f8f9fa",
-                "selected": "#e3f2fd"
+                "selected": "#e3f2fd",
             },
             accessibility_features={
                 "high_contrast": False,
                 "large_fonts": False,
                 "screen_reader_support": True,
                 "keyboard_navigation": True,
-                "focus_indicators": True
+                "focus_indicators": True,
             },
             performance_settings={
                 "animation_enabled": True,
                 "transparency_enabled": True,
                 "shadow_effects": True,
                 "gradient_rendering": True,
-                "anti_aliasing": True
-            }
+                "anti_aliasing": True,
+            },
         )
         self.themes["default"] = default_theme
 
@@ -781,22 +870,22 @@ class IntegratedThemeManager(QObject):
                 "accent": "#007acc",
                 "border": "#404040",
                 "hover": "#3c3c3c",
-                "selected": "#0d47a1"
+                "selected": "#0d47a1",
             },
             accessibility_features={
                 "high_contrast": False,
                 "large_fonts": False,
                 "screen_reader_support": True,
                 "keyboard_navigation": True,
-                "focus_indicators": True
+                "focus_indicators": True,
             },
             performance_settings={
                 "animation_enabled": True,
                 "transparency_enabled": True,
                 "shadow_effects": True,
                 "gradient_rendering": True,
-                "anti_aliasing": True
-            }
+                "anti_aliasing": True,
+            },
         )
         self.themes["dark"] = dark_theme
 
@@ -814,22 +903,22 @@ class IntegratedThemeManager(QObject):
                 "accent": "#00ff00",
                 "border": "#ffffff",
                 "hover": "#333333",
-                "selected": "#0000ff"
+                "selected": "#0000ff",
             },
             accessibility_features={
                 "high_contrast": True,
                 "large_fonts": True,
                 "screen_reader_support": True,
                 "keyboard_navigation": True,
-                "focus_indicators": True
+                "focus_indicators": True,
             },
             performance_settings={
                 "animation_enabled": False,
                 "transparency_enabled": False,
                 "shadow_effects": False,
                 "gradient_rendering": False,
-                "anti_aliasing": True
-            }
+                "anti_aliasing": True,
+            },
         )
         self.themes["high_contrast"] = high_contrast_theme
 
@@ -839,7 +928,7 @@ class IntegratedThemeManager(QObject):
             ("green", "Green", "#388e3c", "#c8e6c9"),
             ("purple", "Purple", "#7b1fa2", "#e1bee7"),
             ("orange", "Orange", "#f57c00", "#ffe0b2"),
-            ("red", "Red", "#d32f2f", "#ffcdd2")
+            ("red", "Red", "#d32f2f", "#ffcdd2"),
         ]
 
         for name, display, primary, accent in color_variants:
@@ -856,8 +945,8 @@ class IntegratedThemeManager(QObject):
                     "accent": accent,
                     "border": "#dee2e6",
                     "hover": "#f8f9fa",
-                    "selected": accent
-                }
+                    "selected": accent,
+                },
             )
             self.themes[name] = theme
 
@@ -867,7 +956,7 @@ class IntegratedThemeManager(QObject):
         try:
             for theme_file in self.custom_theme_dir.glob("*.json"):
                 try:
-                    with open(theme_file, 'r', encoding='utf-8') as f:
+                    with open(theme_file, "r", encoding="utf-8") as f:
                         theme_data = json.load(f)
 
                     # Create theme configuration
@@ -877,8 +966,10 @@ class IntegratedThemeManager(QObject):
                         description=theme_data.get("description", ""),
                         qt_theme_name=theme_data.get("qt_theme_name", "default"),
                         color_scheme=theme_data.get("color_scheme", {}),
-                        accessibility_features=theme_data.get("accessibility_features", {}),
-                        performance_settings=theme_data.get("performance_settings", {})
+                        accessibility_features=theme_data.get(
+                            "accessibility_features", {}
+                        ),
+                        performance_settings=theme_data.get("performance_settings", {}),
                     )
 
                     # Validate theme
@@ -888,21 +979,23 @@ class IntegratedThemeManager(QObject):
                         self.logger_system.log_ai_operation(
                             AIComponent.CURSOR,
                             "custom_theme_load",
-                            f"Loaded custom theme: {theme.name}"
+                            f"Loaded custom theme: {theme.name}",
                         )
 
                 except Exception as e:
                     self.error_handler.handle_error(
-                        e, ErrorCategory.UI_ERROR,
+                        e,
+                        ErrorCategory.UI_ERROR,
                         {"operation": "custom_theme_load", "file": str(theme_file)},
-                        AIComponent.CURSOR
+                        AIComponent.CURSOR,
                     )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "custom_themes_load"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _load_accessibility_settings(self):
@@ -968,9 +1061,7 @@ class IntegratedThemeManager(QObject):
                 self.theme_changed.emit(theme_name)
 
                 self.logger_system.log_ai_operation(
-                    AIComponent.CURSOR,
-                    "theme_apply",
-                    f"Theme applied: {theme_name}"
+                    AIComponent.CURSOR, "theme_apply", f"Theme applied: {theme_name}"
                 )
 
                 return True
@@ -980,9 +1071,10 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_apply", "theme": theme_name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -999,7 +1091,7 @@ class IntegratedThemeManager(QObject):
                 "accessibility_features": theme.accessibility_features,
                 "performance_settings": theme.performance_settings,
                 "is_dark_theme": theme.is_dark_theme,
-                "accessibility_score": theme.accessibility_score
+                "accessibility_score": theme.accessibility_score,
             }
 
         return {}
@@ -1025,7 +1117,7 @@ class IntegratedThemeManager(QObject):
                 qt_theme_name=config.get("qt_theme_name", "default"),
                 color_scheme=config.get("color_scheme", {}),
                 accessibility_features=config.get("accessibility_features", {}),
-                performance_settings=config.get("performance_settings", {})
+                performance_settings=config.get("performance_settings", {}),
             )
 
             # Add to themes
@@ -1033,22 +1125,23 @@ class IntegratedThemeManager(QObject):
 
             # Save to file
             theme_file = self.custom_theme_dir / f"{name}.json"
-            with open(theme_file, 'w', encoding='utf-8') as f:
+            with open(theme_file, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2)
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "custom_theme_create",
-                f"Custom theme created: {name}"
+                f"Custom theme created: {name}",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "custom_theme_create", "theme": name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -1092,9 +1185,10 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_validation"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -1118,9 +1212,10 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "qt_theme_apply", "theme": theme.name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -1224,20 +1319,25 @@ class IntegratedThemeManager(QObject):
             self.large_fonts_mode = accessibility.get("large_fonts", False)
 
             # Save accessibility settings
-            self.config_manager.set_setting("ui.high_contrast_mode", self.high_contrast_mode)
-            self.config_manager.set_setting("ui.large_fonts_mode", self.large_fonts_mode)
+            self.config_manager.set_setting(
+                "ui.high_contrast_mode", self.high_contrast_mode
+            )
+            self.config_manager.set_setting(
+                "ui.large_fonts_mode", self.large_fonts_mode
+            )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "accessibility_apply",
-                f"Accessibility features applied: {accessibility}"
+                f"Accessibility features applied: {accessibility}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "accessibility_apply"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _apply_performance_settings(self, theme: ThemeConfiguration):
@@ -1251,20 +1351,25 @@ class IntegratedThemeManager(QObject):
             self.transparency_enabled = performance.get("transparency_enabled", True)
 
             # Save performance settings
-            self.config_manager.set_setting("ui.animation_enabled", self.animation_enabled)
-            self.config_manager.set_setting("ui.transparency_enabled", self.transparency_enabled)
+            self.config_manager.set_setting(
+                "ui.animation_enabled", self.animation_enabled
+            )
+            self.config_manager.set_setting(
+                "ui.transparency_enabled", self.transparency_enabled
+            )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_apply",
-                f"Performance settings applied: {performance}"
+                f"Performance settings applied: {performance}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "performance_apply"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Utility methods
@@ -1284,7 +1389,7 @@ class IntegratedThemeManager(QObject):
             "primary_color": theme.color_scheme.get("primary", "#0078d4"),
             "background_color": theme.color_scheme.get("background", "#ffffff"),
             "is_dark": theme.is_dark_theme,
-            "accessibility_score": theme.accessibility_score
+            "accessibility_score": theme.accessibility_score,
         }
 
     def export_theme(self, theme_name: str, file_path: Path) -> bool:
@@ -1303,25 +1408,26 @@ class IntegratedThemeManager(QObject):
                 "color_scheme": theme.color_scheme,
                 "accessibility_features": theme.accessibility_features,
                 "performance_settings": theme.performance_settings,
-                "export_timestamp": theme.created_date.isoformat()
+                "export_timestamp": theme.created_date.isoformat(),
             }
 
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(theme_data, f, indent=2)
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "theme_export",
-                f"Theme exported: {theme_name} to {file_path}"
+                f"Theme exported: {theme_name} to {file_path}",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_export", "theme": theme_name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False
 
@@ -1329,7 +1435,7 @@ class IntegratedThemeManager(QObject):
         """Import theme configuration from file"""
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 theme_data = json.load(f)
 
             theme_name = theme_data.get("name", file_path.stem)
@@ -1338,8 +1444,9 @@ class IntegratedThemeManager(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_import", "file": str(file_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
             return False

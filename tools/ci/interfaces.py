@@ -240,7 +240,7 @@ class Serializable(Protocol):
         ...
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Serializable':
+    def from_dict(cls, data: Dict[str, Any]) -> "Serializable":
         """Create object from dictionary representation."""
         ...
 
@@ -248,13 +248,19 @@ class Serializable(Protocol):
 # Exception classes for the CI simulation system
 class CISimulationError(Exception):
     """Base exception for CI simulation errors."""
+
     pass
 
 
 class CheckerError(CISimulationError):
     """Exception raised by checker implementations."""
 
-    def __init__(self, checker_name: str, message: str, original_error: Optional[Exception] = None):
+    def __init__(
+        self,
+        checker_name: str,
+        message: str,
+        original_error: Optional[Exception] = None,
+    ):
         self.checker_name = checker_name
         self.original_error = original_error
         super().__init__(f"{checker_name}: {message}")
@@ -262,11 +268,13 @@ class CheckerError(CISimulationError):
 
 class EnvironmentError(CISimulationError):
     """Exception raised when environment setup fails."""
+
     pass
 
 
 class ConfigurationError(CISimulationError):
     """Exception raised for configuration-related errors."""
+
     pass
 
 
@@ -322,7 +330,9 @@ class CheckerFactory:
         """
         if check_type not in cls._checkers:
             available = ", ".join(cls._checkers.keys())
-            raise ValueError(f"Unknown check type '{check_type}'. Available: {available}")
+            raise ValueError(
+                f"Unknown check type '{check_type}'. Available: {available}"
+            )
 
         checker_class = cls._checkers[check_type]
         return checker_class(config)

@@ -16,20 +16,23 @@ from dataclasses import dataclass
 
 class FileDiscoveryErrorLevel(Enum):
     """ファイル検出エラーのレベル分類"""
-    WARNING = "warning"      # 警告 - 処理は継続可能
-    ERROR = "error"          # エラー - 機能が利用不可
-    CRITICAL = "critical"    # 致命的 - アプリケーション停止が必要
+
+    WARNING = "warning"  # 警告 - 処理は継続可能
+    ERROR = "error"  # エラー - 機能が利用不可
+    CRITICAL = "critical"  # 致命的 - アプリケーション停止が必要
 
 
 class FileDiscoveryError(Exception):
     """ファイル検出エラーの基底クラス"""
 
-    def __init__(self,
-                 message: str,
-                 error_code: str = None,
-                 level: FileDiscoveryErrorLevel = FileDiscoveryErrorLevel.ERROR,
-                 file_path: Optional[Path] = None,
-              details: Optional[Dict] = None):
+    def __init__(
+        self,
+        message: str,
+        error_code: str = None,
+        level: FileDiscoveryErrorLevel = FileDiscoveryErrorLevel.ERROR,
+        file_path: Optional[Path] = None,
+        details: Optional[Dict] = None,
+    ):
         """
         FileDiscoveryErrorの初期化
 
@@ -63,7 +66,7 @@ class FolderAccessError(FileDiscoveryError):
             error_code=error_code,
             level=FileDiscoveryErrorLevel.ERROR,
             file_path=folder_path,
-            details={"reason": reason}
+            details={"reason": reason},
         )
 
 
@@ -78,7 +81,7 @@ class FolderNotFoundError(FileDiscoveryError):
             message=message,
             error_code=error_code,
             level=FileDiscoveryErrorLevel.ERROR,
-            file_path=folder_path
+            file_path=folder_path,
         )
 
 
@@ -94,7 +97,7 @@ class PermissionDeniedError(FileDiscoveryError):
             error_code=error_code,
             level=FileDiscoveryErrorLevel.ERROR,
             file_path=path,
-            details={"operation": operation}
+            details={"operation": operation},
         )
 
 
@@ -110,7 +113,7 @@ class FileValidationError(FileDiscoveryError):
             error_code=error_code,
             level=FileDiscoveryErrorLevel.WARNING,
             file_path=file_path,
-            details={"validation_reason": reason}
+            details={"validation_reason": reason},
         )
 
 
@@ -128,7 +131,7 @@ class CorruptedFileError(FileDiscoveryError):
             error_code=error_code,
             level=FileDiscoveryErrorLevel.WARNING,
             file_path=file_path,
-            details={"corruption_details": details}
+            details={"corruption_details": details},
         )
 
 
@@ -137,14 +140,16 @@ class UnsupportedFileFormatError(FileDiscoveryError):
 
     def __init__(self, file_path: Path, supported_formats: List[str]):
         error_code = "UNSUPPORTED_FORMAT"
-        message = f"未対応のファイル形式です: {file_path.name} (拡張子: {file_path.suffix})"
+        message = (
+            f"未対応のファイル形式です: {file_path.name} (拡張子: {file_path.suffix})"
+        )
 
         super().__init__(
             message=message,
             error_code=error_code,
             level=FileDiscoveryErrorLevel.WARNING,
             file_path=file_path,
-            details={"supported_formats": supported_formats}
+            details={"supported_formats": supported_formats},
         )
 
 
@@ -160,7 +165,7 @@ class ScanTimeoutError(FileDiscoveryError):
             error_code=error_code,
             level=FileDiscoveryErrorLevel.ERROR,
             file_path=folder_path,
-            details={"timeout_seconds": timeout_seconds}
+            details={"timeout_seconds": timeout_seconds},
         )
 
 
@@ -175,10 +180,7 @@ class MemoryLimitExceededError(FileDiscoveryError):
             message=message,
             error_code=error_code,
             level=FileDiscoveryErrorLevel.CRITICAL,
-            details={
-                "current_usage_mb": current_usage_mb,
-                "limit_mb": limit_mb
-            }
+            details={"current_usage_mb": current_usage_mb, "limit_mb": limit_mb},
         )
 
 
@@ -194,10 +196,7 @@ class TooManyFilesError(FileDiscoveryError):
             error_code=error_code,
             level=FileDiscoveryErrorLevel.WARNING,
             file_path=folder_path,
-            details={
-                "file_count": file_count,
-                "limit": limit
-            }
+            details={"file_count": file_count, "limit": limit},
         )
 
 
@@ -268,7 +267,7 @@ class FileDiscoveryErrorMessages:
             "UNSUPPORTED_FORMAT": "未対応のファイル形式です: {filename}",
             "SCAN_TIMEOUT": "フォルダスキャンがタイムアウトしました: {path}",
             "MEMORY_LIMIT_EXCEEDED": "メモリ使用量が制限を超過しました",
-            "TOO_MANY_FILES": "フォルダ内のファイル数が制限を超過しています: {path}"
+            "TOO_MANY_FILES": "フォルダ内のファイル数が制限を超過しています: {path}",
         }
 
         template = message_map.get(error_code, "不明なエラーが発生しました")
@@ -295,56 +294,59 @@ class FileDiscoveryErrorMessages:
                 "フォルダが存在することを確認してください",
                 "フォルダのアクセス権限を確認してください",
                 "別のフォルダを選択してみてください",
-                "アプリケーションを管理者権限で実行してみてください"
+                "アプリケーションを管理者権限で実行してみてください",
             ],
             "FOLDER_NOT_FOUND": [
                 "フォルダパスが正しいことを確認してください",
                 "フォルダが移動または削除されていないか確認してください",
-                "別のフォルダを選択してください"
+                "別のフォルダを選択してください",
             ],
             "PERMISSION_DENIED": [
                 "ファイルまたはフォルダのアクセス権限を確認してください",
                 "アプリケーションを管理者権限で実行してみてください",
-                "ファイルが他のアプリケーションで使用されていないか確認してください"
+                "ファイルが他のアプリケーションで使用されていないか確認してください",
             ],
             "FILE_VALIDATION_ERROR": [
                 "ファイルが破損していないか確認してください",
                 "ファイル形式が対応しているか確認してください",
-                "別のファイルで試してみてください"
+                "別のファイルで試してみてください",
             ],
             "CORRUPTED_FILE": [
                 "元のファイルをバックアップから復元してください",
                 "ファイルを別の場所からコピーし直してください",
-                "画像編集ソフトでファイルを修復してみてください"
+                "画像編集ソフトでファイルを修復してみてください",
             ],
             "UNSUPPORTED_FORMAT": [
                 "対応している形式に変換してください",
                 "対応形式の一覧を確認してください",
-                "別のファイルを選択してください"
+                "別のファイルを選択してください",
             ],
             "SCAN_TIMEOUT": [
                 "フォルダ内のファイル数を減らしてください",
                 "サブフォルダに分けて処理してください",
-                "アプリケーションを再起動してください"
+                "アプリケーションを再起動してください",
             ],
             "MEMORY_LIMIT_EXCEEDED": [
                 "他のアプリケーションを終了してメモリを解放してください",
                 "キャッシュをクリアしてください",
                 "アプリケーションを再起動してください",
-                "処理するファイル数を減らしてください"
+                "処理するファイル数を減らしてください",
             ],
             "TOO_MANY_FILES": [
                 "フォルダ内のファイル数を減らしてください",
                 "サブフォルダに分けて処理してください",
-                "段階的読み込み機能を有効にしてください"
-            ]
+                "段階的読み込み機能を有効にしてください",
+            ],
         }
 
-        return suggestions_map.get(error_code, [
-            "操作を再試行してください",
-            "アプリケーションを再起動してください",
-            "問題が続く場合はサポートにお問い合わせください"
-        ])
+        return suggestions_map.get(
+            error_code,
+            [
+                "操作を再試行してください",
+                "アプリケーションを再起動してください",
+                "問題が続く場合はサポートにお問い合わせください",
+            ],
+        )
 
 
 class FileDiscoveryErrorHandler:
@@ -374,17 +376,21 @@ class FileDiscoveryErrorHandler:
         """
 
         # エラー統計を更新
-        self.error_counts[error.error_code] = self.error_counts.get(error.error_code, 0) + 1
+        self.error_counts[error.error_code] = (
+            self.error_counts.get(error.error_code, 0) + 1
+        )
 
         # 最近のエラーリストに追加
         self.recent_errors.insert(0, error)
-        self.recent_errors = self.recent_errors[:self.max_recent_errors]
+        self.recent_errors = self.recent_errors[: self.max_recent_errors]
 
         # ログに記録
         self._log_error(error)
 
         # 回復提案を取得
-        recovery_suggestions = FileDiscoveryErrorMessages.get_recovery_suggestions(error.error_code)
+        recovery_suggestions = FileDiscoveryErrorMessages.get_recovery_suggestions(
+            error.error_code
+        )
 
         # エラー処理結果を返す
         return {
@@ -394,7 +400,7 @@ class FileDiscoveryErrorHandler:
             "file_path": str(error.file_path) if error.file_path else None,
             "timestamp": error.timestamp.isoformat(),
             "recovery_suggestions": recovery_suggestions,
-            "details": error.details
+            "details": error.details,
         }
 
     def _log_error(self, error: FileDiscoveryError):
@@ -407,7 +413,7 @@ class FileDiscoveryErrorHandler:
         log_extra = {
             "error_code": error.error_code,
             "file_path": str(error.file_path) if error.file_path else None,
-            "details": error.details
+            "details": error.details,
         }
 
         if error.level == FileDiscoveryErrorLevel.CRITICAL:
@@ -424,7 +430,11 @@ class FileDiscoveryErrorHandler:
             "total_errors": sum(self.error_counts.values()),
             "error_counts": self.error_counts.copy(),
             "recent_error_count": len(self.recent_errors),
-            "most_common_error": max(self.error_counts, key=self.error_counts.get) if self.error_counts else None
+            "most_common_error": (
+                max(self.error_counts, key=self.error_counts.get)
+                if self.error_counts
+                else None
+            ),
         }
 
     def clear_error_history(self):

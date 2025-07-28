@@ -44,8 +44,8 @@ class TestAIComponentCompatibility:
             assert theme_manager is not None
 
             # インターフェース互換性確認
-            assert hasattr(image_processor, 'load_image')
-            assert hasattr(theme_manager, 'apply_theme')
+            assert hasattr(image_processor, "load_image")
+            assert hasattr(theme_manager, "apply_theme")
 
         except ImportError as e:
             pytest.skip(f"統合モジュールが利用できません: {e}")
@@ -66,7 +66,7 @@ class TestAIComponentCompatibility:
             assert performance_monitor is not None
 
             # パフォーマンス監視との統合確認
-            if hasattr(performance_monitor, 'start_monitoring'):
+            if hasattr(performance_monitor, "start_monitoring"):
                 performance_monitor.start_monitoring()
 
         except ImportError as e:
@@ -92,11 +92,14 @@ class TestAIComponentCompatibility:
             assert app_controller is not None
 
             # 制御システムとの統合確認
-            if hasattr(app_controller, 'initialize'):
+            if hasattr(app_controller, "initialize"):
                 # 非同期初期化のテスト（AsyncMock使用）
                 import asyncio
                 from unittest.mock import AsyncMock
-                with patch.object(app_controller, 'initialize', new_callable=AsyncMock) as mock_init:
+
+                with patch.object(
+                    app_controller, "initialize", new_callable=AsyncMock
+                ) as mock_init:
                     mock_init.return_value = True
                     result = asyncio.run(app_controller.initialize())
                     assert result is True
@@ -117,11 +120,17 @@ class TestAIComponentCompatibility:
             assert controller is not None
 
             # AI コンポーネント状態確認
-            if hasattr(controller, 'ai_components'):
+            if hasattr(controller, "ai_components"):
                 ai_components = controller.ai_components
-                assert 'copilot' in str(ai_components).lower() or 'COPILOT' in str(ai_components)
-                assert 'cursor' in str(ai_components).lower() or 'CURSOR' in str(ai_components)
-                assert 'kiro' in str(ai_components).lower() or 'KIRO' in str(ai_components)
+                assert "copilot" in str(ai_components).lower() or "COPILOT" in str(
+                    ai_components
+                )
+                assert "cursor" in str(ai_components).lower() or "CURSOR" in str(
+                    ai_components
+                )
+                assert "kiro" in str(ai_components).lower() or "KIRO" in str(
+                    ai_components
+                )
 
         except ImportError as e:
             pytest.skip(f"統合コントローラーが利用できません: {e}")
@@ -140,12 +149,12 @@ class TestAIInterfaceCompatibility:
             processor = CS4CodingImageProcessor()
 
             # 必須メソッドの存在確認
-            assert hasattr(processor, 'load_image')
-            assert hasattr(processor, 'generate_thumbnail')
+            assert hasattr(processor, "load_image")
+            assert hasattr(processor, "generate_thumbnail")
 
             # メソッドが呼び出し可能か確認
-            assert callable(getattr(processor, 'load_image'))
-            assert callable(getattr(processor, 'generate_thumbnail'))
+            assert callable(getattr(processor, "load_image"))
+            assert callable(getattr(processor, "generate_thumbnail"))
 
         except ImportError as e:
             pytest.skip(f"画像プロセッサーインターフェースが利用できません: {e}")
@@ -159,8 +168,12 @@ class TestAIInterfaceCompatibility:
             assert IThemeManager is not None
 
             # 抽象メソッドの確認
-            abstract_methods = getattr(IThemeManager, '__abstractmethods__', set())
-            expected_methods = {'get_available_themes', 'apply_theme', 'get_theme_config'}
+            abstract_methods = getattr(IThemeManager, "__abstractmethods__", set())
+            expected_methods = {
+                "get_available_themes",
+                "apply_theme",
+                "get_theme_config",
+            }
 
             assert expected_methods.issubset(abstract_methods)
 
@@ -170,7 +183,11 @@ class TestAIInterfaceCompatibility:
     def test_data_model_compatibility(self):
         """データモデル互換性テスト"""
         try:
-            from src.integration.models import ImageMetadata, ThemeConfiguration, ApplicationState
+            from src.integration.models import (
+                ImageMetadata,
+                ThemeConfiguration,
+                ApplicationState,
+            )
 
             # データモデルの初期化テスト
             from pathlib import Path
@@ -181,7 +198,7 @@ class TestAIInterfaceCompatibility:
                 file_path=Path("test.jpg"),
                 file_size=1024,
                 created_date=datetime.now(),
-                modified_date=datetime.now()
+                modified_date=datetime.now(),
             )
             assert metadata.file_path.name == "test.jpg"
             assert metadata.file_size == 1024
@@ -192,7 +209,7 @@ class TestAIInterfaceCompatibility:
                 display_name="テストテーマ",
                 qt_theme_name="dark",
                 style_sheet="",
-                color_scheme={}
+                color_scheme={},
             )
             assert theme_config.name == "test_theme"
             assert theme_config.display_name == "テストテーマ"
@@ -216,9 +233,9 @@ class TestAIConfigurationCompatibility:
             assert config_manager is not None
 
             # AI固有設定の処理確認
-            if hasattr(config_manager, 'get_ai_config'):
+            if hasattr(config_manager, "get_ai_config"):
                 # 各AIの設定取得テスト
-                for ai_name in ['copilot', 'cursor', 'kiro']:
+                for ai_name in ["copilot", "cursor", "kiro"]:
                     try:
                         ai_config = config_manager.get_ai_config(ai_name)
                         assert ai_config is not None or ai_config == {}
@@ -242,10 +259,12 @@ class TestAIConfigurationCompatibility:
             assert logging_system is not None
 
             # AI別ログ機能の確認
-            if hasattr(logging_system, 'log_ai_operation'):
+            if hasattr(logging_system, "log_ai_operation"):
                 # モックを使用してAI操作ログをテスト
-                with patch.object(logging_system, 'log_ai_operation') as mock_log:
-                    logging_system.log_ai_operation(AIComponent.KIRO, 'test', 'test_operation', 'test message')
+                with patch.object(logging_system, "log_ai_operation") as mock_log:
+                    logging_system.log_ai_operation(
+                        AIComponent.KIRO, "test", "test_operation", "test message"
+                    )
                     mock_log.assert_called_once()
 
         except ImportError as e:
@@ -267,7 +286,7 @@ class TestAIPerformanceCompatibility:
             assert monitor is not None
 
             # 監視機能の確認
-            if hasattr(monitor, 'get_current_metrics'):
+            if hasattr(monitor, "get_current_metrics"):
                 metrics = monitor.get_current_metrics()
                 if metrics is None:
                     metrics = {}
@@ -293,15 +312,20 @@ class TestAIPerformanceCompatibility:
 
             # キャッシュ操作の確認
 
-            if hasattr(cache_system, 'get') and hasattr(cache_system, 'put'):
+            if hasattr(cache_system, "get") and hasattr(cache_system, "put"):
                 from src.integration.models import AIComponent
+
                 # 基本的なキャッシュ操作テスト
                 test_key = "test_key"
                 test_value = "test_value"
 
                 # imageキャッシュに格納・取得
-                cache_system.put("image", test_key, test_value, component=AIComponent.KIRO)
-                cached_value = cache_system.get("image", test_key, component=AIComponent.KIRO)
+                cache_system.put(
+                    "image", test_key, test_value, component=AIComponent.KIRO
+                )
+                cached_value = cache_system.get(
+                    "image", test_key, component=AIComponent.KIRO
+                )
 
                 assert cached_value == test_value
 
@@ -315,7 +339,10 @@ class TestAIErrorHandlingCompatibility:
     def test_error_handler_compatibility(self):
         """エラーハンドラー互換性テスト"""
         try:
-            from src.integration.error_handling import IntegratedErrorHandler, ErrorCategory
+            from src.integration.error_handling import (
+                IntegratedErrorHandler,
+                ErrorCategory,
+            )
 
             # エラーハンドラーの初期化
             error_handler = IntegratedErrorHandler()
@@ -329,12 +356,14 @@ class TestAIErrorHandlingCompatibility:
             assert ErrorCategory.INTEGRATION_ERROR is not None
 
             # エラーハンドリング機能の確認
-            if hasattr(error_handler, 'handle_error'):
+            if hasattr(error_handler, "handle_error"):
                 # モックエラーでテスト
                 test_error = Exception("テストエラー")
 
-                with patch.object(error_handler, 'handle_error') as mock_handle:
-                    error_handler.handle_error(test_error, ErrorCategory.INTEGRATION_ERROR, {})
+                with patch.object(error_handler, "handle_error") as mock_handle:
+                    error_handler.handle_error(
+                        test_error, ErrorCategory.INTEGRATION_ERROR, {}
+                    )
                     mock_handle.assert_called_once()
 
         except ImportError as e:

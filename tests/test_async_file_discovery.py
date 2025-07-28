@@ -39,8 +39,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         # FileDiscoveryServiceのインスタンス作成
         self.file_discovery = FileDiscoveryService(
-            logger_system=self.logger_system,
-            image_processor=self.mock_image_processor
+            logger_system=self.logger_system, image_processor=self.mock_image_processor
         )
 
     def tearDown(self):
@@ -51,17 +50,21 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         """基本的な非同期画像検出のテスト"""
         # モックの設定
         self.mock_image_processor.validate_image.return_value = True
-        self.mock_image_processor.load_image.return_value = Mock()  # 有効な画像オブジェクト
+        self.mock_image_processor.load_image.return_value = (
+            Mock()
+        )  # 有効な画像オブジェクト
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
+            async for image_path in self.file_discovery.discover_images_async(
+                self.temp_dir
+            ):
                 discovered_files.append(image_path)
 
             # 結果の検証
             self.assertEqual(len(discovered_files), 10)  # 10個のJPGファイル
             for file_path in discovered_files:
-                self.assertTrue(file_path.suffix.lower() == '.jpg')
+                self.assertTrue(file_path.suffix.lower() == ".jpg")
                 self.assertTrue(file_path.exists())
 
         # 非同期テストを実行
@@ -82,9 +85,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         async def run_test():
             discovered_files = []
             async for image_path in self.file_discovery.discover_images_async(
-                self.temp_dir,
-                progress_callback=progress_callback,
-                batch_size=3
+                self.temp_dir, progress_callback=progress_callback, batch_size=3
             ):
                 discovered_files.append(image_path)
 
@@ -110,7 +111,9 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(invalid_folder):
+            async for image_path in self.file_discovery.discover_images_async(
+                invalid_folder
+            ):
                 discovered_files.append(image_path)
 
             # 無効なフォルダでは何も発見されない
@@ -125,7 +128,9 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
+            async for image_path in self.file_discovery.discover_images_async(
+                self.temp_dir
+            ):
                 discovered_files.append(image_path)
 
             # バリデーション失敗により何も発見されない
@@ -135,9 +140,10 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
     def test_discover_images_async_mixed_validation(self):
         """一部のファイルがバリデーション失敗する場合のテスト"""
+
         # 偶数インデックスのファイルのみ有効とする
         def mock_validate(file_path):
-            index = int(file_path.stem.split('_')[-1])
+            index = int(file_path.stem.split("_")[-1])
             return index % 2 == 0
 
         self.mock_image_processor.validate_image.side_effect = mock_validate
@@ -145,7 +151,9 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
+            async for image_path in self.file_discovery.discover_images_async(
+                self.temp_dir
+            ):
                 discovered_files.append(image_path)
 
             # 偶数インデックスのファイルのみ発見される（5個）
@@ -153,7 +161,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
             # 発見されたファイルが偶数インデックスであることを確認
             for file_path in discovered_files:
-                index = int(file_path.stem.split('_')[-1])
+                index = int(file_path.stem.split("_")[-1])
                 self.assertEqual(index % 2, 0)
 
         asyncio.run(run_test())
@@ -171,8 +179,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = await self.file_discovery.scan_folder_async(
-                self.temp_dir,
-                progress_callback=progress_callback
+                self.temp_dir, progress_callback=progress_callback
             )
 
             # 結果の検証
@@ -225,7 +232,9 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         test_file = self.test_files[0]
 
         # バリデーション時に例外が発生する設定
-        self.mock_image_processor.validate_image.side_effect = Exception("Test exception")
+        self.mock_image_processor.validate_image.side_effect = Exception(
+            "Test exception"
+        )
 
         async def run_test():
             is_valid = await self.file_discovery._validate_image_file_async(test_file)
@@ -244,8 +253,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
             batch_size = 3
 
             async for image_path in self.file_discovery.discover_images_async(
-                self.temp_dir,
-                batch_size=batch_size
+                self.temp_dir, batch_size=batch_size
             ):
                 discovered_files.append(image_path)
 
@@ -256,6 +264,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
     def test_async_cancellation(self):
         """非同期処理のキャンセルテスト"""
+
         # モックの設定（処理を遅くする）
         async def slow_validate(file_path):
             await asyncio.sleep(0.1)  # 100ms待機
@@ -270,7 +279,9 @@ class TestAsyncFileDiscovery(unittest.TestCase):
             try:
                 # タスクを作成
                 async def discovery_task():
-                    async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
+                    async for image_path in self.file_discovery.discover_images_async(
+                        self.temp_dir
+                    ):
                         discovered_files.append(image_path)
 
                 # 短時間でタイムアウト
@@ -286,5 +297,5 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         asyncio.run(run_test())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

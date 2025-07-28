@@ -29,6 +29,7 @@ from .logging_system import LoggerSystem
 @dataclass
 class StateChangeEvent:
     """State change event data structure"""
+
     key: str
     old_value: Any
     new_value: Any
@@ -48,9 +49,9 @@ class StateManager:
     - State validation and migration
     """
 
-    def __init__(self,
-                 config_manager: ConfigManager = None,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None
+    ):
         """
         Initialize the state manager
 
@@ -102,9 +103,7 @@ class StateManager:
         self._setup_default_validators()
 
         self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "state_manager_init",
-            "State manager initialized"
+            AIComponent.KIRO, "state_manager_init", "State manager initialized"
         )
 
     def _initialize_directories(self):
@@ -115,9 +114,10 @@ class StateManager:
             self.backup_file.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "directory_initialization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _setup_default_validators(self):
@@ -128,14 +128,27 @@ class StateManager:
         self.validators["selected_image"] = lambda x: x is None or isinstance(x, Path)
 
         # Numeric validators
-        self.validators["thumbnail_size"] = lambda x: isinstance(x, int) and 50 <= x <= 500
+        self.validators["thumbnail_size"] = (
+            lambda x: isinstance(x, int) and 50 <= x <= 500
+        )
         self.validators["map_zoom"] = lambda x: isinstance(x, int) and 1 <= x <= 20
-        self.validators["current_zoom"] = lambda x: isinstance(x, (int, float)) and 0.1 <= x <= 10.0
+        self.validators["current_zoom"] = (
+            lambda x: isinstance(x, (int, float)) and 0.1 <= x <= 10.0
+        )
 
         # String validators
         self.validators["current_theme"] = lambda x: isinstance(x, str) and len(x) > 0
-        self.validators["performance_mode"] = lambda x: x in ["performance", "balanced", "quality"]
-        self.validators["image_sort_mode"] = lambda x: x in ["name", "date", "size", "type"]
+        self.validators["performance_mode"] = lambda x: x in [
+            "performance",
+            "balanced",
+            "quality",
+        ]
+        self.validators["image_sort_mode"] = lambda x: x in [
+            "name",
+            "date",
+            "size",
+            "type",
+        ]
 
     # Core state management
 
@@ -156,7 +169,7 @@ class StateManager:
                 self.state_access_count += 1
 
                 # Handle dot notation
-                keys = key.split('.')
+                keys = key.split(".")
                 value = self.app_state
 
                 for k in keys:
@@ -169,13 +182,16 @@ class StateManager:
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "get_state_value", "key": key},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 return default
 
-    def set_state_value(self, key: str, value: Any, component: AIComponent = AIComponent.KIRO) -> bool:
+    def set_state_value(
+        self, key: str, value: Any, component: AIComponent = AIComponent.KIRO
+    ) -> bool:
         """
         Set a state value
 
@@ -198,7 +214,7 @@ class StateManager:
                 old_value = self.get_state_value(key)
 
                 # Handle dot notation
-                keys = key.split('.')
+                keys = key.split(".")
                 target = self.app_state
 
                 # Navigate to parent of target key
@@ -227,9 +243,7 @@ class StateManager:
                         self._auto_save_if_needed()
 
                     self.logger_system.log_ai_operation(
-                        component,
-                        "state_change",
-                        f"State changed: {key} = {value}"
+                        component, "state_change", f"State changed: {key} = {value}"
                     )
 
                     return True
@@ -238,9 +252,10 @@ class StateManager:
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "set_state_value", "key": key},
-                    component
+                    component,
                 )
                 return False
 
@@ -280,7 +295,7 @@ class StateManager:
                 AIComponent.KIRO,
                 e,
                 "state_validation",
-                {"key": key, "value": str(value)}
+                {"key": key, "value": str(value)},
             )
             return False
 
@@ -299,7 +314,9 @@ class StateManager:
             if listener not in self.change_listeners[key]:
                 self.change_listeners[key].append(listener)
 
-    def remove_change_listener(self, key: str, listener: Callable[[str, Any, Any], None]):
+    def remove_change_listener(
+        self, key: str, listener: Callable[[str, Any, Any], None]
+    ):
         """
         Remove a change listener
 
@@ -336,16 +353,15 @@ class StateManager:
             if listener in self.global_listeners:
                 self.global_listeners.remove(listener)
 
-    def _notify_change_listeners(self, key: str, old_value: Any, new_value: Any, component: AIComponent):
+    def _notify_change_listeners(
+        self, key: str, old_value: Any, new_value: Any, component: AIComponent
+    ):
         """Notify all relevant change listeners"""
 
         try:
             # Create change event
             event = StateChangeEvent(
-                key=key,
-                old_value=old_value,
-                new_value=new_value,
-                component=component
+                key=key, old_value=old_value, new_value=new_value, component=component
             )
 
             # Notify key-specific listeners
@@ -357,7 +373,7 @@ class StateManager:
                         AIComponent.KIRO,
                         e,
                         "change_listener_error",
-                        {"key": key, "listener": str(listener)}
+                        {"key": key, "listener": str(listener)},
                     )
 
             # Notify global listeners
@@ -369,14 +385,15 @@ class StateManager:
                         AIComponent.KIRO,
                         e,
                         "global_listener_error",
-                        {"key": key, "listener": str(listener)}
+                        {"key": key, "listener": str(listener)},
                     )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "change_notification", "key": key},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # State history and undo/redo
@@ -390,7 +407,9 @@ class StateManager:
 
             # Remove future history if we're not at the end
             if self.current_history_index < len(self.state_history) - 1:
-                self.state_history = self.state_history[:self.current_history_index + 1]
+                self.state_history = self.state_history[
+                    : self.current_history_index + 1
+                ]
 
             # Add new state
             self.state_history.append(copy.deepcopy(state_dict))
@@ -402,12 +421,7 @@ class StateManager:
                 self.current_history_index -= 1
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "history_management",
-                {}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "history_management", {})
 
     def can_undo(self) -> bool:
         """Check if undo is possible"""
@@ -434,16 +448,17 @@ class StateManager:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_undo",
-                    f"State undone to index {self.current_history_index}"
+                    f"State undone to index {self.current_history_index}",
                 )
 
                 return True
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "state_undo"},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 return False
 
@@ -464,16 +479,17 @@ class StateManager:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_redo",
-                    f"State redone to index {self.current_history_index}"
+                    f"State redone to index {self.current_history_index}",
                 )
 
                 return True
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "state_redo"},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 return False
 
@@ -496,7 +512,7 @@ class StateManager:
 
                 # Create backup of existing file
                 if target_file.exists():
-                    backup_path = target_file.with_suffix('.backup')
+                    backup_path = target_file.with_suffix(".backup")
                     target_file.rename(backup_path)
 
                 # Convert state to dictionary
@@ -507,28 +523,30 @@ class StateManager:
                     "version": "1.0",
                     "saved_at": datetime.now().isoformat(),
                     "state_changes": self.state_change_count,
-                    "state_accesses": self.state_access_count
+                    "state_accesses": self.state_access_count,
                 }
 
                 # Save to file
-                with open(target_file, 'w', encoding='utf-8') as f:
+                with open(target_file, "w", encoding="utf-8") as f:
                     json.dump(state_dict, f, indent=2, default=str)
 
                 self.last_save_time = datetime.now()
 
                 self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "state_save",
-                    f"State saved to {target_file}"
+                    AIComponent.KIRO, "state_save", f"State saved to {target_file}"
                 )
 
                 return True
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "state_save", "file_path": str(file_path or self.state_file)},
-                    AIComponent.KIRO
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
+                    {
+                        "operation": "state_save",
+                        "file_path": str(file_path or self.state_file),
+                    },
+                    AIComponent.KIRO,
                 )
                 return False
 
@@ -543,11 +561,11 @@ class StateManager:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "state_load",
-                        "No existing state file found, using defaults"
+                        "No existing state file found, using defaults",
                     )
                     return True
 
-                with open(source_file, 'r', encoding='utf-8') as f:
+                with open(source_file, "r", encoding="utf-8") as f:
                     state_dict = json.load(f)
 
                 # Check for metadata and version
@@ -563,16 +581,20 @@ class StateManager:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_load",
-                    f"State loaded from {source_file} (version: {version})"
+                    f"State loaded from {source_file} (version: {version})",
                 )
 
                 return True
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "state_load", "file_path": str(file_path or self.state_file)},
-                    AIComponent.KIRO
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
+                    {
+                        "operation": "state_load",
+                        "file_path": str(file_path or self.state_file),
+                    },
+                    AIComponent.KIRO,
                 )
                 return False
 
@@ -604,14 +626,13 @@ class StateManager:
 
         except Exception as e:
             self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "state_to_dict_conversion",
-                {}
+                AIComponent.KIRO, e, "state_to_dict_conversion", {}
             )
             return {}
 
-    def _restore_state_from_dict(self, state_dict: Dict[str, Any], add_to_history: bool = True):
+    def _restore_state_from_dict(
+        self, state_dict: Dict[str, Any], add_to_history: bool = True
+    ):
         """Restore state from dictionary"""
 
         try:
@@ -623,10 +644,14 @@ class StateManager:
                 state_dict["selected_image"] = Path(state_dict["selected_image"])
 
             if "folder_history" in state_dict:
-                state_dict["folder_history"] = [Path(p) for p in state_dict["folder_history"]]
+                state_dict["folder_history"] = [
+                    Path(p) for p in state_dict["folder_history"]
+                ]
 
             if "loaded_images" in state_dict:
-                state_dict["loaded_images"] = [Path(p) for p in state_dict["loaded_images"]]
+                state_dict["loaded_images"] = [
+                    Path(p) for p in state_dict["loaded_images"]
+                ]
 
             # Convert datetime strings back to datetime objects
             for key in ["session_start", "last_activity"]:
@@ -646,14 +671,11 @@ class StateManager:
                 self._add_to_history()
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "state_restoration",
-                {}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "state_restoration", {})
 
-    def _migrate_state(self, state_dict: Dict[str, Any], version: str) -> Dict[str, Any]:
+    def _migrate_state(
+        self, state_dict: Dict[str, Any], version: str
+    ) -> Dict[str, Any]:
         """Migrate state from older versions"""
 
         try:
@@ -664,17 +686,14 @@ class StateManager:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "state_migration",
-                        f"Applied migration for version {migration_version}"
+                        f"Applied migration for version {migration_version}",
                     )
 
             return state_dict
 
         except Exception as e:
             self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "state_migration",
-                {"version": version}
+                AIComponent.KIRO, e, "state_migration", {"version": version}
             )
             return state_dict
 
@@ -691,18 +710,23 @@ class StateManager:
                 "current_history_index": self.current_history_index,
                 "can_undo": self.can_undo(),
                 "can_redo": self.can_redo(),
-                "change_listeners": sum(len(listeners) for listeners in self.change_listeners.values()),
+                "change_listeners": sum(
+                    len(listeners) for listeners in self.change_listeners.values()
+                ),
                 "global_listeners": len(self.global_listeners),
                 "auto_save_enabled": self.auto_save_enabled,
                 "last_save_time": self.last_save_time.isoformat(),
-                "session_duration": (datetime.now() - self.app_state.session_start).total_seconds()
+                "session_duration": (
+                    datetime.now() - self.app_state.session_start
+                ).total_seconds(),
             }
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "performance_summary"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "error"}
 
@@ -711,8 +735,16 @@ class StateManager:
 
         try:
             return {
-                "current_folder": str(self.app_state.current_folder) if self.app_state.current_folder else None,
-                "selected_image": str(self.app_state.selected_image) if self.app_state.selected_image else None,
+                "current_folder": (
+                    str(self.app_state.current_folder)
+                    if self.app_state.current_folder
+                    else None
+                ),
+                "selected_image": (
+                    str(self.app_state.selected_image)
+                    if self.app_state.selected_image
+                    else None
+                ),
                 "loaded_images_count": len(self.app_state.loaded_images),
                 "current_theme": self.app_state.current_theme,
                 "thumbnail_size": self.app_state.thumbnail_size,
@@ -722,14 +754,15 @@ class StateManager:
                 "last_activity": self.app_state.last_activity.isoformat(),
                 "images_processed": self.app_state.images_processed,
                 "error_count": self.app_state.error_count,
-                "session_duration": self.app_state.session_duration
+                "session_duration": self.app_state.session_duration,
             }
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "state_summary"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "error"}
 
@@ -767,13 +800,10 @@ class StateManager:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "state_manager_shutdown",
-                "State manager shutdown complete"
+                "State manager shutdown complete",
             )
 
         except Exception as e:
             self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "state_manager_shutdown",
-                {}
+                AIComponent.KIRO, e, "state_manager_shutdown", {}
             )

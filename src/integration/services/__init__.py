@@ -12,4 +12,4 @@ Author: Kiro AI Integration System
 from .file_discovery_service import FileDiscoveryService
 from .file_system_watcher import FileSystemWatcher, FileChangeType
 
-__all__ = ['FileDiscoveryService', 'FileSystemWatcher', 'FileChangeType']
+__all__ = ["FileDiscoveryService", "FileSystemWatcher", "FileChangeType"]

@@ -37,7 +37,7 @@ class TestConfigManager:
         return ConfigManager(
             config_dir=temp_config_dir,
             logger_system=logger_system,
-            error_handler=error_handler
+            error_handler=error_handler,
         )
 
     def test_config_manager_initialization(self, config_manager):
@@ -85,10 +85,7 @@ class TestConfigManager:
         """Test updating AI-specific configuration"""
         # Update Copilot configuration
         updates = {
-            "image_processing": {
-                "high_quality_exif": False,
-                "detailed_metadata": False
-            }
+            "image_processing": {"high_quality_exif": False, "detailed_metadata": False}
         }
 
         assert config_manager.update_ai_config("copilot", updates)
@@ -108,9 +105,7 @@ class TestConfigManager:
 
         # Update state
         assert config_manager.update_application_state(
-            current_theme="dark",
-            thumbnail_size=200,
-            images_processed=5
+            current_theme="dark", thumbnail_size=200, images_processed=5
         )
 
         # Verify update
@@ -143,9 +138,7 @@ class TestConfigManager:
         """Test application state saving and loading"""
         # Update application state
         config_manager.update_application_state(
-            current_theme="dark",
-            thumbnail_size=200,
-            images_processed=10
+            current_theme="dark", thumbnail_size=200, images_processed=10
         )
 
         # Save state
@@ -178,9 +171,7 @@ class TestConfigManager:
         """Test application state reset"""
         # Modify state
         config_manager.update_application_state(
-            current_theme="dark",
-            thumbnail_size=200,
-            images_processed=10
+            current_theme="dark", thumbnail_size=200, images_processed=10
         )
 
         # Reset state
@@ -262,8 +253,7 @@ class TestConfigManager:
         """Test application state summary"""
         # Update some state
         config_manager.update_application_state(
-            current_theme="dark",
-            images_processed=5
+            current_theme="dark", images_processed=5
         )
 
         summary = config_manager.get_state_summary()
@@ -296,11 +286,11 @@ class TestConfigManager:
         legacy_config = {
             "app_name": "PhotoGeoView",
             "debug_mode": True,
-            "current_theme": "dark"
+            "current_theme": "dark",
         }
 
         legacy_file = temp_config_dir / "photogeoview_config.json"
-        with open(legacy_file, 'w') as f:
+        with open(legacy_file, "w") as f:
             json.dump(legacy_config, f)
 
         # Test migration detection
@@ -339,7 +329,9 @@ class TestConfigMigrationManager:
         migration_manager = ConfigMigrationManager(config_dir=temp_config_dir)
 
         # Test path transformation
-        result = migration_manager._transform_setting_value("current_folder", "/test/path")
+        result = migration_manager._transform_setting_value(
+            "current_folder", "/test/path"
+        )
         assert isinstance(result, str)
 
         # Test boolean transformation
@@ -354,7 +346,7 @@ class TestConfigMigrationManager:
         assert result == 500  # Should be clamped to max
 
         result = migration_manager._transform_setting_value("thumbnail_size", 10)
-        assert result == 50   # Should be clamped to min
+        assert result == 50  # Should be clamped to min
 
     def test_nested_value_setting(self, temp_config_dir):
         """Test nested configuration value setting"""

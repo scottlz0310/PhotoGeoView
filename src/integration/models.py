@@ -18,6 +18,7 @@ from enum import Enum
 
 class ProcessingStatus(Enum):
     """Status enumeration for processing operations"""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -27,6 +28,7 @@ class ProcessingStatus(Enum):
 
 class AIComponent(Enum):
     """AI component enumeration"""
+
     COPILOT = "copilot"
     CURSOR = "cursor"
     KIRO = "kiro"
@@ -161,22 +163,26 @@ class ThemeConfiguration:
     toolbar_style: Dict[str, Any] = field(default_factory=dict)
 
     # Kiro accessibility features
-    accessibility_features: Dict[str, bool] = field(default_factory=lambda: {
-        "high_contrast": False,
-        "large_fonts": False,
-        "screen_reader_support": True,
-        "keyboard_navigation": True,
-        "focus_indicators": True
-    })
+    accessibility_features: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "high_contrast": False,
+            "large_fonts": False,
+            "screen_reader_support": True,
+            "keyboard_navigation": True,
+            "focus_indicators": True,
+        }
+    )
 
     # Kiro performance settings
-    performance_settings: Dict[str, Any] = field(default_factory=lambda: {
-        "animation_enabled": True,
-        "transparency_enabled": True,
-        "shadow_effects": True,
-        "gradient_rendering": True,
-        "anti_aliasing": True
-    })
+    performance_settings: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "animation_enabled": True,
+            "transparency_enabled": True,
+            "shadow_effects": True,
+            "gradient_rendering": True,
+            "anti_aliasing": True,
+        }
+    )
 
     # Custom properties for extensibility
     custom_properties: Dict[str, Any] = field(default_factory=dict)
@@ -197,14 +203,16 @@ class ThemeConfiguration:
         bg_color = self.color_scheme.get("background", "#ffffff")
         # Simple heuristic: if background is dark, it's a dark theme
         if bg_color.startswith("#"):
-            rgb_sum = sum(int(bg_color[i:i+2], 16) for i in (1, 3, 5))
+            rgb_sum = sum(int(bg_color[i : i + 2], 16) for i in (1, 3, 5))
             return rgb_sum < 384  # 128 * 3
         return False
 
     @property
     def accessibility_score(self) -> float:
         """Calculate accessibility score (0-1)"""
-        enabled_features = sum(1 for enabled in self.accessibility_features.values() if enabled)
+        enabled_features = sum(
+            1 for enabled in self.accessibility_features.values() if enabled
+        )
         total_features = len(self.accessibility_features)
         return enabled_features / total_features if total_features > 0 else 0.0
 
@@ -248,11 +256,13 @@ class ApplicationState:
     # Kiro integration state
     performance_mode: str = "balanced"  # performance, balanced, quality
     cache_status: Dict[str, Any] = field(default_factory=dict)
-    ai_component_status: Dict[str, str] = field(default_factory=lambda: {
-        "copilot": "active",
-        "cursor": "active",
-        "kiro": "active"
-    })
+    ai_component_status: Dict[str, str] = field(
+        default_factory=lambda: {
+            "copilot": "active",
+            "cursor": "active",
+            "kiro": "active",
+        }
+    )
 
     # Session information
     session_start: datetime = field(default_factory=datetime.now)

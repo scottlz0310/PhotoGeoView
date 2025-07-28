@@ -18,6 +18,7 @@ from gitignore_manager import GitignoreManager
 @dataclass
 class CIConfig:
     """Configuration data class for CI simulation settings"""
+
     python_versions: List[str]
     enabled_checks: List[str]
     timeout_seconds: int
@@ -47,7 +48,7 @@ class ConfigManager:
             "integration_tests",
             "ai_compatibility",
             "security_scan",
-            "performance_tests"
+            "performance_tests",
         ],
         "timeout_seconds": 1800,  # 30 minutes
         "output_directory": "reports/ci-simulation",
@@ -55,49 +56,31 @@ class ConfigManager:
         "auto_fix": False,
         "git_hook_enabled": False,
         "performance_threshold": 30.0,  # 30% regression threshold
-        "ai_components": {
-            "copilot": True,
-            "cursor": True,
-            "kiro": True
-        },
+        "ai_components": {"copilot": True, "cursor": True, "kiro": True},
         "security_scan_enabled": True,
         "report_formats": ["markdown", "json"],
         "directories": {
             "history": ".kiro/ci-history",
             "reports": "reports/ci-simulation",
             "logs": "logs",
-            "temp": "temp/ci-simulation"
+            "temp": "temp/ci-simulation",
         },
         "tools": {
             "black": {
                 "enabled": True,
                 "line_length": 88,
-                "target_version": ["py39", "py310", "py311"]
+                "target_version": ["py39", "py310", "py311"],
             },
-            "isort": {
-                "enabled": True,
-                "profile": "black",
-                "multi_line_output": 3
-            },
+            "isort": {"enabled": True, "profile": "black", "multi_line_output": 3},
             "flake8": {
                 "enabled": True,
                 "max_line_length": 88,
-                "ignore": ["E203", "W503"]
+                "ignore": ["E203", "W503"],
             },
-            "mypy": {
-                "enabled": True,
-                "strict": True,
-                "ignore_missing_imports": True
-            },
-            "safety": {
-                "enabled": True,
-                "ignore_ids": []
-            },
-            "bandit": {
-                "enabled": True,
-                "severity_level": "medium"
-            }
-        }
+            "mypy": {"enabled": True, "strict": True, "ignore_missing_imports": True},
+            "safety": {"enabled": True, "ignore_ids": []},
+            "bandit": {"enabled": True, "severity_level": "medium"},
+        },
     }
 
     def __init__(self, config_path: Optional[str] = None):
@@ -127,7 +110,7 @@ class ConfigManager:
             ".kiro/ci-config.json",
             "ci-config.yml",
             "ci-config.yaml",
-            "ci-config.json"
+            "ci-config.json",
         ]
 
         for path in search_paths:
@@ -152,7 +135,9 @@ class ConfigManager:
                 self._load_from_file(self.config_path)
                 self.logger.info(f"Loaded configuration from {self.config_path}")
             except Exception as e:
-                self.logger.warning(f"Failed to load config from {self.config_path}: {e}")
+                self.logger.warning(
+                    f"Failed to load config from {self.config_path}: {e}"
+                )
                 self.logger.info("Using default configuration")
         else:
             self.logger.info("No configuration file found, using defaults")
@@ -172,13 +157,15 @@ class ConfigManager:
         """
         path = Path(file_path)
 
-        with open(path, 'r', encoding='utf-8') as f:
-            if path.suffix.lower() in ['.yml', '.yaml']:
+        with open(path, "r", encoding="utf-8") as f:
+            if path.suffix.lower() in [".yml", ".yaml"]:
                 file_config = yaml.safe_load(f)
-            elif path.suffix.lower() == '.json':
+            elif path.suffix.lower() == ".json":
                 file_config = json.load(f)
             else:
-                raise ValueError(f"Unsupported configuration file format: {path.suffix}")
+                raise ValueError(
+                    f"Unsupported configuration file format: {path.suffix}"
+                )
 
         if file_config:
             # Deep merge with default configuration
@@ -201,14 +188,17 @@ class ConfigManager:
     def _apply_env_overrides(self) -> None:
         """Apply environment variable overrides to configuration."""
         env_mappings = {
-            'CI_PYTHON_VERSIONS': ('python_versions', lambda x: x.split(',')),
-            'CI_TIMEOUT': ('timeout_seconds', int),
-            'CI_OUTPUT_DIR': ('output_directory', str),
-            'CI_PARALLEL': ('parallel_execution', lambda x: x.lower() == 'true'),
-            'CI_AUTO_FIX': ('auto_fix', lambda x: x.lower() == 'true'),
-            'CI_GIT_HOOK': ('git_hook_enabled', lambda x: x.lower() == 'true'),
-            'CI_PERF_THRESHOLD': ('performance_threshold', float),
-            'CI_SECURITY_SCAN': ('security_scan_enabled', lambda x: x.lower() == 'true'),
+            "CI_PYTHON_VERSIONS": ("python_versions", lambda x: x.split(",")),
+            "CI_TIMEOUT": ("timeout_seconds", int),
+            "CI_OUTPUT_DIR": ("output_directory", str),
+            "CI_PARALLEL": ("parallel_execution", lambda x: x.lower() == "true"),
+            "CI_AUTO_FIX": ("auto_fix", lambda x: x.lower() == "true"),
+            "CI_GIT_HOOK": ("git_hook_enabled", lambda x: x.lower() == "true"),
+            "CI_PERF_THRESHOLD": ("performance_threshold", float),
+            "CI_SECURITY_SCAN": (
+                "security_scan_enabled",
+                lambda x: x.lower() == "true",
+            ),
         }
 
         for env_var, (config_key, converter) in env_mappings.items():
@@ -216,31 +206,39 @@ class ConfigManager:
             if env_value is not None:
                 try:
                     self.config[config_key] = converter(env_value)
-                    self.logger.info(f"Applied environment override: {env_var}={env_value}")
+                    self.logger.info(
+                        f"Applied environment override: {env_var}={env_value}"
+                    )
                 except (ValueError, TypeError) as e:
-                    self.logger.warning(f"Invalid environment variable {env_var}={env_value}: {e}")
+                    self.logger.warning(
+                        f"Invalid environment variable {env_var}={env_value}: {e}"
+                    )
 
     def _validate_config(self) -> None:
         """Validate configuration values."""
         # Validate Python versions
-        if not self.config.get('python_versions'):
+        if not self.config.get("python_versions"):
             raise ValueError("At least one Python version must be specified")
 
         # Validate timeout
-        if self.config.get('timeout_seconds', 0) <= 0:
+        if self.config.get("timeout_seconds", 0) <= 0:
             raise ValueError("Timeout must be positive")
 
         # Validate performance threshold
-        threshold = self.config.get('performance_threshold', 0)
+        threshold = self.config.get("performance_threshold", 0)
         if threshold < 0 or threshold > 100:
             raise ValueError("Performance threshold must be between 0 and 100")
 
         # Validate enabled checks
         valid_checks = {
-            'code_quality', 'unit_tests', 'integration_tests',
-            'ai_compatibility', 'security_scan', 'performance_tests'
+            "code_quality",
+            "unit_tests",
+            "integration_tests",
+            "ai_compatibility",
+            "security_scan",
+            "performance_tests",
         }
-        enabled_checks = set(self.config.get('enabled_checks', []))
+        enabled_checks = set(self.config.get("enabled_checks", []))
         invalid_checks = enabled_checks - valid_checks
         if invalid_checks:
             raise ValueError(f"Invalid checks specified: {invalid_checks}")
@@ -263,7 +261,7 @@ class ConfigManager:
         Returns:
             List of Python version strings.
         """
-        return self.config.get('python_versions', [])
+        return self.config.get("python_versions", [])
 
     def get_enabled_checks(self) -> List[str]:
         """
@@ -272,7 +270,7 @@ class ConfigManager:
         Returns:
             List of enabled check names.
         """
-        return self.config.get('enabled_checks', [])
+        return self.config.get("enabled_checks", [])
 
     def get_check_configuration(self, check_name: str) -> Dict[str, Any]:
         """
@@ -284,7 +282,7 @@ class ConfigManager:
         Returns:
             Configuration dictionary for the check.
         """
-        tools_config = self.config.get('tools', {})
+        tools_config = self.config.get("tools", {})
         return tools_config.get(check_name, {})
 
     def is_check_enabled(self, check_name: str) -> bool:
@@ -306,7 +304,7 @@ class ConfigManager:
         Returns:
             Timeout in seconds.
         """
-        return self.config.get('timeout_seconds', 1800)
+        return self.config.get("timeout_seconds", 1800)
 
     def get_output_directory(self) -> str:
         """
@@ -315,7 +313,7 @@ class ConfigManager:
         Returns:
             Output directory path.
         """
-        return self.config.get('output_directory', 'reports/ci-simulation')
+        return self.config.get("output_directory", "reports/ci-simulation")
 
     def get_directories(self) -> Dict[str, str]:
         """
@@ -324,7 +322,7 @@ class ConfigManager:
         Returns:
             Dictionary of directory configurations.
         """
-        return self.config.get('directories', {})
+        return self.config.get("directories", {})
 
     def is_parallel_execution_enabled(self) -> bool:
         """
@@ -333,7 +331,7 @@ class ConfigManager:
         Returns:
             True if parallel execution is enabled.
         """
-        return self.config.get('parallel_execution', True)
+        return self.config.get("parallel_execution", True)
 
     def is_auto_fix_enabled(self) -> bool:
         """
@@ -342,7 +340,7 @@ class ConfigManager:
         Returns:
             True if auto-fix is enabled.
         """
-        return self.config.get('auto_fix', False)
+        return self.config.get("auto_fix", False)
 
     def get_performance_threshold(self) -> float:
         """
@@ -351,7 +349,7 @@ class ConfigManager:
         Returns:
             Performance threshold as percentage.
         """
-        return self.config.get('performance_threshold', 30.0)
+        return self.config.get("performance_threshold", 30.0)
 
     def get_ai_components(self) -> Dict[str, bool]:
         """
@@ -360,7 +358,7 @@ class ConfigManager:
         Returns:
             Dictionary of AI component enablement status.
         """
-        return self.config.get('ai_components', {})
+        return self.config.get("ai_components", {})
 
     def get_report_formats(self) -> List[str]:
         """
@@ -369,7 +367,7 @@ class ConfigManager:
         Returns:
             List of enabled report formats.
         """
-        return self.config.get('report_formats', ['markdown', 'json'])
+        return self.config.get("report_formats", ["markdown", "json"])
 
     def create_default_config_file(self, file_path: str) -> None:
         """
@@ -381,11 +379,11 @@ class ConfigManager:
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        if path.suffix.lower() in ['.yml', '.yaml']:
-            with open(path, 'w', encoding='utf-8') as f:
+        if path.suffix.lower() in [".yml", ".yaml"]:
+            with open(path, "w", encoding="utf-8") as f:
                 yaml.dump(self.DEFAULT_CONFIG, f, default_flow_style=False, indent=2)
-        elif path.suffix.lower() == '.json':
-            with open(path, 'w', encoding='utf-8') as f:
+        elif path.suffix.lower() == ".json":
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(self.DEFAULT_CONFIG, f, indent=2, ensure_ascii=False)
         else:
             raise ValueError(f"Unsupported configuration file format: {path.suffix}")
@@ -408,11 +406,11 @@ class ConfigManager:
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        if path.suffix.lower() in ['.yml', '.yaml']:
-            with open(path, 'w', encoding='utf-8') as f:
+        if path.suffix.lower() in [".yml", ".yaml"]:
+            with open(path, "w", encoding="utf-8") as f:
                 yaml.dump(self.config, f, default_flow_style=False, indent=2)
-        elif path.suffix.lower() == '.json':
-            with open(path, 'w', encoding='utf-8') as f:
+        elif path.suffix.lower() == ".json":
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
         else:
             raise ValueError(f"Unsupported configuration file format: {path.suffix}")

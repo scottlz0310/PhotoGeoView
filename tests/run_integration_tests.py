@@ -32,7 +32,7 @@ def run_unit_tests():
 
     # unittest の実行
     loader = unittest.TestLoader()
-    suite = loader.discover('tests', pattern='test_*.py')
+    suite = loader.discover("tests", pattern="test_*.py")
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
 
@@ -55,7 +55,7 @@ def run_integration_tests():
     print(f"  所要時間: {results['total_duration']:.2f}秒")
     print(f"  レポート: {report_path}")
 
-    return results['overall_status'] in ['all_passed', 'mostly_passed']
+    return results["overall_status"] in ["all_passed", "mostly_passed"]
 
 
 def run_performance_benchmarks():
@@ -76,7 +76,9 @@ def run_performance_benchmarks():
         summary = results["comparison_summary"]
         if "performance_improvement" in summary:
             improvement = summary["performance_improvement"]
-            print(f"  統合実装のパフォーマンス改善: {improvement['duration_improvement']:.1f}%")
+            print(
+                f"  統合実装のパフォーマンス改善: {improvement['duration_improvement']:.1f}%"
+            )
 
     return True
 
@@ -89,22 +91,28 @@ def generate_combined_report(unit_success, integration_success, benchmark_succes
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     report_path = report_dir / f"combined_test_report_{timestamp}.md"
 
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(f"# AI統合テスト総合レポート\n\n")
         f.write(f"実行日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
         f.write("## テスト結果サマリー\n\n")
         f.write(f"- 単体テスト: {'✅ 成功' if unit_success else '❌ 失敗'}\n")
         f.write(f"- 統合テスト: {'✅ 成功' if integration_success else '❌ 失敗'}\n")
-        f.write(f"- パフォーマンステスト: {'✅ 成功' if benchmark_success else '❌ 失敗'}\n\n")
+        f.write(
+            f"- パフォーマンステスト: {'✅ 成功' if benchmark_success else '❌ 失敗'}\n\n"
+        )
 
         overall_success = unit_success and integration_success and benchmark_success
-        f.write(f"**総合結果: {'✅ 全テスト成功' if overall_success else '❌ 一部テスト失敗'}**\n\n")
+        f.write(
+            f"**総合結果: {'✅ 全テスト成功' if overall_success else '❌ 一部テスト失敗'}**\n\n"
+        )
 
         f.write("## 詳細レポート\n\n")
         f.write("詳細な結果は以下のファイルを参照してください:\n\n")
         f.write("- 統合テスト: `tests/reports/ai_integration_report.json`\n")
-        f.write("- パフォーマンステスト: `tests/reports/performance_benchmark_report.json`\n\n")
+        f.write(
+            "- パフォーマンステスト: `tests/reports/performance_benchmark_report.json`\n\n"
+        )
 
         if not overall_success:
             f.write("## 推奨アクション\n\n")
@@ -121,11 +129,13 @@ def generate_combined_report(unit_success, integration_success, benchmark_succes
 
 def main():
     """メイン実行関数"""
-    parser = argparse.ArgumentParser(description='AI統合テストランナー')
-    parser.add_argument('--unit', action='store_true', help='単体テストのみ実行')
-    parser.add_argument('--integration', action='store_true', help='統合テストのみ実行')
-    parser.add_argument('--benchmark', action='store_true', help='ベンチマークのみ実行')
-    parser.add_argument('--all', action='store_true', help='全テストを実行（デフォルト）')
+    parser = argparse.ArgumentParser(description="AI統合テストランナー")
+    parser.add_argument("--unit", action="store_true", help="単体テストのみ実行")
+    parser.add_argument("--integration", action="store_true", help="統合テストのみ実行")
+    parser.add_argument("--benchmark", action="store_true", help="ベンチマークのみ実行")
+    parser.add_argument(
+        "--all", action="store_true", help="全テストを実行（デフォルト）"
+    )
 
     args = parser.parse_args()
 

@@ -27,6 +27,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.controllers import AppController
@@ -42,6 +43,7 @@ from integration.error_handling import IntegratedErrorHandler, ErrorCategory
 @dataclass
 class TestResult:
     """テスト結果データ構造"""
+
     test_name: str
     ai_component: str
     status: str  # passed, failed, error, skipped
@@ -54,6 +56,7 @@ class TestResult:
 @dataclass
 class IntegrationTestResult:
     """AI統合テスト結果"""
+
     test_name: str
     components_involved: List[str]
     status: str
@@ -93,13 +96,13 @@ class AIIntegrationTestSuite:
                 "ai_components": {
                     "cursor_bld": {"enabled": True, "priority": "ui"},
                     "cs4_coding": {"enabled": True, "priority": "core"},
-                    "kiro": {"enabled": True, "priority": "integration"}
+                    "kiro": {"enabled": True, "priority": "integration"},
                 },
                 "testing": {
                     "timeout": 30,
                     "parallel_tests": True,
-                    "performance_benchmarks": True
-                }
+                    "performance_benchmarks": True,
+                },
             }
 
             # テスト用画像ファイルの作成
@@ -118,7 +121,7 @@ class AIIntegrationTestSuite:
             "test_image_1.jpg",
             "test_image_2.png",
             "test_image_with_gps.jpg",
-            "test_image_no_exif.jpg"
+            "test_image_no_exif.jpg",
         ]
 
         for image_name in test_images:
@@ -150,10 +153,12 @@ class AIIntegrationTestSuite:
                 "ai_compatibility": compatibility_results,
                 "overall_status": self._calculate_overall_status(),
                 "test_count": len(self.test_results),
-                "integration_count": len(self.integration_results)
+                "integration_count": len(self.integration_results),
             }
 
-            self.logger.info(f"AI統合テストスイートが完了しました (所要時間: {total_duration:.2f}秒)")
+            self.logger.info(
+                f"AI統合テストスイートが完了しました (所要時間: {total_duration:.2f}秒)"
+            )
             return summary
 
         except Exception as e:
@@ -168,7 +173,7 @@ class AIIntegrationTestSuite:
             self._test_theme_manager_integration,
             self._test_thumbnail_grid_integration,
             self._test_folder_navigator_integration,
-            self._test_main_window_integration
+            self._test_main_window_integration,
         ]
 
         results = []
@@ -182,7 +187,7 @@ class AIIntegrationTestSuite:
                     ai_component="cursor_bld+cs4_coding",
                     status="error",
                     duration=0.0,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
                 results.append(error_result)
                 self.test_results.append(error_result)
@@ -197,7 +202,7 @@ class AIIntegrationTestSuite:
             self._test_image_loader_integration,
             self._test_exif_parser_integration,
             self._test_map_viewer_integration,
-            self._test_cache_system_integration
+            self._test_cache_system_integration,
         ]
 
         results = []
@@ -211,7 +216,7 @@ class AIIntegrationTestSuite:
                     ai_component="cs4_coding+kiro",
                     status="error",
                     duration=0.0,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
                 results.append(error_result)
                 self.test_results.append(error_result)
@@ -227,7 +232,7 @@ class AIIntegrationTestSuite:
             self._benchmark_thumbnail_generation,
             self._benchmark_exif_parsing,
             self._benchmark_memory_usage,
-            self._benchmark_ui_responsiveness
+            self._benchmark_ui_responsiveness,
         ]
 
         results = []
@@ -241,7 +246,7 @@ class AIIntegrationTestSuite:
                     ai_component="all_ai_integrated",
                     status="error",
                     duration=0.0,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
                 results.append(error_result)
                 self.test_results.append(error_result)
@@ -256,7 +261,7 @@ class AIIntegrationTestSuite:
             self._test_cursor_cs4_compatibility,
             self._test_cs4_kiro_compatibility,
             self._test_cursor_kiro_compatibility,
-            self._test_three_way_compatibility
+            self._test_three_way_compatibility,
         ]
 
         results = []
@@ -270,14 +275,16 @@ class AIIntegrationTestSuite:
                     ai_component="compatibility",
                     status="error",
                     duration=0.0,
-                    error_message=str(e)
+                    error_message=str(e),
                 )
                 results.append(error_result)
                 self.test_results.append(error_result)
 
         return self._summarize_test_results(results, "AI Compatibility")
 
-    def _run_test_with_timeout(self, test_func: callable, timeout: int = 30) -> TestResult:
+    def _run_test_with_timeout(
+        self, test_func: callable, timeout: int = 30
+    ) -> TestResult:
         """タイムアウト付きでテストを実行"""
         start_time = time.time()
 
@@ -288,9 +295,9 @@ class AIIntegrationTestSuite:
             duration = time.time() - start_time
             result = TestResult(
                 test_name=test_func.__name__,
-                ai_component=getattr(test_func, 'ai_component', 'unknown'),
+                ai_component=getattr(test_func, "ai_component", "unknown"),
                 status="passed",
-                duration=duration
+                duration=duration,
             )
 
             self.test_results.append(result)
@@ -300,10 +307,10 @@ class AIIntegrationTestSuite:
             duration = time.time() - start_time
             result = TestResult(
                 test_name=test_func.__name__,
-                ai_component=getattr(test_func, 'ai_component', 'unknown'),
+                ai_component=getattr(test_func, "ai_component", "unknown"),
                 status="failed",
                 duration=duration,
-                error_message=str(e)
+                error_message=str(e),
             )
 
             self.test_results.append(result)
@@ -331,8 +338,8 @@ class AIIntegrationTestSuite:
                 duration=duration,
                 performance_data={
                     "test_metrics": performance_data,
-                    "system_metrics": metrics
-                }
+                    "system_metrics": metrics,
+                },
             )
 
             self.test_results.append(result)
@@ -345,7 +352,7 @@ class AIIntegrationTestSuite:
                 ai_component="performance",
                 status="failed",
                 duration=duration,
-                error_message=str(e)
+                error_message=str(e),
             )
 
             self.test_results.append(result)
@@ -364,7 +371,7 @@ class AIIntegrationTestSuite:
                 ai_component="compatibility",
                 status="passed",
                 duration=duration,
-                performance_data=compatibility_data
+                performance_data=compatibility_data,
             )
 
             self.test_results.append(result)
@@ -377,7 +384,7 @@ class AIIntegrationTestSuite:
                 ai_component="compatibility",
                 status="failed",
                 duration=duration,
-                error_message=str(e)
+                error_message=str(e),
             )
 
             self.test_results.append(result)
@@ -443,7 +450,7 @@ class AIIntegrationTestSuite:
             "average_load_time": sum(load_times) / len(load_times),
             "max_load_time": max(load_times),
             "min_load_time": min(load_times),
-            "images_tested": len(load_times)
+            "images_tested": len(load_times),
         }
 
     def _benchmark_thumbnail_generation(self) -> Dict[str, Any]:
@@ -451,7 +458,7 @@ class AIIntegrationTestSuite:
         return {
             "generation_time": 0.1,  # プレースホルダー
             "cache_hit_rate": 0.8,
-            "memory_usage": 1024
+            "memory_usage": 1024,
         }
 
     def _benchmark_exif_parsing(self) -> Dict[str, Any]:
@@ -459,7 +466,7 @@ class AIIntegrationTestSuite:
         return {
             "parse_time": 0.05,  # プレースホルダー
             "accuracy": 0.95,
-            "fields_extracted": 25
+            "fields_extracted": 25,
         }
 
     def _benchmark_memory_usage(self) -> Dict[str, Any]:
@@ -467,16 +474,12 @@ class AIIntegrationTestSuite:
         return {
             "peak_memory": 512,  # MB
             "average_memory": 256,
-            "memory_efficiency": 0.85
+            "memory_efficiency": 0.85,
         }
 
     def _benchmark_ui_responsiveness(self) -> Dict[str, Any]:
         """UI応答性ベンチマーク"""
-        return {
-            "response_time": 0.02,  # 秒
-            "frame_rate": 60,
-            "ui_lag": 0.001
-        }
+        return {"response_time": 0.02, "frame_rate": 60, "ui_lag": 0.001}  # 秒
 
     # 互換性テストメソッド
     def _test_cursor_cs4_compatibility(self) -> Dict[str, Any]:
@@ -484,7 +487,7 @@ class AIIntegrationTestSuite:
         return {
             "ui_core_integration": "passed",
             "data_flow": "passed",
-            "error_handling": "passed"
+            "error_handling": "passed",
         }
 
     def _test_cs4_kiro_compatibility(self) -> Dict[str, Any]:
@@ -492,7 +495,7 @@ class AIIntegrationTestSuite:
         return {
             "core_optimization": "passed",
             "performance_enhancement": "passed",
-            "error_handling": "passed"
+            "error_handling": "passed",
         }
 
     def _test_cursor_kiro_compatibility(self) -> Dict[str, Any]:
@@ -500,7 +503,7 @@ class AIIntegrationTestSuite:
         return {
             "ui_optimization": "passed",
             "theme_integration": "passed",
-            "performance": "passed"
+            "performance": "passed",
         }
 
     def _test_three_way_compatibility(self) -> Dict[str, Any]:
@@ -508,10 +511,12 @@ class AIIntegrationTestSuite:
         return {
             "full_integration": "passed",
             "data_consistency": "passed",
-            "performance_impact": "minimal"
+            "performance_impact": "minimal",
         }
 
-    def _summarize_test_results(self, results: List[TestResult], category: str) -> Dict[str, Any]:
+    def _summarize_test_results(
+        self, results: List[TestResult], category: str
+    ) -> Dict[str, Any]:
         """テスト結果の要約"""
         if not results:
             return {"category": category, "status": "no_tests", "count": 0}
@@ -530,7 +535,7 @@ class AIIntegrationTestSuite:
             "errors": errors,
             "success_rate": passed / len(results) if results else 0,
             "total_duration": total_duration,
-            "average_duration": total_duration / len(results) if results else 0
+            "average_duration": total_duration / len(results) if results else 0,
         }
 
     def _calculate_overall_status(self) -> str:
@@ -538,7 +543,9 @@ class AIIntegrationTestSuite:
         if not self.test_results:
             return "no_tests"
 
-        failed_count = sum(1 for r in self.test_results if r.status in ["failed", "error"])
+        failed_count = sum(
+            1 for r in self.test_results if r.status in ["failed", "error"]
+        )
 
         if failed_count == 0:
             return "all_passed"
@@ -561,7 +568,7 @@ class AIIntegrationTestSuite:
             "test_summary": {
                 "total_tests": len(self.test_results),
                 "integration_tests": len(self.integration_results),
-                "overall_status": self._calculate_overall_status()
+                "overall_status": self._calculate_overall_status(),
             },
             "test_results": [
                 {
@@ -570,7 +577,7 @@ class AIIntegrationTestSuite:
                     "status": r.status,
                     "duration": r.duration,
                     "error_message": r.error_message,
-                    "timestamp": r.timestamp.isoformat()
+                    "timestamp": r.timestamp.isoformat(),
                 }
                 for r in self.test_results
             ],
@@ -579,13 +586,13 @@ class AIIntegrationTestSuite:
                     "test_name": ir.test_name,
                     "components_involved": ir.components_involved,
                     "status": ir.status,
-                    "duration": ir.duration
+                    "duration": ir.duration,
                 }
                 for ir in self.integration_results
-            ]
+            ],
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
 
         self.logger.info(f"テストレポートを生成しました: {output_path}")
@@ -641,7 +648,7 @@ def main():
         print(f"所要時間: {results['total_duration']:.2f}秒")
         print(f"レポート: {report_path}")
 
-        return results['overall_status'] in ['all_passed', 'mostly_passed']
+        return results["overall_status"] in ["all_passed", "mostly_passed"]
 
     except Exception as e:
         print(f"テストスイート実行中にエラーが発生しました: {e}")

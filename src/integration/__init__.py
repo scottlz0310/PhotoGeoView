@@ -33,5 +33,5 @@ __all__ = [
     "ErrorCategory",
     "LoggerSystem",
     "ConfigManager",
-    "StateManager"
+    "StateManager",
 ]

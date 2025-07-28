@@ -25,10 +25,12 @@ class IntegratedLogger(ILogger):
     Unified logging implementation that coordinates logging across AI components
     """
 
-    def __init__(self,
-                 name: str = "PhotoGeoView_AI_Integration",
-                 log_dir: Path = Path("logs"),
-                 log_level: int = logging.INFO):
+    def __init__(
+        self,
+        name: str = "PhotoGeoView_AI_Integration",
+        log_dir: Path = Path("logs"),
+        log_level: int = logging.INFO,
+    ):
         """
         Initialize integrated logger
 
@@ -47,9 +49,9 @@ class IntegratedLogger(ILogger):
         # Initialize loggers for different components
         self.main_logger = self._setup_main_logger()
         self.component_loggers = {
-            'cursorbld': self._setup_component_logger('cursorbld'),
-            'cs4coding': self._setup_component_logger('cs4coding'),
-            'kiro': self._setup_component_logger('kiro')
+            "cursorbld": self._setup_component_logger("cursorbld"),
+            "cs4coding": self._setup_component_logger("cs4coding"),
+            "kiro": self._setup_component_logger("kiro"),
         }
 
         # Performance logging
@@ -72,9 +74,7 @@ class IntegratedLogger(ILogger):
         # File handler for main log
         main_log_file = self.log_dir / "main.log"
         file_handler = logging.handlers.RotatingFileHandler(
-            main_log_file,
-            maxBytes=10*1024*1024,  # 10MB
-            backupCount=5
+            main_log_file, maxBytes=10 * 1024 * 1024, backupCount=5  # 10MB
         )
 
         # Console handler
@@ -82,7 +82,7 @@ class IntegratedLogger(ILogger):
 
         # Formatter
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
 
         file_handler.setFormatter(formatter)
@@ -104,14 +104,12 @@ class IntegratedLogger(ILogger):
         # Component-specific log file
         log_file = self.log_dir / f"{component}.log"
         file_handler = logging.handlers.RotatingFileHandler(
-            log_file,
-            maxBytes=5*1024*1024,  # 5MB
-            backupCount=3
+            log_file, maxBytes=5 * 1024 * 1024, backupCount=3  # 5MB
         )
 
         # Component-specific formatter
         formatter = logging.Formatter(
-            f'%(asctime)s - {component.upper()} - %(levelname)s - %(message)s'
+            f"%(asctime)s - {component.upper()} - %(levelname)s - %(message)s"
         )
 
         file_handler.setFormatter(formatter)
@@ -130,13 +128,11 @@ class IntegratedLogger(ILogger):
         # Performance log file
         perf_log_file = self.log_dir / "performance.log"
         file_handler = logging.handlers.RotatingFileHandler(
-            perf_log_file,
-            maxBytes=20*1024*1024,  # 20MB
-            backupCount=3
+            perf_log_file, maxBytes=20 * 1024 * 1024, backupCount=3  # 20MB
         )
 
         # JSON formatter for structured performance data
-        formatter = logging.Formatter('%(asctime)s - %(message)s')
+        formatter = logging.Formatter("%(asctime)s - %(message)s")
         file_handler.setFormatter(formatter)
 
         logger.addHandler(file_handler)
@@ -146,20 +142,22 @@ class IntegratedLogger(ILogger):
     def _get_component_from_extra(self, extra: Optional[Dict[str, Any]]) -> str:
         """Extract component name from extra data"""
         if not extra:
-            return 'main'
+            return "main"
 
-        component = extra.get('component', '')
+        component = extra.get("component", "")
 
-        if 'cursorbld' in component.lower() or 'cursor' in component.lower():
-            return 'cursorbld'
-        elif 'cs4coding' in component.lower() or 'copilot' in component.lower():
-            return 'cs4coding'
-        elif 'kiro' in component.lower():
-            return 'kiro'
+        if "cursorbld" in component.lower() or "cursor" in component.lower():
+            return "cursorbld"
+        elif "cs4coding" in component.lower() or "copilot" in component.lower():
+            return "cs4coding"
+        elif "kiro" in component.lower():
+            return "kiro"
         else:
-            return 'main'
+            return "main"
 
-    def _log_with_component(self, level: int, message: str, extra: Optional[Dict[str, Any]] = None):
+    def _log_with_component(
+        self, level: int, message: str, extra: Optional[Dict[str, Any]] = None
+    ):
         """Log message with appropriate component logger"""
         with self._lock:
             # Determine component
@@ -175,18 +173,22 @@ class IntegratedLogger(ILogger):
             if extra is None:
                 extra = {}
 
-            extra.update({
-                'timestamp': datetime.now().isoformat(),
-                'component': component,
-                'thread': threading.current_thread().name
-            })
+            extra.update(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "component": component,
+                    "thread": threading.current_thread().name,
+                }
+            )
 
             # Log the message
             logger.log(level, message, extra=extra)
 
             # Also log to main logger for centralized view
-            if component != 'main':
-                self.main_logger.log(level, f"[{component.upper()}] {message}", extra=extra)
+            if component != "main":
+                self.main_logger.log(
+                    level, f"[{component.upper()}] {message}", extra=extra
+                )
 
     def debug(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
         """Log debug message"""
@@ -220,8 +222,14 @@ class IntegratedLogger(ILogger):
 
         self._log_with_component(logging.CRITICAL, message, extra)
 
-    def log_performance(self, component: str, operation: str, duration_ms: float,
-                       success: bool = True, additional_data: Optional[Dict[str, Any]] = None):
+    def log_performance(
+        self,
+        component: str,
+        operation: str,
+        duration_ms: float,
+        success: bool = True,
+        additional_data: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log performance metrics
 
@@ -233,11 +241,11 @@ class IntegratedLogger(ILogger):
             additional_data: Additional performance data
         """
         perf_data = {
-            'timestamp': datetime.now().isoformat(),
-            'component': component,
-            'operation': operation,
-            'duration_ms': duration_ms,
-            'success': success
+            "timestamp": datetime.now().isoformat(),
+            "component": component,
+            "operation": operation,
+            "duration_ms": duration_ms,
+            "success": success,
         }
 
         if additional_data:
@@ -255,9 +263,9 @@ class IntegratedLogger(ILogger):
             context: Additional context information
         """
         action_data = {
-            'timestamp': datetime.now().isoformat(),
-            'action': action,
-            'type': 'user_action'
+            "timestamp": datetime.now().isoformat(),
+            "action": action,
+            "type": "user_action",
         }
 
         if context:
@@ -265,8 +273,13 @@ class IntegratedLogger(ILogger):
 
         self.info(f"User action: {action}", extra=action_data)
 
-    def log_ai_integration_event(self, event_type: str, source_ai: str, target_ai: str,
-                                details: Optional[Dict[str, Any]] = None):
+    def log_ai_integration_event(
+        self,
+        event_type: str,
+        source_ai: str,
+        target_ai: str,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         """
         Log AI integration events
 
@@ -277,31 +290,34 @@ class IntegratedLogger(ILogger):
             details: Additional event details
         """
         event_data = {
-            'timestamp': datetime.now().isoformat(),
-            'event_type': event_type,
-            'source_ai': source_ai,
-            'target_ai': target_ai,
-            'type': 'ai_integration'
+            "timestamp": datetime.now().isoformat(),
+            "event_type": event_type,
+            "source_ai": source_ai,
+            "target_ai": target_ai,
+            "type": "ai_integration",
         }
 
         if details:
             event_data.update(details)
 
-        self.info(f"AI Integration: {event_type} ({source_ai} -> {target_ai})", extra=event_data)
+        self.info(
+            f"AI Integration: {event_type} ({source_ai} -> {target_ai})",
+            extra=event_data,
+        )
 
     def get_error_statistics(self) -> Dict[str, Any]:
         """Get error statistics across all components"""
         with self._lock:
             return {
-                'error_counts': self.error_counts.copy(),
-                'total_errors': sum(
-                    count for key, count in self.error_counts.items()
-                    if 'error' in key
+                "error_counts": self.error_counts.copy(),
+                "total_errors": sum(
+                    count for key, count in self.error_counts.items() if "error" in key
                 ),
-                'total_critical': sum(
-                    count for key, count in self.error_counts.items()
-                    if 'critical' in key
-                )
+                "total_critical": sum(
+                    count
+                    for key, count in self.error_counts.items()
+                    if "critical" in key
+                ),
             }
 
     def set_log_level(self, level: int):
@@ -343,8 +359,9 @@ class IntegratedLogger(ILogger):
             handler.close()
 
 
-def create_integrated_logger(log_dir: Path = Path("logs"),
-                           log_level: int = logging.INFO) -> IntegratedLogger:
+def create_integrated_logger(
+    log_dir: Path = Path("logs"), log_level: int = logging.INFO
+) -> IntegratedLogger:
     """
     Factory function to create integrated logger
 

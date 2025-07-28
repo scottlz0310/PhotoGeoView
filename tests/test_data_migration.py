@@ -14,7 +14,11 @@ from pathlib import Path
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from src.integration.data_migration import DataMigrationManager, MigrationResult, MigrationStatus
+from src.integration.data_migration import (
+    DataMigrationManager,
+    MigrationResult,
+    MigrationStatus,
+)
 from src.integration.data_validation import DataValidator
 from src.integration.models import ImageMetadata, ThemeConfiguration, ApplicationState
 from src.integration.logging_system import LoggerSystem
@@ -41,7 +45,7 @@ class TestDataMigrationManager:
             data_dir=temp_dir,
             backup_dir=temp_dir / "backups",
             logger_system=logger_system,
-            validator=validator
+            validator=validator,
         )
 
     @pytest.fixture
@@ -54,20 +58,20 @@ class TestDataMigrationManager:
                 "thumb_path": str(temp_dir / "thumb1.jpg"),
                 "name": "Image 1",
                 "created": "2024-01-01 10:00:00",
-                "modified": "2024-01-01 10:00:00"
+                "modified": "2024-01-01 10:00:00",
             },
             {
                 "path": str(temp_dir / "image2.jpg"),
                 "size": 2048000,
                 "thumb_path": str(temp_dir / "thumb2.jpg"),
-"name": "Image 2",
+                "name": "Image 2",
                 "created": "2024-01-02 11:00:00",
-                "modified": "2024-01-02 11:00:00"
-            }
+                "modified": "2024-01-02 11:00:00",
+            },
         ]
 
         cache_file = temp_dir / "image_cache.json"
-        with open(cache_file, 'w') as f:
+        with open(cache_file, "w") as f:
             json.dump(cache_data, f)
 
         return cache_file, cache_data
@@ -83,10 +87,10 @@ class TestDataMigrationManager:
                     "background": "#2b2b2b",
                     "foreground": "#ffffff",
                     "primary": "#007acc",
-                    "secondary": "#6c757d"
+                    "secondary": "#6c757d",
                 },
                 "qt_theme": "dark",
-                "stylesheet": "QWidget { background-color: #2b2b2b; }"
+                "stylesheet": "QWidget { background-color: #2b2b2b; }",
             },
             {
                 "theme_name": "light_theme",
@@ -95,15 +99,15 @@ class TestDataMigrationManager:
                     "background": "#ffffff",
                     "foreground": "#000000",
                     "primary": "#007acc",
-                    "secondary": "#6c757d"
+                    "secondary": "#6c757d",
                 },
                 "qt_theme": "light",
-                "stylesheet": "QWidget { background-color: #ffffff; }"
-            }
+                "stylesheet": "QWidget { background-color: #ffffff; }",
+            },
         ]
 
         theme_file = temp_dir / "themes.json"
-        with open(theme_file, 'w') as f:
+        with open(theme_file, "w") as f:
             json.dump(theme_data, f)
 
         return theme_file, theme_data
@@ -125,7 +129,7 @@ class TestDataMigrationManager:
                 "gps_lon": 139.6503,
                 "gps_alt": 10.5,
                 "image_width": 8192,
-                "image_height": 5464
+                "image_height": 5464,
             },
             {
                 "image_path": str(temp_dir / "photo2.jpg"),
@@ -139,12 +143,12 @@ class TestDataMigrationManager:
                 "gps_lat": 40.7128,
                 "gps_lon": -74.0060,
                 "image_width": 8256,
-                "image_height": 5504
-            }
+                "image_height": 5504,
+            },
         ]
 
         exif_file = temp_dir / "exif_data.json"
-        with open(exif_file, 'w') as f:
+        with open(exif_file, "w") as f:
             json.dump(exif_data, f)
 
         return exif_file, exif_data
@@ -156,7 +160,8 @@ class TestDataMigrationManager:
 
         with sqlite3.connect(db_file) as conn:
             # Create images table
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE images (
                     id INTEGER PRIMARY KEY,
                     path TEXT NOT NULL,
@@ -174,42 +179,87 @@ class TestDataMigrationManager:
                     longitude REAL,
                     altitude REAL
                 )
-            """)
+            """
+            )
 
             # Insert sample data
             sample_images = [
-                (str(temp_dir / "legacy1.jpg"), 1500000, "2024-01-01 12:00:00", "2024-01-01 12:00:00",
-                 4000, 3000, "Sony", "A7R IV", 200, 4.0, "1/60", 51.5074, -0.1278, 50.0),
-                (str(temp_dir / "legacy2.jpg"), 1800000, "2024-01-02 13:00:00", "2024-01-02 13:00:00",
-                 6000, 4000, "Fujifilm", "X-T4", 400, 2.8, "1/125", 48.8566, 2.3522, 35.0)
+                (
+                    str(temp_dir / "legacy1.jpg"),
+                    1500000,
+                    "2024-01-01 12:00:00",
+                    "2024-01-01 12:00:00",
+                    4000,
+                    3000,
+                    "Sony",
+                    "A7R IV",
+                    200,
+                    4.0,
+                    "1/60",
+                    51.5074,
+                    -0.1278,
+                    50.0,
+                ),
+                (
+                    str(temp_dir / "legacy2.jpg"),
+                    1800000,
+                    "2024-01-02 13:00:00",
+                    "2024-01-02 13:00:00",
+                    6000,
+                    4000,
+                    "Fujifilm",
+                    "X-T4",
+                    400,
+                    2.8,
+                    "1/125",
+                    48.8566,
+                    2.3522,
+                    35.0,
+                ),
             ]
 
-            conn.executemany("""
+            conn.executemany(
+                """
                 INSERT INTO images (path, size, created, modified, width, height, camera_make,
                                   camera_model, iso, aperture, shutter_speed, latitude, longitude, altitude)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, sample_images)
+            """,
+                sample_images,
+            )
 
             # Create thumbnails table
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE thumbnails (
                     id INTEGER PRIMARY KEY,
                     image_path TEXT NOT NULL,
                     thumbnail_path TEXT,
                     size INTEGER
                 )
-            """)
+            """
+            )
 
             # Insert thumbnail data
             thumbnail_data = [
-                (str(temp_dir / "legacy1.jpg"), str(temp_dir / "thumb_legacy1.jpg"), 150),
-                (str(temp_dir / "legacy2.jpg"), str(temp_dir / "thumb_legacy2.jpg"), 150)
+                (
+                    str(temp_dir / "legacy1.jpg"),
+                    str(temp_dir / "thumb_legacy1.jpg"),
+                    150,
+                ),
+                (
+                    str(temp_dir / "legacy2.jpg"),
+                    str(temp_dir / "thumb_legacy2.jpg"),
+                    150,
+                ),
             ]
 
-            conn.executemany("""
+            conn.executemany(
+                """
                 INSERT INTO thumbnails (image_path, thumbnail_path, size)
                 VALUES (?, ?, ?)
-            """, thumbnail_data)
+            """,
+                thumbnail_data,
+            )
 
         return db_file
 
@@ -246,13 +296,19 @@ class TestDataMigrationManager:
         assert "database" in legacy_mappings
         assert "settings" in legacy_mappings
 
-    def test_migrate_cursor_image_cache(self, migration_manager, sample_cursor_image_cache):
+    def test_migrate_cursor_image_cache(
+        self, migration_manager, sample_cursor_image_cache
+    ):
         """Test migration of CursorBLD image cache data"""
         cache_file, cache_data = sample_cursor_image_cache
 
         # Run migration for cursor_bld image_cache
-        mapping_config = migration_manager.migration_mappings["cursor_bld"]["image_cache"]
-        result = migration_manager._migrate_file_data("cursor_bld", "image_cache", mapping_config)
+        mapping_config = migration_manager.migration_mappings["cursor_bld"][
+            "image_cache"
+        ]
+        result = migration_manager._migrate_file_data(
+            "cursor_bld", "image_cache", mapping_config
+        )
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "cursor_bld_image_cache"
@@ -263,13 +319,19 @@ class TestDataMigrationManager:
         backup_files = list(migration_manager.backup_dir.glob("image_cache_*"))
         assert len(backup_files) > 0
 
-    def test_migrate_cursor_theme_data(self, migration_manager, sample_cursor_theme_data):
+    def test_migrate_cursor_theme_data(
+        self, migration_manager, sample_cursor_theme_data
+    ):
         """Test migration of CursorBLD theme data"""
         theme_file, theme_data = sample_cursor_theme_data
 
         # Run migration for cursor_bld theme_data
-        mapping_config = migration_manager.migration_mappings["cursor_bld"]["theme_data"]
-        result = migration_manager._migrate_file_data("cursor_bld", "theme_data", mapping_config)
+        mapping_config = migration_manager.migration_mappings["cursor_bld"][
+            "theme_data"
+        ]
+        result = migration_manager._migrate_file_data(
+            "cursor_bld", "theme_data", mapping_config
+        )
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "cursor_bld_theme_data"
@@ -281,8 +343,12 @@ class TestDataMigrationManager:
         exif_file, exif_data = sample_cs4_exif_data
 
         # Run migration for cs4_coding exif_cache
-        mapping_config = migration_manager.migration_mappings["cs4_coding"]["exif_cache"]
-        result = migration_manager._migrate_file_data("cs4_coding", "exif_cache", mapping_config)
+        mapping_config = migration_manager.migration_mappings["cs4_coding"][
+            "exif_cache"
+        ]
+        result = migration_manager._migrate_file_data(
+            "cs4_coding", "exif_cache", mapping_config
+        )
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "cs4_coding_exif_cache"
@@ -295,14 +361,18 @@ class TestDataMigrationManager:
 
         # Run migration for legacy database
         mapping_config = migration_manager.migration_mappings["legacy"]["database"]
-        result = migration_manager._migrate_database_data("legacy", "database", mapping_config)
+        result = migration_manager._migrate_database_data(
+            "legacy", "database", mapping_config
+        )
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "legacy_database"
         assert result.target_model == "ImageMetadata"
         assert result.migrated_count > 0  # Should have migrated some records
 
-    def test_migrate_all_data(self, migration_manager, sample_cursor_image_cache, sample_cursor_theme_data):
+    def test_migrate_all_data(
+        self, migration_manager, sample_cursor_image_cache, sample_cursor_theme_data
+    ):
         """Test migration of all data"""
         cache_file, cache_data = sample_cursor_image_cache
         theme_file, theme_data = sample_cursor_theme_data
@@ -321,7 +391,9 @@ class TestDataMigrationManager:
         assert len(cursor_results) > 0
 
         # Check that some migrations were successful
-        successful_migrations = [r for r in cursor_results if r.status == MigrationStatus.SUCCESS]
+        successful_migrations = [
+            r for r in cursor_results if r.status == MigrationStatus.SUCCESS
+        ]
         assert len(successful_migrations) > 0
 
     def test_create_image_metadata(self, migration_manager, temp_dir):
@@ -336,7 +408,7 @@ class TestDataMigrationManager:
             "latitude": 35.6762,
             "longitude": 139.6503,
             "width": 1920,
-            "height": 1080
+            "height": 1080,
         }
 
         metadata = migration_manager._create_image_metadata(test_data)
@@ -358,10 +430,7 @@ class TestDataMigrationManager:
             "display_name": "Test Theme",
             "description": "A test theme",
             "version": "1.0.0",
-            "color_scheme": {
-                "background": "#ffffff",
-                "foreground": "#000000"
-            }
+            "color_scheme": {"background": "#ffffff", "foreground": "#000000"},
         }
 
         theme = migration_manager._create_theme_configuration(test_data)
@@ -384,7 +453,7 @@ class TestDataMigrationManager:
             "thumbnail_size": 200,
             "performance_mode": "performance",
             "image_sort_mode": "date",
-            "image_sort_ascending": False
+            "image_sort_ascending": False,
         }
 
         state = migration_manager._create_application_state(test_data)
@@ -400,25 +469,35 @@ class TestDataMigrationManager:
     def test_transform_field_value(self, migration_manager):
         """Test field value transformation during migration"""
         # Test path transformation
-        path_value = migration_manager._transform_field_value("file_path", "/test/path", "ImageMetadata")
+        path_value = migration_manager._transform_field_value(
+            "file_path", "/test/path", "ImageMetadata"
+        )
         assert isinstance(path_value, Path)
         assert str(path_value) == "/test/path"
 
         # Test datetime transformation
-        datetime_value = migration_manager._transform_field_value("created_date", "2024-01-01 10:00:00", "ImageMetadata")
+        datetime_value = migration_manager._transform_field_value(
+            "created_date", "2024-01-01 10:00:00", "ImageMetadata"
+        )
         assert isinstance(datetime_value, datetime)
 
         # Test numeric transformation
-        int_value = migration_manager._transform_field_value("file_size", "1024", "ImageMetadata")
+        int_value = migration_manager._transform_field_value(
+            "file_size", "1024", "ImageMetadata"
+        )
         assert isinstance(int_value, int)
         assert int_value == 1024
 
-        float_value = migration_manager._transform_field_value("latitude", "35.6762", "ImageMetadata")
+        float_value = migration_manager._transform_field_value(
+            "latitude", "35.6762", "ImageMetadata"
+        )
         assert isinstance(float_value, float)
         assert float_value == 35.6762
 
         # Test boolean transformation
-        bool_value = migration_manager._transform_field_value("image_sort_ascending", "true", "ApplicationState")
+        bool_value = migration_manager._transform_field_value(
+            "image_sort_ascending", "true", "ApplicationState"
+        )
         assert isinstance(bool_value, bool)
         assert bool_value is True
 
@@ -456,7 +535,7 @@ class TestDataMigrationManager:
         # Create test file
         test_file = temp_dir / "test_data.json"
         test_data = {"test": "data"}
-        with open(test_file, 'w') as f:
+        with open(test_file, "w") as f:
             json.dump(test_data, f)
 
         # Create backup
@@ -467,7 +546,7 @@ class TestDataMigrationManager:
         assert "test_data" in backup_file.name
 
         # Verify backup content
-        with open(backup_file, 'r') as f:
+        with open(backup_file, "r") as f:
             backup_data = json.load(f)
         assert backup_data == test_data
 
@@ -479,17 +558,21 @@ class TestDataMigrationManager:
                 "path": "invalid_path",  # Will cause validation issues
                 "size": -1,  # Invalid size
                 "created": "invalid_date",
-                "modified": "invalid_date"
+                "modified": "invalid_date",
             }
         ]
 
         cache_file = temp_dir / "invalid_cache.json"
-        with open(cache_file, 'w') as f:
+        with open(cache_file, "w") as f:
             json.dump(invalid_data, f)
 
         # Run migration
-        mapping_config = migration_manager.migration_mappings["cursor_bld"]["image_cache"]
-        result = migration_manager._migrate_file_data("cursor_bld", "image_cache", mapping_config)
+        mapping_config = migration_manager.migration_mappings["cursor_bld"][
+            "image_cache"
+        ]
+        result = migration_manager._migrate_file_data(
+            "cursor_bld", "image_cache", mapping_config
+        )
 
         # Should have validation results with issues
         assert len(result.validation_results) > 0
@@ -521,7 +604,7 @@ class TestDataMigrationManager:
         mapping_config = {
             "source_files": ["invalid.json"],
             "target_model": "ImageMetadata",
-            "field_mappings": {"file_path": "path"}
+            "field_mappings": {"file_path": "path"},
         }
 
         result = migration_manager._migrate_file_data("test", "invalid", mapping_config)
@@ -541,7 +624,7 @@ class TestMigrationResult:
             source_type="test_source",
             target_model="TestModel",
             status=MigrationStatus.SUCCESS,
-            migrated_count=5
+            migrated_count=5,
         )
 
         assert result.source_type == "test_source"
@@ -563,7 +646,7 @@ class TestMigrationResult:
             status=MigrationStatus.PARTIAL,
             migrated_count=3,
             errors=["Error 1", "Error 2"],
-            warnings=["Warning 1"]
+            warnings=["Warning 1"],
         )
 
         assert result.status == MigrationStatus.PARTIAL

@@ -15,6 +15,7 @@ import json
 
 class CheckStatus(Enum):
     """Status enumeration for check results."""
+
     SUCCESS = "success"
     FAILURE = "failure"
     WARNING = "warning"
@@ -24,6 +25,7 @@ class CheckStatus(Enum):
 
 class SeverityLevel(Enum):
     """Severity levels for issues and regressions."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -40,6 +42,7 @@ class CheckResult:
     containing all necessary information about what was checked,
     the outcome, and any associated metadata.
     """
+
     name: str
     status: CheckStatus
     duration: float
@@ -63,11 +66,11 @@ class CheckResult:
             "suggestions": self.suggestions,
             "metadata": self.metadata,
             "timestamp": self.timestamp.isoformat(),
-            "python_version": self.python_version
+            "python_version": self.python_version,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CheckResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "CheckResult":
         """Create CheckResult from dictionary."""
         return cls(
             name=data["name"],
@@ -78,8 +81,10 @@ class CheckResult:
             warnings=data.get("warnings", []),
             suggestions=data.get("suggestions", []),
             metadata=data.get("metadata", {}),
-            timestamp=datetime.fromisoformat(data.get("timestamp", datetime.now().isoformat())),
-            python_version=data.get("python_version")
+            timestamp=datetime.fromisoformat(
+                data.get("timestamp", datetime.now().isoformat())
+            ),
+            python_version=data.get("python_version"),
         )
 
     @property
@@ -101,6 +106,7 @@ class RegressionIssue:
     Used primarily by the performance analyzer to track degradations
     in benchmark results or other measurable metrics.
     """
+
     test_name: str
     baseline_value: float
     current_value: float
@@ -120,11 +126,11 @@ class RegressionIssue:
             "severity": self.severity.value,
             "description": self.description,
             "metric_type": self.metric_type,
-            "threshold_exceeded": self.threshold_exceeded
+            "threshold_exceeded": self.threshold_exceeded,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'RegressionIssue':
+    def from_dict(cls, data: Dict[str, Any]) -> "RegressionIssue":
         """Create RegressionIssue from dictionary."""
         return cls(
             test_name=data["test_name"],
@@ -134,7 +140,7 @@ class RegressionIssue:
             severity=SeverityLevel(data["severity"]),
             description=data["description"],
             metric_type=data.get("metric_type", "performance"),
-            threshold_exceeded=data.get("threshold_exceeded", False)
+            threshold_exceeded=data.get("threshold_exceeded", False),
         )
 
 
@@ -146,6 +152,7 @@ class SimulationResult:
     This aggregates all individual check results and provides
     overall status and summary information for the entire simulation.
     """
+
     overall_status: CheckStatus
     total_duration: float
     check_results: Dict[str, CheckResult]
@@ -161,17 +168,19 @@ class SimulationResult:
         return {
             "overall_status": self.overall_status.value,
             "total_duration": self.total_duration,
-            "check_results": {name: result.to_dict() for name, result in self.check_results.items()},
+            "check_results": {
+                name: result.to_dict() for name, result in self.check_results.items()
+            },
             "python_versions_tested": self.python_versions_tested,
             "summary": self.summary,
             "report_paths": self.report_paths,
             "regression_issues": [issue.to_dict() for issue in self.regression_issues],
             "timestamp": self.timestamp.isoformat(),
-            "configuration": self.configuration
+            "configuration": self.configuration,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'SimulationResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "SimulationResult":
         """Create SimulationResult from dictionary."""
         return cls(
             overall_status=CheckStatus(data["overall_status"]),
@@ -187,8 +196,10 @@ class SimulationResult:
                 RegressionIssue.from_dict(issue_data)
                 for issue_data in data.get("regression_issues", [])
             ],
-            timestamp=datetime.fromisoformat(data.get("timestamp", datetime.now().isoformat())),
-            configuration=data.get("configuration", {})
+            timestamp=datetime.fromisoformat(
+                data.get("timestamp", datetime.now().isoformat())
+            ),
+            configuration=data.get("configuration", {}),
         )
 
     @property
@@ -199,26 +210,32 @@ class SimulationResult:
     @property
     def failed_checks(self) -> List[CheckResult]:
         """Get list of failed checks."""
-        return [result for result in self.check_results.values() if not result.is_successful]
+        return [
+            result for result in self.check_results.values() if not result.is_successful
+        ]
 
     @property
     def successful_checks(self) -> List[CheckResult]:
         """Get list of successful checks."""
-        return [result for result in self.check_results.values() if result.is_successful]
+        return [
+            result for result in self.check_results.values() if result.is_successful
+        ]
 
     def get_checks_by_status(self, status: CheckStatus) -> List[CheckResult]:
         """Get all checks with a specific status."""
-        return [result for result in self.check_results.values() if result.status == status]
+        return [
+            result for result in self.check_results.values() if result.status == status
+        ]
 
     def save_to_file(self, filepath: str) -> None:
         """Save simulation result to JSON file."""
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
 
     @classmethod
-    def load_from_file(cls, filepath: str) -> 'SimulationResult':
+    def load_from_file(cls, filepath: str) -> "SimulationResult":
         """Load simulation result from JSON file."""
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
         return cls.from_dict(data)
 
@@ -231,6 +248,7 @@ class CheckTask:
     Used internally by the orchestrator to manage check execution,
     dependencies, and resource allocation.
     """
+
     name: str
     check_type: str
     python_version: Optional[str] = None

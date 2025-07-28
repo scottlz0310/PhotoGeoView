@@ -20,10 +20,14 @@ from datetime import datetime, timedelta
 # テスト用のモックファイルを作成
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from integration.services.file_discovery_cache import (
-    FileDiscoveryCache, FileDiscoveryResult, FolderScanCache, CacheMetrics
+    FileDiscoveryCache,
+    FileDiscoveryResult,
+    FolderScanCache,
+    CacheMetrics,
 )
 from integration.logging_system import LoggerSystem
 
@@ -38,7 +42,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
             max_file_entries=10,
             max_folder_entries=5,
             max_memory_mb=1.0,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # テスト用の一時ディレクトリとファイルを作成
@@ -55,6 +59,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
     def tearDown(self):
         """テストクリーンアップ"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_file_result_caching(self):
@@ -105,14 +110,12 @@ class TestFileDiscoveryCache(unittest.TestCase):
                 file_size=file_stat.st_size,
                 modified_time=file_stat.st_mtime,
                 discovery_time=datetime.now(),
-                validation_time=0.1
+                validation_time=0.1,
             )
             file_results.append(result)
 
         # フォルダスキャン結果をキャッシュ
-        success = self.cache.cache_folder_scan(
-            self.temp_path, file_results, 5, 1.5
-        )
+        success = self.cache.cache_folder_scan(self.temp_path, file_results, 5, 1.5)
         self.assertTrue(success)
 
         # キャッシュから取得
@@ -129,8 +132,8 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # 初期状態の確認
         stats = self.cache.get_cache_stats()
-        initial_hits = stats['validation_cache']['hits']
-        initial_misses = stats['validation_cache']['misses']
+        initial_hits = stats["validation_cache"]["hits"]
+        initial_misses = stats["validation_cache"]["misses"]
 
         # キャッシュミス
         result = self.cache.get_cached_validation_result(test_file)
@@ -138,7 +141,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # ミス数が増加していることを確認
         stats = self.cache.get_cache_stats()
-        self.assertEqual(stats['validation_cache']['misses'], initial_misses + 1)
+        self.assertEqual(stats["validation_cache"]["misses"], initial_misses + 1)
 
         # キャッシュに保存
         self.cache.cache_validation_result(test_file, True)
@@ -149,7 +152,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # ヒット数が増加していることを確認
         stats = self.cache.get_cache_stats()
-        self.assertEqual(stats['validation_cache']['hits'], initial_hits + 1)
+        self.assertEqual(stats["validation_cache"]["hits"], initial_hits + 1)
 
     def test_lru_eviction(self):
         """LRU削除機能のテスト"""
@@ -165,7 +168,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # 統計を確認
         stats = self.cache.get_cache_stats()
-        self.assertGreater(stats['validation_cache']['evictions'], 0)
+        self.assertGreater(stats["validation_cache"]["evictions"], 0)
 
     def test_cache_expiration(self):
         """キャッシュ期限切れのテスト"""
@@ -194,14 +197,14 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # クリーンアップ前の統計
         stats_before = self.cache.get_cache_stats()
-        entries_before = stats_before['validation_cache']['entries']
+        entries_before = stats_before["validation_cache"]["entries"]
 
         # クリーンアップ実行
         self.cache.cleanup_expired_entries()
 
         # クリーンアップ後の統計（期限切れがない場合は変化なし）
         stats_after = self.cache.get_cache_stats()
-        entries_after = stats_after['validation_cache']['entries']
+        entries_after = stats_after["validation_cache"]["entries"]
 
         # 期限切れエントリがない場合はエントリ数は変わらない
         self.assertEqual(entries_before, entries_after)
@@ -213,13 +216,15 @@ class TestFileDiscoveryCache(unittest.TestCase):
         self.cache.cache_validation_result(test_file, True)
         self.cache.cache_file_result(test_file, True, 0.1)
 
-        file_results = [FileDiscoveryResult(
-            file_path=test_file,
-            is_valid=True,
-            file_size=test_file.stat().st_size,
-            modified_time=test_file.stat().st_mtime,
-            discovery_time=datetime.now()
-        )]
+        file_results = [
+            FileDiscoveryResult(
+                file_path=test_file,
+                is_valid=True,
+                file_size=test_file.stat().st_size,
+                modified_time=test_file.stat().st_mtime,
+                discovery_time=datetime.now(),
+            )
+        ]
         self.cache.cache_folder_scan(self.temp_path, file_results, 1, 0.5)
 
         # 全キャッシュクリア
@@ -227,20 +232,20 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # 全てのキャッシュが空になっていることを確認
         stats = self.cache.get_cache_stats()
-        self.assertEqual(stats['file_cache']['entries'], 0)
-        self.assertEqual(stats['folder_cache']['entries'], 0)
-        self.assertEqual(stats['validation_cache']['entries'], 0)
+        self.assertEqual(stats["file_cache"]["entries"], 0)
+        self.assertEqual(stats["folder_cache"]["entries"], 0)
+        self.assertEqual(stats["validation_cache"]["entries"], 0)
 
     def test_cache_stats(self):
         """キャッシュ統計情報のテスト"""
         # 初期統計
         stats = self.cache.get_cache_stats()
-        self.assertIn('file_cache', stats)
-        self.assertIn('folder_cache', stats)
-        self.assertIn('validation_cache', stats)
-        self.assertIn('total_memory_mb', stats)
-        self.assertIn('total_entries', stats)
-        self.assertIn('overall_hit_rate', stats)
+        self.assertIn("file_cache", stats)
+        self.assertIn("folder_cache", stats)
+        self.assertIn("validation_cache", stats)
+        self.assertIn("total_memory_mb", stats)
+        self.assertIn("total_entries", stats)
+        self.assertIn("overall_hit_rate", stats)
 
         # データを追加
         test_file = self.test_files[0]
@@ -248,7 +253,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # 統計が更新されていることを確認
         stats = self.cache.get_cache_stats()
-        self.assertGreater(stats['validation_cache']['entries'], 0)
+        self.assertGreater(stats["validation_cache"]["entries"], 0)
 
     def test_cache_summary(self):
         """キャッシュサマリーのテスト"""
@@ -271,8 +276,8 @@ class TestFileDiscoveryCache(unittest.TestCase):
 
         # メモリ使用量が記録されていることを確認
         stats = self.cache.get_cache_stats()
-        self.assertGreater(stats['total_memory_mb'], 0)
-        self.assertGreater(stats['file_cache']['memory_usage_mb'], 0)
+        self.assertGreater(stats["total_memory_mb"], 0)
+        self.assertGreater(stats["file_cache"]["memory_usage_mb"], 0)
 
 
 class TestFileDiscoveryResult(unittest.TestCase):
@@ -288,6 +293,7 @@ class TestFileDiscoveryResult(unittest.TestCase):
     def tearDown(self):
         """テストクリーンアップ"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_cache_key_generation(self):
@@ -298,11 +304,13 @@ class TestFileDiscoveryResult(unittest.TestCase):
             is_valid=True,
             file_size=file_stat.st_size,
             modified_time=file_stat.st_mtime,
-            discovery_time=datetime.now()
+            discovery_time=datetime.now(),
         )
 
         # キャッシュキーが正しく生成されることを確認
-        expected_key = f"file_{self.test_file.stem}_{file_stat.st_size}_{int(file_stat.st_mtime)}"
+        expected_key = (
+            f"file_{self.test_file.stem}_{file_stat.st_size}_{int(file_stat.st_mtime)}"
+        )
         self.assertEqual(result.cache_key, expected_key)
 
     def test_expiration_check(self):
@@ -313,7 +321,7 @@ class TestFileDiscoveryResult(unittest.TestCase):
             is_valid=True,
             file_size=file_stat.st_size,
             modified_time=file_stat.st_mtime,
-            discovery_time=datetime.now()
+            discovery_time=datetime.now(),
         )
 
         # 初期状態では期限切れではない
@@ -327,5 +335,5 @@ class TestFileDiscoveryResult(unittest.TestCase):
         self.assertTrue(result.is_expired)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

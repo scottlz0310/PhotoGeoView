@@ -47,7 +47,7 @@ class GitignoreManager:
         "*.tmp",
         "*.temp",
         ".ci-temp/",
-        "# End CI/CD Simulation patterns"
+        "# End CI/CD Simulation patterns",
     ]
 
     def __init__(self, gitignore_path: str = ".gitignore"):
@@ -72,12 +72,14 @@ class GitignoreManager:
                 self.logger.info(f".gitignore file not found at {self.gitignore_path}")
                 return []
         except (PermissionError, OSError) as e:
-            self.logger.warning(f"Cannot access .gitignore path {self.gitignore_path}: {e}")
+            self.logger.warning(
+                f"Cannot access .gitignore path {self.gitignore_path}: {e}"
+            )
             return []
 
         try:
-            with open(self.gitignore_path, 'r', encoding='utf-8') as f:
-                return [line.rstrip('\n\r') for line in f.readlines()]
+            with open(self.gitignore_path, "r", encoding="utf-8") as f:
+                return [line.rstrip("\n\r") for line in f.readlines()]
         except Exception as e:
             self.logger.error(f"Failed to read .gitignore: {e}")
             return []
@@ -93,9 +95,9 @@ class GitignoreManager:
             # Ensure parent directory exists
             self.gitignore_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.gitignore_path, 'w', encoding='utf-8') as f:
+            with open(self.gitignore_path, "w", encoding="utf-8") as f:
                 for line in lines:
-                    f.write(line + '\n')
+                    f.write(line + "\n")
 
             self.logger.info(f"Updated .gitignore file: {self.gitignore_path}")
 
@@ -115,7 +117,7 @@ class GitignoreManager:
             return None
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        backup_path = self.gitignore_path.with_suffix(f'.backup_{timestamp}')
+        backup_path = self.gitignore_path.with_suffix(f".backup_{timestamp}")
 
         try:
             shutil.copy2(self.gitignore_path, backup_path)
@@ -164,7 +166,7 @@ class GitignoreManager:
         for line in lines:
             # Skip comments and empty lines
             line = line.strip()
-            if line and not line.startswith('#'):
+            if line and not line.startswith("#"):
                 patterns.add(line)
 
         return patterns
@@ -182,7 +184,7 @@ class GitignoreManager:
         ci_patterns = {
             "reports/ci-simulation/",
             ".kiro/ci-history/",
-            "temp/ci-simulation/"
+            "temp/ci-simulation/",
         }
 
         return any(pattern in existing_patterns for pattern in ci_patterns)
@@ -199,7 +201,7 @@ class GitignoreManager:
 
         for pattern in self.CI_SIMULATION_PATTERNS:
             # Skip comments
-            if pattern.startswith('#'):
+            if pattern.startswith("#"):
                 continue
 
             pattern = pattern.strip()
@@ -294,7 +296,9 @@ class GitignoreManager:
             # Write updated content
             self._write_gitignore(updated_lines)
 
-            self.logger.info("Successfully removed CI simulation patterns from .gitignore")
+            self.logger.info(
+                "Successfully removed CI simulation patterns from .gitignore"
+            )
             return True
 
         except Exception as e:
@@ -340,7 +344,7 @@ class GitignoreManager:
             # Check for common issues
             for i, line in enumerate(lines, 1):
                 # Check for invalid characters (basic check)
-                if '\0' in line:
+                if "\0" in line:
                     self.logger.warning(f"Invalid null character found at line {i}")
                     return False
 
@@ -359,12 +363,12 @@ class GitignoreManager:
             Dictionary with status information.
         """
         return {
-            'gitignore_exists': self.gitignore_path.exists(),
-            'gitignore_path': str(self.gitignore_path),
-            'has_ci_patterns': self.has_ci_simulation_patterns(),
-            'missing_patterns': self.get_missing_patterns(),
-            'total_lines': len(self._read_gitignore()),
-            'is_valid': self.validate_gitignore()
+            "gitignore_exists": self.gitignore_path.exists(),
+            "gitignore_path": str(self.gitignore_path),
+            "has_ci_patterns": self.has_ci_simulation_patterns(),
+            "missing_patterns": self.get_missing_patterns(),
+            "total_lines": len(self._read_gitignore()),
+            "is_valid": self.validate_gitignore(),
         }
 
     def list_backups(self) -> List[str]:

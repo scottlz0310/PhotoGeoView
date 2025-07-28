@@ -27,11 +27,11 @@ def test_basic_functionality():
             "",
             "# IDE",
             ".vscode/",
-            "*.swp"
+            "*.swp",
         ]
 
-        with open(gitignore_path, 'w') as f:
-            f.write('\n'.join(initial_content))
+        with open(gitignore_path, "w") as f:
+            f.write("\n".join(initial_content))
 
         # Test GitignoreManager
         manager = GitignoreManager(str(gitignore_path))
@@ -57,7 +57,7 @@ def test_backup_functionality():
 
         # Create initial content
         original_content = "# Original content\n__pycache__/\n*.pyc\n"
-        with open(gitignore_path, 'w') as f:
+        with open(gitignore_path, "w") as f:
             f.write(original_content)
 
         manager = GitignoreManager(str(gitignore_path))
@@ -69,14 +69,14 @@ def test_backup_functionality():
 
         # Modify original file
         modified_content = "# Modified content\n*.log\n"
-        with open(gitignore_path, 'w') as f:
+        with open(gitignore_path, "w") as f:
             f.write(modified_content)
 
         # Restore from backup
         assert manager.restore_backup(backup_path)
 
         # Verify restoration
-        with open(gitignore_path, 'r') as f:
+        with open(gitignore_path, "r") as f:
             restored_content = f.read()
 
         assert restored_content == original_content
@@ -92,14 +92,10 @@ def test_ci_pattern_management():
         gitignore_path = Path(temp_dir) / ".gitignore"
 
         # Create initial content
-        initial_content = [
-            "# Python",
-            "__pycache__/",
-            "*.pyc"
-        ]
+        initial_content = ["# Python", "__pycache__/", "*.pyc"]
 
-        with open(gitignore_path, 'w') as f:
-            f.write('\n'.join(initial_content))
+        with open(gitignore_path, "w") as f:
+            f.write("\n".join(initial_content))
 
         manager = GitignoreManager(str(gitignore_path))
 
@@ -137,11 +133,11 @@ def test_missing_patterns_detection():
             "# Python",
             "__pycache__/",
             "reports/ci-simulation/",  # This is a CI pattern
-            "*.pyc"
+            "*.pyc",
         ]
 
-        with open(gitignore_path, 'w') as f:
-            f.write('\n'.join(partial_content))
+        with open(gitignore_path, "w") as f:
+            f.write("\n".join(partial_content))
 
         manager = GitignoreManager(str(gitignore_path))
 
@@ -164,7 +160,7 @@ def test_status_information():
         gitignore_path = Path(temp_dir) / ".gitignore"
 
         # Create .gitignore
-        with open(gitignore_path, 'w') as f:
+        with open(gitignore_path, "w") as f:
             f.write("__pycache__/\n*.pyc\n")
 
         manager = GitignoreManager(str(gitignore_path))
@@ -172,12 +168,12 @@ def test_status_information():
         # Get status
         status = manager.get_status()
 
-        assert status['gitignore_exists'] is True
-        assert status['gitignore_path'] == str(gitignore_path)
-        assert status['has_ci_patterns'] is False
-        assert status['total_lines'] == 2
-        assert status['is_valid'] is True
-        assert isinstance(status['missing_patterns'], list)
+        assert status["gitignore_exists"] is True
+        assert status["gitignore_path"] == str(gitignore_path)
+        assert status["has_ci_patterns"] is False
+        assert status["total_lines"] == 2
+        assert status["is_valid"] is True
+        assert isinstance(status["missing_patterns"], list)
 
         print("✓ Status information test passed")
 
@@ -190,13 +186,14 @@ def test_backup_management():
         gitignore_path = Path(temp_dir) / ".gitignore"
 
         # Create .gitignore
-        with open(gitignore_path, 'w') as f:
+        with open(gitignore_path, "w") as f:
             f.write("__pycache__/\n")
 
         manager = GitignoreManager(str(gitignore_path))
 
         # Create multiple backups
         import time
+
         backup_paths = []
         for i in range(3):
             backup_path = manager.create_backup()
@@ -230,7 +227,7 @@ def test_validation():
         gitignore_path = Path(temp_dir) / ".gitignore"
 
         # Create valid .gitignore
-        with open(gitignore_path, 'w') as f:
+        with open(gitignore_path, "w") as f:
             f.write("__pycache__/\n*.pyc\n")
 
         manager = GitignoreManager(str(gitignore_path))

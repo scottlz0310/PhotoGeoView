@@ -31,6 +31,7 @@ from .logging_system import LoggerSystem
 @dataclass
 class PerformanceAlert:
     """Performance alert data structure"""
+
     level: str  # info, warning, critical
     message: str
     component: AIComponent
@@ -43,6 +44,7 @@ class PerformanceAlert:
 @dataclass
 class ResourceThresholds:
     """Resource usage thresholds for alerting"""
+
     memory_warning_mb: float = 400.0
     memory_critical_mb: float = 600.0
     cpu_warning_percent: float = 70.0
@@ -65,9 +67,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
     - Historical performance data collection
     """
 
-    def __init__(self,
-                 config_manager: ConfigManager = None,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None
+    ):
         """
         Initialize the performance monitor
 
@@ -91,9 +93,21 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         # AI component tracking
         self.ai_components: Dict[AIComponent, Dict[str, Any]] = {
-            AIComponent.COPILOT: {"status": "unknown", "last_check": None, "response_times": deque(maxlen=100)},
-            AIComponent.CURSOR: {"status": "unknown", "last_check": None, "response_times": deque(maxlen=100)},
-            AIComponent.KIRO: {"status": "active", "last_check": datetime.now(), "response_times": deque(maxlen=100)}
+            AIComponent.COPILOT: {
+                "status": "unknown",
+                "last_check": None,
+                "response_times": deque(maxlen=100),
+            },
+            AIComponent.CURSOR: {
+                "status": "unknown",
+                "last_check": None,
+                "response_times": deque(maxlen=100),
+            },
+            AIComponent.KIRO: {
+                "status": "active",
+                "last_check": datetime.now(),
+                "response_times": deque(maxlen=100),
+            },
         }
 
         # Alert system
@@ -110,7 +124,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         self.alert_cooldown_duration = 60.0  # seconds between same alerts
 
         # Performance optimization integration
-        self.optimizer: Optional['PerformanceOptimizer'] = None
+        self.optimizer: Optional["PerformanceOptimizer"] = None
         self.recent_alerts: deque = deque(maxlen=100)
         self.alert_cooldown: Dict[str, datetime] = {}  # Prevent alert spam
 
@@ -125,7 +139,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "performance_monitor_init",
-            "Kiro Performance Monitor initialized"
+            "Kiro Performance Monitor initialized",
         )
 
     def _load_thresholds_from_config(self):
@@ -170,9 +184,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_thresholds"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _get_system_info(self) -> Dict[str, Any]:
@@ -185,14 +200,11 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 "memory_total": psutil.virtual_memory().total,
                 "platform": os.name,
                 "python_version": f"{os.sys.version_info.major}.{os.sys.version_info.minor}.{os.sys.version_info.micro}",
-                "process_id": os.getpid()
+                "process_id": os.getpid(),
             }
         except Exception as e:
             self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "system_info_collection",
-                {}
+                AIComponent.KIRO, e, "system_info_collection", {}
             )
             return {}
 
@@ -209,16 +221,12 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
             # Start monitoring thread
             self.monitoring_thread = threading.Thread(
-                target=self._monitoring_loop,
-                name="KiroPerformanceMonitor",
-                daemon=True
+                target=self._monitoring_loop, name="KiroPerformanceMonitor", daemon=True
             )
             self.monitoring_thread.start()
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "monitoring_start",
-                "Performance monitoring started"
+                AIComponent.KIRO, "monitoring_start", "Performance monitoring started"
             )
 
     def stop_monitoring(self) -> None:
@@ -235,9 +243,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 self.monitoring_thread.join(timeout=5.0)
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "monitoring_stop",
-                "Performance monitoring stopped"
+                AIComponent.KIRO, "monitoring_stop", "Performance monitoring stopped"
             )
 
     def get_memory_usage(self) -> Dict[str, float]:
@@ -256,14 +262,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 "system_total_mb": system_memory.total / 1024 / 1024,
                 "system_available_mb": system_memory.available / 1024 / 1024,
                 "system_used_percent": system_memory.percent,
-                "process_percent": self.process.memory_percent()
+                "process_percent": self.process.memory_percent(),
             }
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "memory_usage_collection"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {}
 
@@ -293,26 +300,29 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                     "avg_image_load_time": self.current_metrics.avg_image_load_time,
                     "avg_thumbnail_time": self.current_metrics.avg_thumbnail_time,
                     "avg_exif_parse_time": self.current_metrics.avg_exif_parse_time,
-                    "avg_map_render_time": self.current_metrics.avg_map_render_time
+                    "avg_map_render_time": self.current_metrics.avg_map_render_time,
                 }
             else:
                 metrics_dict = {"status": "no_data"}
 
             # Add system info
-            metrics_dict.update({
-                "system_info": self.system_info,
-                "monitoring_active": self.is_monitoring,
-                "metrics_history_count": len(self.metrics_history),
-                "recent_alerts_count": len(self.recent_alerts)
-            })
+            metrics_dict.update(
+                {
+                    "system_info": self.system_info,
+                    "monitoring_active": self.is_monitoring,
+                    "metrics_history_count": len(self.metrics_history),
+                    "recent_alerts_count": len(self.recent_alerts),
+                }
+            )
 
             return metrics_dict
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "performance_metrics_collection"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "error"}
 
@@ -337,10 +347,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_performance(
                 component,
                 operation,
-                {
-                    "duration": duration,
-                    "timestamp": datetime.now().isoformat()
-                }
+                {"duration": duration, "timestamp": datetime.now().isoformat()},
             )
 
             # Check for performance alerts
@@ -348,9 +355,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "operation_time_logging", "op_name": operation},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def get_ai_component_status(self) -> Dict[str, str]:
@@ -380,9 +388,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "ai_component_status"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {}
 
@@ -394,7 +403,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "monitoring_loop_start",
-            "Performance monitoring loop started"
+            "Performance monitoring loop started",
         )
 
         while self.is_monitoring:
@@ -403,7 +412,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 self._collect_metrics()
 
                 # Perform health checks periodically
-                if (datetime.now() - self.last_health_check).total_seconds() >= self.health_check_interval:
+                if (
+                    datetime.now() - self.last_health_check
+                ).total_seconds() >= self.health_check_interval:
                     self._perform_health_checks()
                     self.last_health_check = datetime.now()
 
@@ -412,16 +423,17 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "monitoring_loop"},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
-                time.sleep(self.monitoring_interval)  # Continue monitoring despite errors
+                time.sleep(
+                    self.monitoring_interval
+                )  # Continue monitoring despite errors
 
         self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "monitoring_loop_end",
-            "Performance monitoring loop ended"
+            AIComponent.KIRO, "monitoring_loop_end", "Performance monitoring loop ended"
         )
 
     def _collect_metrics(self):
@@ -438,17 +450,21 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             metrics = PerformanceMetrics(
                 timestamp=datetime.now(),
                 memory_usage_mb=memory_info.get("process_rss_mb", 0.0),
-                memory_peak_mb=memory_info.get("process_rss_mb", 0.0),  # TODO: Track actual peak
+                memory_peak_mb=memory_info.get(
+                    "process_rss_mb", 0.0
+                ),  # TODO: Track actual peak
                 memory_available_mb=memory_info.get("system_available_mb", 0.0),
                 cpu_usage_percent=cpu_percent,
-                cpu_cores=self.system_info.get("cpu_count", 1)
+                cpu_cores=self.system_info.get("cpu_count", 1),
             )
 
             # Calculate average response times
             for component, info in self.ai_components.items():
                 response_times = info.get("response_times", deque())
                 if response_times:
-                    avg_time = sum(response_times) / len(response_times) * 1000  # Convert to ms
+                    avg_time = (
+                        sum(response_times) / len(response_times) * 1000
+                    )  # Convert to ms
 
                     if component == AIComponent.COPILOT:
                         metrics.avg_image_load_time = avg_time
@@ -465,9 +481,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "metrics_collection"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _perform_health_checks(self):
@@ -493,14 +510,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "health_check",
-                f"Health check completed: {self.get_ai_component_status()}"
+                f"Health check completed: {self.get_ai_component_status()}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "health_checks"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Alert system
@@ -510,34 +528,79 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         # Memory alerts
         if metrics.memory_usage_mb > self.thresholds.memory_critical_mb:
-            self._create_alert("critical", "High memory usage", AIComponent.KIRO,
-                             "memory_usage", metrics.memory_usage_mb, self.thresholds.memory_critical_mb)
+            self._create_alert(
+                "critical",
+                "High memory usage",
+                AIComponent.KIRO,
+                "memory_usage",
+                metrics.memory_usage_mb,
+                self.thresholds.memory_critical_mb,
+            )
         elif metrics.memory_usage_mb > self.thresholds.memory_warning_mb:
-            self._create_alert("warning", "Elevated memory usage", AIComponent.KIRO,
-                             "memory_usage", metrics.memory_usage_mb, self.thresholds.memory_warning_mb)
+            self._create_alert(
+                "warning",
+                "Elevated memory usage",
+                AIComponent.KIRO,
+                "memory_usage",
+                metrics.memory_usage_mb,
+                self.thresholds.memory_warning_mb,
+            )
 
         # CPU alerts
         if metrics.cpu_usage_percent > self.thresholds.cpu_critical_percent:
-            self._create_alert("critical", "High CPU usage", AIComponent.KIRO,
-                             "cpu_usage", metrics.cpu_usage_percent, self.thresholds.cpu_critical_percent)
+            self._create_alert(
+                "critical",
+                "High CPU usage",
+                AIComponent.KIRO,
+                "cpu_usage",
+                metrics.cpu_usage_percent,
+                self.thresholds.cpu_critical_percent,
+            )
         elif metrics.cpu_usage_percent > self.thresholds.cpu_warning_percent:
-            self._create_alert("warning", "Elevated CPU usage", AIComponent.KIRO,
-                             "cpu_usage", metrics.cpu_usage_percent, self.thresholds.cpu_warning_percent)
+            self._create_alert(
+                "warning",
+                "Elevated CPU usage",
+                AIComponent.KIRO,
+                "cpu_usage",
+                metrics.cpu_usage_percent,
+                self.thresholds.cpu_warning_percent,
+            )
 
-    def _check_response_time_alert(self, operation: str, duration: float, component: AIComponent):
+    def _check_response_time_alert(
+        self, operation: str, duration: float, component: AIComponent
+    ):
         """Check for response time alerts"""
 
         duration_ms = duration * 1000  # Convert to milliseconds
 
         if duration_ms > self.thresholds.response_time_critical_ms:
-            self._create_alert("critical", f"Slow operation: {operation}", component,
-                             "response_time", duration_ms, self.thresholds.response_time_critical_ms)
+            self._create_alert(
+                "critical",
+                f"Slow operation: {operation}",
+                component,
+                "response_time",
+                duration_ms,
+                self.thresholds.response_time_critical_ms,
+            )
         elif duration_ms > self.thresholds.response_time_warning_ms:
-            self._create_alert("warning", f"Slow operation: {operation}", component,
-                             "response_time", duration_ms, self.thresholds.response_time_warning_ms)
+            self._create_alert(
+                "warning",
+                f"Slow operation: {operation}",
+                component,
+                "response_time",
+                duration_ms,
+                self.thresholds.response_time_warning_ms,
+            )
 
-    def _create_alert(self, level: str, message: str, component: AIComponent,
-                     metric_name: str, current_value: float, threshold: float):
+    def _create_alert(
+        self,
+        level: str,
+        message: str,
+        component: AIComponent,
+        metric_name: str,
+        current_value: float,
+        threshold: float,
+    ):
         """Create and process a performance alert"""
 
         try:
@@ -546,7 +609,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             now = datetime.now()
 
             if alert_key in self.alert_cooldown:
-                if (now - self.alert_cooldown[alert_key]).total_seconds() < 60:  # 1 minute cooldown
+                if (
+                    now - self.alert_cooldown[alert_key]
+                ).total_seconds() < 60:  # 1 minute cooldown
                     return
 
             # Create alert
@@ -557,7 +622,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 metric_name=metric_name,
                 current_value=current_value,
                 threshold=threshold,
-                timestamp=now
+                timestamp=now,
             )
 
             # Store alert
@@ -568,7 +633,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_ai_operation(
                 component,
                 f"performance_alert_{level}",
-                f"{message}: {current_value:.2f} (threshold: {threshold:.2f})"
+                f"{message}: {current_value:.2f} (threshold: {threshold:.2f})",
             )
 
             # Notify alert handlers
@@ -580,14 +645,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                         AIComponent.KIRO,
                         e,
                         "alert_handler_error",
-                        {"alert_level": level, "message": message}
+                        {"alert_level": level, "message": message},
                     )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "alert_creation", "level": level},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Alert handler management
@@ -614,8 +680,12 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             # Calculate averages from recent history
             recent_metrics = list(self.metrics_history)[-10:]  # Last 10 measurements
 
-            avg_memory = sum(m.memory_usage_mb for m in recent_metrics) / len(recent_metrics)
-            avg_cpu = sum(m.cpu_usage_percent for m in recent_metrics) / len(recent_metrics)
+            avg_memory = sum(m.memory_usage_mb for m in recent_metrics) / len(
+                recent_metrics
+            )
+            avg_cpu = sum(m.cpu_usage_percent for m in recent_metrics) / len(
+                recent_metrics
+            )
 
             # Component status
             component_status = self.get_ai_component_status()
@@ -625,16 +695,23 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 "average_memory_mb": avg_memory,
                 "average_cpu_percent": avg_cpu,
                 "component_status": component_status,
-                "recent_alerts": len([a for a in self.recent_alerts if (datetime.now() - a.timestamp).total_seconds() < 300]),  # Last 5 minutes
+                "recent_alerts": len(
+                    [
+                        a
+                        for a in self.recent_alerts
+                        if (datetime.now() - a.timestamp).total_seconds() < 300
+                    ]
+                ),  # Last 5 minutes
                 "metrics_collected": len(self.metrics_history),
-                "system_info": self.system_info
+                "system_info": self.system_info,
             }
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "performance_summary"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "error"}
 
@@ -652,7 +729,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                     "metric_name": alert.metric_name,
                     "current_value": alert.current_value,
                     "threshold": alert.threshold,
-                    "timestamp": alert.timestamp.isoformat()
+                    "timestamp": alert.timestamp.isoformat(),
                 }
                 for alert in self.recent_alerts
                 if alert.timestamp >= cutoff_time
@@ -662,9 +739,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "recent_alerts", "minutes": minutes},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return []
 
@@ -689,22 +767,25 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                     "cpu_warning_percent": self.thresholds.cpu_warning_percent,
                     "cpu_critical_percent": self.thresholds.cpu_critical_percent,
                     "response_time_warning_ms": self.thresholds.response_time_warning_ms,
-                    "response_time_critical_ms": self.thresholds.response_time_critical_ms
+                    "response_time_critical_ms": self.thresholds.response_time_critical_ms,
                 }
 
-                self.config_manager.set_setting("performance.thresholds", threshold_dict)
+                self.config_manager.set_setting(
+                    "performance.thresholds", threshold_dict
+                )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "thresholds_update",
-                f"Performance thresholds updated: {new_thresholds}"
+                f"Performance thresholds updated: {new_thresholds}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "threshold_update", "thresholds": str(new_thresholds)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def shutdown(self):
@@ -723,16 +804,14 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_monitor_shutdown",
-                "Performance monitor shutdown complete"
+                "Performance monitor shutdown complete",
             )
 
         except Exception as e:
             self.logger_system.log_error(
-                AIComponent.KIRO,
-                e,
-                "performance_monitor_shutdown",
-                {}
+                AIComponent.KIRO, e, "performance_monitor_shutdown", {}
             )
+
     def _load_thresholds_from_config(self):
         """Load performance thresholds from configuration"""
         try:
@@ -749,16 +828,20 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 self.thresholds.cpu_critical_percent = self.config_manager.get_setting(
                     "performance.cpu_critical_percent", 90.0
                 )
-                self.thresholds.response_time_warning_ms = self.config_manager.get_setting(
-                    "performance.response_time_warning_ms", 1000.0
+                self.thresholds.response_time_warning_ms = (
+                    self.config_manager.get_setting(
+                        "performance.response_time_warning_ms", 1000.0
+                    )
                 )
-                self.thresholds.response_time_critical_ms = self.config_manager.get_setting(
-                    "performance.response_time_critical_ms", 3000.0
- )
+                self.thresholds.response_time_critical_ms = (
+                    self.config_manager.get_setting(
+                        "performance.response_time_critical_ms", 3000.0
+                    )
+                )
         except Exception as e:
             self.logger_system.error(f"Failed to load thresholds from config: {e}")
 
-    def set_optimizer(self, optimizer: 'PerformanceOptimizer'):
+    def set_optimizer(self, optimizer: "PerformanceOptimizer"):
         """Set performance optimizer for integration"""
         self.optimizer = optimizer
 
@@ -773,21 +856,20 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 self.monitoring_thread = threading.Thread(
                     target=self._monitoring_loop,
                     name="performance_monitor",
-                    daemon=True
+                    daemon=True,
                 )
                 self.monitoring_thread.start()
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "monitoring_started",
-                "Performance monitoring started"
+                AIComponent.KIRO, "monitoring_started", "Performance monitoring started"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "start_monitoring"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def stop_monitoring(self):
@@ -800,16 +882,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 self.monitoring_thread.join(timeout=5.0)
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "monitoring_stopped",
-                "Performance monitoring stopped"
+                AIComponent.KIRO, "monitoring_stopped", "Performance monitoring stopped"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "stop_monitoring"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _monitoring_loop(self):
@@ -835,9 +916,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "monitoring_loop"},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 time.sleep(5.0)  # Longer sleep on error
 
@@ -850,7 +932,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             # Memory metrics
             memory_info = process.memory_info()
             memory_usage_mb = memory_info.rss / 1024 / 1024
-            memory_peak_mb = getattr(memory_info, 'peak_wset', memory_info.rss) / 1024 / 1024
+            memory_peak_mb = (
+                getattr(memory_info, "peak_wset", memory_info.rss) / 1024 / 1024
+            )
             memory_available_mb = system_memory.available / 1024 / 1024
 
             # CPU metrics
@@ -865,15 +949,29 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             cache_misses = 0
 
             # AI component metrics
-            copilot_operations = len(self.ai_components[AIComponent.COPILOT]["response_times"])
-            cursor_operations = len(self.ai_components[AIComponent.CURSOR]["response_times"])
-            kiro_operations = len(self.ai_components[AIComponent.KIRO]["response_times"])
+            copilot_operations = len(
+                self.ai_components[AIComponent.COPILOT]["response_times"]
+            )
+            cursor_operations = len(
+                self.ai_components[AIComponent.CURSOR]["response_times"]
+            )
+            kiro_operations = len(
+                self.ai_components[AIComponent.KIRO]["response_times"]
+            )
 
             # Response times (averages)
-            avg_image_load_time = self._calculate_average_response_time(AIComponent.COPILOT)
-            avg_thumbnail_time = self._calculate_average_response_time(AIComponent.CURSOR)
-            avg_exif_parse_time = self._calculate_average_response_time(AIComponent.COPILOT)
-            avg_map_render_time = self._calculate_average_response_time(AIComponent.COPILOT)
+            avg_image_load_time = self._calculate_average_response_time(
+                AIComponent.COPILOT
+            )
+            avg_thumbnail_time = self._calculate_average_response_time(
+                AIComponent.CURSOR
+            )
+            avg_exif_parse_time = self._calculate_average_response_time(
+                AIComponent.COPILOT
+            )
+            avg_map_render_time = self._calculate_average_response_time(
+                AIComponent.COPILOT
+            )
 
             return PerformanceMetrics(
                 memory_usage_mb=memory_usage_mb,
@@ -892,14 +990,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 avg_image_load_time=avg_image_load_time,
                 avg_thumbnail_time=avg_thumbnail_time,
                 avg_exif_parse_time=avg_exif_parse_time,
-                avg_map_render_time=avg_map_render_time
+                avg_map_render_time=avg_map_render_time,
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "collect_enhanced_metrics"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return None
 
@@ -920,43 +1019,93 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
             # Memory alerts
             if metrics.memory_usage_mb > self.thresholds.memory_critical_mb:
-                self._emit_performance_alert("critical", "Memory usage critical", AIComponent.KIRO,
-                               "memory_usage", metrics.memory_usage_mb, self.thresholds.memory_critical_mb)
+                self._emit_performance_alert(
+                    "critical",
+                    "Memory usage critical",
+                    AIComponent.KIRO,
+                    "memory_usage",
+                    metrics.memory_usage_mb,
+                    self.thresholds.memory_critical_mb,
+                )
             elif metrics.memory_usage_mb > self.thresholds.memory_warning_mb:
-                self._emit_performance_alert("warning", "Memory usage high", AIComponent.KIRO,
-                               "memory_usage", metrics.memory_usage_mb, self.thresholds.memory_warning_mb)
+                self._emit_performance_alert(
+                    "warning",
+                    "Memory usage high",
+                    AIComponent.KIRO,
+                    "memory_usage",
+                    metrics.memory_usage_mb,
+                    self.thresholds.memory_warning_mb,
+                )
 
             # CPU alerts
             if metrics.cpu_usage_percent > self.thresholds.cpu_critical_percent:
-                self._emit_performance_alert("critical", "CPU usage critical", AIComponent.KIRO,
-                               "cpu_usage", metrics.cpu_usage_percent, self.thresholds.cpu_critical_percent)
+                self._emit_performance_alert(
+                    "critical",
+                    "CPU usage critical",
+                    AIComponent.KIRO,
+                    "cpu_usage",
+                    metrics.cpu_usage_percent,
+                    self.thresholds.cpu_critical_percent,
+                )
             elif metrics.cpu_usage_percent > self.thresholds.cpu_warning_percent:
-                self._emit_performance_alert("warning", "CPU usage high", AIComponent.KIRO,
-                               "cpu_usage", metrics.cpu_usage_percent, self.thresholds.cpu_warning_percent)
+                self._emit_performance_alert(
+                    "warning",
+                    "CPU usage high",
+                    AIComponent.KIRO,
+                    "cpu_usage",
+                    metrics.cpu_usage_percent,
+                    self.thresholds.cpu_warning_percent,
+                )
 
             # Response time alerts
             if metrics.avg_image_load_time > self.thresholds.response_time_critical_ms:
-                self._emit_performance_alert("critical", "Image loading very slow", AIComponent.COPILOT,
-                               "response_time", metrics.avg_image_load_time, self.thresholds.response_time_critical_ms)
+                self._emit_performance_alert(
+                    "critical",
+                    "Image loading very slow",
+                    AIComponent.COPILOT,
+                    "response_time",
+                    metrics.avg_image_load_time,
+                    self.thresholds.response_time_critical_ms,
+                )
             elif metrics.avg_image_load_time > self.thresholds.response_time_warning_ms:
-                self._emit_performance_alert("warning", "Image loading slow", AIComponent.COPILOT,
-                               "response_time", metrics.avg_image_load_time, self.thresholds.response_time_warning_ms)
+                self._emit_performance_alert(
+                    "warning",
+                    "Image loading slow",
+                    AIComponent.COPILOT,
+                    "response_time",
+                    metrics.avg_image_load_time,
+                    self.thresholds.response_time_warning_ms,
+                )
 
             # Cache performance alerts
             cache_hit_ratio = metrics.cache_hit_ratio
             if cache_hit_ratio < 0.5:  # Less than 50%
-                self._emit_performance_alert("warning", "Low cache hit ratio", AIComponent.KIRO,
-                               "cache_hit_ratio", cache_hit_ratio, 0.5)
+                self._emit_performance_alert(
+                    "warning",
+                    "Low cache hit ratio",
+                    AIComponent.KIRO,
+                    "cache_hit_ratio",
+                    cache_hit_ratio,
+                    0.5,
+                )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "check_performance_alerts"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
-    def _emit_performance_alert(self, level: str, message: str, component: AIComponent,
-                   metric_name: str, current_value: float, threshold: float):
+    def _emit_performance_alert(
+        self,
+        level: str,
+        message: str,
+        component: AIComponent,
+        metric_name: str,
+        current_value: float,
+        threshold: float,
+    ):
         """Emit performance alert with enhanced suppression and optimization triggers"""
         try:
             # Create alert key for suppression
@@ -966,7 +1115,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             # Check if alert is suppressed
             if alert_key in self.alert_cooldown:
                 last_alert_time = self.alert_cooldown[alert_key]
-                if (current_time - last_alert_time).total_seconds() < 60.0:  # 60 second cooldown
+                if (
+                    current_time - last_alert_time
+                ).total_seconds() < 60.0:  # 60 second cooldown
                     return  # Suppress duplicate alert
 
             # Create alert
@@ -977,7 +1128,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 metric_name=metric_name,
                 current_value=current_value,
                 threshold=threshold,
-                timestamp=current_time
+                timestamp=current_time,
             )
 
             # Store alert
@@ -995,7 +1146,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_ai_operation(
                 component,
                 "performance_alert",
-                f"[{level.upper()}] {message}: {current_value:.2f} (threshold: {threshold:.2f})"
+                f"[{level.upper()}] {message}: {current_value:.2f} (threshold: {threshold:.2f})",
             )
 
             # Trigger optimization if available
@@ -1004,9 +1155,14 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "emit_performance_alert", "level": level, "message": message},
-                AIComponent.KIRO
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
+                {
+                    "operation": "emit_performance_alert",
+                    "level": level,
+                    "message": message,
+                },
+                AIComponent.KIRO,
             )
 
     def _trigger_emergency_optimization(self, metric_name: str, current_value: float):
@@ -1033,9 +1189,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "trigger_emergency_optimization", "metric": metric_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _update_ai_component_status(self):
@@ -1065,9 +1222,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "update_ai_component_status"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Enhanced public API methods
@@ -1086,12 +1244,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         """Record operation time for AI component"""
         try:
             if component in self.ai_components:
-                self.ai_components[component]["response_times"].append(operation_time_ms)
+                self.ai_components[component]["response_times"].append(
+                    operation_time_ms
+                )
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "record_operation_time", "component": component.value},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def get_current_metrics(self) -> Optional[PerformanceMetrics]:
@@ -1120,14 +1281,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "thresholds_updated",
-                f"Performance thresholds updated: {list(kwargs.keys())}"
+                f"Performance thresholds updated: {list(kwargs.keys())}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "update_thresholds"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def cleanup(self):
@@ -1144,12 +1306,13 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_monitor_cleanup",
-                "Performance monitor cleaned up"
+                "Performance monitor cleaned up",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cleanup"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )

@@ -23,22 +23,24 @@ from .models import AIComponent
 
 class ErrorCategory(Enum):
     """Error category enumeration for unified error handling"""
-    UI_ERROR = "ui"                    # CursorBLD UI-related errors
-    CORE_ERROR = "core"               # CS4Coding functionality errors
+
+    UI_ERROR = "ui"  # CursorBLD UI-related errors
+    CORE_ERROR = "core"  # CS4Coding functionality errors
     INTEGRATION_ERROR = "integration"  # Kiro integration errors
-    SYSTEM_ERROR = "system"           # System-level errors
-    NETWORK_ERROR = "network"         # Network-related errors
-    FILE_ERROR = "file"               # File system errors
-    VALIDATION_ERROR = "validation"   # Data validation errors
-    PERFORMANCE_ERROR = "performance" # Performance-related errors
+    SYSTEM_ERROR = "system"  # System-level errors
+    NETWORK_ERROR = "network"  # Network-related errors
+    FILE_ERROR = "file"  # File system errors
+    VALIDATION_ERROR = "validation"  # Data validation errors
+    PERFORMANCE_ERROR = "performance"  # Performance-related errors
 
 
 class ErrorSeverity(Enum):
     """Error severity levels"""
+
     CRITICAL = "critical"  # Application cannot continue
-    ERROR = "error"        # Feature unavailable but app can continue
-    WARNING = "warning"    # Potential issue, degraded functionality
-    INFO = "info"         # Informational message
+    ERROR = "error"  # Feature unavailable but app can continue
+    WARNING = "warning"  # Potential issue, degraded functionality
+    INFO = "info"  # Informational message
 
 
 @dataclass
@@ -102,7 +104,7 @@ class IntegratedErrorHandler:
             ErrorCategory.NETWORK_ERROR: self._handle_network_error,
             ErrorCategory.FILE_ERROR: self._handle_file_error,
             ErrorCategory.VALIDATION_ERROR: self._handle_validation_error,
-            ErrorCategory.PERFORMANCE_ERROR: self._handle_performance_error
+            ErrorCategory.PERFORMANCE_ERROR: self._handle_performance_error,
         }
 
         # Error statistics
@@ -114,11 +116,13 @@ class IntegratedErrorHandler:
         self.recovery_handlers: Dict[str, Callable] = {}
         self.fallback_handlers: Dict[str, Callable] = {}
 
-    def handle_error(self,
-                    error: Exception,
-                    category: ErrorCategory,
-                    context: Dict[str, Any] = None,
-                    ai_component: Optional[AIComponent] = None) -> ErrorContext:
+    def handle_error(
+        self,
+        error: Exception,
+        category: ErrorCategory,
+        context: Dict[str, Any] = None,
+        ai_component: Optional[AIComponent] = None,
+    ) -> ErrorContext:
         """
         Handle an error with unified error management
 
@@ -133,7 +137,9 @@ class IntegratedErrorHandler:
         """
 
         # Create error context
-        error_context = self._create_error_context(error, category, context, ai_component)
+        error_context = self._create_error_context(
+            error, category, context, ai_component
+        )
 
         # Log the error
         self._log_error(error_context)
@@ -141,7 +147,7 @@ class IntegratedErrorHandler:
         # Update statistics
         self.error_counts[category] += 1
         self.recent_errors.insert(0, error_context)
-        self.recent_errors = self.recent_errors[:self.max_recent_errors]
+        self.recent_errors = self.recent_errors[: self.max_recent_errors]
 
         # Apply error handling strategy
         strategy = self.error_strategies.get(category, self._default_error_handling)
@@ -153,11 +159,13 @@ class IntegratedErrorHandler:
 
         return error_context
 
-    def _create_error_context(self,
-                             error: Exception,
-                             category: ErrorCategory,
-                             context: Dict[str, Any] = None,
-                             ai_component: Optional[AIComponent] = None) -> ErrorContext:
+    def _create_error_context(
+        self,
+        error: Exception,
+        category: ErrorCategory,
+        context: Dict[str, Any] = None,
+        ai_component: Optional[AIComponent] = None,
+    ) -> ErrorContext:
         """Create comprehensive error context"""
 
         context = context or {}
@@ -179,7 +187,7 @@ class IntegratedErrorHandler:
         system_info = {
             "python_version": sys.version,
             "platform": sys.platform,
-            "ai_component": ai_component.value if ai_component else None
+            "ai_component": ai_component.value if ai_component else None,
         }
 
         # Determine recovery options
@@ -202,10 +210,12 @@ class IntegratedErrorHandler:
             system_info=system_info,
             recovery_suggestions=recovery_suggestions,
             retry_possible=retry_possible,
-            fallback_available=fallback_available
+            fallback_available=fallback_available,
         )
 
-    def _determine_severity(self, error: Exception, category: ErrorCategory) -> ErrorSeverity:
+    def _determine_severity(
+        self, error: Exception, category: ErrorCategory
+    ) -> ErrorSeverity:
         """Determine error severity based on error type and category"""
 
         # Critical errors that prevent application from continuing
@@ -228,10 +238,12 @@ class IntegratedErrorHandler:
         # Default to ERROR for unknown cases
         return ErrorSeverity.ERROR
 
-    def _generate_user_message(self,
-                              error: Exception,
-                              category: ErrorCategory,
-                              ai_component: Optional[AIComponent]) -> str:
+    def _generate_user_message(
+        self,
+        error: Exception,
+        category: ErrorCategory,
+        ai_component: Optional[AIComponent],
+    ) -> str:
         """Generate user-friendly error message"""
 
         component_name = ai_component.value.title() if ai_component else "System"
@@ -249,47 +261,61 @@ class IntegratedErrorHandler:
         elif category == ErrorCategory.PERFORMANCE_ERROR:
             return f"Performance issue detected. The application may respond slowly."
         else:
-            return f"An unexpected error occurred in {component_name}. Please try again."
+            return (
+                f"An unexpected error occurred in {component_name}. Please try again."
+            )
 
-    def _get_recovery_suggestions(self, error: Exception, category: ErrorCategory) -> List[str]:
+    def _get_recovery_suggestions(
+        self, error: Exception, category: ErrorCategory
+    ) -> List[str]:
         """Get recovery suggestions based on error type and category"""
 
         suggestions = []
 
         if category == ErrorCategory.FILE_ERROR:
-            suggestions.extend([
-                "Check if the file exists and is accessible",
-                "Verify file permissions",
-                "Try selecting a different file",
-                "Restart the application if the problem persists"
-            ])
+            suggestions.extend(
+                [
+                    "Check if the file exists and is accessible",
+                    "Verify file permissions",
+                    "Try selecting a different file",
+                    "Restart the application if the problem persists",
+                ]
+            )
         elif category == ErrorCategory.NETWORK_ERROR:
-            suggestions.extend([
-                "Check your internet connection",
-                "Try again in a few moments",
-                "Check firewall settings",
-                "Use offline features if available"
-            ])
+            suggestions.extend(
+                [
+                    "Check your internet connection",
+                    "Try again in a few moments",
+                    "Check firewall settings",
+                    "Use offline features if available",
+                ]
+            )
         elif category == ErrorCategory.UI_ERROR:
-            suggestions.extend([
-                "Try refreshing the display",
-                "Switch to a different theme",
-                "Restart the application",
-                "Check display settings"
-            ])
+            suggestions.extend(
+                [
+                    "Try refreshing the display",
+                    "Switch to a different theme",
+                    "Restart the application",
+                    "Check display settings",
+                ]
+            )
         elif category == ErrorCategory.PERFORMANCE_ERROR:
-            suggestions.extend([
-                "Close other applications to free memory",
-                "Reduce image quality settings",
-                "Clear application cache",
-                "Restart the application"
-            ])
+            suggestions.extend(
+                [
+                    "Close other applications to free memory",
+                    "Reduce image quality settings",
+                    "Clear application cache",
+                    "Restart the application",
+                ]
+            )
         else:
-            suggestions.extend([
-                "Try the operation again",
-                "Restart the application",
-                "Check the application logs for more details"
-            ])
+            suggestions.extend(
+                [
+                    "Try the operation again",
+                    "Restart the application",
+                    "Check the application logs for more details",
+                ]
+            )
 
         return suggestions
 
@@ -300,7 +326,7 @@ class IntegratedErrorHandler:
         retry_categories = {
             ErrorCategory.NETWORK_ERROR,
             ErrorCategory.PERFORMANCE_ERROR,
-            ErrorCategory.FILE_ERROR
+            ErrorCategory.FILE_ERROR,
         }
 
         # Permanent errors that shouldn't be retried
@@ -315,7 +341,7 @@ class IntegratedErrorHandler:
         fallback_categories = {
             ErrorCategory.UI_ERROR,
             ErrorCategory.CORE_ERROR,
-            ErrorCategory.INTEGRATION_ERROR
+            ErrorCategory.INTEGRATION_ERROR,
         }
 
         return category in fallback_categories
@@ -327,7 +353,9 @@ class IntegratedErrorHandler:
             log_message = f"[{error_context.ai_component.value if error_context.ai_component else 'SYSTEM'}] {error_context.message}"
 
             if error_context.severity == ErrorSeverity.CRITICAL:
-                self.logger.critical(log_message, extra={"error_context": error_context})
+                self.logger.critical(
+                    log_message, extra={"error_context": error_context}
+                )
             elif error_context.severity == ErrorSeverity.ERROR:
                 self.logger.error(log_message, extra={"error_context": error_context})
             elif error_context.severity == ErrorSeverity.WARNING:
@@ -347,7 +375,9 @@ class IntegratedErrorHandler:
 
         if "thumbnail" in error_context.operation.lower():
             # Thumbnail error - disable thumbnails temporarily
-            error_context.recovery_suggestions.insert(0, "Disabling thumbnail generation temporarily")
+            error_context.recovery_suggestions.insert(
+                0, "Disabling thumbnail generation temporarily"
+            )
 
         # UI errors are generally non-critical
         pass
@@ -358,11 +388,15 @@ class IntegratedErrorHandler:
         # Core functionality error recovery
         if "exif" in error_context.operation.lower():
             # EXIF parsing error - use basic file info
-            error_context.recovery_suggestions.insert(0, "Using basic file information instead of EXIF data")
+            error_context.recovery_suggestions.insert(
+                0, "Using basic file information instead of EXIF data"
+            )
 
         if "map" in error_context.operation.lower():
             # Map error - disable map features
-            error_context.recovery_suggestions.insert(0, "Map features temporarily unavailable")
+            error_context.recovery_suggestions.insert(
+                0, "Map features temporarily unavailable"
+            )
 
     def _handle_integration_error(self, error_context: ErrorContext):
         """Handle Kiro integration errors"""
@@ -380,54 +414,73 @@ class IntegratedErrorHandler:
         """Handle system-level errors"""
 
         # System errors are typically more serious
-        if isinstance(error_context.message, str) and "memory" in error_context.message.lower():
-            error_context.recovery_suggestions.insert(0, "Close other applications to free memory")
+        if (
+            isinstance(error_context.message, str)
+            and "memory" in error_context.message.lower()
+        ):
+            error_context.recovery_suggestions.insert(
+                0, "Close other applications to free memory"
+            )
 
         if "permission" in error_context.message.lower():
-            error_context.recovery_suggestions.insert(0, "Check file and folder permissions")
+            error_context.recovery_suggestions.insert(
+                0, "Check file and folder permissions"
+            )
 
     def _handle_network_error(self, error_context: ErrorContext):
         """Handle network-related errors"""
 
-        error_context.recovery_suggestions.extend([
-            "Check internet connection",
-            "Try again in a few moments",
-            "Use offline features if available"
-        ])
+        error_context.recovery_suggestions.extend(
+            [
+                "Check internet connection",
+                "Try again in a few moments",
+                "Use offline features if available",
+            ]
+        )
 
     def _handle_file_error(self, error_context: ErrorContext):
         """Handle file system errors"""
 
         if error_context.file_path:
-            error_context.recovery_suggestions.insert(0, f"Check if file exists: {error_context.file_path}")
+            error_context.recovery_suggestions.insert(
+                0, f"Check if file exists: {error_context.file_path}"
+            )
 
     def _handle_validation_error(self, error_context: ErrorContext):
         """Handle data validation errors"""
 
-        error_context.recovery_suggestions.extend([
-            "Verify input data format",
-            "Check for corrupted files",
-            "Try with a different file"
-        ])
+        error_context.recovery_suggestions.extend(
+            [
+                "Verify input data format",
+                "Check for corrupted files",
+                "Try with a different file",
+            ]
+        )
 
     def _handle_performance_error(self, error_context: ErrorContext):
         """Handle performance-related errors"""
 
-        error_context.recovery_suggestions.extend([
-            "Reduce image quality settings",
-            "Close other applications",
-            "Clear application cache"
-        ])
+        error_context.recovery_suggestions.extend(
+            [
+                "Reduce image quality settings",
+                "Close other applications",
+                "Clear application cache",
+            ]
+        )
 
     def _default_error_handling(self, error_context: ErrorContext):
         """Default error handling for unknown error types"""
 
-        error_context.recovery_suggestions.extend([
-            "Try the operation again",
-            "Restart the application if the problem persists"
-        ])
+        error_context.recovery_suggestions.extend(
+            [
+                "Try the operation again",
+                "Restart the application if the problem persists",
+            ]
+        )
 
-    def _fallback_error_handling(self, error_context: ErrorContext, handler_error: Exception):
+    def _fallback_error_handling(
+        self, error_context: ErrorContext, handler_error: Exception
+    ):
         """Fallback error handling when primary handler fails"""
 
         if self.logger:
@@ -450,10 +503,14 @@ class IntegratedErrorHandler:
         """Get error statistics"""
 
         return {
-            "error_counts": {cat.value: count for cat, count in self.error_counts.items()},
+            "error_counts": {
+                cat.value: count for cat, count in self.error_counts.items()
+            },
             "total_errors": sum(self.error_counts.values()),
             "recent_error_count": len(self.recent_errors),
-            "most_common_category": max(self.error_counts, key=self.error_counts.get).value
+            "most_common_category": max(
+                self.error_counts, key=self.error_counts.get
+            ).value,
         }
 
     def clear_error_history(self):

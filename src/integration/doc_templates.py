@@ -20,6 +20,7 @@ import logging
 @dataclass
 class DocumentTemplate:
     """ドキュメントテンプレート"""
+
     name: str
     template: str
     variables: List[str]
@@ -37,8 +38,8 @@ class DocumentTemplateManager:
         templates = {}
 
         # ファイルヘッダーテンプレート
-        templates['file_header'] = DocumentTemplate(
-            name='file_header',
+        templates["file_header"] = DocumentTemplate(
+            name="file_header",
             template='''"""
 {file_name} - {purpose}
 
@@ -57,17 +58,23 @@ AI貢献者情報:
 作成者: {author}
 """''',
             variables=[
-                'file_name', 'purpose', 'description', 'primary_contributor',
-                'contributor_details', 'dependencies_section', 'api_section',
-                'last_updated', 'author'
+                "file_name",
+                "purpose",
+                "description",
+                "primary_contributor",
+                "contributor_details",
+                "dependencies_section",
+                "api_section",
+                "last_updated",
+                "author",
             ],
-            description='Pythonファイル用のヘッダーテンプレート'
+            description="Pythonファイル用のヘッダーテンプレート",
         )
 
         # APIドキュメントテンプレート
-        templates['api_doc'] = DocumentTemplate(
-            name='api_doc',
-            template='''# {project_name} API ドキュメント
+        templates["api_doc"] = DocumentTemplate(
+            name="api_doc",
+            template="""# {project_name} API ドキュメント
 
 生成日時: {generation_date}
 
@@ -88,18 +95,22 @@ AI貢献者情報:
 {api_details}
 
 ---
-*このドキュメントは自動生成されました*''',
+*このドキュメントは自動生成されました*""",
             variables=[
-                'project_name', 'generation_date', 'project_description',
-                'ai_contributors', 'modules_list', 'api_details'
+                "project_name",
+                "generation_date",
+                "project_description",
+                "ai_contributors",
+                "modules_list",
+                "api_details",
             ],
-            description='統合APIドキュメントテンプレート'
+            description="統合APIドキュメントテンプレート",
         )
 
         # トラブルシューティングテンプレート
-        templates['troubleshooting'] = DocumentTemplate(
-            name='troubleshooting',
-            template='''# {project_name} トラブルシューティングガイド
+        templates["troubleshooting"] = DocumentTemplate(
+            name="troubleshooting",
+            template="""# {project_name} トラブルシューティングガイド
 
 生成日時: {generation_date}
 
@@ -124,19 +135,23 @@ AI貢献者情報:
 {emergency_procedures}
 
 ---
-*このガイドは自動生成されました*''',
+*このガイドは自動生成されました*""",
             variables=[
-                'project_name', 'generation_date', 'overview',
-                'ai_component_sections', 'common_issues', 'diagnostic_tools',
-                'emergency_procedures'
+                "project_name",
+                "generation_date",
+                "overview",
+                "ai_component_sections",
+                "common_issues",
+                "diagnostic_tools",
+                "emergency_procedures",
             ],
-            description='トラブルシューティングガイドテンプレート'
+            description="トラブルシューティングガイドテンプレート",
         )
 
         # 貢献度レポートテンプレート
-        templates['contribution_report'] = DocumentTemplate(
-            name='contribution_report',
-            template='''# {project_name} AI貢献度レポート
+        templates["contribution_report"] = DocumentTemplate(
+            name="contribution_report",
+            template="""# {project_name} AI貢献度レポート
 
 生成日時: {generation_date}
 
@@ -165,13 +180,18 @@ AI貢献者情報:
 {recommendations}
 
 ---
-*このレポートは自動生成されました*''',
+*このレポートは自動生成されました*""",
             variables=[
-                'project_name', 'generation_date', 'project_overview',
-                'contributor_statistics', 'contribution_type_analysis',
-                'file_details', 'quality_metrics', 'recommendations'
+                "project_name",
+                "generation_date",
+                "project_overview",
+                "contributor_statistics",
+                "contribution_type_analysis",
+                "file_details",
+                "quality_metrics",
+                "recommendations",
             ],
-            description='AI貢献度レポートテンプレート'
+            description="AI貢献度レポートテンプレート",
         )
 
         return templates
@@ -210,10 +230,14 @@ AI貢献者情報:
         """テンプレート情報を取得"""
         template = self.get_template(template_name)
         return {
-            'name': template.name,
-            'description': template.description,
-            'variables': template.variables,
-            'template_preview': template.template[:200] + '...' if len(template.template) > 200 else template.template
+            "name": template.name,
+            "description": template.description,
+            "variables": template.variables,
+            "template_preview": (
+                template.template[:200] + "..."
+                if len(template.template) > 200
+                else template.template
+            ),
         }
 
 
@@ -294,18 +318,22 @@ def example_usage():
 
     # ファイルヘッダーの生成例
     variables = {
-        'file_name': 'example.py',
-        'purpose': 'サンプルファイル',
-        'description': 'テンプレートシステムの使用例を示すファイル',
-        'primary_contributor': 'Kiro',
-        'contributor_details': formatter.format_ai_contributors_section(),
-        'dependencies_section': formatter.format_dependencies_section(['os', 'sys', 'pathlib']),
-        'api_section': formatter.format_api_section(['main', 'process_data', 'generate_report']),
-        'last_updated': datetime.now().strftime("%Y年%m月%d日"),
-        'author': 'Kiro AI統合システム'
+        "file_name": "example.py",
+        "purpose": "サンプルファイル",
+        "description": "テンプレートシステムの使用例を示すファイル",
+        "primary_contributor": "Kiro",
+        "contributor_details": formatter.format_ai_contributors_section(),
+        "dependencies_section": formatter.format_dependencies_section(
+            ["os", "sys", "pathlib"]
+        ),
+        "api_section": formatter.format_api_section(
+            ["main", "process_data", "generate_report"]
+        ),
+        "last_updated": datetime.now().strftime("%Y年%m月%d日"),
+        "author": "Kiro AI統合システム",
     }
 
-    header = template_manager.render_template('file_header', variables)
+    header = template_manager.render_template("file_header", variables)
 
     logger = logging.getLogger(__name__)
     logger.info("ファイルヘッダーテンプレートを生成しました")

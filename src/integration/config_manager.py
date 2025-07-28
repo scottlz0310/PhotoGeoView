@@ -35,17 +35,19 @@ class ConfigManager(IConfigManager):
     - Validation and schema enforcement
     """
 
-    def __init__(self,
-                 config_dir: Path = None,
-                 logger_system: LoggerSystem = None,
-                 error_handler: IntegratedErrorHandler = None):
+    def __init__(
+        self,
+        config_dir: Path = None,
+        logger_system: LoggerSystem = None,
+        error_handler: IntegratedErrorHandler = None,
+    ):
         """
-        Initialize the configuration manager
+             Initialize the configuration manager
 
-        Args:
-            config_dir: Directory for configuration files
-            logger_system: Logging system instance
-   error_handler: Error handler instance
+             Args:
+                 config_dir: Directory for configuration files
+                 logger_system: Logging system instance
+        error_handler: Error handler instance
         """
 
         self.config_dir = config_dir or Path("config")
@@ -67,7 +69,7 @@ class ConfigManager(IConfigManager):
         self.ai_config_files = {
             AIComponent.COPILOT: self.config_dir / "copilot_config.json",
             AIComponent.CURSOR: self.config_dir / "cursor_config.json",
-            AIComponent.KIRO: self.config_dir / "kiro_config.json"
+            AIComponent.KIRO: self.config_dir / "kiro_config.json",
         }
 
         # Thread safety
@@ -82,8 +84,7 @@ class ConfigManager(IConfigManager):
 
         # Migration manager
         self.migration_manager = ConfigMigrationManager(
-            config_dir=self.config_dir,
-            logger_system=self.logger_system
+            config_dir=self.config_dir, logger_system=self.logger_system
         )
 
         # Initialize
@@ -120,14 +121,15 @@ class ConfigManager(IConfigManager):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_initialization",
-                f"Configuration system initialized with {len(self.config_data)} settings"
+                f"Configuration system initialized with {len(self.config_data)} settings",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "config_initialization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_default_config(self):
@@ -141,9 +143,8 @@ class ConfigManager(IConfigManager):
                 "debug_mode": False,
                 "auto_save": True,
                 "backup_enabled": True,
-                "telemetry_enabled": False
+                "telemetry_enabled": False,
             },
-
             # UI settings (CursorBLD defaults)
             "ui": {
                 "theme": "default",
@@ -152,9 +153,8 @@ class ConfigManager(IConfigManager):
                 "splitter_states": {},
                 "show_toolbar": True,
                 "show_statusbar": True,
-                "animation_enabled": True
+                "animation_enabled": True,
             },
-
             # Core functionality settings (CS4Coding defaults)
             "core": {
                 "image_formats": [".jpg", ".jpeg", ".png", ".tiff", ".bmp", ".gif"],
@@ -163,9 +163,8 @@ class ConfigManager(IConfigManager):
                 "map_zoom_default": 10,
                 "thumbnail_quality": 85,
                 "cache_enabled": True,
-                "cache_size_mb": 100
+                "cache_size_mb": 100,
             },
-
             # Performance settings (Kiro defaults)
             "performance": {
                 "mode": "balanced",  # performance, balanced, quality
@@ -173,9 +172,8 @@ class ConfigManager(IConfigManager):
                 "thread_pool_size": 4,
                 "async_loading": True,
                 "preload_thumbnails": True,
-                "performance_monitoring": True
+                "performance_monitoring": True,
             },
-
             # AI integration settings
             "ai_integration": {
                 "copilot_enabled": True,
@@ -183,9 +181,8 @@ class ConfigManager(IConfigManager):
                 "kiro_enabled": True,
                 "error_recovery": True,
                 "cross_component_caching": True,
-                "performance_sharing": True
+                "performance_sharing": True,
             },
-
             # Logging settings
             "logging": {
                 "level": "INFO",
@@ -194,8 +191,8 @@ class ConfigManager(IConfigManager):
                 "performance_logging": True,
                 "ai_operation_logging": True,
                 "max_log_size_mb": 10,
-                "log_retention_days": 30
-            }
+                "log_retention_days": 30,
+            },
         }
 
     def _load_ai_configs(self):
@@ -204,28 +201,36 @@ class ConfigManager(IConfigManager):
         for ai_component, config_file in self.ai_config_files.items():
             try:
                 if config_file.exists():
-                    with open(config_file, 'r', encoding='utf-8') as f:
+                    with open(config_file, "r", encoding="utf-8") as f:
                         ai_config = json.load(f)
                         self.ai_configs[ai_component] = ai_config
 
                         self.logger_system.log_ai_operation(
                             ai_component,
                             "config_loading",
-                            f"Loaded {len(ai_config)} AI-specific settings"
+                            f"Loaded {len(ai_config)} AI-specific settings",
                         )
                 else:
                     # Create default AI config
-                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
+                    self.ai_configs[ai_component] = self._get_default_ai_config(
+                        ai_component
+                    )
                     self._save_ai_config(ai_component)
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.CONFIGURATION_ERROR,
-                    {"operation": "ai_config_loading", "ai_component": ai_component.value},
-                    ai_component
+                    e,
+                    ErrorCategory.CONFIGURATION_ERROR,
+                    {
+                        "operation": "ai_config_loading",
+                        "ai_component": ai_component.value,
+                    },
+                    ai_component,
                 )
                 # Use default config on error
-                self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
+                self.ai_configs[ai_component] = self._get_default_ai_config(
+                    ai_component
+                )
 
     def _get_default_ai_config(self, ai_component: AIComponent) -> Dict[str, Any]:
         """Get default configuration for specific AI component"""
@@ -236,14 +241,14 @@ class ConfigManager(IConfigManager):
                     "high_quality_exif": True,
                     "detailed_metadata": True,
                     "gps_precision": "high",
-                    "error_recovery": "robust"
+                    "error_recovery": "robust",
                 },
                 "map_integration": {
                     "folium_version": "latest",
                     "marker_clustering": True,
                     "offline_tiles": False,
-                    "custom_markers": True
-                }
+                    "custom_markers": True,
+                },
             }
 
         elif ai_component == AIComponent.CURSOR:
@@ -252,14 +257,14 @@ class ConfigManager(IConfigManager):
                     "qt_theme_manager": True,
                     "theme_count": 16,
                     "custom_themes": True,
-                    "theme_validation": True
+                    "theme_validation": True,
                 },
                 "ui_optimization": {
                     "fast_thumbnails": True,
                     "smooth_scrolling": True,
                     "responsive_layout": True,
-                    "accessibility_features": True
-                }
+                    "accessibility_features": True,
+                },
             }
 
         elif ai_component == AIComponent.KIRO:
@@ -268,14 +273,14 @@ class ConfigManager(IConfigManager):
                     "error_correlation": True,
                     "performance_monitoring": True,
                     "ai_coordination": True,
-                    "quality_assurance": True
+                    "quality_assurance": True,
                 },
                 "optimization": {
                     "memory_management": True,
                     "cache_optimization": True,
                     "async_processing": True,
-                    "resource_pooling": True
-                }
+                    "resource_pooling": True,
+                },
             }
 
         return {}
@@ -285,7 +290,7 @@ class ConfigManager(IConfigManager):
 
         try:
             if self.main_config_file.exists():
-                with open(self.main_config_file, 'r', encoding='utf-8') as f:
+                with open(self.main_config_file, "r", encoding="utf-8") as f:
                     main_config = json.load(f)
 
                     # Update last modified time
@@ -299,7 +304,7 @@ class ConfigManager(IConfigManager):
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "config_loading",
-                        f"Loaded main configuration with {len(main_config)} sections"
+                        f"Loaded main configuration with {len(main_config)} sections",
                     )
             else:
                 # Create default main config
@@ -307,9 +312,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "main_config_loading"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_user_config(self):
@@ -317,7 +323,7 @@ class ConfigManager(IConfigManager):
 
         try:
             if self.user_config_file.exists():
-                with open(self.user_config_file, 'r', encoding='utf-8') as f:
+                with open(self.user_config_file, "r", encoding="utf-8") as f:
                     user_config = json.load(f)
 
                     # Update last modified time
@@ -331,14 +337,15 @@ class ConfigManager(IConfigManager):
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "config_loading",
-                        f"Applied {len(user_config)} user configuration overrides"
+                        f"Applied {len(user_config)} user configuration overrides",
                     )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "user_config_loading"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _merge_configurations(self):
@@ -359,7 +366,11 @@ class ConfigManager(IConfigManager):
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
-            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+            if (
+                key in target
+                and isinstance(target[key], dict)
+                and isinstance(value, dict)
+            ):
                 self._deep_merge(target[key], value)
             else:
                 target[key] = value
@@ -374,14 +385,14 @@ class ConfigManager(IConfigManager):
                 "debug_mode": bool,
                 "auto_save": bool,
                 "backup_enabled": bool,
-                "telemetry_enabled": bool
+                "telemetry_enabled": bool,
             },
             "ui": {
                 "theme": str,
                 "thumbnail_size": int,
                 "show_toolbar": bool,
                 "show_statusbar": bool,
-                "animation_enabled": bool
+                "animation_enabled": bool,
             },
             "core": {
                 "image_formats": list,
@@ -390,7 +401,7 @@ class ConfigManager(IConfigManager):
                 "map_zoom_default": int,
                 "thumbnail_quality": int,
                 "cache_enabled": bool,
-                "cache_size_mb": int
+                "cache_size_mb": int,
             },
             "performance": {
                 "mode": str,
@@ -398,8 +409,8 @@ class ConfigManager(IConfigManager):
                 "thread_pool_size": int,
                 "async_loading": bool,
                 "preload_thumbnails": bool,
-                "performance_monitoring": bool
-            }
+                "performance_monitoring": bool,
+            },
         }
 
     # IConfigManager implementation
@@ -419,7 +430,7 @@ class ConfigManager(IConfigManager):
         with self._lock:
             try:
                 # Split key by dots for nested access
-                keys = key.split('.')
+                keys = key.split(".")
                 value = self.config_data
 
                 for k in keys:
@@ -432,9 +443,10 @@ class ConfigManager(IConfigManager):
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.CONFIGURATION_ERROR,
+                    e,
+                    ErrorCategory.CONFIGURATION_ERROR,
                     {"operation": "get_setting", "key": key},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 return default
 
@@ -457,7 +469,7 @@ class ConfigManager(IConfigManager):
                     return False
 
                 # Split key by dots for nested access
-                keys = key.split('.')
+                keys = key.split(".")
                 target = self.config_data
 
                 # Navigate to the parent of the target key
@@ -476,16 +488,17 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "config_change",
-                    f"Setting changed: {key} = {value}"
+                    f"Setting changed: {key} = {value}",
                 )
 
                 return True
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.CONFIGURATION_ERROR,
+                    e,
+                    ErrorCategory.CONFIGURATION_ERROR,
                     {"operation": "set_setting", "key": key, "value": str(value)},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 return False
 
@@ -536,7 +549,7 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     ai_component,
                     "config_update",
-                    f"AI configuration updated with {len(config)} settings"
+                    f"AI configuration updated with {len(config)} settings",
                 )
 
                 return True
@@ -546,9 +559,10 @@ class ConfigManager(IConfigManager):
             return False
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "set_ai_config", "ai_name": ai_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -568,7 +582,9 @@ class ConfigManager(IConfigManager):
 
             with self._lock:
                 if ai_component not in self.ai_configs:
-                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
+                    self.ai_configs[ai_component] = self._get_default_ai_config(
+                        ai_component
+                    )
 
                 # Deep merge updates into existing config
                 self._deep_merge(self.ai_configs[ai_component], updates)
@@ -586,7 +602,7 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     ai_component,
                     "config_update",
-                    f"AI configuration updated: {list(updates.keys())}"
+                    f"AI configuration updated: {list(updates.keys())}",
                 )
 
                 return True
@@ -596,9 +612,14 @@ class ConfigManager(IConfigManager):
             return False
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
-                {"operation": "update_ai_config", "ai_name": ai_name, "updates": str(updates)},
-                AIComponent.KIRO
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
+                {
+                    "operation": "update_ai_config",
+                    "ai_name": ai_name,
+                    "updates": str(updates),
+                },
+                AIComponent.KIRO,
             )
             return False
 
@@ -622,16 +643,17 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "config_save",
-                    "All configuration files saved successfully"
+                    "All configuration files saved successfully",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "save_config"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -654,16 +676,17 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "config_reload",
-                    "Configuration reloaded from storage"
+                    "Configuration reloaded from storage",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "load_config"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -678,8 +701,11 @@ class ConfigManager(IConfigManager):
         try:
             with self._lock:
                 # Backup current config
-                backup_file = self.config_dir / f"config_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-                with open(backup_file, 'w', encoding='utf-8') as f:
+                backup_file = (
+                    self.config_dir
+                    / f"config_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                )
+                with open(backup_file, "w", encoding="utf-8") as f:
                     json.dump(self.config_data, f, indent=2, default=str)
 
                 # Reset to defaults
@@ -687,7 +713,9 @@ class ConfigManager(IConfigManager):
 
                 # Reset AI configs
                 for ai_component in self.ai_configs:
-                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
+                    self.ai_configs[ai_component] = self._get_default_ai_config(
+                        ai_component
+                    )
 
                 # Save the reset configuration
                 self.save_config()
@@ -695,16 +723,17 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "config_reset",
-                    f"Configuration reset to defaults (backup saved: {backup_file})"
+                    f"Configuration reset to defaults (backup saved: {backup_file})",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "reset_to_defaults"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -715,11 +744,12 @@ class ConfigManager(IConfigManager):
 
         # Extract main config (exclude AI-specific sections)
         main_config = {
-            key: value for key, value in self.config_data.items()
-            if not key.startswith('ai_')
+            key: value
+            for key, value in self.config_data.items()
+            if not key.startswith("ai_")
         }
 
-        with open(self.main_config_file, 'w', encoding='utf-8') as f:
+        with open(self.main_config_file, "w", encoding="utf-8") as f:
             json.dump(main_config, f, indent=2, default=str)
 
         self.last_modified["main"] = datetime.now()
@@ -730,7 +760,7 @@ class ConfigManager(IConfigManager):
         config_file = self.ai_config_files[ai_component]
         ai_config = self.ai_configs[ai_component]
 
-        with open(config_file, 'w', encoding='utf-8') as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             json.dump(ai_config, f, indent=2, default=str)
 
         self.last_modified[f"ai_{ai_component.value}"] = datetime.now()
@@ -740,11 +770,11 @@ class ConfigManager(IConfigManager):
 
         try:
             # Get the section from the key
-            section = key.split('.')[0]
+            section = key.split(".")[0]
 
             if section in self.validation_schemas:
                 schema = self.validation_schemas[section]
-                setting_name = key.split('.')[-1]
+                setting_name = key.split(".")[-1]
 
                 if setting_name in schema:
                     expected_type = schema[setting_name]
@@ -770,9 +800,10 @@ class ConfigManager(IConfigManager):
                 listener(key, old_value, new_value)
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.CONFIGURATION_ERROR,
+                    e,
+                    ErrorCategory.CONFIGURATION_ERROR,
                     {"operation": "change_notification", "key": key},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
 
     # Advanced features
@@ -805,7 +836,7 @@ class ConfigManager(IConfigManager):
             export_data = {
                 "export_timestamp": datetime.now().isoformat(),
                 "app_version": self.get_setting("app.version", "unknown"),
-                "main_config": self.config_data
+                "main_config": self.config_data,
             }
 
             if include_ai_configs:
@@ -813,22 +844,23 @@ class ConfigManager(IConfigManager):
                     ai.value: config for ai, config in self.ai_configs.items()
                 }
 
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, indent=2, default=str)
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_export",
-                f"Configuration exported to {file_path}"
+                f"Configuration exported to {file_path}",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "export_config", "file_path": str(file_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -845,7 +877,7 @@ class ConfigManager(IConfigManager):
         """
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 import_data = json.load(f)
 
             if "main_config" in import_data:
@@ -871,16 +903,17 @@ class ConfigManager(IConfigManager):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_import",
-                f"Configuration imported from {file_path} (merge: {merge})"
+                f"Configuration imported from {file_path} (merge: {merge})",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "import_config", "file_path": str(file_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -898,10 +931,9 @@ class ConfigManager(IConfigManager):
                 "main": self.main_config_file.exists(),
                 "user": self.user_config_file.exists(),
                 "ai_configs": {
-                    ai.value: file.exists()
-                    for ai, file in self.ai_config_files.items()
-                }
-            }
+                    ai.value: file.exists() for ai, file in self.ai_config_files.items()
+                },
+            },
         }
 
     def _count_settings(self, config: Dict[str, Any]) -> int:
@@ -927,9 +959,7 @@ class ConfigManager(IConfigManager):
 
         try:
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "config_migration",
-                "Starting configuration migration"
+                AIComponent.KIRO, "config_migration", "Starting configuration migration"
             )
 
             # Run migration
@@ -942,16 +972,17 @@ class ConfigManager(IConfigManager):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_migration",
-                f"Configuration migration completed: {migration_result['status']}"
+                f"Configuration migration completed: {migration_result['status']}",
             )
 
             return migration_result
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "migrate_existing_configurations"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "failed", "error": str(e)}
 
@@ -976,16 +1007,17 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "config_rollback",
-                    "Configuration migration rollback completed"
+                    "Configuration migration rollback completed",
                 )
 
             return success
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "rollback_migration"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -1002,9 +1034,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "validate_configuration"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "error", "error": str(e)}
 
@@ -1016,9 +1049,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "get_migration_status"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {"status": "error", "error": str(e)}
 
@@ -1043,7 +1077,7 @@ class ConfigManager(IConfigManager):
                 "performance_config.json",
                 "photogeoview_config.json",
                 "app_settings.json",
-                "user_preferences.json"
+                "user_preferences.json",
             ]
 
             for filename in legacy_files:
@@ -1054,9 +1088,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "has_legacy_configurations"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -1089,7 +1124,7 @@ class ConfigManager(IConfigManager):
                         self.logger_system.log_ai_operation(
                             AIComponent.KIRO,
                             "state_update",
-                            f"Application state updated: {key} = {value}"
+                            f"Application state updated: {key} = {value}",
                         )
 
                 # Update activity timestamp
@@ -1102,9 +1137,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "update_application_state", "kwargs": str(kwargs)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -1120,9 +1156,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "save_application_state"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -1138,9 +1175,10 @@ class ConfigManager(IConfigManager):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "load_application_state"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -1154,7 +1192,10 @@ class ConfigManager(IConfigManager):
         try:
             with self._lock:
                 # Backup current state
-                backup_file = self.config_dir / f"state_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                backup_file = (
+                    self.config_dir
+                    / f"state_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                )
                 self._save_application_state_to_file(backup_file)
 
                 # Reset to default state
@@ -1166,16 +1207,17 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_reset",
-                    f"Application state reset to defaults (backup saved: {backup_file})"
+                    f"Application state reset to defaults (backup saved: {backup_file})",
                 )
 
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.CONFIGURATION_ERROR,
+                e,
+                ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "reset_application_state"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -1188,15 +1230,30 @@ class ConfigManager(IConfigManager):
         try:
             # Convert ApplicationState to dictionary
             state_dict = {
-                "current_folder": str(self.application_state.current_folder) if self.application_state.current_folder else None,
-                "selected_image": str(self.application_state.selected_image) if self.application_state.selected_image else None,
-                "loaded_images": [str(path) for path in self.application_state.loaded_images],
+                "current_folder": (
+                    str(self.application_state.current_folder)
+                    if self.application_state.current_folder
+                    else None
+                ),
+                "selected_image": (
+                    str(self.application_state.selected_image)
+                    if self.application_state.selected_image
+                    else None
+                ),
+                "loaded_images": [
+                    str(path) for path in self.application_state.loaded_images
+                ],
                 "current_theme": self.application_state.current_theme,
                 "thumbnail_size": self.application_state.thumbnail_size,
-                "folder_history": [str(path) for path in self.application_state.folder_history],
+                "folder_history": [
+                    str(path) for path in self.application_state.folder_history
+                ],
                 "ui_layout": self.application_state.ui_layout,
                 "window_geometry": self.application_state.window_geometry,
-                "splitter_states": {k: v.hex() if isinstance(v, bytes) else v for k, v in self.application_state.splitter_states.items()},
+                "splitter_states": {
+                    k: v.hex() if isinstance(v, bytes) else v
+                    for k, v in self.application_state.splitter_states.items()
+                },
                 "map_center": self.application_state.map_center,
                 "map_zoom": self.application_state.map_zoom,
                 "exif_display_mode": self.application_state.exif_display_mode,
@@ -1214,11 +1271,14 @@ class ConfigManager(IConfigManager):
                 "operations_performed": self.application_state.operations_performed,
                 "recent_errors": self.application_state.recent_errors,
                 "error_count": self.application_state.error_count,
-                "memory_usage_history": [(dt.isoformat(), usage) for dt, usage in self.application_state.memory_usage_history],
-                "operation_times": self.application_state.operation_times
+                "memory_usage_history": [
+                    (dt.isoformat(), usage)
+                    for dt, usage in self.application_state.memory_usage_history
+                ],
+                "operation_times": self.application_state.operation_times,
             }
 
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(state_dict, f, indent=2, default=str)
 
             return True
@@ -1235,21 +1295,44 @@ class ConfigManager(IConfigManager):
                 self.application_state = ApplicationState()
                 return True
 
-            with open(self.state_file, 'r', encoding='utf-8') as f:
+            with open(self.state_file, "r", encoding="utf-8") as f:
                 state_dict = json.load(f)
 
             # Convert dictionary back to ApplicationState
             self.application_state = ApplicationState(
-                current_folder=Path(state_dict["current_folder"]) if state_dict.get("current_folder") else None,
-                selected_image=Path(state_dict["selected_image"]) if state_dict.get("selected_image") else None,
-                loaded_images=[Path(path) for path in state_dict.get("loaded_images", [])],
+                current_folder=(
+                    Path(state_dict["current_folder"])
+                    if state_dict.get("current_folder")
+                    else None
+                ),
+                selected_image=(
+                    Path(state_dict["selected_image"])
+                    if state_dict.get("selected_image")
+                    else None
+                ),
+                loaded_images=[
+                    Path(path) for path in state_dict.get("loaded_images", [])
+                ],
                 current_theme=state_dict.get("current_theme", "default"),
                 thumbnail_size=state_dict.get("thumbnail_size", 150),
-                folder_history=[Path(path) for path in state_dict.get("folder_history", [])],
+                folder_history=[
+                    Path(path) for path in state_dict.get("folder_history", [])
+                ],
                 ui_layout=state_dict.get("ui_layout", {}),
-                window_geometry=tuple(state_dict["window_geometry"]) if state_dict.get("window_geometry") else None,
-                splitter_states={k: bytes.fromhex(v) if isinstance(v, str) else v for k, v in state_dict.get("splitter_states", {}).items()},
-                map_center=tuple(state_dict["map_center"]) if state_dict.get("map_center") else None,
+                window_geometry=(
+                    tuple(state_dict["window_geometry"])
+                    if state_dict.get("window_geometry")
+                    else None
+                ),
+                splitter_states={
+                    k: bytes.fromhex(v) if isinstance(v, str) else v
+                    for k, v in state_dict.get("splitter_states", {}).items()
+                },
+                map_center=(
+                    tuple(state_dict["map_center"])
+                    if state_dict.get("map_center")
+                    else None
+                ),
                 map_zoom=state_dict.get("map_zoom", 10),
                 exif_display_mode=state_dict.get("exif_display_mode", "detailed"),
                 image_sort_mode=state_dict.get("image_sort_mode", "name"),
@@ -1259,21 +1342,31 @@ class ConfigManager(IConfigManager):
                 fit_mode=state_dict.get("fit_mode", "fit_window"),
                 performance_mode=state_dict.get("performance_mode", "balanced"),
                 cache_status=state_dict.get("cache_status", {}),
-                ai_component_status=state_dict.get("ai_component_status", {"copilot": "active", "cursor": "active", "kiro": "active"}),
-                session_start=datetime.fromisoformat(state_dict.get("session_start", datetime.now().isoformat())),
-                last_activity=datetime.fromisoformat(state_dict.get("last_activity", datetime.now().isoformat())),
+                ai_component_status=state_dict.get(
+                    "ai_component_status",
+                    {"copilot": "active", "cursor": "active", "kiro": "active"},
+                ),
+                session_start=datetime.fromisoformat(
+                    state_dict.get("session_start", datetime.now().isoformat())
+                ),
+                last_activity=datetime.fromisoformat(
+                    state_dict.get("last_activity", datetime.now().isoformat())
+                ),
                 images_processed=state_dict.get("images_processed", 0),
                 operations_performed=state_dict.get("operations_performed", []),
                 recent_errors=state_dict.get("recent_errors", []),
                 error_count=state_dict.get("error_count", 0),
-                memory_usage_history=[(datetime.fromisoformat(dt), usage) for dt, usage in state_dict.get("memory_usage_history", [])],
-                operation_times=state_dict.get("operation_times", {})
+                memory_usage_history=[
+                    (datetime.fromisoformat(dt), usage)
+                    for dt, usage in state_dict.get("memory_usage_history", [])
+                ],
+                operation_times=state_dict.get("operation_times", {}),
             )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "state_loading",
-                "Application state loaded from storage"
+                "Application state loaded from storage",
             )
 
             return True
@@ -1287,13 +1380,21 @@ class ConfigManager(IConfigManager):
     def get_state_summary(self) -> Dict[str, Any]:
         """Get summary of current application state"""
         return {
-            "current_folder": str(self.application_state.current_folder) if self.application_state.current_folder else None,
-            "selected_image": str(self.application_state.selected_image) if self.application_state.selected_image else None,
+            "current_folder": (
+                str(self.application_state.current_folder)
+                if self.application_state.current_folder
+                else None
+            ),
+            "selected_image": (
+                str(self.application_state.selected_image)
+                if self.application_state.selected_image
+                else None
+            ),
             "loaded_images_count": len(self.application_state.loaded_images),
             "current_theme": self.application_state.current_theme,
             "session_duration": self.application_state.session_duration,
             "images_processed": self.application_state.images_processed,
             "error_count": self.application_state.error_count,
             "ai_component_status": self.application_state.ai_component_status,
-            "performance_mode": self.application_state.performance_mode
+            "performance_mode": self.application_state.performance_mode,
         }

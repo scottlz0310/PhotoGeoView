@@ -31,29 +31,29 @@ def test_integrated_gitignore_management():
                 "*.pyc",
                 "",
                 "# IDE",
-                ".vscode/"
+                ".vscode/",
             ]
 
-            with open(gitignore_path, 'w') as f:
-                f.write('\n'.join(initial_content))
+            with open(gitignore_path, "w") as f:
+                f.write("\n".join(initial_content))
 
             # Create ConfigManager
             config_manager = ConfigManager()
 
             # Test gitignore status
             status = config_manager.get_gitignore_status()
-            assert status['gitignore_exists'] is True
-            assert status['has_ci_patterns'] is False
+            assert status["gitignore_exists"] is True
+            assert status["has_ci_patterns"] is False
 
             # Update .gitignore with CI patterns
             assert config_manager.update_gitignore() is True
 
             # Verify patterns were added
             updated_status = config_manager.get_gitignore_status()
-            assert updated_status['has_ci_patterns'] is True
+            assert updated_status["has_ci_patterns"] is True
 
             # Verify original content is preserved
-            with open(gitignore_path, 'r') as f:
+            with open(gitignore_path, "r") as f:
                 content = f.read()
 
             for line in initial_content:
@@ -83,11 +83,11 @@ def test_config_with_gitignore_integration():
             config_data = {
                 "python_versions": ["3.9", "3.10"],
                 "enabled_checks": ["code_quality", "unit_tests"],
-                "auto_fix": True
+                "auto_fix": True,
             }
 
             config_path = Path("ci-config.json")
-            with open(config_path, 'w') as f:
+            with open(config_path, "w") as f:
                 json.dump(config_data, f)
 
             # Create ConfigManager with specific config
@@ -95,8 +95,8 @@ def test_config_with_gitignore_integration():
 
             # Verify configuration was loaded
             config = config_manager.get_config()
-            assert config['python_versions'] == ["3.9", "3.10"]
-            assert config['auto_fix'] is True
+            assert config["python_versions"] == ["3.9", "3.10"]
+            assert config["auto_fix"] is True
 
             # Test .gitignore management
             assert config_manager.update_gitignore() is True
@@ -106,7 +106,7 @@ def test_config_with_gitignore_integration():
             assert gitignore_path.exists()
 
             status = config_manager.get_gitignore_status()
-            assert status['has_ci_patterns'] is True
+            assert status["has_ci_patterns"] is True
 
             print("✓ Configuration with .gitignore integration test passed")
 
@@ -127,20 +127,20 @@ def test_gitignore_status_reporting():
 
             # Test status with no .gitignore
             status = config_manager.get_gitignore_status()
-            assert status['gitignore_exists'] is False
-            assert status['has_ci_patterns'] is False
-            assert status['total_lines'] == 0
+            assert status["gitignore_exists"] is False
+            assert status["has_ci_patterns"] is False
+            assert status["total_lines"] == 0
 
             # Create .gitignore and update
             config_manager.update_gitignore()
 
             # Test status after update
             updated_status = config_manager.get_gitignore_status()
-            assert updated_status['gitignore_exists'] is True
-            assert updated_status['has_ci_patterns'] is True
-            assert updated_status['total_lines'] > 0
-            assert updated_status['is_valid'] is True
-            assert len(updated_status['missing_patterns']) == 0
+            assert updated_status["gitignore_exists"] is True
+            assert updated_status["has_ci_patterns"] is True
+            assert updated_status["total_lines"] > 0
+            assert updated_status["is_valid"] is True
+            assert len(updated_status["missing_patterns"]) == 0
 
             print("✓ .gitignore status reporting test passed")
 
@@ -164,7 +164,9 @@ def test_error_handling():
 
             # Try to create .gitignore in read-only directory
             config_manager = ConfigManager()
-            config_manager.gitignore_manager.gitignore_path = readonly_dir / ".gitignore"
+            config_manager.gitignore_manager.gitignore_path = (
+                readonly_dir / ".gitignore"
+            )
 
             # This should handle the error gracefully
             result = config_manager.update_gitignore()
@@ -179,7 +181,7 @@ def test_error_handling():
             raise
         finally:
             # Clean up read-only directory
-            if 'readonly_dir' in locals():
+            if "readonly_dir" in locals():
                 readonly_dir.chmod(0o755)
             os.chdir(original_cwd)
 

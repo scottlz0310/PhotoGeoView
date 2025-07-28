@@ -39,7 +39,9 @@ def check_class_exists(module_path: Path, class_name: str) -> Tuple[bool, str]:
         return False, f"❌ {module_path} の読み込みに失敗: {e}"
 
 
-def check_method_exists(module_path: Path, class_name: str, method_name: str) -> Tuple[bool, str]:
+def check_method_exists(
+    module_path: Path, class_name: str, method_name: str
+) -> Tuple[bool, str]:
     """メソッドの存在確認"""
     try:
         spec = importlib.util.spec_from_file_location("module", module_path)
@@ -68,7 +70,7 @@ def validate_task6_completion() -> Dict[str, Any]:
         "files": [],
         "classes": [],
         "methods": [],
-        "overall_status": True
+        "overall_status": True,
     }
 
     # 必要なファイルの確認
@@ -77,13 +79,15 @@ def validate_task6_completion() -> Dict[str, Any]:
         Path("tests/unit_tests.py"),
         Path("tests/performance_benchmarks.py"),
         Path("tests/run_integration_tests.py"),
-        Path(".github/workflows/ai-integration-tests.yml")
+        Path(".github/workflows/ai-integration-tests.yml"),
     ]
 
     print("\n1. 必要ファイルの確認:")
     for file_path in required_files:
         success, message = check_file_exists(file_path)
-        validation_results["files"].append({"file": str(file_path), "success": success, "message": message})
+        validation_results["files"].append(
+            {"file": str(file_path), "success": success, "message": message}
+        )
         validation_results["overall_status"] &= success
         print(f"   {message}")
 
@@ -93,43 +97,79 @@ def validate_task6_completion() -> Dict[str, Any]:
         (Path("tests/ai_integration_test_suite.py"), "TestResult"),
         (Path("tests/ai_integration_test_suite.py"), "IntegrationTestResult"),
         (Path("tests/performance_benchmarks.py"), "PerformanceBenchmarkSuite"),
-        (Path("tests/performance_benchmarks.py"), "BenchmarkResult")
+        (Path("tests/performance_benchmarks.py"), "BenchmarkResult"),
     ]
 
     print("\n2. 必要クラスの確認:")
     for module_path, class_name in required_classes:
         success, message = check_class_exists(module_path, class_name)
-        validation_results["classes"].append({
-            "module": str(module_path),
-            "class": class_name,
-            "success": success,
-            "message": message
-        })
+        validation_results["classes"].append(
+            {
+                "module": str(module_path),
+                "class": class_name,
+                "success": success,
+                "message": message,
+            }
+        )
         validation_results["overall_status"] &= success
         print(f"   {message}")
 
     # 必要なメソッドの確認
     required_methods = [
-        (Path("tests/ai_integration_test_suite.py"), "AIIntegrationTestSuite", "run_all_tests"),
-        (Path("tests/ai_integration_test_suite.py"), "AIIntegrationTestSuite", "test_ui_integration"),
-        (Path("tests/ai_integration_test_suite.py"), "AIIntegrationTestSuite", "test_core_integration"),
-        (Path("tests/ai_integration_test_suite.py"), "AIIntegrationTestSuite", "test_performance_integration"),
-        (Path("tests/ai_integration_test_suite.py"), "AIIntegrationTestSuite", "test_ai_compatibility"),
-        (Path("tests/performance_benchmarks.py"), "PerformanceBenchmarkSuite", "run_all_benchmarks"),
-        (Path("tests/performance_benchmarks.py"), "PerformanceBenchmarkSuite", "benchmark_image_loading"),
-        (Path("tests/performance_benchmarks.py"), "PerformanceBenchmarkSuite", "benchmark_thumbnail_generation")
+        (
+            Path("tests/ai_integration_test_suite.py"),
+            "AIIntegrationTestSuite",
+            "run_all_tests",
+        ),
+        (
+            Path("tests/ai_integration_test_suite.py"),
+            "AIIntegrationTestSuite",
+            "test_ui_integration",
+        ),
+        (
+            Path("tests/ai_integration_test_suite.py"),
+            "AIIntegrationTestSuite",
+            "test_core_integration",
+        ),
+        (
+            Path("tests/ai_integration_test_suite.py"),
+            "AIIntegrationTestSuite",
+            "test_performance_integration",
+        ),
+        (
+            Path("tests/ai_integration_test_suite.py"),
+            "AIIntegrationTestSuite",
+            "test_ai_compatibility",
+        ),
+        (
+            Path("tests/performance_benchmarks.py"),
+            "PerformanceBenchmarkSuite",
+            "run_all_benchmarks",
+        ),
+        (
+            Path("tests/performance_benchmarks.py"),
+            "PerformanceBenchmarkSuite",
+            "benchmark_image_loading",
+        ),
+        (
+            Path("tests/performance_benchmarks.py"),
+            "PerformanceBenchmarkSuite",
+            "benchmark_thumbnail_generation",
+        ),
     ]
 
     print("\n3. 必要メソッドの確認:")
     for module_path, class_name, method_name in required_methods:
         success, message = check_method_exists(module_path, class_name, method_name)
-        validation_results["methods"].append({
-            "module": str(module_path),
-            "class": class_name,
-            "method": method_name,
-            "success": success,
-            "message": message
-        })
+        validation_results["methods"].append(
+            {
+                "module": str(module_path),
+                "class": class_name,
+                "method": method_name,
+                "success": success,
+                "message": message,
+            }
+        )
         validation_results["overall_status"] &= success
         print(f"   {message}")
 
@@ -139,11 +179,13 @@ def validate_task6_completion() -> Dict[str, Any]:
     try:
         # AIIntegrationTestSuiteの基本動作確認
         from tests.ai_integration_test_suite import AIIntegrationTestSuite
+
         suite = AIIntegrationTestSuite()
         print("   ✅ AIIntegrationTestSuite のインスタンス化に成功")
 
         # PerformanceBenchmarkSuiteの基本動作確認
         from tests.performance_benchmarks import PerformanceBenchmarkSuite
+
         benchmark_suite = PerformanceBenchmarkSuite()
         print("   ✅ PerformanceBenchmarkSuite のインスタンス化に成功")
 
@@ -157,7 +199,7 @@ def validate_task6_completion() -> Dict[str, Any]:
         "AIIntegrationTestSuite with multi-AI test coordination",
         "Unit tests for each integrated component",
         "Integration tests for AI component interactions",
-        "Performance benchmarks comparing integrated vs individual AI performance"
+        "Performance benchmarks comparing integrated vs individual AI performance",
     ]
 
     for requirement in requirements_check:

@@ -36,6 +36,7 @@ from enum import Enum
 try:
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler, FileSystemEvent
+
     WATCHDOG_AVAILABLE = True
 except ImportError:
     WATCHDOG_AVAILABLE = False
@@ -50,6 +51,7 @@ from ..error_handling import IntegratedErrorHandler, ErrorCategory
 
 class FileChangeType(Enum):
     """ファイル変更タイプの定義"""
+
     CREATED = "created"
     DELETED = "deleted"
     MODIFIED = "modified"
@@ -68,13 +70,13 @@ class FileSystemWatcher:
     """
 
     # 対応画像形式の定数定義（FileDiscoveryServiceと同じ）
-    SUPPORTED_EXTENSIONS = {
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'
-    }
+    SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
 
-    def __init__(self,
-                 logger_system: Optional[LoggerSystem] = None,
-                 enable_monitoring: bool = True):
+    def __init__(
+        self,
+        logger_system: Optional[LoggerSystem] = None,
+        enable_monitoring: bool = True,
+    ):
         """
         FileSystemWatcherの初期化
 
@@ -94,7 +96,7 @@ class FileSystemWatcher:
                 AIComponent.KIRO,
                 "watchdog_unavailable",
                 "watchdogライブラリが利用できません。ファイルシステム監視機能は無効になります。",
-                level="WARNING"
+                level="WARNING",
             )
 
         # 監視状態の管理
@@ -105,16 +107,18 @@ class FileSystemWatcher:
         self.enable_monitoring = enable_monitoring and self.watchdog_available
 
         # コールバック関数の管理
-        self.change_listeners: List[Callable[[Path, FileChangeType, Optional[Path]], None]] = []
+        self.change_listeners: List[
+            Callable[[Path, FileChangeType, Optional[Path]], None]
+        ] = []
 
         # 監視統計情報
         self.watch_stats = {
-            'start_time': None,
-            'total_events': 0,
-            'filtered_events': 0,
-            'callback_calls': 0,
-            'errors': 0,
-            'last_event_time': None
+            "start_time": None,
+            "total_events": 0,
+            "filtered_events": 0,
+            "callback_calls": 0,
+            "errors": 0,
+            "last_event_time": None,
         }
 
         # パフォーマンス設定
@@ -126,7 +130,7 @@ class FileSystemWatcher:
             AIComponent.KIRO,
             "file_watcher_init",
             f"FileSystemWatcher が初期化されました (監視機能: {'有効' if self.enable_monitoring else '無効'})",
-            level="INFO"
+            level="INFO",
         )
 
     def start_watching(self, folder_path: Path) -> bool:
@@ -154,12 +158,14 @@ class FileSystemWatcher:
         """
 
         # 操作コンテキストを使用してログ記録を自動化
-        with self.logger_system.operation_context(AIComponent.KIRO, "start_file_watching") as ctx:
+        with self.logger_system.operation_context(
+            AIComponent.KIRO, "start_file_watching"
+        ) as ctx:
             start_time = time.time()
             watch_details = {
                 "folder_path": str(folder_path),
                 "start_time": datetime.now().isoformat(),
-                "monitoring_enabled": self.enable_monitoring
+                "monitoring_enabled": self.enable_monitoring,
             }
 
             try:
@@ -169,7 +175,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "watch_disabled",
                         f"ファイルシステム監視が無効のため、監視を開始しません: {folder_path}",
-                        level="INFO"
+                        level="INFO",
                     )
                     return False
 
@@ -179,7 +185,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "watch_restart",
                         f"既存の監視を停止して新しいフォルダの監視を開始: {self.current_folder} -> {folder_path}",
-                        level="INFO"
+                        level="INFO",
                     )
                     self.stop_watching()
 
@@ -190,7 +196,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "watch_error",
                         f"監視対象フォルダが存在しません: {folder_path}",
-                        level="ERROR"
+                        level="ERROR",
                     )
                     return False
 
@@ -200,7 +206,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "watch_error",
                         f"指定されたパスはフォルダではありません: {folder_path}",
-                        level="ERROR"
+                        level="ERROR",
                     )
                     return False
 
@@ -209,7 +215,7 @@ class FileSystemWatcher:
                     self.event_handler = ImageFileEventHandler(
                         watcher=self,
                         supported_extensions=self.SUPPORTED_EXTENSIONS,
-                        logger_system=self.logger_system
+                        logger_system=self.logger_system,
                     )
                 else:
                     # watchdog が利用できない場合はダミーハンドラー
@@ -220,7 +226,7 @@ class FileSystemWatcher:
                 self.observer.schedule(
                     self.event_handler,
                     str(folder_path),
-                    recursive=False  # サブフォルダは監視しない
+                    recursive=False,  # サブフォルダは監視しない
                 )
 
                 self.observer.start()
@@ -228,23 +234,25 @@ class FileSystemWatcher:
                 # 監視状態の更新
                 self.is_watching = True
                 self.current_folder = folder_path
-                self.watch_stats['start_time'] = datetime.now()
-                self.watch_stats['total_events'] = 0
-                self.watch_stats['filtered_events'] = 0
-                self.watch_stats['callback_calls'] = 0
-                self.watch_stats['errors'] = 0
+                self.watch_stats["start_time"] = datetime.now()
+                self.watch_stats["total_events"] = 0
+                self.watch_stats["filtered_events"] = 0
+                self.watch_stats["callback_calls"] = 0
+                self.watch_stats["errors"] = 0
 
                 setup_duration = time.time() - start_time
-                watch_details.update({
-                    "setup_duration": setup_duration,
-                    "success": True,
-                    "end_time": datetime.now().isoformat()
-                })
+                watch_details.update(
+                    {
+                        "setup_duration": setup_duration,
+                        "success": True,
+                        "end_time": datetime.now().isoformat(),
+                    }
+                )
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "watch_started",
-                    f"ファイルシステム監視を開始しました: {folder_path} ({setup_duration:.3f}秒)"
+                    f"ファイルシステム監視を開始しました: {folder_path} ({setup_duration:.3f}秒)",
                 )
 
                 # 詳細なデバッグ情報をログに記録
@@ -254,7 +262,7 @@ class FileSystemWatcher:
                     f"監視設定詳細 - フォルダ: {folder_path}, "
                     f"対応拡張子: {', '.join(self.SUPPORTED_EXTENSIONS)}, "
                     f"デバウンス間隔: {self.debounce_interval}秒",
-                    level="DEBUG"
+                    level="DEBUG",
                 )
 
                 return True
@@ -262,29 +270,32 @@ class FileSystemWatcher:
             except Exception as e:
                 # 監視開始エラーのハンドリング
                 setup_duration = time.time() - start_time
-                watch_details.update({
-                    "setup_duration": setup_duration,
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                    "success": False
-                })
+                watch_details.update(
+                    {
+                        "setup_duration": setup_duration,
+                        "error": str(e),
+                        "error_type": type(e).__name__,
+                        "success": False,
+                    }
+                )
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "watch_start_error",
                     f"ファイルシステム監視の開始に失敗しました: {folder_path} - {str(e)}",
-                    level="ERROR"
+                    level="ERROR",
                 )
 
                 self.error_handler.handle_error(
-                    e, ErrorCategory.SYSTEM_ERROR,
+                    e,
+                    ErrorCategory.SYSTEM_ERROR,
                     {
                         "operation": "start_file_watching",
                         "file_path": str(folder_path),
                         "user_action": "フォルダ監視開始",
-                        "setup_duration": setup_duration
+                        "setup_duration": setup_duration,
                     },
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
 
                 # クリーンアップ
@@ -299,12 +310,16 @@ class FileSystemWatcher:
             監視停止に成功した場合True、失敗した場合False
         """
 
-        with self.logger_system.operation_context(AIComponent.KIRO, "stop_file_watching") as ctx:
+        with self.logger_system.operation_context(
+            AIComponent.KIRO, "stop_file_watching"
+        ) as ctx:
             stop_time = time.time()
             stop_details = {
-                "current_folder": str(self.current_folder) if self.current_folder else None,
+                "current_folder": (
+                    str(self.current_folder) if self.current_folder else None
+                ),
                 "was_watching": self.is_watching,
-                "stop_time": datetime.now().isoformat()
+                "stop_time": datetime.now().isoformat(),
             }
 
             try:
@@ -313,20 +328,24 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "watch_not_active",
                         "監視が開始されていないため、停止処理をスキップします",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
                     return True
 
                 # 監視統計の記録
-                if self.watch_stats['start_time']:
-                    watch_duration = (datetime.now() - self.watch_stats['start_time']).total_seconds()
-                    stop_details.update({
-                        "watch_duration": watch_duration,
-                        "total_events": self.watch_stats['total_events'],
-                        "filtered_events": self.watch_stats['filtered_events'],
-                        "callback_calls": self.watch_stats['callback_calls'],
-                        "errors": self.watch_stats['errors']
-                    })
+                if self.watch_stats["start_time"]:
+                    watch_duration = (
+                        datetime.now() - self.watch_stats["start_time"]
+                    ).total_seconds()
+                    stop_details.update(
+                        {
+                            "watch_duration": watch_duration,
+                            "total_events": self.watch_stats["total_events"],
+                            "filtered_events": self.watch_stats["filtered_events"],
+                            "callback_calls": self.watch_stats["callback_calls"],
+                            "errors": self.watch_stats["errors"],
+                        }
+                    )
 
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
@@ -336,7 +355,7 @@ class FileSystemWatcher:
                         f"フィルタ済み: {self.watch_stats['filtered_events']}, "
                         f"コールバック: {self.watch_stats['callback_calls']}, "
                         f"エラー: {self.watch_stats['errors']}",
-                        level="INFO"
+                        level="INFO",
                     )
 
                 # オブザーバーの停止とクリーンアップ
@@ -347,15 +366,12 @@ class FileSystemWatcher:
                 self.current_folder = None
 
                 stop_duration = time.time() - stop_time
-                stop_details.update({
-                    "stop_duration": stop_duration,
-                    "success": True
-                })
+                stop_details.update({"stop_duration": stop_duration, "success": True})
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "watch_stopped",
-                    f"ファイルシステム監視を停止しました ({stop_duration:.3f}秒)"
+                    f"ファイルシステム監視を停止しました ({stop_duration:.3f}秒)",
                 )
 
                 return True
@@ -363,28 +379,31 @@ class FileSystemWatcher:
             except Exception as e:
                 # 監視停止エラーのハンドリング
                 stop_duration = time.time() - stop_time
-                stop_details.update({
-                    "stop_duration": stop_duration,
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                    "success": False
-                })
+                stop_details.update(
+                    {
+                        "stop_duration": stop_duration,
+                        "error": str(e),
+                        "error_type": type(e).__name__,
+                        "success": False,
+                    }
+                )
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "watch_stop_error",
                     f"ファイルシステム監視の停止中にエラーが発生しました: {str(e)}",
-                    level="ERROR"
+                    level="ERROR",
                 )
 
                 self.error_handler.handle_error(
-                    e, ErrorCategory.SYSTEM_ERROR,
+                    e,
+                    ErrorCategory.SYSTEM_ERROR,
                     {
                         "operation": "stop_file_watching",
                         "user_action": "フォルダ監視停止",
-                        "stop_duration": stop_duration
+                        "stop_duration": stop_duration,
                     },
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
 
                 # 強制クリーンアップ
@@ -393,7 +412,9 @@ class FileSystemWatcher:
                 self.current_folder = None
                 return False
 
-    def add_change_listener(self, callback: Callable[[Path, FileChangeType, Optional[Path]], None]):
+    def add_change_listener(
+        self, callback: Callable[[Path, FileChangeType, Optional[Path]], None]
+    ):
         """
         ファイル変更通知のコールバック関数を追加する
 
@@ -420,10 +441,12 @@ class FileSystemWatcher:
                 AIComponent.KIRO,
                 "listener_added",
                 f"ファイル変更リスナーを追加しました (総数: {len(self.change_listeners)})",
-                level="DEBUG"
+                level="DEBUG",
             )
 
-    def remove_change_listener(self, callback: Callable[[Path, FileChangeType, Optional[Path]], None]):
+    def remove_change_listener(
+        self, callback: Callable[[Path, FileChangeType, Optional[Path]], None]
+    ):
         """
         ファイル変更通知のコールバック関数を削除する
 
@@ -438,7 +461,7 @@ class FileSystemWatcher:
                 AIComponent.KIRO,
                 "listener_removed",
                 f"ファイル変更リスナーを削除しました (総数: {len(self.change_listeners)})",
-                level="DEBUG"
+                level="DEBUG",
             )
 
     def get_watch_status(self) -> Dict[str, Any]:
@@ -457,12 +480,14 @@ class FileSystemWatcher:
             "listener_count": len(self.change_listeners),
             "supported_extensions": list(self.SUPPORTED_EXTENSIONS),
             "debounce_interval": self.debounce_interval,
-            "stats": dict(self.watch_stats)
+            "stats": dict(self.watch_stats),
         }
 
         # 監視期間の計算
-        if self.is_watching and self.watch_stats['start_time']:
-            status["watch_duration"] = (datetime.now() - self.watch_stats['start_time']).total_seconds()
+        if self.is_watching and self.watch_stats["start_time"]:
+            status["watch_duration"] = (
+                datetime.now() - self.watch_stats["start_time"]
+            ).total_seconds()
 
         return status
 
@@ -479,7 +504,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "observer_cleanup_timeout",
                         "オブザーバーの停止がタイムアウトしました",
-                        level="WARNING"
+                        level="WARNING",
                     )
 
             self.observer = None
@@ -490,10 +515,15 @@ class FileSystemWatcher:
                 AIComponent.KIRO,
                 "observer_cleanup_error",
                 f"オブザーバーのクリーンアップ中にエラーが発生しました: {str(e)}",
-                level="ERROR"
+                level="ERROR",
             )
 
-    def _notify_listeners(self, file_path: Path, change_type: FileChangeType, old_path: Optional[Path] = None):
+    def _notify_listeners(
+        self,
+        file_path: Path,
+        change_type: FileChangeType,
+        old_path: Optional[Path] = None,
+    ):
         """
         登録されたリスナーにファイル変更を通知する
 
@@ -517,7 +547,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "event_debounced",
                         f"イベントをデバウンス処理でスキップ: {file_path.name} ({time_diff:.3f}秒)",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
                     return
 
@@ -536,7 +566,7 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "listener_notification_debug",
                         f"リスナー通知成功: {file_path.name} ({change_type.value})",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                 except Exception as listener_error:
@@ -546,23 +576,24 @@ class FileSystemWatcher:
                         AIComponent.KIRO,
                         "listener_notification_error",
                         f"リスナー通知エラー: {file_path.name} - {str(listener_error)}",
-                        level="ERROR"
+                        level="ERROR",
                     )
 
                     self.error_handler.handle_error(
-                        listener_error, ErrorCategory.INTEGRATION_ERROR,
+                        listener_error,
+                        ErrorCategory.INTEGRATION_ERROR,
                         {
                             "operation": "file_change_notification",
                             "file_path": str(file_path),
                             "change_type": change_type.value,
-                            "user_action": "ファイル変更通知"
+                            "user_action": "ファイル変更通知",
                         },
-                        AIComponent.KIRO
+                        AIComponent.KIRO,
                     )
 
             # 通知統計の更新
-            self.watch_stats['callback_calls'] += successful_notifications
-            self.watch_stats['errors'] += failed_notifications
+            self.watch_stats["callback_calls"] += successful_notifications
+            self.watch_stats["errors"] += failed_notifications
 
             notification_duration = time.time() - notification_start_time
 
@@ -571,7 +602,7 @@ class FileSystemWatcher:
                 "listener_notification_complete",
                 f"リスナー通知完了: {file_path.name} ({change_type.value}) - "
                 f"成功: {successful_notifications}, 失敗: {failed_notifications} ({notification_duration:.3f}秒)",
-                level="DEBUG"
+                level="DEBUG",
             )
 
         except Exception as e:
@@ -579,18 +610,19 @@ class FileSystemWatcher:
                 AIComponent.KIRO,
                 "notification_error",
                 f"リスナー通知処理中にエラーが発生しました: {str(e)}",
-                level="ERROR"
+                level="ERROR",
             )
 
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {
                     "operation": "file_change_notification",
                     "file_path": str(file_path),
                     "change_type": change_type.value,
-                    "user_action": "ファイル変更通知処理"
+                    "user_action": "ファイル変更通知処理",
                 },
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def optimize_logging_for_production(self):
@@ -610,7 +642,7 @@ class FileSystemWatcher:
             AIComponent.KIRO,
             "watcher_production_optimized",
             "ファイルシステム監視の本番環境最適化が完了しました",
-            level="INFO"
+            level="INFO",
         )
 
     def get_performance_summary(self) -> Dict[str, Any]:
@@ -622,32 +654,45 @@ class FileSystemWatcher:
         """
 
         watch_duration = 0.0
-        if self.is_watching and self.watch_stats['start_time']:
-            watch_duration = (datetime.now() - self.watch_stats['start_time']).total_seconds()
+        if self.is_watching and self.watch_stats["start_time"]:
+            watch_duration = (
+                datetime.now() - self.watch_stats["start_time"]
+            ).total_seconds()
 
-        event_rate = self.watch_stats['total_events'] / max(1, watch_duration) if watch_duration > 0 else 0
-        filter_efficiency = self.watch_stats['filtered_events'] / max(1, self.watch_stats['total_events']) if self.watch_stats['total_events'] > 0 else 0
+        event_rate = (
+            self.watch_stats["total_events"] / max(1, watch_duration)
+            if watch_duration > 0
+            else 0
+        )
+        filter_efficiency = (
+            self.watch_stats["filtered_events"]
+            / max(1, self.watch_stats["total_events"])
+            if self.watch_stats["total_events"] > 0
+            else 0
+        )
 
         summary = {
             "monitoring": {
                 "is_watching": self.is_watching,
-                "current_folder": str(self.current_folder) if self.current_folder else None,
+                "current_folder": (
+                    str(self.current_folder) if self.current_folder else None
+                ),
                 "watch_duration": watch_duration,
-                "watchdog_available": self.watchdog_available
+                "watchdog_available": self.watchdog_available,
             },
             "events": {
-                "total_events": self.watch_stats['total_events'],
-                "filtered_events": self.watch_stats['filtered_events'],
-                "callback_calls": self.watch_stats['callback_calls'],
-                "errors": self.watch_stats['errors'],
+                "total_events": self.watch_stats["total_events"],
+                "filtered_events": self.watch_stats["filtered_events"],
+                "callback_calls": self.watch_stats["callback_calls"],
+                "errors": self.watch_stats["errors"],
                 "event_rate_per_second": event_rate,
-                "filter_efficiency": filter_efficiency
+                "filter_efficiency": filter_efficiency,
             },
             "listeners": {
                 "listener_count": len(self.change_listeners),
-                "debounce_interval": self.debounce_interval
+                "debounce_interval": self.debounce_interval,
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         return summary
@@ -668,27 +713,28 @@ class FileSystemWatcher:
                 f"イベント数: {summary['events']['total_events']}, "
                 f"フィルタ効率: {summary['events']['filter_efficiency']:.1%}, "
                 f"イベント率: {summary['events']['event_rate_per_second']:.2f}/秒",
-                level="INFO"
+                level="INFO",
             )
 
         # 詳細統計をパフォーマンスログに記録
         self.logger_system.log_performance(
-            AIComponent.KIRO,
-            "watcher_detailed_performance",
-            summary
+            AIComponent.KIRO, "watcher_detailed_performance", summary
         )
 
 
 if WATCHDOG_AVAILABLE:
+
     class ImageFileEventHandler(FileSystemEventHandler):
         """
         画像ファイル専用のファイルシステムイベントハンドラー
         """
 
-        def __init__(self,
-                     watcher: FileSystemWatcher,
-                     supported_extensions: Set[str],
-                     logger_system: LoggerSystem):
+        def __init__(
+            self,
+            watcher: FileSystemWatcher,
+            supported_extensions: Set[str],
+            logger_system: LoggerSystem,
+        ):
             """
             イベントハンドラーの初期化
 
@@ -723,17 +769,17 @@ if WATCHDOG_AVAILABLE:
                 file_path = Path(event.src_path)
 
                 # 統計更新
-                self.watcher.watch_stats['total_events'] += 1
+                self.watcher.watch_stats["total_events"] += 1
 
                 if self._is_image_file(file_path):
-                    self.watcher.watch_stats['filtered_events'] += 1
-                    self.watcher.watch_stats['last_event_time'] = datetime.now()
+                    self.watcher.watch_stats["filtered_events"] += 1
+                    self.watcher.watch_stats["last_event_time"] = datetime.now()
 
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "file_created",
                         f"画像ファイルが作成されました: {file_path.name}",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                     self.watcher._notify_listeners(file_path, FileChangeType.CREATED)
@@ -745,17 +791,17 @@ if WATCHDOG_AVAILABLE:
                 file_path = Path(event.src_path)
 
                 # 統計更新
-                self.watcher.watch_stats['total_events'] += 1
+                self.watcher.watch_stats["total_events"] += 1
 
                 if self._is_image_file(file_path):
-                    self.watcher.watch_stats['filtered_events'] += 1
-                    self.watcher.watch_stats['last_event_time'] = datetime.now()
+                    self.watcher.watch_stats["filtered_events"] += 1
+                    self.watcher.watch_stats["last_event_time"] = datetime.now()
 
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "file_deleted",
                         f"画像ファイルが削除されました: {file_path.name}",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                     self.watcher._notify_listeners(file_path, FileChangeType.DELETED)
@@ -767,17 +813,17 @@ if WATCHDOG_AVAILABLE:
                 file_path = Path(event.src_path)
 
                 # 統計更新
-                self.watcher.watch_stats['total_events'] += 1
+                self.watcher.watch_stats["total_events"] += 1
 
                 if self._is_image_file(file_path):
-                    self.watcher.watch_stats['filtered_events'] += 1
-                    self.watcher.watch_stats['last_event_time'] = datetime.now()
+                    self.watcher.watch_stats["filtered_events"] += 1
+                    self.watcher.watch_stats["last_event_time"] = datetime.now()
 
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "file_modified",
                         f"画像ファイルが変更されました: {file_path.name}",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                     self.watcher._notify_listeners(file_path, FileChangeType.MODIFIED)
@@ -790,23 +836,26 @@ if WATCHDOG_AVAILABLE:
                 dest_path = Path(event.dest_path)
 
                 # 統計更新
-                self.watcher.watch_stats['total_events'] += 1
+                self.watcher.watch_stats["total_events"] += 1
 
                 # 移動元または移動先が画像ファイルの場合
                 if self._is_image_file(src_path) or self._is_image_file(dest_path):
-                    self.watcher.watch_stats['filtered_events'] += 1
-                    self.watcher.watch_stats['last_event_time'] = datetime.now()
+                    self.watcher.watch_stats["filtered_events"] += 1
+                    self.watcher.watch_stats["last_event_time"] = datetime.now()
 
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "file_moved",
                         f"画像ファイルが移動されました: {src_path.name} -> {dest_path.name}",
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
-                    self.watcher._notify_listeners(dest_path, FileChangeType.MOVED, src_path)
+                    self.watcher._notify_listeners(
+                        dest_path, FileChangeType.MOVED, src_path
+                    )
 
 else:
+
     class ImageFileEventHandler:
         """
         watchdog が利用できない場合のダミーイベントハンドラー

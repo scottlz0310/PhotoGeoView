@@ -32,6 +32,7 @@ from .error_handling import IntegratedErrorHandler, ErrorCategory
 @dataclass
 class UIIntegrationState:
     """State tracking for UI integration"""
+
     current_folder: Optional[Path] = None
     selected_image: Optional[Path] = None
     loaded_images: List[Path] = field(default_factory=list)
@@ -64,16 +65,18 @@ class UIIntegrationController(QObject):
     theme_transition_completed = pyqtSignal(str)  # new_theme
     ui_performance_alert = pyqtSignal(str, str)  # level, message
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 state_manager: StateManager,
-                 image_processor: CS4CodingImageProcessor,
-                 theme_manager: IntegratedThemeManager,
-                 thumbnail_grid: OptimizedThumbnailGrid,
-                 folder_navigator: EnhancedFolderNavigator,
-                 cache_system: UnifiedCacheSystem,
-                 performance_monitor: KiroPerformanceMonitor,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        state_manager: StateManager,
+        image_processor: CS4CodingImageProcessor,
+        theme_manager: IntegratedThemeManager,
+        thumbnail_grid: OptimizedThumbnailGrid,
+        folder_navigator: EnhancedFolderNavigator,
+        cache_system: UnifiedCacheSystem,
+        performance_monitor: KiroPerformanceMonitor,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize UI integration controller
 
@@ -129,7 +132,7 @@ class UIIntegrationController(QObject):
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "ui_integration_init",
-            "UI Integration Controller initialized"
+            "UI Integration Controller initialized",
         )
 
     def _setup_ui_connections(self):
@@ -141,31 +144,40 @@ class UIIntegrationController(QObject):
 
             # Thumbnail grid connections
             self.thumbnail_grid.image_selected.connect(self._handle_image_selection)
-            self.thumbnail_grid.thumbnail_requested.connect(self._handle_thumbnail_request)
+            self.thumbnail_grid.thumbnail_requested.connect(
+                self._handle_thumbnail_request
+            )
 
             # Theme manager connections
-            self.theme_manager.theme_change_requested.connect(self._handle_theme_change_request)
+            self.theme_manager.theme_change_requested.connect(
+                self._handle_theme_change_request
+            )
             self.theme_manager.theme_applied.connect(self._handle_theme_applied)
 
             # Image processor connections
             self.image_processor.image_processed.connect(self._handle_image_processed)
             self.image_processor.exif_extracted.connect(self._handle_exif_extracted)
-            self.image_processor.thumbnail_generated.connect(self._handle_thumbnail_generated)
+            self.image_processor.thumbnail_generated.connect(
+                self._handle_thumbnail_generated
+            )
 
             # Performance monitor connections
-            self.performance_monitor.performance_alert.connect(self._handle_performance_alert)
+            self.performance_monitor.performance_alert.connect(
+                self._handle_performance_alert
+            )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "ui_connections_setup",
-                "UI component connections established"
+                "UI component connections established",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "setup_ui_connections"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _handle_folder_selection(self, folder_path: Path):
@@ -184,14 +196,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "folder_selection",
-                f"Folder selected: {folder_path}"
+                f"Folder selected: {folder_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "handle_folder_selection", "folder": str(folder_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _handle_folder_change(self, folder_path: Path):
@@ -210,9 +223,10 @@ class UIIntegrationController(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "handle_folder_change", "folder": str(folder_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _load_folder_async(self, folder_path: Path):
@@ -227,12 +241,17 @@ class UIIntegrationController(QObject):
                 return
 
             # Load from filesystem
-            image_extensions = self.config_manager.get_setting("core.image_formats", [".jpg", ".jpeg", ".png", ".tiff", ".bmp"])
+            image_extensions = self.config_manager.get_setting(
+                "core.image_formats", [".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
+            )
             image_files = []
 
             if folder_path.exists() and folder_path.is_dir():
                 for file_path in folder_path.iterdir():
-                    if file_path.is_file() and file_path.suffix.lower() in image_extensions:
+                    if (
+                        file_path.is_file()
+                        and file_path.suffix.lower() in image_extensions
+                    ):
                         image_files.append(file_path)
 
             # Sort images
@@ -254,9 +273,10 @@ class UIIntegrationController(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_folder_async", "folder": str(folder_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _process_folder_contents(self, folder_path: Path, image_files: List[Path]):
@@ -277,14 +297,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "folder_processed",
-                f"Processed folder with {len(image_files)} images: {folder_path}"
+                f"Processed folder with {len(image_files)} images: {folder_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "process_folder_contents", "folder": str(folder_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _generate_thumbnails_async(self, image_files: List[Path]):
@@ -305,14 +326,17 @@ class UIIntegrationController(QObject):
                 self.image_processor.generate_thumbnail_async(
                     image_path,
                     (thumbnail_size, thumbnail_size),
-                    callback=lambda path, thumb: self._handle_thumbnail_generated(path, thumb)
+                    callback=lambda path, thumb: self._handle_thumbnail_generated(
+                        path, thumb
+                    ),
                 )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "generate_thumbnails_async"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _handle_image_selection(self, image_path: Path):
@@ -329,16 +353,15 @@ class UIIntegrationController(QObject):
             self._load_image_metadata_async(image_path)
 
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR,
-                "image_selection",
-                f"Image selected: {image_path}"
+                AIComponent.CURSOR, "image_selection", f"Image selected: {image_path}"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "handle_image_selection", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _load_image_metadata_async(self, image_path: Path):
@@ -358,14 +381,17 @@ class UIIntegrationController(QObject):
 
             self.image_processor.extract_metadata_async(
                 image_path,
-                callback=lambda path, metadata: self._handle_metadata_extracted(path, metadata)
+                callback=lambda path, metadata: self._handle_metadata_extracted(
+                    path, metadata
+                ),
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_image_metadata_async", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _handle_metadata_extracted(self, image_path: Path, metadata: ImageMetadata):
@@ -388,17 +414,20 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.COPILOT,
                 "metadata_extracted",
-                f"Metadata extracted for: {image_path}"
+                f"Metadata extracted for: {image_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "handle_metadata_extracted", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
-    def _prepare_map_async(self, latitude: float, longitude: float, metadata: ImageMetadata):
+    def _prepare_map_async(
+        self, latitude: float, longitude: float, metadata: ImageMetadata
+    ):
         """Prepare map data asynchronously"""
         try:
             with self.ui_mutex:
@@ -418,13 +447,15 @@ class UIIntegrationController(QObject):
             map_data = {
                 "center": (latitude, longitude),
                 "zoom": self.state_manager.get_state().map_zoom,
-                "markers": [{
-                    "lat": latitude,
-                    "lon": longitude,
-                    "popup": f"{metadata.display_name}<br/>Taken: {metadata.created_date}",
-                    "icon": "camera"
-                }],
-                "metadata": metadata
+                "markers": [
+                    {
+                        "lat": latitude,
+                        "lon": longitude,
+                        "popup": f"{metadata.display_name}<br/>Taken: {metadata.created_date}",
+                        "icon": "camera",
+                    }
+                ],
+                "metadata": metadata,
             }
 
             # Cache map data
@@ -439,7 +470,7 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.COPILOT,
                 "map_prepared",
-                f"Map prepared for location: {latitude}, {longitude}"
+                f"Map prepared for location: {latitude}, {longitude}",
             )
 
         except Exception as e:
@@ -447,9 +478,10 @@ class UIIntegrationController(QObject):
                 self.integration_state.map_rendering_active = False
 
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "prepare_map_async", "lat": latitude, "lon": longitude},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _handle_thumbnail_request(self, image_path: Path):
@@ -469,14 +501,17 @@ class UIIntegrationController(QObject):
             self.image_processor.generate_thumbnail_async(
                 image_path,
                 (thumbnail_size, thumbnail_size),
-                callback=lambda path, thumb: self._handle_thumbnail_generated(path, thumb)
+                callback=lambda path, thumb: self._handle_thumbnail_generated(
+                    path, thumb
+                ),
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "handle_thumbnail_request", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _handle_thumbnail_generated(self, image_path: Path, thumbnail: QPixmap):
@@ -494,14 +529,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.COPILOT,
                 "thumbnail_generated",
-                f"Thumbnail generated for: {image_path}"
+                f"Thumbnail generated for: {image_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "handle_thumbnail_generated", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _handle_theme_change_request(self, old_theme: str, new_theme: str):
@@ -522,7 +558,7 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "theme_change_started",
-                f"Theme change: {old_theme} -> {new_theme}"
+                f"Theme change: {old_theme} -> {new_theme}",
             )
 
         except Exception as e:
@@ -530,9 +566,14 @@ class UIIntegrationController(QObject):
                 self.integration_state.theme_transition_active = False
 
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
-                {"operation": "handle_theme_change_request", "old_theme": old_theme, "new_theme": new_theme},
-                AIComponent.CURSOR
+                e,
+                ErrorCategory.UI_ERROR,
+                {
+                    "operation": "handle_theme_change_request",
+                    "old_theme": old_theme,
+                    "new_theme": new_theme,
+                },
+                AIComponent.CURSOR,
             )
 
     def _complete_theme_transition(self):
@@ -549,14 +590,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "theme_change_completed",
-                f"Theme transition completed: {current_theme}"
+                f"Theme transition completed: {current_theme}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "complete_theme_transition"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _handle_theme_applied(self, theme_name: str):
@@ -568,19 +610,22 @@ class UIIntegrationController(QObject):
 
             # Update cache status
             with self.ui_mutex:
-                self.integration_state.thumbnail_cache_status["theme_applied"] = datetime.now()
+                self.integration_state.thumbnail_cache_status["theme_applied"] = (
+                    datetime.now()
+                )
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "theme_applied",
-                f"Theme applied and UI refreshed: {theme_name}"
+                f"Theme applied and UI refreshed: {theme_name}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "handle_theme_applied", "theme": theme_name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _handle_image_processed(self, image_path: Path, result: Dict[str, Any]):
@@ -594,14 +639,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.COPILOT,
                 "image_processed",
-                f"Image processing completed: {image_path}"
+                f"Image processing completed: {image_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "handle_image_processed", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _handle_exif_extracted(self, image_path: Path, exif_data: Dict[str, Any]):
@@ -613,14 +659,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.COPILOT,
                 "exif_extracted",
-                f"EXIF data extracted: {image_path}"
+                f"EXIF data extracted: {image_path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "handle_exif_extracted", "image": str(image_path)},
-                AIComponent.COPILOT
+                AIComponent.COPILOT,
             )
 
     def _handle_performance_alert(self, level: str, message: str):
@@ -637,14 +684,19 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_alert",
-                f"UI Performance alert [{level}]: {message}"
+                f"UI Performance alert [{level}]: {message}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "handle_performance_alert", "level": level, "message": message},
-                AIComponent.KIRO
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
+                {
+                    "operation": "handle_performance_alert",
+                    "level": level,
+                    "message": message,
+                },
+                AIComponent.KIRO,
             )
 
     def _monitor_ui_performance(self):
@@ -659,20 +711,22 @@ class UIIntegrationController(QObject):
                     self.integration_state.ui_responsive = events_processed >= 0
 
                 # Check for performance issues
-                if (self.integration_state.theme_transition_active and
-                    self.integration_state.exif_loading_active and
-                    self.integration_state.map_rendering_active):
+                if (
+                    self.integration_state.theme_transition_active
+                    and self.integration_state.exif_loading_active
+                    and self.integration_state.map_rendering_active
+                ):
 
                     self.ui_performance_alert.emit(
-                        "warning",
-                        "Multiple heavy operations running simultaneously"
+                        "warning", "Multiple heavy operations running simultaneously"
                     )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "monitor_ui_performance"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def get_integration_state(self) -> UIIntegrationState:
@@ -699,14 +753,15 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "thumbnail_size_changed",
-                f"Thumbnail size changed to: {size}"
+                f"Thumbnail size changed to: {size}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "set_thumbnail_size", "size": size},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def refresh_current_folder(self):
@@ -722,9 +777,10 @@ class UIIntegrationController(QObject):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "refresh_current_folder"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def cleanup(self):
@@ -745,12 +801,13 @@ class UIIntegrationController(QObject):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "ui_integration_cleanup",
-                "UI Integration Controller cleaned up"
+                "UI Integration Controller cleaned up",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cleanup"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )

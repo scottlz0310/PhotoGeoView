@@ -10,7 +10,10 @@ import time
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from src.integration.services.file_system_watcher import FileSystemWatcher, FileChangeType
+from src.integration.services.file_system_watcher import (
+    FileSystemWatcher,
+    FileChangeType,
+)
 from src.integration.logging_system import LoggerSystem
 
 
@@ -24,12 +27,14 @@ class TestFileSystemWatcher:
 
     def teardown_method(self):
         """各テストメソッドの後に実行されるクリーンアップ処理"""
-        if hasattr(self, 'watcher') and self.watcher:
+        if hasattr(self, "watcher") and self.watcher:
             self.watcher.stop_watching()
 
     def test_init_with_watchdog_available(self):
         """watchdog が利用可能な場合の初期化テスト"""
-        with patch('src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE', True):
+        with patch(
+            "src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", True
+        ):
             watcher = FileSystemWatcher(logger_system=self.logger_system)
 
             assert watcher.watchdog_available is True
@@ -38,12 +43,20 @@ class TestFileSystemWatcher:
             assert watcher.current_folder is None
             assert len(watcher.change_listeners) == 0
             assert watcher.SUPPORTED_EXTENSIONS == {
-                '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".gif",
+                ".bmp",
+                ".tiff",
+                ".webp",
             }
 
     def test_init_with_watchdog_unavailable(self):
         """watchdog が利用できない場合の初期化テスト"""
-        with patch('src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE', False):
+        with patch(
+            "src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", False
+        ):
             watcher = FileSystemWatcher(logger_system=self.logger_system)
 
             assert watcher.watchdog_available is False
@@ -73,8 +86,8 @@ class TestFileSystemWatcher:
             assert watcher.is_watching is False
             assert watcher.current_folder is None
 
-    @patch('src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE', True)
-    @patch('src.integration.services.file_system_watcher.Observer')
+    @patch("src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", True)
+    @patch("src.integration.services.file_system_watcher.Observer")
     def test_start_watching_success(self, mock_observer_class):
         """正常な監視開始テスト"""
         mock_observer = Mock()
@@ -101,12 +114,14 @@ class TestFileSystemWatcher:
         assert result is True
         assert watcher.is_watching is False
 
-    @patch('src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE', True)
-    @patch('src.integration.services.file_system_watcher.Observer')
+    @patch("src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", True)
+    @patch("src.integration.services.file_system_watcher.Observer")
     def test_stop_watching_success(self, mock_observer_class):
         """正常な監視停止テスト"""
         mock_observer = Mock()
-        mock_observer.is_alive.return_value = True  # Changed to True to trigger stop call
+        mock_observer.is_alive.return_value = (
+            True  # Changed to True to trigger stop call
+        )
         mock_observer_class.return_value = mock_observer
 
         watcher = FileSystemWatcher(logger_system=self.logger_system)
@@ -154,17 +169,17 @@ class TestFileSystemWatcher:
         status = watcher.get_watch_status()
 
         assert isinstance(status, dict)
-        assert 'is_watching' in status
-        assert 'current_folder' in status
-        assert 'watchdog_available' in status
-        assert 'enable_monitoring' in status
-        assert 'listener_count' in status
-        assert 'supported_extensions' in status
-        assert 'stats' in status
+        assert "is_watching" in status
+        assert "current_folder" in status
+        assert "watchdog_available" in status
+        assert "enable_monitoring" in status
+        assert "listener_count" in status
+        assert "supported_extensions" in status
+        assert "stats" in status
 
-        assert status['is_watching'] is False
-        assert status['current_folder'] is None
-        assert status['listener_count'] == 0
+        assert status["is_watching"] is False
+        assert status["current_folder"] is None
+        assert status["listener_count"] == 0
 
     def test_notify_listeners(self):
         """リスナー通知テスト"""
@@ -205,11 +220,14 @@ class TestFileSystemWatcher:
         watcher._notify_listeners(test_path, FileChangeType.CREATED)
 
         # 統計にエラーが記録されることを確認
-        assert watcher.watch_stats['errors'] > 0
+        assert watcher.watch_stats["errors"] > 0
 
     def test_image_file_filtering(self):
         """画像ファイルフィルタリングテスト"""
-        from src.integration.services.file_system_watcher import ImageFileEventHandler, WATCHDOG_AVAILABLE
+        from src.integration.services.file_system_watcher import (
+            ImageFileEventHandler,
+            WATCHDOG_AVAILABLE,
+        )
 
         if not WATCHDOG_AVAILABLE:
             pytest.skip("watchdog not available")
@@ -218,7 +236,7 @@ class TestFileSystemWatcher:
         handler = ImageFileEventHandler(
             watcher=watcher,
             supported_extensions=watcher.SUPPORTED_EXTENSIONS,
-            logger_system=self.logger_system
+            logger_system=self.logger_system,
         )
 
         # 画像ファイルのテスト
@@ -229,11 +247,13 @@ class TestFileSystemWatcher:
             Path("/test/graphic.gif"),
             Path("/test/bitmap.bmp"),
             Path("/test/tiff_file.tiff"),
-            Path("/test/webp_file.webp")
+            Path("/test/webp_file.webp"),
         ]
 
         for image_file in image_files:
-            assert handler._is_image_file(image_file), f"{image_file.suffix} should be recognized as image file"
+            assert handler._is_image_file(
+                image_file
+            ), f"{image_file.suffix} should be recognized as image file"
 
         # 非画像ファイルのテスト
         non_image_files = [
@@ -241,11 +261,13 @@ class TestFileSystemWatcher:
             Path("/test/video.mp4"),
             Path("/test/audio.mp3"),
             Path("/test/archive.zip"),
-            Path("/test/executable.exe")
+            Path("/test/executable.exe"),
         ]
 
         for non_image_file in non_image_files:
-            assert not handler._is_image_file(non_image_file), f"{non_image_file.suffix} should not be recognized as image file"
+            assert not handler._is_image_file(
+                non_image_file
+            ), f"{non_image_file.suffix} should not be recognized as image file"
 
     def test_change_notification_system(self):
         """変更通知システムの統合テスト"""
@@ -255,12 +277,14 @@ class TestFileSystemWatcher:
         notifications = []
 
         def change_callback(file_path, change_type, old_path=None):
-            notifications.append({
-                'file_path': file_path,
-                'change_type': change_type,
-                'old_path': old_path,
-                'timestamp': time.time()
-            })
+            notifications.append(
+                {
+                    "file_path": file_path,
+                    "change_type": change_type,
+                    "old_path": old_path,
+                    "timestamp": time.time(),
+                }
+            )
 
         # リスナーを追加
         watcher.add_change_listener(change_callback)
@@ -270,7 +294,11 @@ class TestFileSystemWatcher:
             (Path("/test/new_image.jpg"), FileChangeType.CREATED, None),
             (Path("/test/modified_image.png"), FileChangeType.MODIFIED, None),
             (Path("/test/deleted_image.gif"), FileChangeType.DELETED, None),
-            (Path("/test/moved_image.bmp"), FileChangeType.MOVED, Path("/test/old_image.bmp"))
+            (
+                Path("/test/moved_image.bmp"),
+                FileChangeType.MOVED,
+                Path("/test/old_image.bmp"),
+            ),
         ]
 
         for file_path, change_type, old_path in test_cases:
@@ -279,12 +307,14 @@ class TestFileSystemWatcher:
         # 通知が正しく記録されたことを確認
         assert len(notifications) == len(test_cases)
 
-        for i, (expected_path, expected_type, expected_old_path) in enumerate(test_cases):
+        for i, (expected_path, expected_type, expected_old_path) in enumerate(
+            test_cases
+        ):
             notification = notifications[i]
-            assert notification['file_path'] == expected_path
-            assert notification['change_type'] == expected_type
-            assert notification['old_path'] == expected_old_path
-            assert 'timestamp' in notification
+            assert notification["file_path"] == expected_path
+            assert notification["change_type"] == expected_type
+            assert notification["old_path"] == expected_old_path
+            assert "timestamp" in notification
 
     def test_debounce_functionality(self):
         """デバウンス機能のテスト"""

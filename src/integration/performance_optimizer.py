@@ -34,6 +34,7 @@ from .error_handling import IntegratedErrorHandler, ErrorCategory
 @dataclass
 class OptimizationStrategy:
     """Performance optimization strategy configuration"""
+
     name: str
     enabled: bool = True
     print = 1  # 1=highest, 5=lowest
@@ -46,6 +47,7 @@ class OptimizationStrategy:
 @dataclass
 class ResourcePool:
     """Resource pool for managing shared resources"""
+
     name: str
     resource_type: str
     max_size: int
@@ -70,11 +72,13 @@ class PerformanceOptimizer:
     - Performance bottleneck identification and resolution
     """
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 cache_system: UnifiedCacheSystem,
-                 performance_monitor: KiroPerformanceMonitor,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        cache_system: UnifiedCacheSystem,
+        performance_monitor: KiroPerformanceMonitor,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize performance optimizer
 
@@ -104,20 +108,18 @@ class PerformanceOptimizer:
 
         # Thread pools for different types of operations
         self.io_thread_pool = ThreadPoolExecutor(
-            max_workers=4,
-            thread_name_prefix="optimizer_io"
+            max_workers=4, thread_name_prefix="optimizer_io"
         )
         self.cpu_thread_pool = ThreadPoolExecutor(
-            max_workers=2,
-            thread_name_prefix="optimizer_cpu"
+            max_workers=2, thread_name_prefix="optimizer_cpu"
         )
-        self.process_pool = ProcessPoolExecutor(
-            max_workers=2
-        )
+        self.process_pool = ProcessPoolExecutor(max_workers=2)
 
         # Performance tracking
         self.optimization_history: deque = deque(maxlen=500)
-        self.bottleneck_detection: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self.bottleneck_detection: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=100)
+        )
 
         # Memory management
         self.memory_pressure_threshold = 0.8  # 80% memory usage
@@ -137,7 +139,7 @@ class PerformanceOptimizer:
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "performance_optimizer_init",
-            "Performance optimizer initialized"
+            "Performance optimizer initialized",
         )
 
     def _initialize_strategies(self):
@@ -151,8 +153,8 @@ class PerformanceOptimizer:
                 parameters={
                     "gc_threshold": 0.8,
                     "cleanup_interval": 30,
-                    "aggressive_mode": False
-                }
+                    "aggressive_mode": False,
+                },
             )
 
             self.strategies["cache_optimization"] = OptimizationStrategy(
@@ -162,8 +164,8 @@ class PerformanceOptimizer:
                 parameters={
                     "max_cache_size": 200 * 1024 * 1024,  # 200MB
                     "eviction_policy": "lru",
-                    "compression_enabled": True
-                }
+                    "compression_enabled": True,
+                },
             )
 
             # UI optimization strategies
@@ -174,8 +176,8 @@ class PerformanceOptimizer:
                 parameters={
                     "max_ui_thread_time": 16,  # 16ms for 60fps
                     "background_processing": True,
-                    "lazy_loading": True
-                }
+                    "lazy_loading": True,
+                },
             )
 
             self.strategies["thumbnail_optimization"] = OptimizationStrategy(
@@ -185,8 +187,8 @@ class PerformanceOptimizer:
                 parameters={
                     "batch_size": 10,
                     "preload_distance": 20,
-                    "quality_scaling": True
-                }
+                    "quality_scaling": True,
+                },
             )
 
             # Core processing optimization strategies
@@ -197,8 +199,8 @@ class PerformanceOptimizer:
                 parameters={
                     "parallel_processing": True,
                     "chunk_size": 1024 * 1024,  # 1MB chunks
-                    "use_gpu": False
-                }
+                    "use_gpu": False,
+                },
             )
 
             self.strategies["exif_processing"] = OptimizationStrategy(
@@ -208,8 +210,8 @@ class PerformanceOptimizer:
                 parameters={
                     "batch_processing": True,
                     "cache_parsed_data": True,
-                    "skip_thumbnails": False
-                }
+                    "skip_thumbnails": False,
+                },
             )
 
             # Resource pooling strategies
@@ -220,21 +222,22 @@ class PerformanceOptimizer:
                 parameters={
                     "max_connections": 10,
                     "idle_timeout": 300,
-                    "validation_interval": 60
-                }
+                    "validation_interval": 60,
+                },
             )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "strategies_initialized",
-                f"Initialized {len(self.strategies)} optimization strategies"
+                f"Initialized {len(self.strategies)} optimization strategies",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "initialize_strategies"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def start_optimization(self):
@@ -248,21 +251,22 @@ class PerformanceOptimizer:
                 self.optimization_thread = threading.Thread(
                     target=self._optimization_loop,
                     name="performance_optimizer",
-                    daemon=True
+                    daemon=True,
                 )
                 self.optimization_thread.start()
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "optimization_started",
-                "Performance optimization monitoring started"
+                "Performance optimization monitoring started",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "start_optimization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def stop_optimization(self):
@@ -277,14 +281,15 @@ class PerformanceOptimizer:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "optimization_stopped",
-                "Performance optimization monitoring stopped"
+                "Performance optimization monitoring stopped",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "stop_optimization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _optimization_loop(self):
@@ -309,9 +314,10 @@ class PerformanceOptimizer:
 
             except Exception as e:
                 self.error_handler.handle_error(
-                    e, ErrorCategory.INTEGRATION_ERROR,
+                    e,
+                    ErrorCategory.INTEGRATION_ERROR,
                     {"operation": "optimization_loop"},
-                    AIComponent.KIRO
+                    AIComponent.KIRO,
                 )
                 time.sleep(10.0)  # Longer sleep on error
 
@@ -326,31 +332,32 @@ class PerformanceOptimizer:
                     "rss": process.memory_info().rss,
                     "vms": process.memory_info().vms,
                     "percent": process.memory_percent(),
-                    "available": psutil.virtual_memory().available
+                    "available": psutil.virtual_memory().available,
                 },
                 "cpu": {
                     "percent": process.cpu_percent(),
                     "system_percent": psutil.cpu_percent(),
-                    "threads": process.num_threads()
+                    "threads": process.num_threads(),
                 },
                 "io": {
                     "read_bytes": process.io_counters().read_bytes,
-                    "write_bytes": process.io_counters().write_bytes
+                    "write_bytes": process.io_counters().write_bytes,
                 },
                 "cache": {
                     "size": self.cache_system.get_cache_size(),
                     "hit_rate": self.cache_system.get_hit_rate(),
-                    "entries": self.cache_system.get_entry_count()
-                }
+                    "entries": self.cache_system.get_entry_count(),
+                },
             }
 
             return metrics
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "collect_performance_metrics"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {}
 
@@ -392,9 +399,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "detect_bottlenecks"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return []
 
@@ -411,9 +419,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "apply_optimizations", "bottlenecks": bottlenecks},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _optimize_memory_usage(self):
@@ -442,14 +451,15 @@ class PerformanceOptimizer:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "memory_optimized",
-                f"Memory optimization applied, collected {collected} objects"
+                f"Memory optimization applied, collected {collected} objects",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "optimize_memory_usage"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _optimize_cpu_usage(self):
@@ -460,7 +470,7 @@ class PerformanceOptimizer:
                 return
 
             # Reduce thread pool sizes temporarily
-            if hasattr(self.io_thread_pool, '_max_workers'):
+            if hasattr(self.io_thread_pool, "_max_workers"):
                 original_workers = self.io_thread_pool._max_workers
                 if original_workers > 2:
                     # Temporarily reduce workers
@@ -472,16 +482,15 @@ class PerformanceOptimizer:
             strategy.last_applied = datetime.now()
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "cpu_optimized",
-                "CPU usage optimization applied"
+                AIComponent.KIRO, "cpu_optimized", "CPU usage optimization applied"
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "optimize_cpu_usage"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _optimize_cache_performance(self):
@@ -518,14 +527,15 @@ class PerformanceOptimizer:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "cache_optimized",
-                f"Cache optimization applied, hit rate: {hit_rate:.2f}"
+                f"Cache optimization applied, hit rate: {hit_rate:.2f}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "optimize_cache_performance"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _adjust_background_task_intervals(self, multiplier: float):
@@ -537,9 +547,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "adjust_background_task_intervals"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _perform_maintenance(self):
@@ -554,8 +565,7 @@ class PerformanceOptimizer:
 
             # Clean up completed async tasks
             completed_tasks = [
-                task_id for task_id, task in self.async_tasks.items()
-                if task.done()
+                task_id for task_id, task in self.async_tasks.items() if task.done()
             ]
 
             for task_id in completed_tasks:
@@ -568,9 +578,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "perform_maintenance"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _maintain_resource_pools(self):
@@ -582,7 +593,7 @@ class PerformanceOptimizer:
                 expired_resources = []
 
                 for resource in list(pool.available_resources):
-                    if hasattr(resource, 'last_used'):
+                    if hasattr(resource, "last_used"):
                         if current_time - resource.last_used > 300:  # 5 minutes
                             expired_resources.append(resource)
 
@@ -593,38 +604,40 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "maintain_resource_pools"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Public API methods
 
-    def create_resource_pool(self, name: str, resource_type: str, max_size: int) -> bool:
+    def create_resource_pool(
+        self, name: str, resource_type: str, max_size: int
+    ) -> bool:
         """Create a new resource pool"""
         try:
             if name in self.resource_pools:
                 return False
 
             self.resource_pools[name] = ResourcePool(
-                name=name,
-                resource_type=resource_type,
-                max_size=max_size
+                name=name, resource_type=resource_type, max_size=max_size
             )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "resource_pool_created",
-                f"Resource pool created: {name} ({resource_type}, max_size={max_size})"
+                f"Resource pool created: {name} ({resource_type}, max_size={max_size})",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "create_resource_pool", "name": name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -658,9 +671,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "get_resource", "pool": pool_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return None
 
@@ -676,10 +690,10 @@ class PerformanceOptimizer:
                 pool.in_use_resources.remove(resource)
 
                 # Mark last used time
-                if hasattr(resource, 'last_used'):
+                if hasattr(resource, "last_used"):
                     resource.last_used = time.time()
                 else:
-                    setattr(resource, 'last_used', time.time())
+                    setattr(resource, "last_used", time.time())
 
                 pool.available_resources.append(resource)
                 return True
@@ -688,9 +702,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "return_resource", "pool": pool_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -708,16 +723,17 @@ class PerformanceOptimizer:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "async_task_submitted",
-                f"Async task submitted: {task_id} (priority={priority})"
+                f"Async task submitted: {task_id} (priority={priority})",
             )
 
             return True
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "submit_async_task", "task_id": task_id},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -738,9 +754,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cancel_async_task", "task_id": task_id},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -749,13 +766,23 @@ class PerformanceOptimizer:
         try:
             return {
                 "is_optimizing": self.is_optimizing,
-                "active_strategies": len([s for s in self.strategies.values() if s.enabled]),
+                "active_strategies": len(
+                    [s for s in self.strategies.values() if s.enabled]
+                ),
                 "resource_pools": {
                     name: {
                         "size": pool.current_size,
                         "max_size": pool.max_size,
-                        "hit_rate": pool.hit_count / (pool.hit_count + pool.miss_count) if (pool.hit_count + pool.miss_count) > 0 else 0,
-                        "utilization": pool.current_size / pool.max_size if pool.max_size > 0 else 0
+                        "hit_rate": (
+                            pool.hit_count / (pool.hit_count + pool.miss_count)
+                            if (pool.hit_count + pool.miss_count) > 0
+                            else 0
+                        ),
+                        "utilization": (
+                            pool.current_size / pool.max_size
+                            if pool.max_size > 0
+                            else 0
+                        ),
                     }
                     for name, pool in self.resource_pools.items()
                 },
@@ -763,14 +790,15 @@ class PerformanceOptimizer:
                 "recent_bottlenecks": {
                     name: list(deque_data)[-5:] if deque_data else []
                     for name, deque_data in self.bottleneck_detection.items()
-                }
+                },
             }
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "get_optimization_status"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return {}
 
@@ -784,9 +812,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "enable_strategy", "strategy": strategy_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -800,9 +829,10 @@ class PerformanceOptimizer:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "disable_strategy", "strategy": strategy_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -827,12 +857,13 @@ class PerformanceOptimizer:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_optimizer_cleanup",
-                "Performance optimizer cleaned up"
+                "Performance optimizer cleaned up",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "cleanup"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )

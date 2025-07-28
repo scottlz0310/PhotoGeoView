@@ -22,6 +22,7 @@ from .error_handling import IntegratedErrorHandler, ErrorCategory
 
 class MigrationStatus(Enum):
     """Migration status enumeration"""
+
     SUCCESS = "success"
     PARTIAL = "partial"
     FAILED = "failed"
@@ -31,6 +32,7 @@ class MigrationStatus(Enum):
 @dataclass
 class MigrationResult:
     """Migration result data structure"""
+
     source_file: Path
     target_section: str
     status: MigrationStatus
@@ -48,10 +50,12 @@ class ConfigMigrationManager:
     to the unified configuration system.
     """
 
-    def __init__(self,
-                 config_dir: Path = None,
-                 backup_dir: Path = None,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_dir: Path = None,
+        backup_dir: Path = None,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize the migration manager
 
@@ -86,7 +90,7 @@ class ConfigMigrationManager:
                 "source_files": [
                     "qt_theme_settings.json",
                     "qt_theme_user_settings.json",
-                    "cursor_ui_config.json"
+                    "cursor_ui_config.json",
                 ],
                 "target_section": "ai_cursor",
                 "mappings": {
@@ -95,28 +99,25 @@ class ConfigMigrationManager:
                     "theme_list": "theme_system.available_themes",
                     "custom_themes": "theme_system.custom_themes",
                     "theme_validation": "theme_system.theme_validation",
-
                     # UI optimization settings
                     "thumbnail_size": "ui_optimization.thumbnail_size",
                     "fast_thumbnails": "ui_optimization.fast_thumbnails",
                     "smooth_scrolling": "ui_optimization.smooth_scrolling",
                     "responsive_layout": "ui_optimization.responsive_layout",
                     "accessibility_features": "ui_optimization.accessibility_features",
-
                     # Window settings
                     "window_geometry": "ui.window_geometry",
                     "splitter_states": "ui.splitter_states",
                     "show_toolbar": "ui.show_toolbar",
-                    "show_statusbar": "ui.show_statusbar"
-                }
+                    "show_statusbar": "ui.show_statusbar",
+                },
             },
-
             # CS4Coding configuration migration
             "cs4_coding": {
                 "source_files": [
                     "copilot_config.json",
                     "image_processing_config.json",
-                    "map_config.json"
+                    "map_config.json",
                 ],
                 "target_section": "ai_copilot",
                 "mappings": {
@@ -125,13 +126,11 @@ class ConfigMigrationManager:
                     "detailed_metadata": "image_processing.detailed_metadata",
                     "gps_precision": "image_processing.gps_precision",
                     "error_recovery": "image_processing.error_recovery",
-
                     # Map integration settings
                     "folium_version": "map_integration.folium_version",
                     "marker_clustering": "map_integration.marker_clustering",
                     "offline_tiles": "map_integration.offline_tiles",
                     "custom_markers": "map_integration.custom_markers",
-
                     # Core functionality
                     "image_formats": "core.image_formats",
                     "exif_parsing_enabled": "core.exif_parsing_enabled",
@@ -139,16 +138,15 @@ class ConfigMigrationManager:
                     "map_zoom_default": "core.map_zoom_default",
                     "thumbnail_quality": "core.thumbna",
                     "cache_enabled": "core.cache_enabled",
-                    "cache_size_mb": "core.cache_size_mb"
-                }
+                    "cache_size_mb": "core.cache_size_mb",
+                },
             },
-
             # Kiro configuration migration
             "kiro": {
                 "source_files": [
                     "kiro_config.json",
                     "integration_config.json",
-                    "performance_config.json"
+                    "performance_config.json",
                 ],
                 "target_section": "ai_kiro",
                 "mappings": {
@@ -157,29 +155,26 @@ class ConfigMigrationManager:
                     "performance_monitoring": "integration.performance_monitoring",
                     "ai_coordination": "integration.ai_coordination",
                     "quality_assurance": "integration.quality_assurance",
-
                     # Optimization settings
                     "memory_management": "optimization.memory_management",
                     "cache_optimization": "optimization.cache_optimization",
                     "async_processing": "optimization.async_processing",
                     "resource_pooling": "optimization.resource_pooling",
-
                     # Performance settings
                     "mode": "performance.mode",
                     "max_memory_mb": "performance.max_memory_mb",
                     "thread_pool_size": "performance.thread_pool_size",
                     "async_loading": "performance.async_loading",
                     "preload_thumbnails": "performance.preload_thumbnails",
-                    "performance_monitoring": "performance.performance_monitoring"
-                }
+                    "performance_monitoring": "performance.performance_monitoring",
+                },
             },
-
             # Legacy PhotoGeoView configuration
             "legacy": {
                 "source_files": [
                     "photogeoview_config.json",
                     "app_settings.json",
-                    "user_preferences.json"
+                    "user_preferences.json",
                 ],
                 "target_section": "app",
                 "mappings": {
@@ -190,7 +185,6 @@ class ConfigMigrationManager:
                     "auto_save": "app.auto_save",
                     "backup_enabled": "app.backup_enabled",
                     "telemetry_enabled": "app.telemetry_enabled",
-
                     # Logging settings
                     "log_level": "logging.level",
                     "file_logging": "logging.file_logging",
@@ -198,9 +192,9 @@ class ConfigMigrationManager:
                     "performance_logging": "logging.performance_logging",
                     "ai_operation_logging": "logging.ai_operation_logging",
                     "max_log_size_mb": "logging.max_log_size_mb",
-                    "log_retention_days": "logging.log_retention_days"
-                }
-            }
+                    "log_retention_days": "logging.log_retention_days",
+                },
+            },
         }
 
     def migrate_all_configurations(self) -> Dict[str, Any]:
@@ -219,7 +213,7 @@ class ConfigMigrationManager:
             "total_files_processed": 0,
             "total_settings_migrated": 0,
             "errors": [],
-            "warnings": []
+            "warnings": [],
         }
 
         try:
@@ -231,12 +225,16 @@ class ConfigMigrationManager:
                 # Update totals
                 migration_summary["total_files_processed"] += len(ai_results)
                 for result in ai_results:
-                    migration_summary["total_settings_migrated"] += result.migrated_settings
+                    migration_summary[
+                        "total_settings_migrated"
+                    ] += result.migrated_settings
                     migration_summary["errors"].extend(result.errors)
                     migration_summary["warnings"].extend(result.warnings)
 
             migration_summary["end_time"] = datetime.now().isoformat()
-            migration_summary["status"] = self._determine_overall_status(migration_summary)
+            migration_summary["status"] = self._determine_overall_status(
+                migration_summary
+            )
 
             # Generate migration report
             self._generate_migration_report(migration_summary)
@@ -249,15 +247,18 @@ class ConfigMigrationManager:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "migrate_all_configurations"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             migration_summary["status"] = "failed"
             migration_summary["errors"].append(str(e))
             return migration_summary
 
-    def _migrate_ai_configuration(self, ai_name: str, mapping_config: Dict[str, Any]) -> List[MigrationResult]:
+    def _migrate_ai_configuration(
+        self, ai_name: str, mapping_config: Dict[str, Any]
+    ) -> List[MigrationResult]:
         """Migrate configuration for a specific AI implementation"""
 
         results = []
@@ -277,27 +278,31 @@ class ConfigMigrationManager:
                     status=MigrationStatus.SKIPPED,
                     migrated_settings=0,
                     errors=[],
-                    warnings=[f"Source file not found: {source_file}"]
+                    warnings=[f"Source file not found: {source_file}"],
                 )
                 results.append(result)
                 continue
 
             try:
                 # Load source configuration
-                with open(source_file, 'r', encoding='utf-8') as f:
+                with open(source_file, "r", encoding="utf-8") as f:
                     source_config = json.load(f)
 
                 # Create backup
                 backup_file = self._create_backup(source_file)
 
                 # Migrate settings
-                migrated_config, migration_errors, migration_warnings = self._migrate_settings(
-                    source_config, mappings
+                migrated_config, migration_errors, migration_warnings = (
+                    self._migrate_settings(source_config, mappings)
                 )
 
                 # Determine migration status
                 if migration_errors:
-                    status = MigrationStatus.FAILED if not migrated_config else MigrationStatus.PARTIAL
+                    status = (
+                        MigrationStatus.FAILED
+                        if not migrated_config
+                        else MigrationStatus.PARTIAL
+                    )
                 else:
                     status = MigrationStatus.SUCCESS
 
@@ -308,7 +313,7 @@ class ConfigMigrationManager:
                     migrated_settings=len(migrated_config),
                     errors=migration_errors,
                     warnings=migration_warnings,
-                    backup_file=backup_file
+                    backup_file=backup_file,
                 )
 
                 results.append(result)
@@ -328,7 +333,7 @@ class ConfigMigrationManager:
                     status=MigrationStatus.FAILED,
                     migrated_settings=0,
                     errors=[str(e)],
-                    warnings=[]
+                    warnings=[],
                 )
                 results.append(result)
 
@@ -336,7 +341,9 @@ class ConfigMigrationManager:
 
         return results
 
-    def _migrate_settings(self, source_config: Dict[str, Any], mappings: Dict[str, str]) -> Tuple[Dict[str, Any], List[str], List[str]]:
+    def _migrate_settings(
+        self, source_config: Dict[str, Any], mappings: Dict[str, str]
+    ) -> Tuple[Dict[str, Any], List[str], List[str]]:
         """Migrate individual settings using mapping configuration"""
 
         migrated_config = {}
@@ -352,7 +359,9 @@ class ConfigMigrationManager:
                     transformed_value = self._transform_setting_value(source_key, value)
 
                     # Set nested value using dot notation
-                    self._set_nested_value(migrated_config, target_path, transformed_value)
+                    self._set_nested_value(
+                        migrated_config, target_path, transformed_value
+                    )
 
                 else:
                     warnings.append(f"Source setting not found: {source_key}")
@@ -370,17 +379,26 @@ class ConfigMigrationManager:
             # Convert string paths to Path objects
             "current_folder": lambda x: str(Path(x)) if x else None,
             "selected_image": lambda x: str(Path(x)) if x else None,
-
             # Convert theme names
             "current_theme": lambda x: x.lower() if isinstance(x, str) else x,
-
             # Ensure numeric ranges
-            "thumbnail_size": lambda x: max(50, min(500, int(x))) if isinstance(x, (int, float)) else x,
-            "map_zoom_default": lambda x: max(1, min(20, int(x))) if isinstance(x, (int, float)) else x,
-
+            "thumbnail_size": lambda x: (
+                max(50, min(500, int(x))) if isinstance(x, (int, float)) else x
+            ),
+            "map_zoom_default": lambda x: (
+                max(1, min(20, int(x))) if isinstance(x, (int, float)) else x
+            ),
             # Convert boolean strings
-            "debug_mode": lambda x: str(x).lower() in ['true', '1', 'yes', 'on'] if isinstance(x, str) else bool(x),
-            "auto_save": lambda x: str(x).lower() in ['true', '1', 'yes', 'on'] if isinstance(x, str) else bool(x),
+            "debug_mode": lambda x: (
+                str(x).lower() in ["true", "1", "yes", "on"]
+                if isinstance(x, str)
+                else bool(x)
+            ),
+            "auto_save": lambda x: (
+                str(x).lower() in ["true", "1", "yes", "on"]
+                if isinstance(x, str)
+                else bool(x)
+            ),
         }
 
         if key in transformations:
@@ -395,7 +413,7 @@ class ConfigMigrationManager:
     def _set_nested_value(self, config: Dict[str, Any], path: str, value: Any):
         """Set nested configuration value using dot notation"""
 
-        keys = path.split('.')
+        keys = path.split(".")
         current = config
 
         # Navigate to parent of target key
@@ -411,13 +429,17 @@ class ConfigMigrationManager:
         """Create backup of source configuration file"""
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
+        backup_file = (
+            self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
+        )
 
         shutil.copy2(source_file, backup_file)
 
         return backup_file
 
-    def _save_migrated_config(self, target_section: str, migrated_config: Dict[str, Any]):
+    def _save_migrated_config(
+        self, target_section: str, migrated_config: Dict[str, Any]
+    ):
         """Save migrated configuration to appropriate file"""
 
         # Determine target file based on section
@@ -431,7 +453,7 @@ class ConfigMigrationManager:
         existing_config = {}
         if target_file.exists():
             try:
-                with open(target_file, 'r', encoding='utf-8') as f:
+                with open(target_file, "r", encoding="utf-8") as f:
                     existing_config = json.load(f)
             except Exception:
                 pass
@@ -440,14 +462,18 @@ class ConfigMigrationManager:
         self._deep_merge(existing_config, migrated_config)
 
         # Save merged configuration
-        with open(target_file, 'w', encoding='utf-8') as f:
+        with open(target_file, "w", encoding="utf-8") as f:
             json.dump(existing_config, f, indent=2, default=str)
 
     def _deep_merge(self, target: Dict[str, Any], source: Dict[str, Any]):
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
-            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+            if (
+                key in target
+                and isinstance(target[key], dict)
+                and isinstance(value, dict)
+            ):
                 self._deep_merge(target[key], value)
             else:
                 target[key] = value
@@ -482,12 +508,12 @@ class ConfigMigrationManager:
                 "migrated_settings": result.migrated_settings,
                 "errors": result.errors,
                 "warnings": result.warnings,
-                "backup_file": str(result.backup_file) if result.backup_file else None
+                "backup_file": str(result.backup_file) if result.backup_file else None,
             }
             for result in self.migration_results
         ]
 
-        with open(report_file, 'w', encoding='utf-8') as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             json.dump(detailed_summary, f, indent=2, default=str)
 
         self.logger_system.info(f"Migration report saved to {report_file}")
@@ -523,10 +549,12 @@ class ConfigMigrationManager:
             for backup_file in backup_files:
                 try:
                     # Extract original filename
-                    parts = backup_file.stem.split('_')
+                    parts = backup_file.stem.split("_")
                     if len(parts) >= 3:  # name_timestamp format
-                        original_name = '_'.join(parts[:-2])  # Remove timestamp parts
-                        original_file = self.config_dir / f"{original_name}{backup_file.suffix}"
+                        original_name = "_".join(parts[:-2])  # Remove timestamp parts
+                        original_file = (
+                            self.config_dir / f"{original_name}{backup_file.suffix}"
+                        )
 
                         # Restore backup
                         shutil.copy2(backup_file, original_file)
@@ -537,14 +565,17 @@ class ConfigMigrationManager:
                 except Exception as e:
                     self.logger_system.error(f"Failed to restore {backup_file}: {e}")
 
-            self.logger_system.info(f"Migration rollback completed: {restored_count} files restored")
+            self.logger_system.info(
+                f"Migration rollback completed: {restored_count} files restored"
+            )
             return restored_count > 0
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "rollback_migration"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -556,7 +587,7 @@ class ConfigMigrationManager:
             "backup_directory": str(self.backup_dir),
             "backup_files_count": len(list(self.backup_dir.glob("*"))),
             "config_directory": str(self.config_dir),
-            "available_migrations": list(self.migration_mappings.keys())
+            "available_migrations": list(self.migration_mappings.keys()),
         }
 
     def migrate_all_configurations(self) -> Dict[str, Any]:
@@ -575,7 +606,7 @@ class ConfigMigrationManager:
             "total_files_processed": 0,
             "total_settings_migrated": 0,
             "errors": [],
-            "warnings": []
+            "warnings": [],
         }
 
         try:
@@ -587,12 +618,16 @@ class ConfigMigrationManager:
                 # Update totals
                 migration_summary["total_files_processed"] += len(ai_results)
                 for result in ai_results:
-                    migration_summary["total_settings_migrated"] += result.migrated_settings
+                    migration_summary[
+                        "total_settings_migrated"
+                    ] += result.migrated_settings
                     migration_summary["errors"].extend(result.errors)
                     migration_summary["warnings"].extend(result.warnings)
 
             migration_summary["end_time"] = datetime.now().isoformat()
-            migration_summary["status"] = self._determine_overall_status(migration_summary)
+            migration_summary["status"] = self._determine_overall_status(
+                migration_summary
+            )
 
             # Generate migration report
             self._generate_migration_report(migration_summary)
@@ -605,15 +640,18 @@ class ConfigMigrationManager:
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "migrate_all_configurations"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             migration_summary["status"] = "failed"
             migration_summary["errors"].append(str(e))
             return migration_summary
 
-    def _migrate_ai_configuration(self, ai_name: str, mapping_config: Dict[str, Any]) -> List[MigrationResult]:
+    def _migrate_ai_configuration(
+        self, ai_name: str, mapping_config: Dict[str, Any]
+    ) -> List[MigrationResult]:
         """Migrate configuration for a specific AI implementation"""
 
         results = []
@@ -633,27 +671,31 @@ class ConfigMigrationManager:
                     status=MigrationStatus.SKIPPED,
                     migrated_settings=0,
                     errors=[],
-                    warnings=[f"Source file not found: {source_file}"]
+                    warnings=[f"Source file not found: {source_file}"],
                 )
                 results.append(result)
                 continue
 
             try:
                 # Load source configuration
-                with open(source_file, 'r', encoding='utf-8') as f:
+                with open(source_file, "r", encoding="utf-8") as f:
                     source_config = json.load(f)
 
                 # Create backup
                 backup_file = self._create_backup(source_file)
 
                 # Migrate settings
-                migrated_config, migration_errors, migration_warnings = self._migrate_settings(
-                    source_config, mappings
+                migrated_config, migration_errors, migration_warnings = (
+                    self._migrate_settings(source_config, mappings)
                 )
 
                 # Determine migration status
                 if migration_errors:
-                    status = MigrationStatus.FAILED if not migrated_config else MigrationStatus.PARTIAL
+                    status = (
+                        MigrationStatus.FAILED
+                        if not migrated_config
+                        else MigrationStatus.PARTIAL
+                    )
                 else:
                     status = MigrationStatus.SUCCESS
 
@@ -664,7 +706,7 @@ class ConfigMigrationManager:
                     migrated_settings=len(migrated_config),
                     errors=migration_errors,
                     warnings=migration_warnings,
-                    backup_file=backup_file
+                    backup_file=backup_file,
                 )
 
                 results.append(result)
@@ -684,7 +726,7 @@ class ConfigMigrationManager:
                     status=MigrationStatus.FAILED,
                     migrated_settings=0,
                     errors=[str(e)],
-                    warnings=[]
+                    warnings=[],
                 )
                 results.append(result)
 
@@ -692,7 +734,9 @@ class ConfigMigrationManager:
 
         return results
 
-    def _migrate_settings(self, source_config: Dict[str, Any], mappings: Dict[str, str]) -> Tuple[Dict[str, Any], List[str], List[str]]:
+    def _migrate_settings(
+        self, source_config: Dict[str, Any], mappings: Dict[str, str]
+    ) -> Tuple[Dict[str, Any], List[str], List[str]]:
         """Migrate individual settings using mapping configuration"""
 
         migrated_config = {}
@@ -708,7 +752,9 @@ class ConfigMigrationManager:
                     transformed_value = self._transform_setting_value(source_key, value)
 
                     # Set nested value using dot notation
-                    self._set_nested_value(migrated_config, target_path, transformed_value)
+                    self._set_nested_value(
+                        migrated_config, target_path, transformed_value
+                    )
 
                 else:
                     warnings.append(f"Source setting not found: {source_key}")
@@ -726,17 +772,26 @@ class ConfigMigrationManager:
             # Convert string paths to Path objects
             "current_folder": lambda x: str(Path(x)) if x else None,
             "selected_image": lambda x: str(Path(x)) if x else None,
-
             # Convert theme names
             "current_theme": lambda x: x.lower() if isinstance(x, str) else x,
-
             # Ensure numeric ranges
-            "thumbnail_size": lambda x: max(50, min(500, int(x))) if isinstance(x, (int, float)) else x,
-            "map_zoom_default": lambda x: max(1, min(20, int(x))) if isinstance(x, (int, float)) else x,
-
+            "thumbnail_size": lambda x: (
+                max(50, min(500, int(x))) if isinstance(x, (int, float)) else x
+            ),
+            "map_zoom_default": lambda x: (
+                max(1, min(20, int(x))) if isinstance(x, (int, float)) else x
+            ),
             # Convert boolean strings
-            "debug_mode": lambda x: str(x).lower() in ['true', '1', 'yes', 'on'] if isinstance(x, str) else bool(x),
-            "auto_save": lambda x: str(x).lower() in ['true', '1', 'yes', 'on'] if isinstance(x, str) else bool(x),
+            "debug_mode": lambda x: (
+                str(x).lower() in ["true", "1", "yes", "on"]
+                if isinstance(x, str)
+                else bool(x)
+            ),
+            "auto_save": lambda x: (
+                str(x).lower() in ["true", "1", "yes", "on"]
+                if isinstance(x, str)
+                else bool(x)
+            ),
         }
 
         if key in transformations:
@@ -751,7 +806,7 @@ class ConfigMigrationManager:
     def _set_nested_value(self, config: Dict[str, Any], path: str, value: Any):
         """Set nested configuration value using dot notation"""
 
-        keys = path.split('.')
+        keys = path.split(".")
         current = config
 
         # Navigate to parent of target key
@@ -767,13 +822,17 @@ class ConfigMigrationManager:
         """Create backup of source configuration file"""
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
+        backup_file = (
+            self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
+        )
 
         shutil.copy2(source_file, backup_file)
 
         return backup_file
 
-    def _save_migrated_config(self, target_section: str, migrated_config: Dict[str, Any]):
+    def _save_migrated_config(
+        self, target_section: str, migrated_config: Dict[str, Any]
+    ):
         """Save migrated configuration to appropriate file"""
 
         # Determine target file based on section
@@ -787,7 +846,7 @@ class ConfigMigrationManager:
         existing_config = {}
         if target_file.exists():
             try:
-                with open(target_file, 'r', encoding='utf-8') as f:
+                with open(target_file, "r", encoding="utf-8") as f:
                     existing_config = json.load(f)
             except Exception:
                 pass
@@ -796,14 +855,18 @@ class ConfigMigrationManager:
         self._deep_merge(existing_config, migrated_config)
 
         # Save merged configuration
-        with open(target_file, 'w', encoding='utf-8') as f:
+        with open(target_file, "w", encoding="utf-8") as f:
             json.dump(existing_config, f, indent=2, default=str)
 
     def _deep_merge(self, target: Dict[str, Any], source: Dict[str, Any]):
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
-            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+            if (
+                key in target
+                and isinstance(target[key], dict)
+                and isinstance(value, dict)
+            ):
                 self._deep_merge(target[key], value)
             else:
                 target[key] = value
@@ -838,12 +901,12 @@ class ConfigMigrationManager:
                 "migrated_settings": result.migrated_settings,
                 "errors": result.errors,
                 "warnings": result.warnings,
-                "backup_file": str(result.backup_file) if result.backup_file else None
+                "backup_file": str(result.backup_file) if result.backup_file else None,
             }
             for result in self.migration_results
         ]
 
-        with open(report_file, 'w', encoding='utf-8') as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             json.dump(detailed_summary, f, indent=2, default=str)
 
         self.logger_system.info(f"Migration report saved to {report_file}")
@@ -879,10 +942,12 @@ class ConfigMigrationManager:
             for backup_file in backup_files:
                 try:
                     # Extract original filename
-                    parts = backup_file.stem.split('_')
+                    parts = backup_file.stem.split("_")
                     if len(parts) >= 3:  # name_timestamp format
-                        original_name = '_'.join(parts[:-2])  # Remove timestamp parts
-                        original_file = self.config_dir / f"{original_name}{backup_file.suffix}"
+                        original_name = "_".join(parts[:-2])  # Remove timestamp parts
+                        original_file = (
+                            self.config_dir / f"{original_name}{backup_file.suffix}"
+                        )
 
                         # Restore backup
                         shutil.copy2(backup_file, original_file)
@@ -893,14 +958,17 @@ class ConfigMigrationManager:
                 except Exception as e:
                     self.logger_system.error(f"Failed to restore {backup_file}: {e}")
 
-            self.logger_system.info(f"Migration rollback completed: {restored_count} files restored")
+            self.logger_system.info(
+                f"Migration rollback completed: {restored_count} files restored"
+            )
             return restored_count > 0
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "rollback_migration"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -912,7 +980,7 @@ class ConfigMigrationManager:
             "files_validated": 0,
             "validation_errors": [],
             "validation_warnings": [],
-            "status": "success"
+            "status": "success",
         }
 
         try:
@@ -921,15 +989,19 @@ class ConfigMigrationManager:
                 self.config_dir / "app_config.json",
                 self.config_dir / "copilot_config.json",
                 self.config_dir / "cursor_config.json",
-                self.config_dir / "kiro_config.json"
+                self.config_dir / "kiro_config.json",
             ]
 
             for config_file in config_files:
                 if config_file.exists():
                     file_validation = self._validate_config_file(config_file)
                     validation_results["files_validated"] += 1
-                    validation_results["validation_errors"].extend(file_validation["errors"])
-                    validation_results["validation_warnings"].extend(file_validation["warnings"])
+                    validation_results["validation_errors"].extend(
+                        file_validation["errors"]
+                    )
+                    validation_results["validation_warnings"].extend(
+                        file_validation["warnings"]
+                    )
 
             # Determine overall status
             if validation_results["validation_errors"]:
@@ -947,19 +1019,17 @@ class ConfigMigrationManager:
     def _validate_config_file(self, config_file: Path) -> Dict[str, Any]:
         """Validate individual configuration file"""
 
-        validation_result = {
-            "file": str(config_file),
-            "errors": [],
-            "warnings": []
-        }
+        validation_result = {"file": str(config_file), "errors": [], "warnings": []}
 
         try:
-            with open(config_file, 'r', encoding='utf-8') as f:
+            with open(config_file, "r", encoding="utf-8") as f:
                 config_data = json.load(f)
 
             # Basic JSON structure validation
             if not isinstance(config_data, dict):
-                validation_result["errors"].append("Configuration must be a JSON object")
+                validation_result["errors"].append(
+                    "Configuration must be a JSON object"
+                )
                 return validation_result
 
             # Check for required sections based on file type
@@ -976,7 +1046,9 @@ class ConfigMigrationManager:
 
             for section in required_sections:
                 if section not in config_data:
-                    validation_result["warnings"].append(f"Missing recommended section: {section}")
+                    validation_result["warnings"].append(
+                        f"Missing recommended section: {section}"
+                    )
 
             return validation_result
 
@@ -995,5 +1067,5 @@ class ConfigMigrationManager:
             "backup_directory": str(self.backup_dir),
             "backup_files_count": len(list(self.backup_dir.glob("*"))),
             "config_directory": str(self.config_dir),
-            "available_migrations": list(self.migration_mappings.keys())
+            "available_migrations": list(self.migration_mappings.keys()),
         }

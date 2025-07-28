@@ -223,7 +223,12 @@ class IMapProvider(ABC):
         pass
 
     @abstractmethod
-    def add_image_overlay(self, map_obj: Any, image_path: Path, bounds: Tuple[Tuple[float, float], Tuple[float, float]]) -> None:
+    def add_image_overlay(
+        self,
+        map_obj: Any,
+        image_path: Path,
+        bounds: Tuple[Tuple[float, float], Tuple[float, float]],
+    ) -> None:
         """
         Add an image overlay to the map
 

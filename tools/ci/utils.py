@@ -60,7 +60,7 @@ def get_python_executable(version: Optional[str] = None) -> Optional[str]:
         f"python{version}",
         f"python{version.replace('.', '')}",
         "python3",
-        "python"
+        "python",
     ]
 
     for name in possible_names:
@@ -69,10 +69,7 @@ def get_python_executable(version: Optional[str] = None) -> Optional[str]:
             # Verify version matches
             try:
                 result = subprocess.run(
-                    [executable, "--version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
+                    [executable, "--version"], capture_output=True, text=True, timeout=5
                 )
                 if result.returncode == 0 and version in result.stdout:
                     return executable
@@ -86,7 +83,7 @@ def run_command(
     command: List[str],
     cwd: Optional[str] = None,
     timeout: Optional[float] = None,
-    capture_output: bool = True
+    capture_output: bool = True,
 ) -> Tuple[int, str, str]:
     """
     Run a command and return the result.
@@ -102,11 +99,7 @@ def run_command(
     """
     try:
         result = subprocess.run(
-            command,
-            cwd=cwd,
-            timeout=timeout,
-            capture_output=capture_output,
-            text=True
+            command, cwd=cwd, timeout=timeout, capture_output=capture_output, text=True
         )
         return result.returncode, result.stdout or "", result.stderr or ""
     except subprocess.TimeoutExpired:
@@ -131,7 +124,7 @@ def is_tool_available(tool_name: str) -> bool:
 def get_file_list(
     directory: str,
     extensions: Optional[List[str]] = None,
-    exclude_patterns: Optional[List[str]] = None
+    exclude_patterns: Optional[List[str]] = None,
 ) -> List[str]:
     """
     Get a list of files in a directory with optional filtering.
@@ -195,7 +188,7 @@ def format_duration(seconds: float) -> str:
 def setup_logging(
     log_file: Optional[str] = None,
     level: int = logging.INFO,
-    format_string: Optional[str] = None
+    format_string: Optional[str] = None,
 ) -> logging.Logger:
     """
     Set up logging configuration.
@@ -263,10 +256,10 @@ def safe_filename(filename: str) -> str:
     invalid_chars = '<>:"/\\|?*'
     safe_name = filename
     for char in invalid_chars:
-        safe_name = safe_name.replace(char, '_')
+        safe_name = safe_name.replace(char, "_")
 
     # Remove leading/trailing whitespace and dots
-    safe_name = safe_name.strip(' .')
+    safe_name = safe_name.strip(" .")
 
     # Ensure it's not empty
     if not safe_name:
@@ -286,7 +279,9 @@ def get_git_info() -> Dict[str, str]:
 
     try:
         # Get current branch
-        returncode, stdout, _ = run_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        returncode, stdout, _ = run_command(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+        )
         if returncode == 0:
             git_info["branch"] = stdout.strip()
 

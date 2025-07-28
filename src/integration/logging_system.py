@@ -23,6 +23,7 @@ from .models import AIComponent, PerformanceMetrics
 
 class LogLevel(Enum):
     """Extended log levels for AI integration"""
+
     CRITICAL = "CRITICAL"
     ERROR = "ERROR"
     WARNING = "WARNING"
@@ -46,11 +47,11 @@ class AILogFormatter(logging.Formatter):
         """Format log record with AI component information"""
 
         # Add AI component if not present
-        if not hasattr(record, 'ai_component'):
-            record.ai_component = 'SYSTEM'
+        if not hasattr(record, "ai_component"):
+            record.ai_component = "SYSTEM"
 
         # Add operation context if available
-        if hasattr(record, 'operation'):
+        if hasattr(record, "operation"):
             record.message = f"[{record.operation}] {record.getMessage()}"
         else:
             record.message = record.getMessage()
@@ -72,13 +73,13 @@ class PerformanceLogHandler(logging.Handler):
     def emit(self, record):
         """Emit performance log record"""
 
-        if hasattr(record, 'performance_data'):
+        if hasattr(record, "performance_data"):
             metric_entry = {
-                'timestamp': datetime.now().isoformat(),
-                'level': record.levelname,
-                'ai_component': getattr(record, 'ai_component', 'SYSTEM'),
-                'operation': getattr(record, 'operation', 'unknown'),
-                'metrics': record.performance_data
+                "timestamp": datetime.now().isoformat(),
+                "level": record.levelname,
+                "ai_component": getattr(record, "ai_component", "SYSTEM"),
+                "operation": getattr(record, "operation", "unknown"),
+                "metrics": record.performance_data,
             }
 
             self.metrics_buffer.append(metric_entry)
@@ -98,9 +99,9 @@ class PerformanceLogHandler(logging.Handler):
             self.metrics_file.parent.mkdir(parents=True, exist_ok=True)
 
             # Append metrics to file
-            with open(self.metrics_file, 'a', encoding='utf-8') as f:
+            with open(self.metrics_file, "a", encoding="utf-8") as f:
                 for metric in self.metrics_buffer:
-                    f.write(json.dumps(metric) + '\n')
+                    f.write(json.dumps(metric) + "\n")
 
             self.metrics_buffer.clear()
 
@@ -114,11 +115,13 @@ class LoggerSystem:
     Unified logging system that coordinates logging across all AI implementations
     """
 
-    def __init__(self,
-                 log_dir: Path = None,
-                 log_level: str = "INFO",
-                 enable_performance_logging: bool = True,
-                 enable_ai_operation_logging: bool = True):
+    def __init__(
+        self,
+        log_dir: Path = None,
+        log_level: str = "INFO",
+        enable_performance_logging: bool = True,
+        enable_ai_operation_logging: bool = True,
+    ):
         """
         Initialize the unified logging system
 
@@ -152,7 +155,7 @@ class LoggerSystem:
         self.ai_loggers = {
             AIComponent.COPILOT: self.get_logger("copilot"),
             AIComponent.CURSOR: self.get_logger("cursor"),
-            AIComponent.KIRO: self.get_logger("kiro")
+            AIComponent.KIRO: self.get_logger("kiro"),
         }
 
     def _setup_logging(self):
@@ -189,9 +192,9 @@ class LoggerSystem:
         main_log_file = self.log_dir / "photogeoview.log"
         main_handler = logging.handlers.RotatingFileHandler(
             main_log_file,
-            maxBytes=10*1024*1024,  # 10MB
+            maxBytes=10 * 1024 * 1024,  # 10MB
             backupCount=5,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         main_handler.setLevel(self.log_level)
         main_handler.setFormatter(self.formatter)
@@ -201,9 +204,9 @@ class LoggerSystem:
         error_log_file = self.log_dir / "errors.log"
         error_handler = logging.handlers.RotatingFileHandler(
             error_log_file,
-            maxBytes=5*1024*1024,  # 5MB
+            maxBytes=5 * 1024 * 1024,  # 5MB
             backupCount=3,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(self.formatter)
@@ -214,16 +217,20 @@ class LoggerSystem:
             ai_log_file = self.log_dir / f"{ai_component.value}.log"
             ai_handler = logging.handlers.RotatingFileHandler(
                 ai_log_file,
-                maxBytes=5*1024*1024,  # 5MB
+                maxBytes=5 * 1024 * 1024,  # 5MB
                 backupCount=3,
-                encoding='utf-8'
+                encoding="utf-8",
             )
             ai_handler.setLevel(self.log_level)
             ai_handler.setFormatter(self.formatter)
 
             # Add filter for AI-specific logs
-            ai_handler.addFilter(lambda record, component=ai_component:
-                               getattr(record, 'ai_component', None) == component.value.upper())
+            ai_handler.addFilter(
+                lambda record, component=ai_component: getattr(
+                    record, "ai_component", None
+                )
+                == component.value.upper()
+            )
 
             logging.getLogger().addHandler(ai_handler)
 
@@ -257,12 +264,14 @@ class LoggerSystem:
 
         return self.loggers[name]
 
-    def log_ai_operation(self,
-                        ai_component: AIComponent,
-                        operation: str,
-                        message: str,
-                        level: str = "INFO",
-                        **kwargs):
+    def log_ai_operation(
+        self,
+        ai_component: AIComponent,
+        operation: str,
+        message: str,
+        level: str = "INFO",
+        **kwargs,
+    ):
         """
         Log an AI operation with component attribution
 
@@ -282,9 +291,9 @@ class LoggerSystem:
 
         # Create log record with AI context
         extra = {
-            'ai_component': ai_component.value.upper(),
-            'operation': operation,
-            **kwargs
+            "ai_component": ai_component.value.upper(),
+            "operation": operation,
+            **kwargs,
         }
 
         logger.log(log_level, message, extra=extra)
@@ -293,10 +302,9 @@ class LoggerSystem:
         op_key = f"{ai_component.value}_{operation}"
         self.operation_counts[op_key] = self.operation_counts.get(op_key, 0) + 1
 
-    def log_performance(self,
-                       ai_component: AIComponent,
-                       operation: str,
-                       metrics: Dict[str, Any]):
+    def log_performance(
+        self, ai_component: AIComponent, operation: str, metrics: Dict[str, Any]
+    ):
         """
         Log performance metrics
 
@@ -312,18 +320,20 @@ class LoggerSystem:
         perf_logger = logging.getLogger("performance")
 
         extra = {
-            'ai_component': ai_component.value.upper(),
-            'operation': operation,
-            'performance_data': metrics
+            "ai_component": ai_component.value.upper(),
+            "operation": operation,
+            "performance_data": metrics,
         }
 
         perf_logger.info(f"Performance metrics for {operation}", extra=extra)
 
-    def log_error(self,
-                  ai_component: AIComponent,
-                  error: Exception,
-                  operation: str = "",
-                  context: Dict[str, Any] = None):
+    def log_error(
+        self,
+        ai_component: AIComponent,
+        error: Exception,
+        operation: str = "",
+        context: Dict[str, Any] = None,
+    ):
         """
         Log an error with AI component context
 
@@ -337,18 +347,17 @@ class LoggerSystem:
         logger = self.ai_loggers[ai_component]
 
         extra = {
-            'ai_component': ai_component.value.upper(),
-            'operation': operation,
-            'error_type': type(error).__name__,
-            **(context or {})
+            "ai_component": ai_component.value.upper(),
+            "operation": operation,
+            "error_type": type(error).__name__,
+            **(context or {}),
         }
 
         logger.error(f"Error in {operation}: {str(error)}", extra=extra, exc_info=True)
 
-    def log_integration_event(self,
-                             event: str,
-                             components: List[AIComponent],
-                             details: Dict[str, Any] = None):
+    def log_integration_event(
+        self, event: str, components: List[AIComponent], details: Dict[str, Any] = None
+    ):
         """
         Log an integration event involving multiple AI components
 
@@ -363,13 +372,16 @@ class LoggerSystem:
         component_names = [comp.value for comp in components]
 
         extra = {
-            'ai_component': 'KIRO',
-            'operation': 'integration',
-            'involved_components': component_names,
-            **(details or {})
+            "ai_component": "KIRO",
+            "operation": "integration",
+            "involved_components": component_names,
+            **(details or {}),
         }
 
-        kiro_logger.info(f"Integration event: {event} (Components: {', '.join(component_names)})", extra=extra)
+        kiro_logger.info(
+            f"Integration event: {event} (Components: {', '.join(component_names)})",
+            extra=extra,
+        )
 
     def create_performance_metrics(self) -> PerformanceMetrics:
         """
@@ -388,13 +400,17 @@ class LoggerSystem:
 
         metrics = PerformanceMetrics(
             memory_usage_mb=memory_info.rss / 1024 / 1024,
-            memory_peak_mb=memory_info.peak_wss / 1024 / 1024 if hasattr(memory_info, 'peak_wss') else 0,
+            memory_peak_mb=(
+                memory_info.peak_wss / 1024 / 1024
+                if hasattr(memory_info, "peak_wss")
+                else 0
+            ),
             memory_available_mb=psutil.virtual_memory().available / 1024 / 1024,
             cpu_usage_percent=process.cpu_percent(),
             cpu_cores=psutil.cpu_count(),
-            copilot_operations=self.operation_counts.get('copilot_total', 0),
-            cursor_operations=self.operation_counts.get('cursor_total', 0),
-            kiro_operations=self.operation_counts.get('kiro_total', 0)
+            copilot_operations=self.operation_counts.get("copilot_total", 0),
+            cursor_operations=self.operation_counts.get("cursor_total", 0),
+            kiro_operations=self.operation_counts.get("kiro_total", 0),
         )
 
         self.performance_history.append(metrics)
@@ -415,16 +431,28 @@ class LoggerSystem:
         total_operations = sum(self.operation_counts.values())
 
         ai_totals = {
-            'copilot': sum(count for op, count in self.operation_counts.items() if op.startswith('copilot_')),
-            'cursor': sum(count for op, count in self.operation_counts.items() if op.startswith('cursor_')),
-            'kiro': sum(count for op, count in self.operation_counts.items() if op.startswith('kiro_'))
+            "copilot": sum(
+                count
+                for op, count in self.operation_counts.items()
+                if op.startswith("copilot_")
+            ),
+            "cursor": sum(
+                count
+                for op, count in self.operation_counts.items()
+                if op.startswith("cursor_")
+            ),
+            "kiro": sum(
+                count
+                for op, count in self.operation_counts.items()
+                if op.startswith("kiro_")
+            ),
         }
 
         return {
-            'total_operations': total_operations,
-            'ai_totals': ai_totals,
-            'operation_breakdown': dict(self.operation_counts),
-            'most_active_ai': max(ai_totals, key=ai_totals.get) if ai_totals else None
+            "total_operations": total_operations,
+            "ai_totals": ai_totals,
+            "operation_breakdown": dict(self.operation_counts),
+            "most_active_ai": max(ai_totals, key=ai_totals.get) if ai_totals else None,
         }
 
     def flush_all(self):
@@ -485,7 +513,9 @@ class LoggerSystem:
 class OperationContext:
     """Context manager for operation logging"""
 
-    def __init__(self, logger_system: LoggerSystem, ai_component: AIComponent, operation: str):
+    def __init__(
+        self, logger_system: LoggerSystem, ai_component: AIComponent, operation: str
+    ):
         self.logger_system = logger_system
         self.ai_component = ai_component
         self.operation = operation
@@ -497,7 +527,7 @@ class OperationContext:
             self.ai_component,
             self.operation,
             f"Starting {self.operation}",
-            level="DEBUG"
+            level="DEBUG",
         )
         return self
 
@@ -511,14 +541,14 @@ class OperationContext:
                 self.ai_component,
                 self.operation,
                 f"Completed {self.operation} in {duration:.3f}s",
-                level="DEBUG"
+                level="DEBUG",
             )
 
             # Log performance metrics
             self.logger_system.log_performance(
                 self.ai_component,
                 self.operation,
-                {'duration_seconds': duration, 'status': 'success'}
+                {"duration_seconds": duration, "status": "success"},
             )
         else:
             # Operation failed
@@ -526,5 +556,5 @@ class OperationContext:
                 self.ai_component,
                 exc_val,
                 self.operation,
-                {'duration_seconds': duration}
+                {"duration_seconds": duration},
             )

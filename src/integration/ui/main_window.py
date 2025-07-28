@@ -13,9 +13,19 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
-    QToolBar, QStatusBar, QLabel, QProgressBar, QMenuBar, QMenu,
-    QMessageBox, QApplication
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QToolBar,
+    QStatusBar,
+    QLabel,
+    QProgressBar,
+    QMenuBar,
+    QMenu,
+    QMessageBox,
+    QApplication,
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
 from PyQt6.QtGui import QAction, QIcon, QKeySequence, QCloseEvent
@@ -49,10 +59,12 @@ class IntegratedMainWindow(QMainWindow):
     theme_changed = pyqtSignal(str)
     performance_alert = pyqtSignal(str, str)  # level, message
 
-    def __init__(self,
-                 config_manager: ConfigManager,
-                 state_manager: StateManager,
-                 logger_system: LoggerSystem = None):
+    def __init__(
+        self,
+        config_manager: ConfigManager,
+        state_manager: StateManager,
+        logger_system: LoggerSystem = None,
+    ):
         """
         Initialize the integrated main window
 
@@ -102,9 +114,7 @@ class IntegratedMainWindow(QMainWindow):
         self._restore_state()
 
         self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "main_window_init",
-            "Integrated main window initialized"
+            AIComponent.KIRO, "main_window_init", "Integrated main window initialized"
         )
 
     def _initialize_ui(self):
@@ -135,9 +145,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "ui_initialization"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _create_menu_bar(self):
@@ -248,17 +259,13 @@ class IntegratedMainWindow(QMainWindow):
 
         # Folder navigator (CursorBLD component with Kiro enhancements)
         self.folder_navigator = EnhancedFolderNavigator(
-            self.config_manager,
-            self.state_manager,
-            self.logger_system
+            self.config_manager, self.state_manager, self.logger_system
         )
         left_layout.addWidget(self.folder_navigator, 0)
 
         # Thumbnail grid (CursorBLD component with Kiro optimization)
         self.thumbnail_grid = OptimizedThumbnailGrid(
-            self.config_manager,
-            self.state_manager,
-            self.logger_system
+            self.config_manager, self.state_manager, self.logger_system
         )
         left_layout.addWidget(self.thumbnail_grid, 1)
 
@@ -278,7 +285,9 @@ class IntegratedMainWindow(QMainWindow):
         # Image preview area (placeholder for now)
         image_preview = QLabel("Image Preview Area")
         image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        image_preview.setStyleSheet("border: 1px solid gray; background-color: #f0f0f0;")
+        image_preview.setStyleSheet(
+            "border: 1px solid gray; background-color: #f0f0f0;"
+        )
         image_preview.setMinimumHeight(300)
         right_splitter.addWidget(image_preview)
 
@@ -322,9 +331,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             self.theme_manager = IntegratedThemeManager(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Connect theme change signal
@@ -332,9 +339,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_manager_init"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _apply_initial_theme(self):
@@ -347,9 +355,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "initial_theme_apply"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _setup_monitoring(self):
@@ -398,9 +407,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "state_restore"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Event handlers
@@ -414,7 +424,7 @@ class IntegratedMainWindow(QMainWindow):
             folder = QFileDialog.getExistingDirectory(
                 self,
                 "Select Image Folder",
-                str(self.state_manager.get_state_value("current_folder", Path.home()))
+                str(self.state_manager.get_state_value("current_folder", Path.home())),
             )
 
             if folder:
@@ -422,16 +432,15 @@ class IntegratedMainWindow(QMainWindow):
                 self.folder_changed.emit(folder_path)
 
                 self.logger_system.log_ai_operation(
-                    AIComponent.CURSOR,
-                    "folder_open",
-                    f"Folder opened: {folder_path}"
+                    AIComponent.CURSOR, "folder_open", f"Folder opened: {folder_path}"
                 )
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "open_folder"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _toggle_theme(self):
@@ -439,7 +448,9 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             if self.theme_manager:
-                current_theme = self.state_manager.get_state_value("current_theme", "default")
+                current_theme = self.state_manager.get_state_value(
+                    "current_theme", "default"
+                )
 
                 # Simple toggle logic - can be enhanced
                 new_theme = "dark" if current_theme == "default" else "default"
@@ -448,9 +459,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_toggle"},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _toggle_performance_monitor(self, enabled: bool):
@@ -480,7 +492,7 @@ class IntegratedMainWindow(QMainWindow):
             "• GitHub Copilot (CS4Coding): Core functionality\n"
             "• Cursor (CursorBLD): UI/UX excellence\n"
             "• Kiro: Integration and optimization\n\n"
-            "Version: 1.0.0"
+            "Version: 1.0.0",
         )
 
     def _on_folder_changed(self, folder_path: Path):
@@ -498,9 +510,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "folder_change_handling", "folder": str(folder_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_image_selected(self, image_path: Path):
@@ -518,9 +531,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "image_selection_handling", "image": str(image_path)},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _on_theme_changed(self, theme_name: str):
@@ -538,9 +552,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "theme_change_handling", "theme": theme_name},
-                AIComponent.CURSOR
+                AIComponent.CURSOR,
             )
 
     def _update_thumbnail_grid(self, folder_path: Path):
@@ -554,7 +569,7 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "thumbnail_update_start",
-                f"Starting thumbnail update for folder: {folder_path}"
+                f"Starting thumbnail update for folder: {folder_path}",
             )
 
             # Validate folder path
@@ -564,7 +579,7 @@ class IntegratedMainWindow(QMainWindow):
                     AIComponent.KIRO,
                     Exception(error_msg),
                     "folder_validation",
-                    {"folder_path": str(folder_path)}
+                    {"folder_path": str(folder_path)},
                 )
 
                 if self.thumbnail_grid:
@@ -582,7 +597,7 @@ class IntegratedMainWindow(QMainWindow):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "file_discovery_complete",
-                    f"Discovered {len(image_files)} images in {folder_path}"
+                    f"Discovered {len(image_files)} images in {folder_path}",
                 )
 
                 # Update thumbnail grid based on results
@@ -592,50 +607,51 @@ class IntegratedMainWindow(QMainWindow):
                         self.thumbnail_grid.update_image_list(image_files)
 
                         # Update status bar
-                        if hasattr(self, 'status_bar') and self.status_bar:
+                        if hasattr(self, "status_bar") and self.status_bar:
                             self.status_bar.showMessage(
                                 f"{len(image_files)}個の画像ファイルが見つかりました - {folder_path.name}",
-                                3000
+                                3000,
                             )
                     else:
                         # Show empty state
                         self.thumbnail_grid.show_empty_state()
 
                         # Update status bar
-                        if hasattr(self, 'status_bar') and self.status_bar:
+                        if hasattr(self, "status_bar") and self.status_bar:
                             self.status_bar.showMessage(
                                 f"画像ファイルが見つかりませんでした - {folder_path.name}",
-                                3000
+                                3000,
                             )
 
                 # Update state manager
                 self.state_manager.update_state(
-                    current_folder=folder_path,
-                    image_count=len(image_files)
+                    current_folder=folder_path, image_count=len(image_files)
                 )
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "thumbnail_update_complete",
-                    f"Successfully updated thumbnails for {len(image_files)} images"
+                    f"Successfully updated thumbnails for {len(image_files)} images",
                 )
 
             except Exception as discovery_error:
                 # Handle FileDiscoveryService errors
-                error_msg = f"ファイル検出中にエラーが発生しました: {str(discovery_error)}"
+                error_msg = (
+                    f"ファイル検出中にエラーが発生しました: {str(discovery_error)}"
+                )
 
                 self.logger_system.log_error(
                     AIComponent.KIRO,
                     discovery_error,
                     "file_discovery_error",
-                    {"folder_path": str(folder_path)}
+                    {"folder_path": str(folder_path)},
                 )
 
                 if self.thumbnail_grid:
                     self.thumbnail_grid.show_error_state(error_msg)
 
                 # Update status bar with error
-                if hasattr(self, 'status_bar') and self.status_bar:
+                if hasattr(self, "status_bar") and self.status_bar:
                     self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
 
                 # Show user-friendly error dialog
@@ -643,7 +659,7 @@ class IntegratedMainWindow(QMainWindow):
                     "ファイル検出エラー",
                     f"フォルダ '{folder_path.name}' の画像ファイル検出中にエラーが発生しました。\n\n"
                     f"詳細: {str(discovery_error)}\n\n"
-                    "フォルダの権限を確認するか、別のフォルダを選択してください。"
+                    "フォルダの権限を確認するか、別のフォルダを選択してください。",
                 )
 
         except Exception as e:
@@ -651,16 +667,17 @@ class IntegratedMainWindow(QMainWindow):
             error_msg = f"サムネイル更新中に予期しないエラーが発生しました: {str(e)}"
 
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "thumbnail_grid_update", "folder": str(folder_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
             if self.thumbnail_grid:
                 self.thumbnail_grid.show_error_state("予期しないエラーが発生しました")
 
             # Update status bar with error
-            if hasattr(self, 'status_bar') and self.status_bar:
+            if hasattr(self, "status_bar") and self.status_bar:
                 self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
 
     def _show_error_dialog(self, title: str, message: str):
@@ -685,29 +702,38 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.KIRO,
                 e,
                 "error_dialog_failure",
-                {"title": title, "message": message}
+                {"title": title, "message": message},
             )
 
     def _on_performance_alert(self, level: str, message: str):
         """Handle performance alerts (Kiro enhancement)"""
 
         # UI要素の存在確認
-        if not hasattr(self, 'performance_label') or self.performance_label is None:
+        if not hasattr(self, "performance_label") or self.performance_label is None:
             return
 
         if level == "warning":
             self.performance_label.setStyleSheet("color: orange; font-weight: bold;")
-            if hasattr(self, 'status_performance') and self.status_performance is not None:
+            if (
+                hasattr(self, "status_performance")
+                and self.status_performance is not None
+            ):
                 self.status_performance.setStyleSheet("color: orange;")
                 self.status_performance.setText(f"Performance: {message}")
         elif level == "critical":
             self.performance_label.setStyleSheet("color: red; font-weight: bold;")
-            if hasattr(self, 'status_performance') and self.status_performance is not None:
+            if (
+                hasattr(self, "status_performance")
+                and self.status_performance is not None
+            ):
                 self.status_performance.setStyleSheet("color: red;")
                 self.status_performance.setText(f"Performance: {message}")
         else:
             self.performance_label.setStyleSheet("color: green; font-weight: bold;")
-            if hasattr(self, 'status_performance') and self.status_performance is not None:
+            if (
+                hasattr(self, "status_performance")
+                and self.status_performance is not None
+            ):
                 self.status_performance.setStyleSheet("color: green;")
                 self.status_performance.setText("Performance: Good")
 
@@ -718,7 +744,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # UI要素が初期化されているかチェック
-            if not hasattr(self, 'performance_label') or self.performance_label is None:
+            if not hasattr(self, "performance_label") or self.performance_label is None:
                 return
 
             # Get performance summary from state manager
@@ -741,9 +767,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "performance_update"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _update_memory_usage(self):
@@ -751,7 +778,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # UI要素が初期化されているかチェック
-            if not hasattr(self, 'memory_label') or self.memory_label is None:
+            if not hasattr(self, "memory_label") or self.memory_label is None:
                 return
 
             import psutil
@@ -763,11 +790,13 @@ class IntegratedMainWindow(QMainWindow):
 
             # Update memory labels
             self.memory_label.setText(f"Memory: {memory_mb:.1f} MB")
-            if hasattr(self, 'status_memory') and self.status_memory is not None:
+            if hasattr(self, "status_memory") and self.status_memory is not None:
                 self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
 
             # Check for memory alerts
-            max_memory = self.config_manager.get_setting("performance.max_memory_mb", 512)
+            max_memory = self.config_manager.get_setting(
+                "performance.max_memory_mb", 512
+            )
 
             if memory_mb > max_memory * 0.9:
                 self.performance_alert.emit("critical", "High Memory")
@@ -776,9 +805,10 @@ class IntegratedMainWindow(QMainWindow):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.INTEGRATION_ERROR,
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "memory_update"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Window events
@@ -791,29 +821,25 @@ class IntegratedMainWindow(QMainWindow):
             self.config_manager.set_setting("ui.window_geometry", self.saveGeometry())
 
             # Save splitter states
-            splitter_states = {
-                "main_splitter": self.main_splitter.saveState()
-            }
+            splitter_states = {"main_splitter": self.main_splitter.saveState()}
             self.config_manager.set_setting("ui.splitter_states", splitter_states)
 
             # Save configuration
             self.config_manager.save_config()
 
             # Stop file system monitoring
-            if hasattr(self, 'folder_navigator') and self.folder_navigator:
+            if hasattr(self, "folder_navigator") and self.folder_navigator:
                 self.folder_navigator.stop_monitoring()
 
             # Stop performance monitoring
-            if hasattr(self, 'performance_timer') and self.performance_timer:
+            if hasattr(self, "performance_timer") and self.performance_timer:
                 self.performance_timer.stop()
 
-            if hasattr(self, 'memory_monitor') and self.memory_monitor:
+            if hasattr(self, "memory_monitor") and self.memory_monitor:
                 self.memory_monitor.stop()
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "main_window_cleanup",
-                "Main window cleanup completed"
+                AIComponent.KIRO, "main_window_cleanup", "Main window cleanup completed"
             )
 
             # Stop timers
@@ -823,18 +849,17 @@ class IntegratedMainWindow(QMainWindow):
                 self.memory_monitor.stop()
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "main_window_close",
-                "Main window closed, state saved"
+                AIComponent.KIRO, "main_window_close", "Main window closed, state saved"
             )
 
             event.accept()
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR,
+                e,
+                ErrorCategory.UI_ERROR,
                 {"operation": "window_close"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             event.accept()  # Accept anyway to prevent hanging
 

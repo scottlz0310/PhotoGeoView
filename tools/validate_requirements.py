@@ -22,6 +22,7 @@ import subprocess
 
 class ValidationStatus(Enum):
     """検証ステータス"""
+
     PASSED = "✅ 合格"
     FAILED = "❌ 不合格"
     WARNING = "⚠️ 警告"
@@ -31,6 +32,7 @@ class ValidationStatus(Enum):
 @dataclass
 class RequirementValidation:
     """要件検証結果"""
+
     requirement_id: str
     description: str
     status: ValidationStatus
@@ -53,7 +55,9 @@ class RequirementValidator:
 
         try:
             # テーママネージャーの存在確認
-            theme_manager_path = self.project_root / "src/integration/ui/theme_manager.py"
+            theme_manager_path = (
+                self.project_root / "src/integration/ui/theme_manager.py"
+            )
             if theme_manager_path.exists():
                 evidence.append(f"テーママネージャー: {theme_manager_path}")
             else:
@@ -78,7 +82,7 @@ class RequirementValidator:
             description="CursorBLD UI/UX統合",
             status=status,
             details=details or "CursorBLD UIコンポーネントが正常に統合されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_1_2(self) -> RequirementValidation:
@@ -89,7 +93,9 @@ class RequirementValidator:
 
         try:
             # サムネイルグリッドの存在確認
-            thumbnail_grid_path = self.project_root / "src/integration/ui/thumbnail_grid.py"
+            thumbnail_grid_path = (
+                self.project_root / "src/integration/ui/thumbnail_grid.py"
+            )
             if thumbnail_grid_path.exists():
                 evidence.append(f"サムネイルグリッド: {thumbnail_grid_path}")
             else:
@@ -97,10 +103,12 @@ class RequirementValidator:
                 details += "サムネイルグリッドファイルが見つかりません。"
 
             # 画像プロセッサーでのサムネイル機能確認
-            image_processor_path = self.project_root / "src/integration/image_processor.py"
+            image_processor_path = (
+                self.project_root / "src/integration/image_processor.py"
+            )
             if image_processor_path.exists():
-                content = image_processor_path.read_text(encoding='utf-8')
-                if 'thumbnail' in content.lower():
+                content = image_processor_path.read_text(encoding="utf-8")
+                if "thumbnail" in content.lower():
                     evidence.append("画像プロセッサーにサムネイル機能が含まれています")
                 else:
                     status = ValidationStatus.WARNING
@@ -115,7 +123,7 @@ class RequirementValidator:
             description="サムネイル表示統合",
             status=status,
             details=details or "サムネイル表示機能が統合されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_1_3(self) -> RequirementValidation:
@@ -126,20 +134,22 @@ class RequirementValidator:
 
         try:
             # 画像プロセッサーの存在確認
-            image_processor_path = self.project_root / "src/integration/image_processor.py"
+            image_processor_path = (
+                self.project_root / "src/integration/image_processor.py"
+            )
             if image_processor_path.exists():
-                content = image_processor_path.read_text(encoding='utf-8')
+                content = image_processor_path.read_text(encoding="utf-8")
                 evidence.append(f"画像プロセッサー: {image_processor_path}")
 
                 # EXIF関連機能の確認
-                if 'exif' in content.lower():
+                if "exif" in content.lower():
                     evidence.append("EXIF処理機能が含まれています")
                 else:
                     status = ValidationStatus.WARNING
                     details += "EXIF処理機能が見つかりません。"
 
                 # CS4Coding言及の確認
-                if 'cs4coding' in content.lower():
+                if "cs4coding" in content.lower():
                     evidence.append("CS4Coding統合が確認されました")
                 else:
                     status = ValidationStatus.WARNING
@@ -157,7 +167,7 @@ class RequirementValidator:
             description="CS4Coding EXIF解析統合",
             status=status,
             details=details or "CS4Coding EXIF解析機能が統合されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_1_4(self) -> RequirementValidation:
@@ -170,7 +180,12 @@ class RequirementValidator:
             # 地図関連ファイルの確認
             map_files = list(self.project_root.rglob("*map*.py"))
             if map_files:
-                evidence.extend([f"地図ファイル: {f.relative_to(self.project_root)}" for f in map_files])
+                evidence.extend(
+                    [
+                        f"地図ファイル: {f.relative_to(self.project_root)}"
+                        for f in map_files
+                    ]
+                )
             else:
                 status = ValidationStatus.WARNING
                 details += "地図関連ファイルが見つかりません。"
@@ -179,7 +194,7 @@ class RequirementValidator:
             requirements_path = self.project_root / "requirements.txt"
             if requirements_path.exists():
                 content = requirements_path.read_text()
-                if 'folium' in content:
+                if "folium" in content:
                     evidence.append("folium依存関係が確認されました")
                 else:
                     status = ValidationStatus.WARNING
@@ -194,7 +209,7 @@ class RequirementValidator:
             description="CS4Coding地図表示統合",
             status=status,
             details=details or "CS4Coding地図表示機能が統合されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_2_1(self) -> RequirementValidation:
@@ -209,8 +224,8 @@ class RequirementValidator:
             if controller_path.exists():
                 evidence.append(f"統合コントローラー: {controller_path}")
 
-                content = controller_path.read_text(encoding='utf-8')
-                if 'kiro' in content.lower():
+                content = controller_path.read_text(encoding="utf-8")
+                if "kiro" in content.lower():
                     evidence.append("Kiro統合が確認されました")
                 else:
                     status = ValidationStatus.WARNING
@@ -237,7 +252,7 @@ class RequirementValidator:
             description="Kiro統一アーキテクチャ",
             status=status,
             details=details or "Kiro統一アーキテクチャが実装されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_2_2(self) -> RequirementValidation:
@@ -248,7 +263,9 @@ class RequirementValidator:
 
         try:
             # パフォーマンス監視の存在確認
-            perf_monitor_path = self.project_root / "src/integration/performance_monitor.py"
+            perf_monitor_path = (
+                self.project_root / "src/integration/performance_monitor.py"
+            )
             if perf_monitor_path.exists():
                 evidence.append(f"パフォーマンス監視: {perf_monitor_path}")
             else:
@@ -281,7 +298,7 @@ class RequirementValidator:
             description="パフォーマンス最適化",
             status=status,
             details=details or "パフォーマンス最適化機能が実装されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_4_1(self) -> RequirementValidation:
@@ -301,7 +318,7 @@ class RequirementValidator:
                     "api_documentation.md",
                     "ai_contribution_report.md",
                     "troubleshooting_guide.md",
-                    "README.md"
+                    "README.md",
                 ]
 
                 for doc_file in required_docs:
@@ -316,7 +333,9 @@ class RequirementValidator:
                 details += "AI統合ドキュメントディレクトリが見つかりません。"
 
             # ドキュメント生成ツールの確認
-            doc_generator_path = self.project_root / "docs/ai_integration/standalone_doc_generator.py"
+            doc_generator_path = (
+                self.project_root / "docs/ai_integration/standalone_doc_generator.py"
+            )
             if doc_generator_path.exists():
                 evidence.append(f"ドキュメント生成ツール: {doc_generator_path}")
             else:
@@ -332,7 +351,7 @@ class RequirementValidator:
             description="AI貢献度ドキュメント",
             status=status,
             details=details or "AI貢献度ドキュメントが作成されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_requirement_5_1(self) -> RequirementValidation:
@@ -370,7 +389,7 @@ class RequirementValidator:
             test_dirs = [
                 "tests/integration_tests",
                 "tests/ai_compatibility",
-                "tests/performance_tests"
+                "tests/performance_tests",
             ]
 
             for test_dir in test_dirs:
@@ -390,7 +409,7 @@ class RequirementValidator:
             description="自動品質保証",
             status=status,
             details=details or "自動品質保証システムが実装されています",
-            evidence=evidence
+            evidence=evidence,
         )
 
     def validate_all_requirements(self) -> List[RequirementValidation]:
@@ -412,14 +431,16 @@ class RequirementValidator:
             try:
                 validation = method()
                 self.validations.append(validation)
-                print(f"{validation.status.value} 要件{validation.requirement_id}: {validation.description}")
+                print(
+                    f"{validation.status.value} 要件{validation.requirement_id}: {validation.description}"
+                )
             except Exception as e:
                 error_validation = RequirementValidation(
                     requirement_id="ERROR",
                     description=f"検証エラー: {method.__name__}",
                     status=ValidationStatus.FAILED,
                     details=str(e),
-                    evidence=[]
+                    evidence=[],
                 )
                 self.validations.append(error_validation)
                 print(f"❌ 検証エラー: {method.__name__} - {e}")
@@ -434,64 +455,73 @@ class RequirementValidator:
             f"検証日時: {Path(__file__).stat().st_mtime}",
             "",
             "## 検証結果概要",
-            ""
+            "",
         ]
 
         # 統計情報
-        passed = len([v for v in self.validations if v.status == ValidationStatus.PASSED])
-        failed = len([v for v in self.validations if v.status == ValidationStatus.FAILED])
-        warnings = len([v for v in self.validations if v.status == ValidationStatus.WARNING])
+        passed = len(
+            [v for v in self.validations if v.status == ValidationStatus.PASSED]
+        )
+        failed = len(
+            [v for v in self.validations if v.status == ValidationStatus.FAILED]
+        )
+        warnings = len(
+            [v for v in self.validations if v.status == ValidationStatus.WARNING]
+        )
 
-        report_lines.extend([
-            f"- **合格**: {passed}件",
-            f"- **不合格**: {failed}件",
-            f"- **警告**: {warnings}件",
-            f"- **総要件数**: {len(self.validations)}件",
-            "",
-            "## 詳細検証結果",
-            ""
-        ])
+        report_lines.extend(
+            [
+                f"- **合格**: {passed}件",
+                f"- **不合格**: {failed}件",
+                f"- **警告**: {warnings}件",
+                f"- **総要件数**: {len(self.validations)}件",
+                "",
+                "## 詳細検証結果",
+                "",
+            ]
+        )
 
         # 各要件の詳細
         for validation in self.validations:
-            report_lines.extend([
-                f"### {validation.status.value} 要件{validation.requirement_id}: {validation.description}",
-                "",
-                f"**詳細**: {validation.details}",
-                ""
-            ])
+            report_lines.extend(
+                [
+                    f"### {validation.status.value} 要件{validation.requirement_id}: {validation.description}",
+                    "",
+                    f"**詳細**: {validation.details}",
+                    "",
+                ]
+            )
 
             if validation.evidence:
-                report_lines.extend([
-                    "**証跡**:",
-                    ""
-                ])
+                report_lines.extend(["**証跡**:", ""])
                 for evidence in validation.evidence:
                     report_lines.append(f"- {evidence}")
                 report_lines.append("")
 
         # 推奨事項
         if failed > 0:
-            report_lines.extend([
-                "## 🔴 必須対応事項",
-                ""
-            ])
+            report_lines.extend(["## 🔴 必須対応事項", ""])
 
-            failed_validations = [v for v in self.validations if v.status == ValidationStatus.FAILED]
+            failed_validations = [
+                v for v in self.validations if v.status == ValidationStatus.FAILED
+            ]
             for validation in failed_validations:
-                report_lines.append(f"- **要件{validation.requirement_id}**: {validation.details}")
+                report_lines.append(
+                    f"- **要件{validation.requirement_id}**: {validation.details}"
+                )
 
             report_lines.append("")
 
         if warnings > 0:
-            report_lines.extend([
-                "## ⚠️ 改善推奨事項",
-                ""
-            ])
+            report_lines.extend(["## ⚠️ 改善推奨事項", ""])
 
-            warning_validations = [v for v in self.validations if v.status == ValidationStatus.WARNING]
+            warning_validations = [
+                v for v in self.validations if v.status == ValidationStatus.WARNING
+            ]
             for validation in warning_validations:
-                report_lines.append(f"- **要件{validation.requirement_id}**: {validation.details}")
+                report_lines.append(
+                    f"- **要件{validation.requirement_id}**: {validation.details}"
+                )
 
             report_lines.append("")
 
@@ -499,23 +529,31 @@ class RequirementValidator:
 
         if output_path:
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(report_content, encoding='utf-8')
+            output_path.write_text(report_content, encoding="utf-8")
 
         return report_content
 
     def get_validation_summary(self) -> Dict[str, Any]:
         """検証サマリーを取得"""
-        passed = len([v for v in self.validations if v.status == ValidationStatus.PASSED])
-        failed = len([v for v in self.validations if v.status == ValidationStatus.FAILED])
-        warnings = len([v for v in self.validations if v.status == ValidationStatus.WARNING])
+        passed = len(
+            [v for v in self.validations if v.status == ValidationStatus.PASSED]
+        )
+        failed = len(
+            [v for v in self.validations if v.status == ValidationStatus.FAILED]
+        )
+        warnings = len(
+            [v for v in self.validations if v.status == ValidationStatus.WARNING]
+        )
 
         return {
-            'total_requirements': len(self.validations),
-            'passed': passed,
-            'failed': failed,
-            'warnings': warnings,
-            'success_rate': (passed / len(self.validations) * 100) if self.validations else 0,
-            'overall_status': 'PASSED' if failed == 0 else 'FAILED'
+            "total_requirements": len(self.validations),
+            "passed": passed,
+            "failed": failed,
+            "warnings": warnings,
+            "success_rate": (
+                (passed / len(self.validations) * 100) if self.validations else 0
+            ),
+            "overall_status": "PASSED" if failed == 0 else "FAILED",
         }
 
 
@@ -523,9 +561,9 @@ def main():
     """メイン実行関数"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='AI統合要件検証')
-    parser.add_argument('--output', '-o', type=Path, help='レポート出力パス')
-    parser.add_argument('--json', action='store_true', help='JSON形式で出力')
+    parser = argparse.ArgumentParser(description="AI統合要件検証")
+    parser.add_argument("--output", "-o", type=Path, help="レポート出力パス")
+    parser.add_argument("--json", action="store_true", help="JSON形式で出力")
 
     args = parser.parse_args()
 
@@ -541,22 +579,22 @@ def main():
     if args.json:
         # JSON出力
         json_data = {
-            'summary': summary,
-            'validations': [
+            "summary": summary,
+            "validations": [
                 {
-                    'requirement_id': v.requirement_id,
-                    'description': v.description,
-                    'status': v.status.name,
-                    'details': v.details,
-                    'evidence': v.evidence
+                    "requirement_id": v.requirement_id,
+                    "description": v.description,
+                    "status": v.status.name,
+                    "details": v.details,
+                    "evidence": v.evidence,
                 }
                 for v in validations
-            ]
+            ],
         }
 
         output = json.dumps(json_data, ensure_ascii=False, indent=2)
         if args.output:
-            args.output.write_text(output, encoding='utf-8')
+            args.output.write_text(output, encoding="utf-8")
         else:
             print(output)
     else:
@@ -575,7 +613,7 @@ def main():
     print(f"  総合判定: {summary['overall_status']}")
 
     # 不合格がある場合は終了コード1
-    sys.exit(0 if summary['failed'] == 0 else 1)
+    sys.exit(0 if summary["failed"] == 0 else 1)
 
 
 if __name__ == "__main__":

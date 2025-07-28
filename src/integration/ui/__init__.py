@@ -17,5 +17,5 @@ __all__ = [
     "IntegratedMainWindow",
     "IntegratedThemeManager",
     "OptimizedThumbnailGrid",
-    "EnhancedFolderNavigator"
+    "EnhancedFolderNavigator",
 ]
