@@ -62,5 +62,12 @@ build/
 *.whl
 *.tar.gz
 
+# CI Simulation Tool generated files
+reports/ci-simulation/
+.kiro/ci-history/
+logs/ci-simulation.log
+logs/performance.log
+logs/security-scan.log
+
 # Examples フォルダは開発・デモ用として含める
 # examples/ - これらのファイルはリポジトリに含まれます

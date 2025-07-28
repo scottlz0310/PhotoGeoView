@@ -1,0 +1,82 @@
+# CI/CD Simulation Configuration
+# This file configures the behavior of the CI/CD simulation tool
+
+# Python versions to test against
+python_versions:
+  - "3.9"
+  - "3.10"
+  - "3.11"
+
+# Enabled checks - comment out to disable
+enabled_checks:
+  - "code_quality"
+  - "unit_tests"
+  - "integration_tests"
+  - "ai_compatibility"
+  - "security_scan"
+  - "performance_tests"
+
+# Execution settings
+timeout_seconds: 1800  # 30 minutes
+parallel_execution: true
+auto_fix: false
+git_hook_enabled: false
+
+# Performance regression threshold (percentage)
+performance_threshold: 30.0
+
+# AI components to test
+ai_components:
+  copilot: true
+  cursor: true
+  kiro: true
+
+# Security scanning
+security_scan_enabled: true
+
+# Report formats
+report_formats:
+  - "markdown"
+  - "json"
+
+# Directory structure
+directories:
+  history: ".kiro/ci-history"
+  reports: "reports/ci-simulation"
+  logs: "logs"
+  temp: "temp/ci-simulation"
+
+# Tool-specific configurations
+tools:
+  black:
+    enabled: true
+    line_length: 88
+    target_version:
+      - "py39"
+      - "py310"
+      - "py311"
+
+  isort:
+    enabled: true
+    profile: "black"
+    multi_line_output: 3
+
+  flake8:
+    enabled: true
+    max_line_length: 88
+    ignore:
+      - "E203"  # whitespace before ':'
+      - "W503"  # line break before binary operator
+
+  mypy:
+    enabled: true
+    strict: true
+    ignore_missing_imports: true
+
+  safety:
+    enabled: true
+    ignore_ids: []  # Add vulnerability IDs to ignore
+
+  bandit:
+    enabled: true
+    severity_level: "medium"
