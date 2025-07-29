@@ -14,8 +14,9 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor, as_comple
-..interfaces import CheckerInterface
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+from ..interfaces import CheckerInterface
 from ..models import CheckResult, CheckStatus, ConfigDict
 
 
