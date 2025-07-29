@@ -99,8 +99,8 @@
     - テスト結果の集約と比較を実装
     - _要件: 2.1, 2.2, 2.3_
 
-- [ ] 6. セキュリティスキャンシステムの実装
-  - [ ] 6.1 safety統合付きSecurityScannerの作成
+- [x] 6. セキュリティスキャンシステムの実装
+  - [x] 6.1 safety統合付きSecurityScannerの作成
     - tools/ci/checkers/security_scanner.py にSecurityScannerクラスを作成
     - safety脆弱性スキャン機能を実装
     - 依存関係脆弱性レポートを追加
@@ -108,7 +108,7 @@
     - CheckerInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 6.1, 6.2_
 
-  - [ ] 6.2 banditセキュリティリンティングの実装
+  - [x] 6.2 banditセキュリティリンティングの実装
     - SecurityScannerクラスにbanditコードセキュリティ分析を実装
     - セキュリティ問題の分類と重要度評価を追加
     - 詳細なセキュリティ発見レポートを作成
