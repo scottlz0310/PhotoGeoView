@@ -76,7 +76,7 @@
     - _要件: 3.1, 3.3_
 
 - [ ] 5. 包括的テストランナーシステムの作成
-  - [ ] 5.1 pytest統合付きTestRunnerクラスの実装
+  - [x] 5.1 pytest統合付きTestRunnerクラスの実装
     - tools/ci/checkers/test_runner.py にTestRunnerクラスを作成
     - 適切な環境セットアップ付きpytest実行ラッパーを実装
     - テスト発見と分類 (unit, integration, performance) を追加
