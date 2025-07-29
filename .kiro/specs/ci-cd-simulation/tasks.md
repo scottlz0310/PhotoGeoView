@@ -129,8 +129,8 @@
     - パフォーマンス傾向分析とレポートを作成
     - _要件: 7.1, 7.2, 7.3_
 
-- [ ] 8. 包括的レポートシステムの作成
-  - [ ] 8.1 Markdownレポート生成の実装
+- [x] 8. 包括的レポートシステムの作成
+  - [x] 8.1 Markdownレポート生成の実装
     - tools/ci/reporters/markdown_reporter.py にMarkdownReporterクラスを作成
     - 詳細なMarkdownレポートテンプレートを実装
     - チェック結果のフォーマットと可視化を追加
@@ -138,7 +138,7 @@
     - ReporterInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 8.1, 8.2, 8.3_
 
-  - [ ] 8.2 機械処理用JSONレポート生成の実装
+  - [x] 8.2 機械処理用JSONレポート生成の実装
     - tools/ci/reporters/json_reporter.py にJSONReporterクラスを作成
     - CI統合用の構造化JSON出力を実装
     - 機械可読結果フォーマットを追加
@@ -146,7 +146,7 @@
     - ReporterInterfaceを継承し、既存のアーキテクチャに統合
     - _要件: 8.1, 8.2, 8.3_
 
-  - [ ] 8.3 履歴追跡と傾向分析の作成
+  - [x] 8.3 履歴追跡と傾向分析の作成
     - tools/ci/reporters/history_tracker.py にHistoryTrackerクラスを作成
     - 実行履歴の保存と取得を実装
     - 傾向分析と品質メトリクス追跡を追加
