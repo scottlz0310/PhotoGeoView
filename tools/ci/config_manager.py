@@ -12,7 +12,10 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 import logging
 from dataclasses import dataclass, asdict
-from gitignore_manager import GitignoreManager
+try:
+    from .gitignore_manager import GitignoreManager
+except ImportError:
+    from gitignore_manager import GitignoreManager
 
 
 @dataclass

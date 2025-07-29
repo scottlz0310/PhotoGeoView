@@ -15,8 +15,12 @@ from pathlib import Path
 import threading
 import os
 
-from .interfaces import OrchestratorInterface, CheckerInterface, CheckerFactory
-from .models import CheckTask, CheckResult, CheckStatus, ConfigDict
+try:
+    from .interfaces import OrchestratorInterface, CheckerInterface, CheckerFactory
+    from .models import CheckTask, CheckResult, CheckStatus, ConfigDict
+except ImportError:
+    from interfaces import OrchestratorInterface, CheckerInterface, CheckerFactory
+    from models import CheckTask, CheckResult, CheckStatus, ConfigDict
 
 
 class DependencyResolver:

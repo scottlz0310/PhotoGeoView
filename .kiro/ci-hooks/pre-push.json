@@ -1,0 +1,10 @@
+{
+  "hook_type": "pre-push",
+  "checks": [
+    "code_quality",
+    "test_runner",
+    "security_scanner"
+  ],
+  "installed_at": "2025-07-29T11:32:52.429345",
+  "timeout": 1800
+}

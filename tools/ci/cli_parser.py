@@ -11,8 +11,12 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import logging
 
-from .check_orchestrator import CheckOrchestrator
-from .models import CheckTask, ConfigDict
+try:
+    from .check_orchestrator import CheckOrchestrator
+    from .models import CheckTask, ConfigDict
+except ImportError:
+    from check_orchestrator import CheckOrchestrator
+    from models import CheckTask, ConfigDict
 
 
 class CLIParser:
@@ -61,6 +65,9 @@ class CLIParser:
 
         # Plan command
         self._add_plan_command(subparsers)
+
+        # Hook command
+        self._add_hook_command(subparsers)
 
         return parser
 
@@ -210,6 +217,94 @@ class CLIParser:
             help='Plan output format (default: table)'
         )
 
+    def _add_hook_command(self, subparsers) -> None:
+        """Add the 'hook' command for Git hook management."""
+        hook_parser = subparsers.add_parser(
+            'hook',
+            help='Manage Git hooks',
+            description='Install, configure, and manage Git hooks for CI simulation'
+        )
+
+        hook_subparsers = hook_parser.add_subparsers(
+            dest='hook_action',
+            help='Hook management actions',
+            metavar='ACTION'
+        )
+
+        # Install hook
+        install_parser = hook_subparsers.add_parser(
+            'install',
+            help='Install Git hook',
+            description='Install a Git hook for CI simulation'
+        )
+        install_parser.add_argument(
+            'hook_type',
+            choices=['pre-commit', 'pre-push', 'commit-msg'],
+            help='Type of hook to install'
+        )
+        install_parser.add_argument(
+            '--checks',
+            nargs='+',
+            metavar='CHECK',
+            help='Checks to run in the hook (default: hook-specific defaults)'
+        )
+        install_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Overwrite existing hook'
+        )
+
+        # Uninstall hook
+        uninstall_parser = hook_subparsers.add_parser(
+            'uninstall',
+            help='Uninstall Git hook',
+            description='Remove a Git hook installed by CI Simulator'
+        )
+        uninstall_parser.add_argument(
+            'hook_type',
+            choices=['pre-commit', 'pre-push', 'commit-msg'],
+            help='Type of hook to uninstall'
+        )
+
+        # List hooks
+        list_parser = hook_subparsers.add_parser(
+            'list',
+            help='List Git hooks',
+            description='Show status of all Git hooks'
+        )
+        list_parser.add_argument(
+            '--format',
+            choices=['table', 'json'],
+            default='table',
+            help='Output format (default: table)'
+        )
+
+        # Test hook
+        test_parser = hook_subparsers.add_parser(
+            'test',
+            help='Test Git hook',
+            description='Test a Git hook by running it manually'
+        )
+        test_parser.add_argument(
+            'hook_type',
+            choices=['pre-commit', 'pre-push', 'commit-msg'],
+            help='Type of hook to test'
+        )
+
+        # Status command
+        status_parser = hook_subparsers.add_parser(
+            'status',
+            help='Show hook status',
+            description='Show comprehensive status of Git hooks'
+        )
+
+        # Setup recommended hooks
+        setup_parser = hook_subparsers.add_parser(
+            'setup',
+            help='Setup recommended hooks',
+            description='Install recommended Git hooks for the project'
+        )
+
     def _get_epilog_text(self) -> str:
         """Get epilog text with examples."""
         return """
@@ -239,7 +334,7 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
             args = sys.argv[1:]
 
         # Set default command if none provided
-        if not args or (args[0] not in ['run', 'list', 'info', 'plan'] and not args[0].startswith('-')):
+        if not args or (args[0] not in ['run', 'list', 'info', 'plan', 'hook'] and not args[0].startswith('-')):
             args = ['run'] + args
 
         return self.parser.parse_args(args)
