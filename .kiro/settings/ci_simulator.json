@@ -1,0 +1,118 @@
+{
+  "version": "1.0.0",
+  "project_name": "PhotoGeoView",
+  "python_versions": [
+    "3.9",
+    "3.10",
+    "3.11"
+  ],
+  "timeout": 1800,
+  "parallel_jobs": 4,
+  "fail_fast": false,
+  "checks": {
+    "code_quality": {
+      "enabled": true,
+      "auto_fix": false,
+      "tools": {
+        "black": {
+          "line_length": 88
+        },
+        "isort": {
+          "profile": "black"
+        },
+        "flake8": {
+          "max_line_length": 88,
+          "extend_ignore": [
+            "E203",
+            "W503"
+          ]
+        },
+        "mypy": {
+          "ignore_missing_imports": true
+        }
+      }
+    },
+    "test_runner": {
+      "enabled": true,
+      "coverage_threshold": 80.0,
+      "test_types": [
+        "unit",
+        "integration",
+        "ai_compatibility"
+      ],
+      "pytest_args": [
+        "-v",
+        "--tb=short"
+      ]
+    },
+    "security_scanner": {
+      "enabled": true,
+      "fail_on_high": false,
+      "tools": {
+        "safety": {
+          "ignore": []
+        },
+        "bandit": {
+          "skip": [
+            "B101",
+            "B601"
+          ]
+        }
+      }
+    },
+    "performance_analyzer": {
+      "enabled": true,
+      "regression_threshold": 30.0,
+      "benchmark_timeout": 300
+    },
+    "ai_component_tester": {
+      "enabled": true,
+      "demo_tests": true,
+      "components": [
+        "copilot",
+        "cursor",
+        "kiro"
+      ]
+    }
+  },
+  "directories": {
+    "reports": "reports/ci-simulation",
+    "logs": "logs",
+    "history": ".kiro/ci-history",
+    "temp": "temp/ci-simulation"
+  },
+  "git_hooks": {
+    "pre_commit": {
+      "enabled": true,
+      "checks": [
+        "code_quality",
+        "test_runner"
+      ]
+    },
+    "pre_push": {
+      "enabled": false,
+      "checks": [
+        "all"
+      ]
+    }
+  },
+  "ai_integration": {
+    "quality_threshold": 70.0,
+    "coverage_threshold": 80.0,
+    "performance_regression_threshold": 30.0,
+    "components": {
+      "copilot": {
+        "focus": "core_functionality",
+        "weight": 1.2
+      },
+      "cursor": {
+        "focus": "ui_ux",
+        "weight": 1.0
+      },
+      "kiro": {
+        "focus": "integration",
+        "weight": 1.5
+      }
+    }
+  }
+}

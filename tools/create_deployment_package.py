@@ -457,6 +457,76 @@ if __name__ == "__main__":
         print(f"✅ デプロイメントマニフェスト: {manifest_path}")
         return manifest_path
 
+
+    def run_ci_simulation(self) -> bool:
+        """Run comprehensive CI simulation before deployment."""
+        print("Running comprehensive CI simulation...")
+
+        try:
+            # Ensure CI simulator is available
+            ci_simulator_path = self.project_root / "tools" / "ci" / "simulator.py"
+            if not ci_simulator_path.exists():
+                print("❌ CI simulator not found, skipping CI simulation")
+                return True  # Don't fail deployment if CI simulator is not available
+
+            # Run full CI simulation
+            result = subprocess.run([
+                sys.executable,
+                "-m", "tools.ci.simulator",
+                "run",
+                "--checks", "all",
+                "--format", "json",
+                "--output-dir", str(self.build_dir / "ci-reports")
+            ], cwd=self.project_root, capture_output=True, text=True, timeout=1800)
+
+            if result.returncode == 0:
+                print("✅ CI simulation passed")
+
+                # Parse CI results
+                ci_report_path = self.build_dir / "ci-reports"
+                if ci_report_path.exists():
+                    for report_file in ci_report_path.glob("ci_report_*.json"):
+                        try:
+                            with open(report_file, "r", encoding="utf-8") as f:
+                                ci_data = json.load(f)
+
+                            print(f"CI Summary: {ci_data.get('summary', 'No summary available')}")
+
+                            # Check for critical issues
+                            overall_status = ci_data.get('overall_status', 'UNKNOWN')
+                            if overall_status == 'FAILURE':
+                                print("❌ CI simulation found critical issues")
+
+                                # Show failed checks
+                                check_results = ci_data.get('check_results', {})
+                                failed_checks = [name for name, result in check_results.items()
+                                               if result.get('status') == 'FAILURE']
+                                if failed_checks:
+                                    print(f"Failed checks: {', '.join(failed_checks)}")
+
+                                return False
+                            elif overall_status == 'WARNING':
+                                print("⚠️ CI simulation completed with warnings")
+
+                        except (json.JSONDecodeError, IOError) as e:
+                            print(f"⚠️ Could not parse CI report: {e}")
+
+                return True
+            else:
+                print(f"❌ CI simulation failed (exit code: {result.returncode})")
+                if result.stderr:
+                    print(f"Error output: {result.stderr}")
+                if result.stdout:
+                    print(f"Standard output: {result.stdout}")
+                return False
+
+        except subprocess.TimeoutExpired:
+            print("❌ CI simulation timed out after 30 minutes")
+            return False
+        except Exception as e:
+            print(f"❌ CI simulation error: {e}")
+            return False
+
     def create_deployment_package(
         self, skip_tests: bool = False, skip_quality: bool = False
     ) -> bool:
@@ -467,6 +537,11 @@ if __name__ == "__main__":
 
         # ビルドディレクトリをクリーン
         self.clean_build_directories()
+
+        # CI Simulation
+        if not self.run_ci_simulation():
+            print("❌ CI simulation failed")
+            return False
 
         # 品質チェック
         if not skip_quality:

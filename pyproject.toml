@@ -45,6 +45,23 @@ dev = [
     "safety>=2.3.0",
     "bandit>=1.7.0",
 ]
+ci = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=3.0.0",
+    "pytest-benchmark>=4.0.0",
+    "pytest-qt>=4.2.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "safety>=2.3.0",
+    "bandit>=1.7.0",
+    "toml>=0.10.0",
+    "tomlkit>=0.11.0",
+    "psutil>=5.9.0",
+    "watchdog>=3.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/scottlz0310/PhotoGeoView"
@@ -53,6 +70,8 @@ Issues = "https://github.com/scottlz0310/PhotoGeoView/issues"
 
 [project.scripts]
 photogeoview = "src.main:main"
+ci-simulator = "tools.ci.simulator:main"
+pgv-ci = "tools.ci.simulator:main"
 
 # Black設定
 [tool.black]
@@ -171,3 +190,33 @@ performance_regression_threshold = 30.0
 copilot = {focus = "core_functionality", quality_weight = 1.2}
 cursor = {focus = "ui_ux", quality_weight = 1.0}
 kiro = {focus = "integration", quality_weight = 1.5}
+
+# CI Simulator設定
+[tool.ci_simulator]
+enabled = true
+default_python_versions = ["3.9", "3.10", "3.11"]
+timeout = 1800  # 30 minutes
+parallel_jobs = 4
+fail_fast = false
+
+[tool.ci_simulator.checks]
+code_quality = {enabled = true, auto_fix = false}
+test_runner = {enabled = true, coverage_threshold = 80.0}
+security_scanner = {enabled = true, fail_on_high = false}
+performance_analyzer = {enabled = true, regression_threshold = 30.0}
+ai_component_tester = {enabled = true, demo_tests = true}
+
+[tool.ci_simulator.directories]
+reports = "reports/ci-simulation"
+logs = "logs"
+history = ".kiro/ci-history"
+temp = "temp/ci-simulation"
+
+[tool.ci_simulator.git_hooks]
+pre_commit = {enabled = true, checks = ["code_quality", "test_runner"]}
+pre_push = {enabled = false, checks = ["all"]}
+
+[tool.ci_simulator.notifications]
+slack_webhook = ""
+email_recipients = []
+github_status = true

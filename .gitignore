@@ -71,3 +71,15 @@ logs/security-scan.log
 
 # Examples フォルダは開発・デモ用として含める
 # examples/ - これらのファイルはリポジトリに含まれます
+
+# CI Simulator generated files
+reports/ci-simulation/
+.kiro/ci-history/
+temp/ci-simulation/
+logs/ci-simulation.log
+logs/performance.log
+logs/security-scan.log
+*.benchmark.json
+.ci_cache/
+ci_report_*.md
+ci_report_*.json
