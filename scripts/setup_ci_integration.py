@@ -2,336 +2,472 @@
 """
 CI Integration Setup Script
 
-This script sets up the complete CI simulator integration with the PhotoGeoView project.
-It handles all aspects of integration including build process, Git hooks, and deployment.
+This script sets up the CI simulator integration with the existing project
+structure and configures all necessary components.
 
-AI Contributors:
-- Kiro: Integration setup and automation
+AI貢献者:
+- Kiro: CI統合セットアップシステム設計・実装
 
-Created by: Kiro AI Integration System
-Created on: 2025-01-29
+作成者: Kiro AI統合システム
+作成日: 2025年1月30日
 """
 
-import os
 import sys
 import subprocess
+import json
+import os
 import shutil
 from pathlib import Path
-from typing import List, Tuple, Optional
-import logging
+from typing import Dict, List, Any, Optional
 
 
-def setup_logging() -> logging.Logger:
-    """Set up logging for the setup process."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout)
+class CIIntegrationSetup:
+    """CI統合セットアップ"""
+
+    def __init__(self, project_root: Path):
+        self.project_root = project_root
+
+    def setup_directories(self) -> bool:
+        """必要なディレクトリの作成"""
+        print("Setting up required directories...")
+
+        directories = [
+            "reports/ci-simulation",
+            "logs",
+            ".kiro/ci-history",
+            "temp/ci-simulation",
+            "tools/ci/templates"
         ]
-    )
-    return logging.getLogger('ci_setup')
 
+        try:
+            for directory in directories:
+                dir_path = self.project_root / directory
+                dir_path.mkdir(parents=True, exist_ok=True)
+                print(f"✅ Created directory: {directory}")
 
-def run_command(command: List[str], cwd: Optional[Path] = None, timeout: int = 300) -> Tuple[bool, str, str]:
-    """Run a command and return success status and output."""
-    try:
-        result = subprocess.run(
-            command,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=timeout
-        )
-        return result.returncode == 0, result.stdout, result.stderr
-    except subprocess.TimeoutExpired:
-        return False, "", f"Command timed out after {timeout} seconds"
-    except Exception as e:
-        return False, "", str(e)
+            return True
 
-
-def check_prerequisites(project_root: Path, logger: logging.Logger) -> bool:
-    """Check that all prerequisites are met."""
-    logger.info("Checking prerequisites...")
-
-    # Check Python version
-    if sys.version_info < (3, 9):
-        logger.error("Python 3.9 or higher is required")
-        return False
-
-    # Check that we're in a Git repository
-    git_dir = project_root / ".git"
-    if not git_dir.exists():
-        logger.error("Not in a Git repository")
-        return False
-
-    # Check that CI simulator exists
-    ci_simulator = project_root / "tools" / "ci" / "simulator.py"
-    if not ci_simulator.exists():
-        logger.error(f"CI simulator not found at {ci_simulator}")
-        return False
-
-    # Check that required files exist
-    required_files = [
-        "pyproject.toml",
-        "Makefile",
-        "requirements.txt"
-    ]
-
-    for file_name in required_files:
-        file_path = project_root / file_name
-        if not file_path.exists():
-            logger.error(f"Required file not found: {file_path}")
+        except Exception as e:
+            print(f"❌ Error creating directories: {e}")
             return False
 
-    logger.info("✅ All prerequisites met")
-    return True
+    def setup_gitignore(self) -> bool:
+        """gitignore設定の更新"""
+        print("Updating .gitignore...")
 
+        gitignore_path = self.project_root / ".gitignore"
 
-def install_dependencies(project_root: Path, logger: logging.Logger) -> bool:
-    """Install required dependencies."""
-    logger.info("Installing dependencies...")
+        ci_ignore_entries = [
+            "",
+            "# CI Simulation files",
+            "reports/ci-simulation/",
+            "temp/ci-simulation/",
+            ".kiro/ci-history/",
+            "logs/ci-simulation.log",
+            "logs/performance.log",
+            "logs/security-scan.log",
+            "",
+            "# CI build artifacts",
+            "build/ci-reports/",
+            "dist/",
+            "*.egg-info/",
+            "",
+            "# Coverage reports",
+            "htmlcov/",
+            ".coverage",
+            "coverage.xml",
+            "",
+            "# Pytest cache",
+            ".pytest_cache/",
+            "",
+            "# MyPy cache",
+            ".mypy_cache/",
+            "",
+            "# Performance benchmarks",
+            "benchmark.json",
+            "performance_baseline.json"
+        ]
 
-    # Install project in development mode with CI dependencies
-    success, stdout, stderr = run_command([
-        sys.executable, "-m", "pip", "install", "-e", ".[ci]"
-    ], cwd=project_root)
+        try:
+            # Read existing .gitignore
+            existing_content = ""
+            if gitignore_path.exists():
+                with open(gitignore_path, "r", encoding="utf-8") as f:
+                    existing_content = f.read()
 
-    if success:
-        logger.info("✅ Dependencies installed successfully")
-  return True
-    else:
-        logger.error(f"❌ Failed to install dependencies: {stderr}")
-        return False
+            # Check if CI entries already exist
+            if "# CI Simulation files" in existing_content:
+                print("✅ .gitignore already contains CI simulation entries")
+                return True
 
+            # Append CI entries
+            with open(gitignore_path, "a", encoding="utf-8") as f:
+                f.write("\n".join(ci_ignore_entries))
 
-def run_ci_integration(project_root: Path, logger: logging.Logger) -> bool:
-    """Run the CI integration manager."""
-    logger.info("Running CI integration...")
+            print("✅ Updated .gitignore with CI simulation entries")
+            return True
 
-    integration_script = project_root / "tools" / "ci_integration.py"
+        except Exception as e:
+            print(f"❌ Error updating .gitignore: {e}")
+            return False
 
-    success, stdout, stderr = run_command([
-        sys.executable, str(integration_script)
-    ], cwd=project_root, timeout=600)
+    def install_dependencies(self) -> bool:
+        """依存関係のインストール"""
+        print("Installing CI dependencies...")
 
-    if success:
-        logger.info("✅ CI integration completed successfully")
-        if stdout:
-            logger.info(f"Integration output:\n{stdout}")
-        return True
-    else:
-        logger.error(f"❌ CI integration failed: {stderr}")
-        if stdout:
-            logger.info(f"Integration output:\n{stdout}")
-        return False
+        try:
+            # Install project with CI dependencies
+            result = subprocess.run([
+                sys.executable,
+                "-m", "pip", "install", "-e", ".[ci]"
+            ], cwd=self.project_root, capture_output=True, text=True)
 
+            if result.returncode != 0:
+                print(f"❌ Failed to install CI dependencies: {result.stderr}")
+                return False
 
-def verify_integration(project_root: Path, logger: logging.Logger) -> bool:
-    """Verify that integration was successful."""
-    logger.info("Verifying integration...")
+            print("✅ CI dependencies installed successfully")
+            return True
 
-    # Run integration validation
-    integration_script = project_root / "tools" / "ci_integration.py"
+        except Exception as e:
+            print(f"❌ Error installing dependencies: {e}")
+            return False
 
-    success, stdout, stderr = run_command([
-        sys.executable, str(integration_script), "--validate-only"
-    ], cwd=project_root)
+    def setup_git_hooks(self) -> bool:
+        """Git hooksのセットアップ"""
+        print("Setting up Git hooks...")
 
-    if success:
-        logger.info("✅ Integration verification passed")
-        return True
-    else:
-        logger.error(f"❌ Integration verification failed: {stderr}")
-        return False
+        try:
+            # Check if we're in a Git repository
+            result = subprocess.run([
+                "git", "rev-parse", "--git-dir"
+            ], cwd=self.project_root, capture_output=True, text=True)
 
+            if result.returncode != 0:
+                print("⚠️ Not in a Git repository, skipping Git hooks setup")
+                return True
 
-def run_integration_test(project_root: Path, logger: logging.Logger) -> bool:
-    """Run integration tests."""
-    logger.info("Running integration tests...")
+            # Install recommended hooks
+            result = subprocess.run([
+                sys.executable,
+                "-m", "tools.ci.simulator",
+                "hook", "setup"
+            ], cwd=self.project_root, capture_output=True, text=True)
 
-    test_script = project_root / "tests" / "test_ci_integration.py"
+            if result.returncode != 0:
+                print(f"⚠️ Git hooks setup failed: {result.stderr}")
+                print("You can set up hooks manually later using: make setup-hooks")
+                return True  # Don't fail the entire setup
 
-    if not test_script.exists():
-        logger.warning("Integration test script not found, skipping tests")
-        return True
+            print("✅ Git hooks set up successfully")
+            return True
 
-    success, stdout, stderr = run_command([
-        sys.executable, str(test_script)
-    ], cwd=project_root, timeout=300)
+        except Exception as e:
+            print(f"⚠️ Error setting up Git hooks: {e}")
+            return True  # Don't fail the entire setup
 
-    if success:
-        logger.info("✅ Integration tests passed")
-        return True
-    else:
-        logger.warning(f"⚠️ Some integration tests failed: {stderr}")
-        # Don't fail setup if tests fail - they might fail due to missing components
-        return True
+    def create_default_config(self) -> bool:
+        """デフォルト設定ファイルの作成"""
+        print("Creating default CI configuration...")
 
+        config_dir = self.project_root / ".kiro" / "settings"
+        config_dir.mkdir(parents=True, exist_ok=True)
 
-def run_quick_ci_test(project_root: Path, logger: logging.Logger) -> bool:
-    """Run a quick CI simulation to test the integration."""
-    logger.info("Running quick CI test...")
+        ci_config_path = config_dir / "ci_simulator.json"
 
-    success, stdout, stderr = run_command([
-        sys.executable, "-m", "tools.ci.simulator",
-        "run", "--checks", "code_quality", "--format", "json"
-    ], cwd=project_root, timeout=300)
+        default_config = {
+            "enabled": True,
+            "default_python_versions": ["3.9", "3.10", "3.11"],
+            "timeout": 1800,
+            "parallel_jobs": 4,
+            "fail_fast": False,
+            "checks": {
+                "code_quality": {
+                    "enabled": True,
+                    "auto_fix": False,
+                    "tools": {
+                        "black": {"enabled": True, "line_length": 88},
+                        "isort": {"enabled": True, "profile": "black"},
+                        "flake8": {"enabled": True, "max_line_length": 88},
+                        "mypy": {"enabled": True, "strict": False}
+                    }
+                },
+                "test_runner": {
+                    "enabled": True,
+                    "coverage_threshold": 80.0,
+                    "test_types": ["unit", "integration", "ai_compatibility"]
+                },
+                "security_scanner": {
+                    "enabled": True,
+                    "fail_on_high": False,
+                    "tools": {
+                        "safety": {"enabled": True},
+                        "bandit": {"enabled": True, "confidence": "medium"}
+                    }
+                },
+                "performance_analyzer": {
+                    "enabled": True,
+                    "regression_threshold": 30.0,
+                    "benchmark_iterations": 3
+                },
+                "ai_component_tester": {
+                    "enabled": True,
+                    "demo_tests": True,
+                    "components": ["copilot", "cursor", "kiro"]
+                }
+            },
+            "directories": {
+                "reports": "reports/ci-simulation",
+                "logs": "logs",
+                "history": ".kiro/ci-history",
+                "temp": "temp/ci-simulation"
+            },
+            "git_hooks": {
+                "pre_commit": {
+                    "enabled": True,
+                    "checks": ["code_quality", "test_runner"]
+                },
+                "pre_push": {
+                    "enabled": False,
+                    "checks": ["all"]
+                }
+            },
+            "notifications": {
+                "slack_webhook": "",
+                "email_recipients": [],
+                "github_status": True
+            },
+            "ai_integration": {
+                "quality_threshold": 70.0,
+                "components": {
+                    "copilot": {"focus": "core_functionality", "quality_weight": 1.2},
+                    "cursor": {"focus": "ui_ux", "quality_weight": 1.0},
+                    "kiro": {"focus": "integration", "quality_weight": 1.5}
+                }
+            }
+        }
 
-    if success:
-        logger.info("✅ Quick CI test passed")
-        return True
-    else:
-        logger.warning(f"⚠️ Quick CI test failed: {stderr}")
-        # Don't fail setup if CI test fails - the integration might still be correct
-        return True
+        try:
+            if ci_config_path.exists():
+                print("✅ CI configuration already exists")
+                return True
 
+            with open(ci_config_path, "w", encoding="utf-8") as f:
+                json.dump(default_config, f, indent=2, ensure_ascii=False)
 
-def create_setup_summary(project_root: Path, logger: logging.Logger) -> None:
-    """Create a summary of the setup process."""
-    logger.info("Creating setup summary...")
+            print("✅ Default CI configuration created")
+            return True
 
-    summary_content = f"""# CI Integration Setup Summary
+        except Exception as e:
+            print(f"❌ Error creating CI configuration: {e}")
+            return False
 
-## Setup Completed Successfully
+    def create_template_files(self) -> bool:
+        """テンプレートファイルの作成"""
+        print("Creating template files...")
 
-The CI simulator has been integrated with the PhotoGeoView project.
+        templates_dir = self.project_root / "tools" / "ci" / "templates"
+        templates_dir.mkdir(parents=True, exist_ok=True)
 
-## What was configured:
+        # Pre-commit hook template
+        pre_commit_template = '''#!/bin/sh
+# PhotoGeoView CI Simulator Pre-commit Hook
+# Generated by CI Integration Setup
 
-### 1. Build Process Integration
-- ✅ pyproject.toml updated with CI simulator entry points
-- ✅ Makefile updated with CI targets (`ci`, `ci-quick`, `ci-full`)
-- ✅ Build scripts configured to run CI checks
+echo "Running CI simulation pre-commit checks..."
 
-### 2. Git Hooks Integration
-- ✅ Pre-commit hooks set up to run code quality checks
-- ✅ Git hooks configured for automatic CI simulation
+# Run CI simulator with pre-commit checks
+python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast --quiet
 
-### 3. Project Configuration
-- ✅ `.kiro/settings/ci_simulator.json` created with project-specific settings
-- ✅ Directory structure created for reports and logs
-- ✅ `.gitignore` updated to exclude CI artifacts
+exit_code=$?
 
-### 4. Documentation
-- ✅ Integration documentation created in `docs/ci_simulator_integration.md`
+if [ $exit_code -ne 0 ]; then
+    echo "❌ Pre-commit checks failed. Commit aborted."
+    echo "Run 'make ci-quick' to see detailed results."
+    echo "Use 'git commit --no-verify' to bypass checks (not recommended)."
+    exit 1
+fi
 
-## How to use:
+echo "✅ Pre-commit checks passed."
+exit 0
+'''
 
-### Quick Commands
-```bash
-# Run all CI checks
-make ci
+        # Report template
+        report_template = '''# CI Simulation Report
 
-# Run quick checks (code quality + unit tests)
-make ci-quick
+**Generated:** {{timestamp}}
+**Duration:** {{duration}} seconds
+**Status:** {{status}}
+**Python Versions:** {{python_versions}}
 
-# Run comprehensive checks
-make ci-full
+## Summary
 
-# Check CI status
-make ci-status
-```
+{{summary}}
 
-### Direct CI Simulator Usage
-```bash
-# Run specific checks
-python -m tools.ci.simulator run --checks code_quality test_runner
+## Check Results
 
-# Interactive mode
-python -m tools.ci.simulator --interactive
+{{#check_results}}
+### {{name}}
 
-# Show available checks
-python -m tools.ci.simulator list
-```
+- **Status:** {{status}}
+- **Duration:** {{duration}}s
 
-### Git Hooks
-Pre-commit hooks are automatically installed and will run:
-- Code formatting (Black)
-- Import sorting (isort)
-- Style checking (flake8)
-- Type checking (mypy)
-- Unit tests
+{{#errors}}
+**Errors:**
+{{#errors}}
+- {{.}}
+{{/errors}}
+{{/errors}}
 
-## Next Steps:
+{{#warnings}}
+**Warnings:**
+{{#warnings}}
+- {{.}}
+{{/warnings}}
+{{/warnings}}
 
-1. **Test the integration**: Run `make ci-quick` to test the setup
-2. **Customize settings**: Edit `.kiro/settings/ci_simulator.json` if needed
-3. **Review documentation**: Check `docs/ci_simulator_integration.md` for detailed usage
-4. **Start developing**: The CI simulator will now run automatically on commits
+{{#suggestions}}
+**Suggestions:**
+{{#suggestions}}
+- {{.}}
+{{/suggestions}}
+{{/suggestions}}
 
-## Troubleshooting:
+{{/check_results}}
 
-If you encounter issues:
-1. Check the logs in `logs/ci-integration.log`
-2. Run `python tools/ci_integration.py --validate-only` to check integration status
-3. Run `python tests/test_ci_integration.py` to run integration tests
-4. See `docs/ci_simulator_integration.md` for detailed troubleshooting
+## AI Integration Quality
 
-Setup completed on: {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-"""
+{{#ai_quality}}
+- **Overall Score:** {{overall_score}}/100
+- **Copilot Components:** {{copilot_score}}/100
+- **Cursor Components:** {{cursor_score}}/100
+- **Kiro Components:** {{kiro_score}}/100
+{{/ai_quality}}
 
-    summary_path = project_root / "CI_INTEGRATION_SETUP.md"
-    with open(summary_path, 'w', encoding='utf-8') as f:
-        f.write(summary_content)
+---
+*Generated by PhotoGeoView CI Simulator*
+'''
 
-    logger.info(f"✅ Setup summary created: {summary_path}")
+        try:
+            # Write pre-commit hook template
+            pre_commit_path = templates_dir / "pre_commit_hook.sh"
+            with open(pre_commit_path, "w", encoding="utf-8") as f:
+                f.write(pre_commit_template)
+
+            # Write report template
+            report_template_path = templates_dir / "report_template.md"
+            with open(report_template_path, "w", encoding="utf-8") as f:
+                f.write(report_template)
+
+            print("✅ Template files created")
+            return True
+
+        except Exception as e:
+            print(f"❌ Error creating template files: {e}")
+            return False
+
+    def validate_setup(self) -> bool:
+        """セットアップの検証"""
+        print("Validating CI integration setup...")
+
+        try:
+            # Test CI simulator functionality
+            result = subprocess.run([
+                sys.executable,
+                "-m", "tools.ci.simulator",
+                "list"
+            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+
+            if result.returncode != 0:
+                print(f"❌ CI simulator validation failed: {result.stderr}")
+                return False
+
+            print("✅ CI integration setup validation passed")
+            return True
+
+        except subprocess.TimeoutExpired:
+            print("❌ CI simulator validation timed out")
+            return False
+        except Exception as e:
+            print(f"❌ Setup validation error: {e}")
+            return False
+
+    def setup_all(self) -> bool:
+        """全てのセットアップを実行"""
+        print("=" * 60)
+        print("PhotoGeoView CI Integration Setup")
+        print("=" * 60)
+
+        setup_steps = [
+            ("Setting up directories", self.setup_directories),
+            ("Updating .gitignore", self.setup_gitignore),
+            ("Installing dependencies", self.install_dependencies),
+            ("Creating default configuration", self.create_default_config),
+            ("Creating template files", self.create_template_files),
+            ("Setting up Git hooks", self.setup_git_hooks),
+            ("Validating setup", self.validate_setup)
+        ]
+
+        all_successful = True
+
+        for step_name, step_func in setup_steps:
+            print(f"\n{step_name}:")
+            print("-" * 40)
+            try:
+                success = step_func()
+                if not success:
+                    all_successful = False
+                    print(f"❌ {step_name} failed")
+            except Exception as e:
+                print(f"❌ {step_name} error: {e}")
+                all_successful = False
+
+        # Print summary
+        print("\n" + "=" * 60)
+        print("SETUP SUMMARY")
+        print("=" * 60)
+
+        if all_successful:
+            print("🎉 CI integration setup completed successfully!")
+            print("\nNext steps:")
+            print("1. Run 'make ci' to test the integration")
+            print("2. Run 'make validate-ci-integration' to validate")
+            print("3. Commit your changes to activate Git hooks")
+            print("\nUseful commands:")
+            print("- make ci-quick    # Quick CI checks")
+            print("- make ci-full     # Comprehensive CI checks")
+            print("- make setup-hooks # Setup Git hooks manually")
+        else:
+            print("❌ Some setup steps failed.")
+            print("Please review the errors above and fix them manually.")
+
+        return all_successful
 
 
 def main():
-    """Main setup function."""
-    logger = setup_logging()
+    """メイン実行関数"""
+    import argparse
 
-    # Determine project root
-    project_root = Path(__file__).parent.parent
-    logger.info(f"Setting up CI integration for project: {project_root}")
+    parser = argparse.ArgumentParser(description="CI統合セットアップスクリプト")
+    parser.add_argument("--project-root", type=Path, help="プロジェクトルートパス")
+    parser.add_argument("--skip-hooks", action="store_true", help="Git hooksセットアップをスキップ")
+    parser.add_argument("--skip-deps", action="store_true", help="依存関係インストールをスキップ")
 
-    # Setup steps
-    steps = [
-        ("Checking prerequisites", lambda: check_prerequisites(project_root, logger)),
-        ("Installing dependencies", lambda: install_dependencies(project_root, logger)),
-        ("Running CI integration", lambda: run_ci_integration(project_root, logger)),
-        ("Verifying integration", lambda: verify_integration(project_root, logger)),
-        ("Running integration tests", lambda: run_integration_test(project_root, logger)),
-        ("Running quick CI test", lambda: run_quick_ci_test(project_root, logger)),
-        ("Creating setup summary", lambda: create_setup_summary(project_root, logger) or True)
-    ]
+    args = parser.parse_args()
 
-    # Execute steps
-    success_count = 0
-    for step_name, step_func in steps:
-        logger.info(f"\n{'='*60}")
-        logger.info(f"Step: {step_name}")
-        logger.info('='*60)
+    project_root = args.project_root or Path(__file__).parent.parent
+    setup = CIIntegrationSetup(project_root)
 
-        try:
-            if step_func():
-                logger.info(f"✅ {step_name} completed successfully")
-                success_count += 1
-            else:
-                logger.error(f"❌ {step_name} failed")
-        except Exception as e:
-            logger.error(f"❌ {step_name} failed with exception: {e}")
+    # Skip certain steps if requested
+    if args.skip_hooks:
+        setup.setup_git_hooks = lambda: True
+    if args.skip_deps:
+        setup.install_dependencies = lambda: True
 
-    # Final summary
-    logger.info(f"\n{'='*60}")
-    logger.info("SETUP SUMMARY")
-    logger.info('='*60)
-    logger.info(f"Steps completed: {success_count}/{len(steps)}")
+    success = setup.setup_all()
 
-    if success_count == len(steps):
-        logger.info("🎉 CI Integration setup completed successfully!")
-        logger.info("\nNext steps:")
-        logger.info("1. Run 'make ci-quick' to test the integration")
-        logger.info("2. Check 'CI_INTEGRATION_SETUP.md' for usage instructions")
-        logger.info("3. Review 'docs/ci_simulator_integration.md' for detailed documentation")
-        return 0
-    else:
-        logger.warning("⚠️ CI Integration setup completed with some issues")
-        logger.info("Check the logs above for details on what failed")
-        logger.info("You may need to run some steps manually")
-        return 1
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

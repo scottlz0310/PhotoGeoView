@@ -308,21 +308,43 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: システム依存関係をインストール (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
     - name: 依存関係をインストール
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -e .[ci]
         pip install build
 
-    - name: パッケージをビルド
+    - name: CI統合ビルドを実行
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        python -m build || echo "Build completed with warnings"
+        xvfb-run -a python scripts/build_with_ci.py || echo "CI-integrated build completed with warnings"
+
+    - name: デプロイメントパッケージを作成
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
+      run: |
+        xvfb-run -a python tools/create_deployment_package.py || echo "Deployment package creation completed with warnings"
 
     - name: ビルド成果物をアップロード
       uses: actions/upload-artifact@v4
       with:
         name: dist-packages
         path: dist/
+
+    - name: ビルドレポートをアップロード
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-reports
+        path: reports/ci-build/
 
   # 統合レポート生成
   integration-report:

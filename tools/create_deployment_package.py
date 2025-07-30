@@ -43,7 +43,7 @@ class DeploymentPackageCreator:
                 with open(pyproject_path, "rb") as f:
                     pyproject_data = tomllib.load(f)
 
-                project_info = pyproject_da.get("project", {})
+                project_info = pyproject_data.get("project", {})
                 return {
                     "name": project_info.get("name", "photogeoview"),
                     "version": project_info.get("version", "1.0.0"),
@@ -469,55 +469,90 @@ if __name__ == "__main__":
                 print("❌ CI simulator not found, skipping CI simulation")
                 return True  # Don't fail deployment if CI simulator is not available
 
-            # Run full CI simulation
+            # Create CI reports directory
+            ci_reports_dir = self.build_dir / "ci-reports"
+            ci_reports_dir.mkdir(parents=True, exist_ok=True)
+
+            # Run full CI simulation with all Python versions
             result = subprocess.run([
                 sys.executable,
                 "-m", "tools.ci.simulator",
                 "run",
-                "--checks", "all",
-                "--format", "json",
-                "--output-dir", str(self.build_dir / "ci-reports")
+                "--all",
+                "--format", "both",
+                "--output-dir", str(ci_reports_dir),
+                "--timeout", "1800"
             ], cwd=self.project_root, capture_output=True, text=True, timeout=1800)
 
             if result.returncode == 0:
                 print("✅ CI simulation passed")
 
                 # Parse CI results
-                ci_report_path = self.build_dir / "ci-reports"
-                if ci_report_path.exists():
-                    for report_file in ci_report_path.glob("ci_report_*.json"):
-                        try:
-                            with open(report_file, "r", encoding="utf-8") as f:
-                                ci_data = json.load(f)
+                json_reports = list(ci_reports_dir.glob("ci_report_*.json"))
+                if json_reports:
+                    # Get the latest report
+                    latest_report = max(json_reports, key=lambda p: p.stat().st_mtime)
 
-                            print(f"CI Summary: {ci_data.get('summary', 'No summary available')}")
+                    try:
+                        with open(latest_report, "r", encoding="utf-8") as f:
+                            ci_data = json.load(f)
 
-                            # Check for critical issues
-                            overall_status = ci_data.get('overall_status', 'UNKNOWN')
-                            if overall_status == 'FAILURE':
-                                print("❌ CI simulation found critical issues")
+                        print(f"CI Summary: {ci_data.get('summary', 'No summary available')}")
 
-                                # Show failed checks
-                                check_results = ci_data.get('check_results', {})
-                                failed_checks = [name for name, result in check_results.items()
-                                               if result.get('status') == 'FAILURE']
-                                if failed_checks:
-                                    print(f"Failed checks: {', '.join(failed_checks)}")
+                        # Check for critical issues
+                        overall_status = ci_data.get('overall_status', 'UNKNOWN')
+                        if overall_status == 'FAILURE':
+                            print("❌ CI simulation found critical issues")
 
-                                return False
-                            elif overall_status == 'WARNING':
-                                print("⚠️ CI simulation completed with warnings")
+                            # Show failed checks
+                            check_results = ci_data.get('check_results', {})
+                            failed_checks = [name for name, result in check_results.items()
+                                           if result.get('status') == 'FAILURE']
+                            if failed_checks:
+                                print(f"Failed checks: {', '.join(failed_checks)}")
 
-                        except (json.JSONDecodeError, IOError) as e:
-                            print(f"⚠️ Could not parse CI report: {e}")
+                                # Show specific errors for failed checks
+                                for check_name in failed_checks[:3]:  # Show details for first 3 failed checks
+                                    check_result = check_results[check_name]
+                                    errors = check_result.get('errors', [])
+                                    if errors:
+                                        print(f"\n{check_name} errors:")
+                                        for error in errors[:2]:  # Show first 2 errors per check
+                                            print(f"  - {error}")
+                                        if len(errors) > 2:
+                                            print(f"  - ... and {len(errors) - 2} more errors")
+
+                            return False
+                        elif overall_status == 'WARNING':
+                            print("⚠️ CI simulation completed with warnings")
+
+                            # Show warning details
+                            check_results = ci_data.get('check_results', {})
+                            warning_checks = [name for name, result in check_results.items()
+                                            if result.get('status') == 'WARNING']
+                            if warning_checks:
+                                print(f"Checks with warnings: {', '.join(warning_checks)}")
+
+                        # Show performance metrics if available
+                        python_versions = ci_data.get('python_versions_tested', [])
+                        if python_versions:
+                            print(f"Tested Python versions: {', '.join(python_versions)}")
+
+                        duration = ci_data.get('total_duration', 0)
+                        print(f"CI simulation duration: {duration:.2f} seconds")
+
+                    except (json.JSONDecodeError, IOError) as e:
+                        print(f"⚠️ Could not parse CI report: {e}")
 
                 return True
             else:
                 print(f"❌ CI simulation failed (exit code: {result.returncode})")
                 if result.stderr:
-                    print(f"Error output: {result.stderr}")
+                    print("Error output:")
+                    print(result.stderr)
                 if result.stdout:
-                    print(f"Standard output: {result.stdout}")
+                    print("Standard output:")
+                    print(result.stdout)
                 return False
 
         except subprocess.TimeoutExpired:

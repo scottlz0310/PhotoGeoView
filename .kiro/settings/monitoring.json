@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "health_checks": true,
+  "performance_tracking": true,
+  "resource_monitoring": true,
+  "alert_thresholds": {
+    "memory_usage_percent": 80.0,
+    "cpu_usage_percent": 90.0,
+    "disk_usage_percent": 85.0,
+    "execution_time_minutes": 30.0
+  },
+  "notification_channels": []
+}

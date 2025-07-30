@@ -114,31 +114,47 @@ class CISimulator:
         """Register all available checker types."""
         # Import and register checker implementations
         try:
-            from checkers.code_quality import CodeQualityChecker
+            # Try relative imports first (when used as module)
+            try:
+                from .checkers.code_quality import CodeQualityChecker
+            except ImportError:
+                from checkers.code_quality import CodeQualityChecker
             CheckerFactory.register_checker('code_quality', CodeQualityChecker)
         except ImportError as e:
             self.logger.warning(f"Code quality checker not available: {e}")
 
         try:
-            from checkers.test_runner import TestRunner
+            try:
+                from .checkers.test_runner import TestRunner
+            except ImportError:
+                from checkers.test_runner import TestRunner
             CheckerFactory.register_checker('test_runner', TestRunner)
         except ImportError as e:
             self.logger.warning(f"Test runner not available: {e}")
 
         try:
-            from checkers.security_scanner import SecurityScanner
+            try:
+                from .checkers.security_scanner import SecurityScanner
+            except ImportError:
+                from checkers.security_scanner import SecurityScanner
             CheckerFactory.register_checker('security_scanner', SecurityScanner)
         except ImportError as e:
             self.logger.warning(f"Security scanner not available: {e}")
 
         try:
-            from checkers.performance_analyzer import PerformanceAnalyzer
+            try:
+                from .checkers.performance_analyzer import PerformanceAnalyzer
+            except ImportError:
+                from checkers.performance_analyzer import PerformanceAnalyzer
             CheckerFactory.register_checker('performance_analyzer', PerformanceAnalyzer)
         except ImportError as e:
             self.logger.warning(f"Performance analyzer not available: {e}")
 
         try:
-            from checkers.ai_component_tester import AIComponentTester
+            try:
+                from .checkers.ai_component_tester import AIComponentTester
+            except ImportError:
+                from checkers.ai_component_tester import AIComponentTester
             CheckerFactory.register_checker('ai_component_tester', AIComponentTester)
         except ImportError as e:
             self.logger.warning(f"AI component tester not available: {e}")

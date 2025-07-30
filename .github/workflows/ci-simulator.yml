@@ -91,17 +91,48 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: Install system dependencies (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -e .[ci]
 
-    - name: Run deployment readiness check
+    - name: Validate CI integration
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
       run: |
-        python tools/create_deployment_package.py --skip-tests
+        xvfb-run -a python scripts/validate_ci_integration.py
+
+    - name: Run CI-integrated build
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
+      run: |
+        xvfb-run -a python scripts/build_with_ci.py
+
+    - name: Run deployment readiness check
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
+      run: |
+        xvfb-run -a python tools/create_deployment_package.py --skip-tests
 
     - name: Upload deployment artifacts
       uses: actions/upload-artifact@v4
       with:
         name: deployment-package
         path: dist/
+
+    - name: Upload CI integration reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-integration-reports
+        path: |
+          reports/ci-build/
+          reports/ci-simulation/

@@ -72,6 +72,7 @@ Issues = "https://github.com/scottlz0310/PhotoGeoView/issues"
 photogeoview = "src.main:main"
 ci-simulator = "tools.ci.simulator:main"
 pgv-ci = "tools.ci.simulator:main"
+photogeoview-ci = "tools.ci.simulator:main"
 
 # Black設定
 [tool.black]

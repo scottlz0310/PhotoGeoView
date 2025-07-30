@@ -74,6 +74,7 @@ logs/security-scan.log
 
 # CI Simulator generated files
 reports/ci-simulation/
+reports/ci-build/
 .kiro/ci-history/
 temp/ci-simulation/
 logs/ci-simulation.log
@@ -83,3 +84,8 @@ logs/security-scan.log
 .ci_cache/
 ci_report_*.md
 ci_report_*.json
+
+# CI Integration build artifacts
+build/ci-reports/
+deployment_manifest.json
+performance_baseline.json

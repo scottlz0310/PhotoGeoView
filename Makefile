@@ -29,7 +29,7 @@ ci-quick:
 	python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast
 
 ci-full:
-	python -m tools.ci.simulator run --checks all --format both
+	python -m tools.ci.simulator run --checks all --format both --python-versions 3.9 3.10 3.11
 
 test:
 	python -m tools.ci.simulator run --checks test_runner
@@ -75,6 +75,26 @@ build: ci
 deploy: ci-full
 	python tools/create_deployment_package.py
 
+# Validate CI integration
+validate-ci:
+	python scripts/validate_ci_integration.py
+	@echo "CI integration validation completed"
+
+# Check CI integration status
+ci-status:
+	python tools/ci_integration.py validate
+	@echo "CI integration status check completed"
+
+# Generate CI integration report
+ci-report:
+	python tools/ci_integration.py report --output reports/ci-integration-report.md
+	@echo "CI integration report generated"
+
+# Set up CI integration
+setup-ci:
+	python scripts/setup_ci_integration.py
+	@echo "CI integration setup completed"
+
 # CI Simulator integration commands
 ci-install:
 	python -m tools.ci.simulator hook setup
@@ -94,3 +114,18 @@ build-with-ci: ci-full
 deploy-production: ci-full
 	python tools/create_deployment_package.py --skip-tests
 	@echo "Production deployment package created successfully"
+
+# CI Simulator integration with existing workflows
+ci-integration-check:
+	python -m tools.ci.simulator run --checks code_quality test_runner security_scanner --format json --output-dir reports/ci-integration
+	@echo "CI integration check completed"
+
+# Validate CI simulator integration
+validate-ci-integration:
+	python scripts/validate_ci_integration.py
+	python -m tools.ci.simulator run --checks all --format both --timeout 300
+	@echo "CI integration validation completed"
+
+# Setup development environment with CI integration
+dev-setup-full: install setup-hooks ci-integration-check
+	@echo "Full development environment with CI integration set up successfully"

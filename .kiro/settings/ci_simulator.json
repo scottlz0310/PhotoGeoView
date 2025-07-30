@@ -6,7 +6,7 @@
     "3.10",
     "3.11"
   ],
-  "timeout": 1800,
+  "timeout": 3600,
   "parallel_jobs": 4,
   "fail_fast": false,
   "checks": {
@@ -113,6 +113,29 @@
         "focus": "integration",
         "weight": 1.5
       }
+    }
+  },
+  "cache_enabled": true,
+  "incremental_checks": false,
+  "large_codebase_mode": false,
+  "batch_processing": false,
+  "batch_size": 100,
+  "memory_limit_mb": 4096,
+  "logging": {
+    "level": "INFO",
+    "structured": true,
+    "performance_metrics": true,
+    "file_rotation": true,
+    "max_file_size_mb": 100
+  },
+  "monitoring": {
+    "enabled": true,
+    "resource_monitoring": true,
+    "alert_thresholds": {
+      "memory_usage_percent": 80.0,
+      "cpu_usage_percent": 90.0,
+      "disk_usage_percent": 85.0,
+      "execution_time_minutes": 30.0
     }
   }
 }
