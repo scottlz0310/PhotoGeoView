@@ -10,9 +10,7 @@ CI checks locally before committing to the repository.
 import argparse
 import json
 import logging
-import os
 import shutil
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -244,9 +242,25 @@ class CISimulator:
                 self.logger.error("No available tasks to execute")
                 return 1
 
-            # Execute checks
+                        # Execute checks with timeout
             self.logger.info(f"Executing {len(available_tasks)} tasks...")
-            check_results = self.orchestrator.execute_checks(available_tasks)
+
+            # Set overall timeout for all checks (30 minutes)
+            overall_timeout = self.config.get("timeout_seconds", 1800)
+
+            # Execute checks with timeout using concurrent.futures
+            import concurrent.futures
+
+            try:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(self.orchestrator.execute_checks, available_tasks)
+                    check_results = future.result(timeout=overall_timeout)
+            except concurrent.futures.TimeoutError:
+                self.logger.error(f"Overall execution timeout after {overall_timeout} seconds")
+                return 1
+            except Exception as e:
+                self.logger.error(f"Check execution failed: {e}")
+                return 1
 
             # Calculate overall status
             overall_status = self._calculate_overall_status(check_results)

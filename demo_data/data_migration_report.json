@@ -1,5 +1,5 @@
 {
-  "migration_timestamp": "2025-07-30T19:18:41.263450",
+  "migration_timestamp": "2025-07-30T20:51:39.952193",
   "summary": {
     "cursor_bld": {
       "total_operations": 3,
@@ -25,7 +25,7 @@
       "partial": 1,
       "failed": 0,
       "skipped": 1,
-      "total_migrated": 2,
+      "total_migrated": 12,
       "total_errors": 1
     }
   },
@@ -84,10 +84,10 @@
         "source_type": "legacy_database",
         "target_model": "ImageMetadata",
         "status": "partial",
-        "migrated_count": 2,
+        "migrated_count": 12,
         "error_count": 1,
         "warning_count": 1,
-        "validation_issues": 2
+        "validation_issues": 12
       },
       {
         "source_type": "legacy_settings",
@@ -101,7 +101,7 @@
     ]
   },
   "overall_summary": {
-    "total_migrated_objects": 6,
+    "total_migrated_objects": 16,
     "total_errors": 1,
     "migration_status": "partial"
   }

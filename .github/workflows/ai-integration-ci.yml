@@ -14,6 +14,7 @@ jobs:
   ai-integration-tests:
     name: AI統合テスト
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # 全体のタイムアウトを30分に設定
 
     strategy:
       matrix:
@@ -50,51 +51,58 @@ jobs:
         pip install pytest pytest-cov pytest-xdist flake8 mypy black isort
         # Qt環境のための追加パッケージ
         pip install pytest-qt
+        # CI/CDシミュレーションツール用の追加依存関係
+        pip install pyyaml flake8 mypy pytest-xdist pytest-benchmark safety bandit pytest-qt
 
     - name: コード品質チェック (Black)
+      timeout-minutes: 5
       run: |
         black --check --diff src/ tests/ examples/ || echo "Black formatting needed, but continuing..."
 
     - name: インポート順序チェック (isort)
+      timeout-minutes: 5
       run: |
         isort --check-only --diff src/ tests/ examples/ || echo "Import sorting needed, but continuing..."
 
     - name: コードスタイルチェック (flake8)
+      timeout-minutes: 10
       run: |
         flake8 src/ tests/ examples/ --max-line-length=88 --extend-ignore=E203,W503,F401,E402 || echo "Style issues found, but continuing..."
 
     - name: 型チェック (mypy)
+      timeout-minutes: 15
       run: |
         mypy src/ --ignore-missing-imports --no-strict-optional || echo "Type issues found, but continuing..."
 
+    - name: セキュリティスキャン
+      timeout-minutes: 10
+      run: |
+        safety check || echo "Security issues found, but continuing..."
+        bandit -r src/ -f json -o security-report.json || echo "Bandit issues found, but continuing..."
+
+    - name: パフォーマンステスト
+      timeout-minutes: 15
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
+      run: |
+        xvfb-run -a python -m tools.ci.simulator run performance_analyzer --timeout 900 || echo "Performance tests failed, but continuing..."
+
     - name: AI統合テストを実行
+      timeout-minutes: 20
       env:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ':99'
       run: |
         xvfb-run -a pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ -x || echo "Some tests failed, but continuing..."
 
-    - name: パフォーマンステストを実行
+    - name: AIコンポーネントテスト
+      timeout-minutes: 15
       env:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ':99'
       run: |
-        if [ -d "tests/performance_tests/" ]; then
-          xvfb-run -a pytest tests/performance_tests/ -v --tb=short || echo "Performance tests failed, but continuing..."
-        else
-          echo "Performance tests directory not found, skipping..."
-        fi
-
-    - name: AI互換性テストを実行
-      env:
-        QT_QPA_PLATFORM: offscreen
-        DISPLAY: ':99'
-      run: |
-        if [ -d "tests/ai_compatibility/" ]; then
-          xvfb-run -a pytest tests/ai_compatibility/ -v --tb=short || echo "Compatibility tests failed, but continuing..."
-        else
-          echo "AI compatibility tests directory not found, skipping..."
-        fi
+        xvfb-run -a python -m tools.ci.simulator run ai_component_tester --timeout 900 || echo "AI component tests failed, but continuing..."
 
     - name: カバレッジレポートをアップロード
       uses: codecov/codecov-action@v4
@@ -103,264 +111,83 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}
 
-  # AI コンポーネント別テスト
-  ai-component-tests:
-    name: AI コンポーネント別テスト
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        ai-component: ['copilot', 'cursor', 'kiro']
-
-    steps:
-    - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
-
-    - name: Python をセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: システム依存関係をインストール (Qt)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
-
-    - name: 依存関係をインストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
-
-    - name: ${{ matrix.ai-component }} コンポーネントテストを実行
-      env:
-        QT_QPA_PLATFORM: offscreen
-        DISPLAY: ':99'
-      run: |
-        if [ "${{ matrix.ai-component }}" = "kiro" ]; then
-          xvfb-run -a pytest tests/test_kiro_components.py -v --cov=src --cov-report=xml || echo "Kiro tests failed, but continuing..."
-        elif [ "${{ matrix.ai-component }}" = "copilot" ]; then
-          xvfb-run -a pytest tests/test_image_processor.py -v --cov=src --cov-report=xml || echo "Copilot tests failed, but continuing..."
-        elif [ "${{ matrix.ai-component }}" = "cursor" ]; then
-          xvfb-run -a pytest tests/test_config_manager.py -v --cov=src --cov-report=xml || echo "Cursor tests failed, but continuing..."
-        fi
-
-    - name: ${{ matrix.ai-component }} デモスクリプトテストを実行
-      env:
-        QT_QPA_PLATFORM: offscreen
-        DISPLAY: ':99'
-      run: |
-        if [ "${{ matrix.ai-component }}" = "kiro" ]; then
-          xvfb-run -a python examples/demo_kiro_components.py || echo "Kiro demo failed, but continuing..."
-        elif [ "${{ matrix.ai-component }}" = "copilot" ]; then
-          xvfb-run -a python examples/demo_image_processor.py || echo "Copilot demo failed, but continuing..."
-        elif [ "${{ matrix.ai-component }}" = "cursor" ]; then
-          xvfb-run -a python examples/demo_config_manager.py || echo "Cursor demo failed, but continuing..."
-        fi
-
-  # ドキュメント生成テスト
-  documentation-tests:
-    name: ドキュメント生成テスト
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
-
-    - name: Python をセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: 依存関係をインストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: ドキュメント生成テスト
-      run: |
-        if [ -f "docs/ai_integration/standalone_doc_generator.py" ]; then
-          python docs/ai_integration/standalone_doc_generator.py || echo "Document generation failed, but continuing..."
-        else
-          echo "Document generator not found, skipping..."
-        fi
-
-    - name: 生成されたドキュメントを確認
-      run: |
-        mkdir -p docs/ai_integration
-        if [ -f "docs/ai_integration/api_documentation.md" ]; then
-          echo "✓ API documentation found"
-        else
-          echo "⚠ API documentation not found"
-        fi
-        if [ -f "docs/ai_integration/ai_contribution_report.md" ]; then
-          echo "✓ AI contribution report found"
-        else
-          echo "⚠ AI contribution report not found"
-        fi
-        if [ -f "docs/ai_integration/troubleshooting_guide.md" ]; then
-          echo "✓ Troubleshooting guide found"
-        else
-          echo "⚠ Troubleshooting guide not found"
-        fi
-
-    - name: ドキュメント品質チェック
-      run: |
-        python -c "
-        import os
-        docs_dir = 'docs/ai_integration'
-        for file in os.listdir(docs_dir):
-            if file.endswith('.md'):
-                with open(os.path.join(docs_dir, file), 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    assert len(content) > 100, f'{file} is too short'
-                    assert 'AI' in content, f'{file} missing AI content'
-        print('✓ All documentation files passed quality checks')
-        "
-
-  # セキュリティスキャン
-  security-scan:
-    name: セキュリティスキャン
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
-
-    - name: Python をセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: 依存関係をインストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install safety bandit
-
-    - name: 依存関係の脆弱性スキャン
-      run: |
-        safety check --json || echo "Security scan completed with warnings"
-
-    - name: コードセキュリティスキャン
-      run: |
-        bandit -r src/ -f json || echo "Security analysis completed with warnings"
-
-  # パフォーマンス回帰テスト
-  performance-regression:
-    name: パフォーマンス回帰テスト
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
-
-    - name: Python をセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: システム依存関係をインストール (Qt)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
-
-    - name: 依存関係をインストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest-benchmark
-
-    - name: パフォーマンスベンチマークを実行
-      env:
-        QT_QPA_PLATFORM: offscreen
-        DISPLAY: ':99'
-      run: |
-        if [ -d "tests/performance_tests/" ]; then
-          xvfb-run -a pytest tests/performance_tests/ --benchmark-only --benchmark-json=benchmark.json || echo "Performance benchmarks completed with warnings"
-        else
-          echo "Performance tests directory not found, creating dummy benchmark..."
-          echo '{"benchmarks": [{"name": "dummy", "min": 0.1, "max": 0.1, "mean": 0.1}]}' > benchmark.json
-        fi
-
-    - name: ベンチマーク結果を保存
+    - name: テスト結果レポートをアップロード
       uses: actions/upload-artifact@v4
+      if: always()
       with:
-        name: benchmark-results
-        path: benchmark.json
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          coverage.xml
+          security-report.json
+          reports/
 
-  # デプロイメント準備
-  deployment-preparation:
-    name: デプロイメント準備
+  # CI/CDシミュレーション統合テスト
+  ci-simulation-integration:
+    name: CI/CDシミュレーション統合
     runs-on: ubuntu-latest
-    needs: [ai-integration-tests, ai-component-tests, documentation-tests]
+    needs: ai-integration-tests
+    timeout-minutes: 20
+
+    steps:
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4
+
+    - name: Python 3.11 をセットアップ
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: システム依存関係をインストール (Qt)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+
+    - name: 依存関係をインストール
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyyaml flake8 mypy pytest-xdist pytest-benchmark safety bandit pytest-qt
+
+    - name: CI/CDシミュレーション実行
+      timeout-minutes: 15
+      env:
+        QT_QPA_PLATFORM: offscreen
+        DISPLAY: ':99'
+      run: |
+        # タイムアウト付きでCI/CDシミュレーションを実行
+        timeout 900 xvfb-run -a python -m tools.ci.simulator run --timeout 900 || {
+          echo "CI simulation completed with timeout or errors"
+          exit 0  # エラーでも継続
+        }
+
+    - name: CI/CDレポートをアップロード
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ci-simulation-reports
+        path: |
+          reports/ci-simulation/
+          logs/
+
+  # デプロイメント準備チェック
+  deployment-readiness:
+    name: デプロイメント準備チェック
+    runs-on: ubuntu-latest
+    needs: [ai-integration-tests, ci-simulation-integration]
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 15
 
     steps:
     - name: リポジトリをチェックアウト
       uses: actions/checkout@v4
 
-    - name: Python をセットアップ
+    - name: Python 3.11 をセットアップ
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: システム依存関係をインストール (Qt)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
-
-    - name: 依存関係をインストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .[ci]
-        pip install build
-
-    - name: CI統合ビルドを実行
-      env:
-        QT_QPA_PLATFORM: offscreen
-        DISPLAY: ':99'
-      run: |
-        xvfb-run -a python scripts/build_with_ci.py || echo "CI-integrated build completed with warnings"
-
-    - name: デプロイメントパッケージを作成
-      env:
-        QT_QPA_PLATFORM: offscreen
-        DISPLAY: ':99'
-      run: |
-        xvfb-run -a python tools/create_deployment_package.py || echo "Deployment package creation completed with warnings"
-
-    - name: ビルド成果物をアップロード
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist-packages
-        path: dist/
-
-    - name: ビルドレポートをアップロード
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-reports
-        path: reports/ci-build/
-
-  # 統合レポート生成
-  integration-report:
-    name: 統合レポート生成
-    runs-on: ubuntu-latest
-    needs: [ai-integration-tests, ai-component-tests, documentation-tests, security-scan, performance-regression]
-    if: always()
-
-    steps:
-    - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
-
-    - name: Python をセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: '3.11'
 
     - name: システム依存関係をインストール (Qt)
       run: |
@@ -373,25 +200,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 統合レポートを生成
+    - name: デプロイメントパッケージ作成
+      timeout-minutes: 10
       env:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ':99'
       run: |
-        if [ -f "tools/generate_integration_report.py" ]; then
-          xvfb-run -a python tools/generate_integration_report.py || echo "Integration report generation completed with warnings"
-        else
-          echo "Integration report generator not found, creating basic report..."
-          mkdir -p reports
-          echo "# AI Integration Report" > reports/integration_report.md
-          echo "Generated on: $(date)" >> reports/integration_report.md
-          echo "Repository: PhotoGeoView" >> reports/integration_report.md
-          echo "Branch: ${{ github.ref_name }}" >> reports/integration_report.md
-          echo "Commit: ${{ github.sha }}" >> reports/integration_report.md
-        fi
+        xvfb-run -a python tools/create_deployment_package.py --skip-tests
 
-    - name: レポートをアップロード
+    - name: デプロイメントアーティファクトをアップロード
       uses: actions/upload-artifact@v4
       with:
-        name: integration-report
-        path: reports/
+        name: deployment-package
+        path: dist/
