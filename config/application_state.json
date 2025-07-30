@@ -2,8 +2,8 @@
   "current_folder": null,
   "selected_image": null,
   "loaded_images": [],
-  "current_theme": "blue",
-  "thumbnail_size": 300,
+  "current_theme": "dark",
+  "thumbnail_size": 200,
   "folder_history": [],
   "ui_layout": {},
   "window_geometry": null,
@@ -11,7 +11,7 @@
   "map_center": null,
   "map_zoom": 10,
   "exif_display_mode": "detailed",
-  "image_sort_mode": "date",
+  "image_sort_mode": "name",
   "image_sort_ascending": true,
   "current_zoom": 1.0,
   "current_pan": [
@@ -26,18 +26,12 @@
     "cursor": "active",
     "kiro": "active"
   },
-  "session_start": "2025-07-30 19:14:18.064151",
-  "last_activity": "2025-07-30 19:18:38.497601",
-  "images_processed": 5,
+  "session_start": "2025-07-30T19:18:37.115867",
+  "last_activity": "2025-07-30T19:18:37.119115",
+  "images_processed": 15,
   "operations_performed": [],
   "recent_errors": [],
   "error_count": 0,
   "memory_usage_history": [],
-  "operation_times": {},
-  "_metadata": {
-    "version": "1.0",
-    "saved_at": "2025-07-30T19:18:40.101551",
-    "state_changes": 12,
-    "state_accesses": 15
-  }
+  "operation_times": {}
 }
