@@ -10,19 +10,19 @@ Demonstrates the Kiro integration layer components:
 Author: Kiro AI Integration System
 """
 
+import asyncio
 import sys
 import time
-import asyncio
 from pathlib import Path
 
 # Add src to path - adjusted for examples folder
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.performance_monitor import KiroPerformanceMonitor
-from integration.unified_cache import UnifiedCacheSystem
-from integration.state_manager import StateManager
 from integration.config_manager import ConfigManager
 from integration.logging_system import LoggerSystem
+from integration.performance_monitor import KiroPerformanceMonitor
+from integration.state_manager import StateManager
+from integration.unified_cache import UnifiedCacheSystem
 
 
 def main():
@@ -42,20 +42,17 @@ def main():
     print("\n2. Initializing Kiro components...")
 
     performance_monitor = KiroPerformanceMonitor(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
     print("   ✓ PerformanceMonitor initialized")
 
     cache_system = UnifiedCacheSystem(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
     print("   ✓ UnifiedCacheSystem initialized")
 
     state_manager = StateManager(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
     print("   ✓ StateManager initialized")
 
@@ -98,7 +95,9 @@ def main():
     cached_thumb = cache_system.get("thumbnail", "test_thumb_1")
     cached_meta = cache_system.get("metadata", "test_meta_1")
 
-    print(f"   ✓ Cache hits: Image={cached_image is not None}, Thumb={cached_thumb is not None}, Meta={cached_meta is not None}")
+    print(
+        f"   ✓ Cache hits: Image={cached_image is not None}, Thumb={cached_thumb is not None}, Meta={cached_meta is not None}"
+    )
 
     # Test specialized cache methods
     test_path = Path("demo_image.jpg")
@@ -112,7 +111,9 @@ def main():
     cache_stats = cache_system.get_cache_stats()
     print(f"   ✓ Cache statistics:")
     for cache_type, stats in cache_stats.items():
-        print(f"     - {cache_type}: {stats['entry_count']} entries, {stats['hit_rate']:.1%} hit rate")
+        print(
+            f"     - {cache_type}: {stats['entry_count']} entries, {stats['hit_rate']:.1%} hit rate"
+        )
 
     # Get cache summary
     cache_summary = cache_system.get_cache_summary()
@@ -135,9 +136,7 @@ def main():
 
     # Test bulk update
     state_manager.update_state(
-        current_theme="blue",
-        thumbnail_size=250,
-        image_sort_mode="date"
+        current_theme="blue", thumbnail_size=250, image_sort_mode="date"
     )
     print("   ✓ Bulk state update completed")
 
@@ -159,13 +158,16 @@ def main():
 
     # Get state summary
     state_summary = state_manager.get_state_summary()
-    print(f"   ✓ State summary: {state_summary.get('current_theme')} theme, {state_summary.get('images_processed', 0)} images processed")
+    print(
+        f"   ✓ State summary: {state_summary.get('current_theme')} theme, {state_summary.get('images_processed', 0)} images processed"
+    )
 
     # Test component integration
     print("\n6. Testing component integration...")
 
     # Add state change listener
     state_changes = []
+
     def state_change_listener(event):
         state_changes.append(event.key)
 
@@ -187,7 +189,9 @@ def main():
 
         time.sleep(0.1)  # Small delay
 
-    print(f"   ✓ Integration test completed: {len(state_changes)} state changes recorded")
+    print(
+        f"   ✓ Integration test completed: {len(state_changes)} state changes recorded"
+    )
 
     # Test performance monitoring with cache operations
     print("\n7. Testing performance monitoring with cache operations...")
@@ -206,7 +210,9 @@ def main():
         if retrieved:
             cache_operations += 1
 
-    print(f"   ✓ Performance test completed: {cache_operations} successful cache operations")
+    print(
+        f"   ✓ Performance test completed: {cache_operations} successful cache operations"
+    )
 
     # Show final statistics
     print("\n8. Final Statistics:")
@@ -217,11 +223,15 @@ def main():
 
     # Cache statistics
     final_cache_summary = cache_system.get_cache_summary()
-    print(f"   Cache: {final_cache_summary.get('total_entries', 0)} entries, {final_cache_summary.get('overall_hit_rate', 0):.1%} hit rate")
+    print(
+        f"   Cache: {final_cache_summary.get('total_entries', 0)} entries, {final_cache_summary.get('overall_hit_rate', 0):.1%} hit rate"
+    )
 
     # State statistics
     final_state_summary = state_manager.get_performance_summary()
-    print(f"   State: {final_state_summary.get('state_changes', 0)} changes, {final_state_summary.get('state_accesses', 0)} accesses")
+    print(
+        f"   State: {final_state_summary.get('state_changes', 0)} changes, {final_state_summary.get('state_accesses', 0)} accesses"
+    )
 
     # Cleanup
     print("\n9. Shutting down...")
@@ -253,4 +263,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\nDemo error: {e}")
         import traceback
+
         traceback.print_exc()

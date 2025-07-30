@@ -7,17 +7,17 @@ Demonstrates the unified configuration management system for AI integration.
 Author: Kiro AI Integration System
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Add src to path for imports - adjusted for examples folder
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from integration.config_manager import ConfigManager
-from integration.models import AIComponent, ApplicationState
-from integration.logging_system import LoggerSystem
 from integration.error_handling import IntegratedErrorHandler
+from integration.logging_system import LoggerSystem
+from integration.models import AIComponent, ApplicationState
 
 
 def main():
@@ -50,15 +50,21 @@ def main():
             # Show some specific settings
             if ai_name == "copilot":
                 image_processing = ai_config.get("image_processing", {})
-                print(f"     - High Quality EXIF: {image_processing.get('high_quality_exif')}")
+                print(
+                    f"     - High Quality EXIF: {image_processing.get('high_quality_exif')}"
+                )
                 print(f"     - GPS Precision: {image_processing.get('gps_precision')}")
             elif ai_name == "cursor":
                 theme_system = ai_config.get("theme_system", {})
-                print(f"     - Qt Theme Manager: {theme_system.get('qt_theme_manager')}")
+                print(
+                    f"     - Qt Theme Manager: {theme_system.get('qt_theme_manager')}"
+                )
                 print(f"     - Theme Count: {theme_system.get('theme_count')}")
             elif ai_name == "kiro":
                 integration = ai_config.get("integration", {})
-                print(f"     - Performance Monitoring: {integration.get('performance_monitoring')}")
+                print(
+                    f"     - Performance Monitoring: {integration.get('performance_monitoring')}"
+                )
                 print(f"     - AI Coordination: {integration.get('ai_coordination')}")
 
         # Demonstrate configuration modification
@@ -69,15 +75,14 @@ def main():
 
         print("   Updating thumbnail size to 200...")
         config_manager.set_setting("ui.thumbnail_size", 200)
-        print(f"   New thumbnail size: {config_manager.get_setting('ui.thumbnail_size')}")
+        print(
+            f"   New thumbnail size: {config_manager.get_setting('ui.thumbnail_size')}"
+        )
 
         # Demonstrate AI configuration update
         print("\n5. AI Configuration Update:")
         copilot_updates = {
-            "image_processing": {
-                "high_quality_exif": False,
-                "detailed_metadata": True
-            }
+            "image_processing": {"high_quality_exif": False, "detailed_metadata": True}
         }
         config_manager.update_ai_config("copilot", copilot_updates)
         print("   ✓ Copilot configuration updated")
@@ -101,7 +106,7 @@ def main():
             current_theme="dark",
             thumbnail_size=200,
             images_processed=15,
-            performance_mode="performance"
+            performance_mode="performance",
         )
 
         updated_state = config_manager.get_application_state()
@@ -125,7 +130,7 @@ def main():
         summary = config_manager.get_config_summary()
         print(f"   Total Settings: {summary['total_settings']}")
         print(f"   AI Configurations:")
-        for ai_name, count in summary['ai_configs'].items():
+        for ai_name, count in summary["ai_configs"].items():
             print(f"     - {ai_name}: {count} settings")
 
         state_summary = config_manager.get_state_summary()
@@ -154,8 +159,12 @@ def main():
             print("   Running migration...")
             migration_result = config_manager.migrate_existing_configurations()
             print(f"   Migration status: {migration_result.get('status', 'unknown')}")
-            print(f"   Files processed: {migration_result.get('total_files_processed', 0)}")
-            print(f"   Settings migrated: {migration_result.get('total_settings_migrated', 0)}")
+            print(
+                f"   Files processed: {migration_result.get('total_files_processed', 0)}"
+            )
+            print(
+                f"   Settings migrated: {migration_result.get('total_settings_migrated', 0)}"
+            )
 
         # Demonstrate change listeners
         print("\n11. Change Listeners:")
@@ -196,7 +205,9 @@ def main():
         print(f"  - UI Theme: {config_manager.get_setting('ui.theme')}")
         print(f"  - Thumbnail Size: {config_manager.get_setting('ui.thumbnail_size')}")
         print(f"  - Performance Mode: {config_manager.get_setting('performance.mode')}")
-        print(f"  - Images Processed: {config_manager.get_application_state().images_processed}")
+        print(
+            f"  - Images Processed: {config_manager.get_application_state().images_processed}"
+        )
 
         # Cleanup
         if export_file.exists():
@@ -206,6 +217,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error during demo: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

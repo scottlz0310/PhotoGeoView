@@ -17,8 +17,8 @@ from pathlib import Path
 # Add src to path - adjusted for examples folder
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.image_processor import CS4CodingImageProcessor
 from integration.config_manager import ConfigManager
+from integration.image_processor import CS4CodingImageProcessor
 from integration.logging_system import LoggerSystem
 
 
@@ -33,13 +33,14 @@ def main():
     logger_system = LoggerSystem()
 
     processor = CS4CodingImageProcessor(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
 
     print(f"   ✓ ImageProcessor initialized")
     print(f"   ✓ Supported formats: {len(processor.get_supported_formats())}")
-    print(f"   ✓ Libraries available: {processor.get_performance_stats()['libraries_available']}")
+    print(
+        f"   ✓ Libraries available: {processor.get_performance_stats()['libraries_available']}"
+    )
 
     # Test coordinate validation
     print("\n2. Testing GPS coordinate validation...")
@@ -48,7 +49,7 @@ def main():
         (35.6762, 139.6503, "Tokyo"),
         (51.5074, -0.1278, "London"),
         (91.0, 0.0, "Invalid (lat > 90)"),
-        (0.0, 181.0, "Invalid (lon > 180)")
+        (0.0, 181.0, "Invalid (lon > 180)"),
     ]
 
     for lat, lon, name in test_coords:
@@ -92,16 +93,20 @@ def main():
     print("\n7. Performance Statistics:")
     stats = processor.get_performance_stats()
     for key, value in stats.items():
-        if key != 'recent_processing_times':  # Skip long lists
+        if key != "recent_processing_times":  # Skip long lists
             print(f"   ✓ {key}: {value}")
 
     # Test cache functionality
     print("\n8. Testing cache functionality...")
-    print(f"   ✓ Initial cache sizes - Images: {stats['image_cache_size']}, Metadata: {stats['metadata_cache_size']}")
+    print(
+        f"   ✓ Initial cache sizes - Images: {stats['image_cache_size']}, Metadata: {stats['metadata_cache_size']}"
+    )
 
     processor.clear_cache()
     stats_after_clear = processor.get_performance_stats()
-    print(f"   ✓ After clear - Images: {stats_after_clear['image_cache_size']}, Metadata: {stats_after_clear['metadata_cache_size']}")
+    print(
+        f"   ✓ After clear - Images: {stats_after_clear['image_cache_size']}, Metadata: {stats_after_clear['metadata_cache_size']}"
+    )
 
     # Test image validation with different file types
     print("\n9. Testing image validation...")
@@ -111,7 +116,7 @@ def main():
         "test.tiff",
         "test.txt",
         "test.pdf",
-        "nonexistent.jpg"
+        "nonexistent.jpg",
     ]
 
     for filename in test_files:
@@ -146,4 +151,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\nDemo error: {e}")
         import traceback
+
         traceback.print_exc()
