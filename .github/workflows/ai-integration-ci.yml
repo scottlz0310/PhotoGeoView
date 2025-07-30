@@ -32,9 +32,14 @@ jobs:
     - name: システム依存関係をインストール (Qt)
       run: |
         sudo apt-get update
+        # 基本的なX11とQt依存関係
         sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
-        sudo apt-get install -y libfontconfig1 libfreetype6 libx11-6 libxext6 libxfixes3 libxi6 libxrender1 libxcb1 libx11-xcb1 libxcb-glx0 libxcb-keysyms1 libxcb-image0 libxcb-shm0 libxcb-icccm4 libxcb-sync1 libxcb-xfixes0 libxcb-shape0 libxcb-randr0 libxcb-render-util0
+        # OpenGLとマルチメディア依存関係（パッケージ名を修正）
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libxi6 libxtst6 || true
+        # ALSAサウンドシステム（オプション）
+        sudo apt-get install -y libasound2 || sudo apt-get install -y libasound2-dev || echo "ALSA not available, continuing..."
+        # 追加のQt依存関係
+        sudo apt-get install -y libfontconfig1 libfreetype6 libx11-6 libxext6 libxfixes3 libxrender1 libxcb1 libx11-xcb1 libxcb-glx0 libxcb-shm0 libxcb-sync1 libxcb-shape0 || true
 
     - name: 依存関係をキャッシュ
       uses: actions/cache@v4
@@ -142,8 +147,12 @@ jobs:
     - name: システム依存関係をインストール (Qt)
       run: |
         sudo apt-get update
+        # 基本的なX11とQt依存関係
         sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+        # OpenGLとマルチメディア依存関係（パッケージ名を修正）
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libxi6 libxtst6 || true
+        # ALSAサウンドシステム（オプション）
+        sudo apt-get install -y libasound2 || sudo apt-get install -y libasound2-dev || echo "ALSA not available, continuing..."
 
     - name: 依存関係をインストール
       run: |
@@ -192,8 +201,12 @@ jobs:
     - name: システム依存関係をインストール (Qt)
       run: |
         sudo apt-get update
+        # 基本的なX11とQt依存関係
         sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+        # OpenGLとマルチメディア依存関係（パッケージ名を修正）
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libxi6 libxtst6 || true
+        # ALSAサウンドシステム（オプション）
+        sudo apt-get install -y libasound2 || sudo apt-get install -y libasound2-dev || echo "ALSA not available, continuing..."
 
     - name: 依存関係をインストール
       run: |

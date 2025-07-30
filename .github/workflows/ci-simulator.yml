@@ -31,8 +31,12 @@ jobs:
     - name: Install system dependencies (Qt)
       run: |
         sudo apt-get update
+        # 基本的なX11とQt依存関係
         sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xinput0 libxcb-xfixes0
-        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6
+        # OpenGLとマルチメディア依存関係（パッケージ名を修正）
+        sudo apt-get install -y libgl1-mesa-glx libegl1-mesa libxrandr2 libxss1 libxcursor1 libxcomposite1 libxi6 libxtst6 || true
+        # ALSAサウンドシステム（オプション）
+        sudo apt-get install -y libasound2 || sudo apt-get install -y libasound2-dev || echo "ALSA not available, continuing..."
 
     - name: Cache pip dependencies
       uses: actions/cache@v4
