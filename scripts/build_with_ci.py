@@ -64,7 +64,7 @@ class CIIntegratedBuilder:
                 sys.executable,
                 "-m", "tools.ci.simulator",
                 "run",
-                "--checks", "all",
+                "--all",
                 "--format", "both",
                 "--output-dir", str(self.reports_dir),
                 "--timeout", "1800"

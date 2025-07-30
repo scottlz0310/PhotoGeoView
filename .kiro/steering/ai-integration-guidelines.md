@@ -1,105 +1,136 @@
-# AI Integration Development Guidelines
+# PhotoGeoView AI統合ガイドライン（Kiro監督版）
 
-## Overview
+## 概要
 
-This steering document provides guidelines for integrating multiple AI coding agent implementations in the PhotoGeoView project. It establishes standards for maintaining code quality, consistency, and collaboration between GitHub Copilot, Cursor, and Kiro implementations.
+本ガイドラインは、PhotoGeoViewプロジェクトにおけるAI統合開発の監督指針です。GitHub Copilot、Cursor、Kiroの3つのAIエージェントの役割分担と連携方針、プロジェクト構造、技術標準、品質維持、ritual（習慣的な開発規約）を含みます。
 
-## AI Role Definitions
+---
 
-### GitHub Copilot (CS4Coding)
-- **Primary Focus**: Core functionality implementation
-- **Strengths**: Code completion, pattern recognition, stable implementations
-- **Responsibilities**: EXIF parsing, image processing, map integration, error handling
+## AIエージェントの役割
 
-### Cursor (CursorBLD)
-- **Primary Focus**: UI/UX design and user experience
-- **Strengths**: Interface design, theme systems, real-time editing
-- **Responsibilities**: Main window layout, theme management, thumbnail display, navigation
+| AI | 担当領域 | 得意分野 | 主な責任 |
+|----|----------|----------|----------|
+| GitHub Copilot (CS4Coding) | 機能実装 | コード補完、パターン認識 | EXIF解析、画像処理、地図連携、エラー処理 |
+| Cursor (CursorBLD) | UI/UX設計 | インターフェース構築、即時編集 | レイアウト設計、テーマ管理、サムネイル、ナビゲーション |
+| Kiro | アーキテクチャ・品質統合 | 構造化設計、テスト管理、ドキュメント統括 | 全体構成、パフォーマンス最適化、CI/CD構築、技術方針の監督 |
 
-### Kiro
-- **Primary Focus**: Architecture integration and quality assurance
-- **Strengths**: Project structure, cross-component integration, testing
-- **Responsibilities**: Overall architecture, performance optimization, testing strategy, documentation
+---
 
-## Integration Principles
+## 開発ワークフロー
 
-### Code Organization
-- Maintain clear attribution of AI contributions in file headers
-- Use consistent naming conventions across all AI implementations
-- Implement unified error handling and logging systems
-- Ensure modular design with clear interfaces between components
+1. **要件定義**：Kiro主導で全AIから意見を収集
+2. **設計フェーズ**：役割に応じた協調設計
+3. **実装フェーズ**：AI別に並列実装・定期統合
+4. **テストフェーズ**：統合試験・UX整合性確認
+5. **デプロイフェーズ**：共同リリース・監視
 
-### Quality Standards
-- All integrated code must pass comprehensive testing
-- Performance benchmarks must meet or exceed individual AI implementations
-- Documentation must be maintained for all integrated components
-- Code reviews should consider multi-AI compatibility
+---
 
-### Development Workflow
-1. **Requirements Phase**: Kiro leads with input from all AIs
-2. **Design Phase**: Collaborative design with AI-specific focus areas
-3. **Implementation Phase**: Parallel development with integration checkpoints
-4. **Testing Phase**: Comprehensive integration testing
-5. **Deployment Phase**: Coordinated release with monitoring
+## 技術方針
 
-## Technical Standards
+### プロジェクト構造
+- ルートディレクトリには `main.py` 等のエントリーポイントのみ配置
+- `api/`, `ui/`, `utils/`, `model/` など機能別に責務分離
+- `__init__.py` は依存解決のみに使用、副作用は禁止
 
-### Dependencies
-- Use unified dependency management (requirements.txt)
-- Prefer libraries that work well across all AI implementations
-- Document any AI-specific dependency requirements
-- Maintain backward compatibility where possible
+### 依存管理
+- `requirements.txt` により統一
+- クロスAI環境で互換性のあるライブラリを選定
+- AI特有の依存関係は明示し、可能なら統一化
 
-### Configuration
-- Centralized configuration management
-- Environment-specific settings support
-- AI-specific configuration sections where needed
-- User preference persistence across AI components
+### 設定管理
+- `config.py` 等による集中管理
+- 環境別設定切り替え対応
+- ユーザー設定は全AIで一貫して反映
 
-### Performance
-- Memory usage optimization across all components
-- Efficient caching strategies for shared resources
-- Asynchronous processing where appropriate
-- Regular performance monitoring and optimization
+### パフォーマンス設計
+- 非同期処理・キャッシュ戦略導入
+- メモリ効率化とモジュール単位最適化
+- 定期モニタリングとベンチマーク維持
 
-## Testing Strategy
+---
 
-### Integration Testing
-- Test AI component interactions
-- Verify unified user experience
-- Performance regression testing
-- Cross-platform compatibility testing
+## コーディングスタイル規約
 
-### Quality Assurance
-- Automated code quality checks
-- Documentation completeness verification
-- Security vulnerability scanning
-- Accessibility compliance testing
+| 項目 | 指針 |
+|------|------|
+| ファイル名 | スネークケース（例：`photo_utils.py`） |
+| クラス名 | パスカルケース（例：`ThemeManager`） |
+| 変数名 | キャメルケース（例：`imagePath`） |
+| 型指定 | 明示型を推奨、`any`の濫用を避ける |
+| import順 | 標準 → サードパーティ → 自作（`isort`使用） |
 
-## Documentation Requirements
+---
 
-### Code Documentation
-- Clear docstrings for all public interfaces
-- AI contribution attribution in file headers
-- Architecture decision records for integration choices
-- API documentation for inter-component communication
+## デバッグおよび一時コード規約
 
-### User Documentation
-- Unified user manual covering all features
-- Installation and setup guides
-- Troubleshooting documentation
-- Feature comparison with individual AI versions
+### デバッグ出力
+- `print()` 使用禁止
+- `logging` またはプロジェクトLoggerを通す
+- ログ初期化は `logger_setup.py` 経由で行う
+- ログレベルは意図に応じて選定（`DEBUG`, `INFO`, `WARNING`, `ERROR`）
 
-## Collaboration Guidelines
+### 一時コード管理
+- 一時変数/関数は `_debug_` プレフィックス付与
+- PR前に必ず削除またはコメント化し、レビュー時に明示
 
-### Communication
-- Regular integration status updates
-- Clear issue reporting and tracking
-- Collaborative problem-solving approach
-- Knowledge sharing between AI implementations
+### モジュール責務の扱い
+- 機能追加は既存モジュールへの直書きを避け、新規ユーティリティ導入
+- 命名は自然に役割が読み取れる形式を採用（例：`ExifParser`, `MapRenderer`）
 
-### Conflict Resolution
-- Kiro mediates technical disagreements
-- Performance benchmarks guide implementation choices
-- User experience takes priority in UI decisions
-- Maintainability considerations for long-term decisions
+---
+
+## CI/CD方針
+
+- GitHub Actions によるCI/CD導入
+- ワークフロー作成前に構文検証用シミュレータを活用
+- CI上のログはフィルタリングして冗長抑制
+- 全統合コードは CI統合テストを通過すること
+
+---
+
+## テストおよび品質保証
+
+### 統合テスト
+- 全AIコンポーネントの連携確認
+- UI/UX整合性と体験品質を検証
+- パフォーマンスの退行試験含む
+
+### 品質管理
+- コード品質自動チェック（Lint、型、スタイル）
+- セキュリティスキャン・アクセシビリティ検証
+- ドキュメント整備状況を品質指標に含める
+
+---
+
+## ドキュメント要件
+
+### コードドキュメント
+- 全公開インターフェースにDocstring付与
+- ファイル冒頭に担当AIを明記
+- 統合方針に関する判断記録（ADR）を残す
+- API間通信仕様を整備する
+
+### ユーザードキュメント
+- 統合版の機能を網羅するマニュアル
+- 環境構築手順書（セットアップ）
+- トラブルシューティングガイド
+- 個別AI機能との比較一覧を含む
+
+---
+
+## コラボレーション指針
+
+### 統合方針
+
+- Kiroは、GitHub Copilot（CS4Coding）版およびCursor（CursorBLD）版の成果物をレビューし、技術的・UX的観点から統合案をまとめる
+- 各AIが生成した設計調書や仕様方針を尊重し、それぞれの出力の特徴を生かした統合を行う
+- 最終統合は、構造の再現性・パフォーマンス・UX一貫性を満たすことを条件とする
+
+### コンフリクト解決
+- Kiroが技術的議論の調停役を務める
+- 性能ベンチマークを参考に判断する
+- UI/UX関連では利用者体験を最優先とする
+- 長期保守性・構造的明瞭性を重視して選択する
+
+---

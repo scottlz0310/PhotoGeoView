@@ -16,8 +16,12 @@ from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from ..interfaces import CheckerInterface
-from ..models import CheckResult, CheckStatus, ConfigDict
+try:
+    from ..interfaces import CheckerInterface
+    from ..models import CheckResult, CheckStatus, ConfigDict
+except ImportError:
+    from interfaces import CheckerInterface
+    from models import CheckResult, CheckStatus, ConfigDict
 
 
 @dataclass
@@ -198,8 +202,19 @@ class AIComponentTester(CheckerInterface):
                 )
             else:
                 # For other tools, try to import them
+                import_name = tool.replace('-', '_')
+                # Special cases for pytest plugins
+                if tool == "pytest-asyncio":
+                    import_name = "pytest_asyncio"
+                elif tool == "pytest-qt":
+                    import_name = "pytestqt"
+                elif tool == "pytest-xdist":
+                    import_name = "xdist"
+                elif tool == "pytest-cov":
+                    import_name = "pytest_cov"
+
                 result = subprocess.run(
-                    [sys.executable, "-c", f"import {tool.replace('-', '_')}"],
+                    [sys.executable, "-c", f"import {import_name}"],
                     capture_output=True,
                     text=True,
                     timeout=10,

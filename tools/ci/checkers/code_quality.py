@@ -17,8 +17,12 @@ import logging
 import time
 from dataclasses import dataclass
 
-from ..interfaces import CheckerInterface
-from ..models import CheckResult, CheckStatus, ConfigDict
+try:
+    from ..interfaces import CheckerInterface
+    from ..models import CheckResult, CheckStatus, ConfigDict
+except ImportError:
+    from interfaces import CheckerInterface
+    from models import CheckResult, CheckStatus, ConfigDict
 
 
 @dataclass

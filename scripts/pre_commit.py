@@ -14,7 +14,7 @@ def main():
 
     result = subprocess.run([
         sys.executable, "-m", "tools.ci.simulator",
-        "run", "--checks", "code_quality", "test_runner",
+        "run", "code_quality", "test_runner",
         "--fail-fast", "--format", "markdown"
     ], cwd=project_root)
 

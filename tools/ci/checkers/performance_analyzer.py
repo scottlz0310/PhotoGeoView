@@ -21,8 +21,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from ..interfaces import CheckerInterface
-from ..models import CheckResult, CheckStatus, ConfigDict, RegressionIssue, SeverityLevel
+try:
+    from ..interfaces import CheckerInterface
+    from ..models import CheckResult, CheckStatus, ConfigDict, RegressionIssue, SeverityLevel
+except ImportError:
+    from interfaces import CheckerInterface
+    from models import CheckResult, CheckStatus, ConfigDict, RegressionIssue, SeverityLevel
 
 
 @dataclass

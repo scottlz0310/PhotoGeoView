@@ -17,8 +17,12 @@ import logging
 import time
 from dataclasses import dataclass
 
-from ..interfaces import CheckerInterface
-from ..models import CheckResult, CheckStatus, ConfigDict, SeverityLevel
+try:
+    from ..interfaces import CheckerInterface
+    from ..models import CheckResult, CheckStatus, ConfigDict, SeverityLevel
+except ImportError:
+    from interfaces import CheckerInterface
+    from models import CheckResult, CheckStatus, ConfigDict, SeverityLevel
 
 
 @dataclass
@@ -820,11 +824,4 @@ n=time.time() - start_time,
         pass
 
 
-# Register the security scanner with the checker factory
-from ..interfaces import CheckerFactory
-
-try:
-    CheckerFactory.register_checker('security', SecurityScanner)
-except Exception:
-    # Factory might not be available during import
-    pass
+# SecurityScanner is registered by the simulator during initialization

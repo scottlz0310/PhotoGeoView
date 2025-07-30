@@ -277,7 +277,7 @@ class CIIntegrationSetup:
 echo "Running CI simulation pre-commit checks..."
 
 # Run CI simulator with pre-commit checks
-python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast --quiet
+python -m tools.ci.simulator run code_quality test_runner --fail-fast --quiet
 
 exit_code=$?
 

@@ -23,28 +23,28 @@ install:
 	python -m pip install -e .[ci]
 
 ci:
-	python -m tools.ci.simulator run --checks code_quality test_runner --format both
+	python -m tools.ci.simulator run code_quality test_runner --format both
 
 ci-quick:
-	python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast
+	python -m tools.ci.simulator run code_quality test_runner --fail-fast
 
 ci-full:
-	python -m tools.ci.simulator run --checks all --format both --python-versions 3.9 3.10 3.11
+	python -m tools.ci.simulator run --all --format both --python-versions 3.9 3.10 3.11
 
 test:
-	python -m tools.ci.simulator run --checks test_runner
+	python -m tools.ci.simulator run test_runner
 
 lint:
-	python -m tools.ci.simulator run --checks code_quality
+	python -m tools.ci.simulator run code_quality
 
 format:
-	python -m tools.ci.simulator run --checks code_quality --auto-fix
+	python -m tools.ci.simulator run code_quality --auto-fix
 
 security:
-	python -m tools.ci.simulator run --checks security_scanner
+	python -m tools.ci.simulator run security_scanner
 
 performance:
-	python -m tools.ci.simulator run --checks performance_analyzer
+	python -m tools.ci.simulator run performance_analyzer
 
 setup-hooks:
 	python -m tools.ci.simulator hook setup
@@ -117,13 +117,13 @@ deploy-production: ci-full
 
 # CI Simulator integration with existing workflows
 ci-integration-check:
-	python -m tools.ci.simulator run --checks code_quality test_runner security_scanner --format json --output-dir reports/ci-integration
+	python -m tools.ci.simulator run code_quality test_runner security_scanner --format json --output-dir reports/ci-integration
 	@echo "CI integration check completed"
 
 # Validate CI simulator integration
 validate-ci-integration:
 	python scripts/validate_ci_integration.py
-	python -m tools.ci.simulator run --checks all --format both --timeout 300
+	python -m tools.ci.simulator run --all --format both --timeout 300
 	@echo "CI integration validation completed"
 
 # Setup development environment with CI integration

@@ -12,7 +12,7 @@ def main():
 
     # Default to quick CI if no arguments provided
     if len(sys.argv) == 1:
-        args = ["run", "--checks", "code_quality", "test_runner", "--format", "both"]
+        args = ["run", "code_quality", "test_runner", "--format", "both"]
     else:
         args = sys.argv[1:]
 

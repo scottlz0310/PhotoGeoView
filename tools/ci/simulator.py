@@ -64,16 +64,18 @@ class CISimulator:
         """
         self.config_manager = ConfigManager(config_path)
         self.config = self.config_manager.get_config()
-        self.orchestrator = CheckOrchestrator(self.config)
-        self.cli_parser = CLIParser(self.orchestrator)
-        self.git_hook_manager = GitHookManager(self.config)
         self.logger = self._setup_logging()
 
         # Initialize directories
         self._ensure_directories()
 
-        # Register available checkers
+        # Register available checkers BEFORE initializing orchestrator
         self._register_checkers()
+
+        # Initialize components that depend on registered checkers
+        self.orchestrator = CheckOrchestrator(self.config)
+        self.cli_parser = CLIParser(self.orchestrator)
+        self.git_hook_manager = GitHookManager(self.config)
 
     def _setup_logging(self) -> logging.Logger:
         """Set up logging configuration."""
