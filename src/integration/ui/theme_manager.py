@@ -9,16 +9,17 @@ Author: Kiro AI Integration System
 """
 
 import json
-from typing import Dict, Any, List, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
-from ..models import ThemeConfiguration, AIComponent
 from ..config_manager import ConfigManager
-from ..state_manager import StateManager
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
+from ..models import AIComponent, ThemeConfiguration
+from ..state_manager import StateManager
 
 
 class IntegratedThemeManager(QObject):

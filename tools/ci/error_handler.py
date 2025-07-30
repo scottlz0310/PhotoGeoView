@@ -9,25 +9,48 @@ Author: Kiro (AI Integration and Quality Assurance)
 """
 
 import logging
-import traceback
-import sys
 import os
 import shutil
 import subprocess
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Union, Tuple, Callable
-from enum import Enum
+import sys
+import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 try:
+    from .interfaces import (
+        CheckerError,
+        CISimulationError,
+        ConfigurationError,
+        DependencyError,
+        EnvironmentError,
+    )
     from .models import CheckResult, CheckStatus, SeverityLevel
-    from .interfaces import CISimulationError, CheckerError, EnvironmentError, ConfigurationError, DependencyError
-    from .utils import run_command, is_tool_available, get_python_executable, ensure_directory_exists
+    from .utils import (
+        ensure_directory_exists,
+        get_python_executable,
+        is_tool_available,
+        run_command,
+    )
 except ImportError:
+    from interfaces import (
+        CheckerError,
+        CISimulationError,
+        ConfigurationError,
+        DependencyError,
+        EnvironmentError,
+    )
     from models import CheckResult, CheckStatus, SeverityLevel
-    from interfaces import CISimulationError, CheckerError, EnvironmentError, ConfigurationError, DependencyError
-    from utils import run_command, is_tool_available, get_python_executable, ensure_directory_exists
+
+    from utils import (
+        ensure_directory_exists,
+        get_python_executable,
+        is_tool_available,
+        run_command,
+    )
 
 
 class ErrorCategory(Enum):
@@ -103,9 +126,9 @@ class ErrorHandler:
         self.logger = logging.getLogger(__name__)
         self.error_history: List[ErrorContext] = []
         self.recovery_strategies: Dict[ErrorCategory, List[RecoveryAction]] = {}
-        self.max_retry_attempts = self.config.get('max_retry_attempts', 3)
-        self.retry_delay = self.config.get('retry_delay', 1.0)
-        self.auto_recovery_enabled = self.config.get('auto_recovery_enabled', True)
+        self.max_retry_attempts = self.config.get("max_retry_attempts", 3)
+        self.retry_delay = self.config.get("retry_delay", 1.0)
+        self.auto_recovery_enabled = self.config.get("auto_recovery_enabled", True)
 
         self._initialize_recovery_strategies()
 
@@ -119,21 +142,21 @@ class ErrorHandler:
                 description="Attempt to install missing system dependencies",
                 action_function=self._install_system_dependencies,
                 success_probability=0.7,
-                estimated_time=30.0
+                estimated_time=30.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.FALLBACK,
                 description="Use alternative Python version",
                 action_function=self._use_alternative_python,
                 success_probability=0.6,
-                estimated_time=5.0
+                estimated_time=5.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.MANUAL,
                 description="Manual environment setup required",
                 success_probability=0.9,
-                user_confirmation_required=True
-            )
+                user_confirmation_required=True,
+            ),
         ]
 
         # Configuration errors
@@ -143,15 +166,15 @@ class ErrorHandler:
                 description="Use default configuration",
                 action_function=self._use_default_config,
                 success_probability=0.8,
-                estimated_time=1.0
+                estimated_time=1.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.AUTO_FIX,
                 description="Repair configuration file",
                 action_function=self._repair_config_file,
                 success_probability=0.6,
-                estimated_time=2.0
-            )
+                estimated_time=2.0,
+            ),
         ]
 
         # Execution errors
@@ -161,15 +184,15 @@ class ErrorHandler:
                 description="Retry with increased timeout",
                 action_function=self._retry_with_timeout,
                 success_probability=0.5,
-                estimated_time=10.0
+                estimated_time=10.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.FALLBACK,
                 description="Skip problematic test and continue",
                 action_function=self._skip_and_continue,
                 success_probability=0.9,
-                estimated_time=0.1
-            )
+                estimated_time=0.1,
+            ),
         ]
 
         # Dependency errors
@@ -179,15 +202,15 @@ class ErrorHandler:
                 description="Install missing dependencies",
                 action_function=self._install_dependencies,
                 success_probability=0.8,
-                estimated_time=20.0
+                estimated_time=20.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.FALLBACK,
                 description="Use alternative implementation",
                 action_function=self._use_alternative_implementation,
                 success_probability=0.4,
-                estimated_time=1.0
-            )
+                estimated_time=1.0,
+            ),
         ]
 
         # Resource errors
@@ -197,15 +220,15 @@ class ErrorHandler:
                 description="Clean up temporary files",
                 action_function=self._cleanup_resources,
                 success_probability=0.7,
-                estimated_time=5.0
+                estimated_time=5.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.FALLBACK,
                 description="Reduce resource usage",
                 action_function=self._reduce_resource_usage,
                 success_probability=0.6,
-                estimated_time=2.0
-            )
+                estimated_time=2.0,
+            ),
         ]
 
         # Timeout errors
@@ -215,15 +238,15 @@ class ErrorHandler:
                 description="Retry with extended timeout",
                 action_function=self._extend_timeout,
                 success_probability=0.6,
-                estimated_time=30.0
+                estimated_time=30.0,
             ),
             RecoveryAction(
                 strategy=RecoveryStrategy.SKIP,
                 description="Skip timeout-prone operation",
                 action_function=self._skip_operation,
                 success_probability=0.9,
-                estimated_time=0.1
-            )
+                estimated_time=0.1,
+            ),
         ]
 
     def handle_error(
@@ -231,7 +254,7 @@ class ErrorHandler:
         error: Exception,
         component: str,
         operation: str,
-        context: Dict[str, Any] = None
+        context: Dict[str, Any] = None,
     ) -> ErrorContext:
         """
         Handle an error with automatic classification and recovery attempts.
@@ -301,7 +324,9 @@ class ErrorHandler:
         else:
             return ErrorCategory.UNKNOWN
 
-    def _determine_severity(self, error: Exception, category: ErrorCategory) -> SeverityLevel:
+    def _determine_severity(
+        self, error: Exception, category: ErrorCategory
+    ) -> SeverityLevel:
         """Determine the severity level of an error."""
 
         # Critical errors that prevent any progress
@@ -326,22 +351,23 @@ class ErrorHandler:
         """Gather environment information for error context."""
 
         info = {
-            'python_version': sys.version,
-            'platform': sys.platform,
-            'cwd': os.getcwd(),
-            'path': os.environ.get('PATH', ''),
-            'timestamp': datetime.now().isoformat(),
+            "python_version": sys.version,
+            "platform": sys.platform,
+            "cwd": os.getcwd(),
+            "path": os.environ.get("PATH", ""),
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Check available tools
-        tools = ['git', 'python', 'pip', 'black', 'isort', 'flake8', 'mypy', 'pytest']
-        info['available_tools'] = {tool: is_tool_available(tool) for tool in tools}
+        tools = ["git", "python", "pip", "black", "isort", "flake8", "mypy", "pytest"]
+        info["available_tools"] = {tool: is_tool_available(tool) for tool in tools}
 
         # Memory and disk info (if available)
         try:
             import psutil
-            info['memory_percent'] = psutil.virtual_memory().percent
-            info['disk_percent'] = psutil.disk_usage('/').percent
+
+            info["memory_percent"] = psutil.virtual_memory().percent
+            info["disk_percent"] = psutil.disk_usage("/").percent
         except ImportError:
             pass
 
@@ -372,7 +398,9 @@ class ErrorHandler:
 
             try:
                 if strategy.action_function:
-                    success = strategy.action_function(error_context, **strategy.parameters)
+                    success = strategy.action_function(
+                        error_context, **strategy.parameters
+                    )
                     if success:
                         error_context.resolved = True
                         self.logger.info(f"Recovery successful: {strategy.description}")
@@ -388,27 +416,29 @@ class ErrorHandler:
 
     # Recovery action implementations
 
-    def _install_system_dependencies(self, error_context: ErrorContext, **kwargs) -> bool:
+    def _install_system_dependencies(
+        self, error_context: ErrorContext, **kwargs
+    ) -> bool:
         """Attempt to install missing system dependencies."""
 
         # Check for common missing dependencies
         missing_deps = []
 
         # Qt dependencies
-        if not is_tool_available('qmake') and 'qt' in str(error_context.error).lower():
-            missing_deps.extend(['qt5-default', 'qtbase5-dev'])
+        if not is_tool_available("qmake") and "qt" in str(error_context.error).lower():
+            missing_deps.extend(["qt5-default", "qtbase5-dev"])
 
         # Display dependencies
-        if 'display' in str(error_context.error).lower():
-            missing_deps.extend(['xvfb', 'x11-utils'])
+        if "display" in str(error_context.error).lower():
+            missing_deps.extend(["xvfb", "x11-utils"])
 
         if not missing_deps:
             return False
 
         # Try to install using apt (Ubuntu/Debian)
-        if shutil.which('apt-get'):
+        if shutil.which("apt-get"):
             try:
-                cmd = ['sudo', 'apt-get', 'install', '-y'] + missing_deps
+                cmd = ["sudo", "apt-get", "install", "-y"] + missing_deps
                 returncode, stdout, stderr = run_command(cmd, timeout=300)
                 return returncode == 0
             except Exception:
@@ -420,13 +450,13 @@ class ErrorHandler:
         """Try to use an alternative Python version."""
 
         # Try different Python versions
-        versions = ['3.9', '3.10', '3.11', '3.8']
+        versions = ["3.9", "3.10", "3.11", "3.8"]
 
         for version in versions:
             python_exe = get_python_executable(version)
             if python_exe:
                 # Update environment to use this Python version
-                os.environ['PYTHON_EXECUTABLE'] = python_exe
+                os.environ["PYTHON_EXECUTABLE"] = python_exe
                 return True
 
         return False
@@ -468,7 +498,7 @@ class ErrorHandler:
             missing_deps = error_context.error.missing_dependencies
 
             try:
-                cmd = [sys.executable, '-m', 'pip', 'install'] + missing_deps
+                cmd = [sys.executable, "-m", "pip", "install"] + missing_deps
                 returncode, stdout, stderr = run_command(cmd, timeout=120)
                 return returncode == 0
             except Exception:
@@ -476,7 +506,9 @@ class ErrorHandler:
 
         return False
 
-    def _use_alternative_implementation(self, error_context: ErrorContext, **kwargs) -> bool:
+    def _use_alternative_implementation(
+        self, error_context: ErrorContext, **kwargs
+    ) -> bool:
         """Use alternative implementation when primary fails."""
 
         # This would be component-specific
@@ -487,14 +519,14 @@ class ErrorHandler:
 
         try:
             # Clean up common temporary directories
-            temp_dirs = ['/tmp', 'temp', '.pytest_cache', '__pycache__']
+            temp_dirs = ["/tmp", "temp", ".pytest_cache", "__pycache__"]
 
             for temp_dir in temp_dirs:
                 if os.path.exists(temp_dir):
-                    if temp_dir.startswith('/tmp'):
+                    if temp_dir.startswith("/tmp"):
                         # Only clean our own temp files
                         for item in os.listdir(temp_dir):
-                            if 'ci_simulation' in item:
+                            if "ci_simulation" in item:
                                 item_path = os.path.join(temp_dir, item)
                                 if os.path.isdir(item_path):
                                     shutil.rmtree(item_path)
@@ -548,7 +580,7 @@ class ErrorHandler:
             "# CI Simulation Error Report",
             f"Generated: {datetime.now().isoformat()}",
             f"Total Errors: {len(errors)}",
-            ""
+            "",
         ]
 
         # Summary by category
@@ -556,44 +588,41 @@ class ErrorHandler:
         for error in errors:
             category_counts[error.category] = category_counts.get(error.category, 0) + 1
 
-        report_lines.extend([
-            "## Error Summary by Category",
-            ""
-        ])
+        report_lines.extend(["## Error Summary by Category", ""])
 
-        for category, count in sorted(category_counts.items(), key=lambda x: x[0].value):
+        for category, count in sorted(
+            category_counts.items(), key=lambda x: x[0].value
+        ):
             report_lines.append(f"- {category.value}: {count}")
 
         report_lines.extend(["", "## Detailed Error Information", ""])
 
         # Detailed error information
         for i, error in enumerate(errors, 1):
-            report_lines.extend([
-                f"### Error {i}: {error.component}.{error.operation}",
-                f"- **Category**: {error.category.value}",
-                f"- **Severity**: {error.severity.value}",
-                f"- **Timestamp**: {error.timestamp.isoformat()}",
-                f"- **Error**: {str(error.error)}",
-                f"- **Resolved**: {'Yes' if error.resolved else 'No'}",
-                ""
-            ])
+            report_lines.extend(
+                [
+                    f"### Error {i}: {error.component}.{error.operation}",
+                    f"- **Category**: {error.category.value}",
+                    f"- **Severity**: {error.severity.value}",
+                    f"- **Timestamp**: {error.timestamp.isoformat()}",
+                    f"- **Error**: {str(error.error)}",
+                    f"- **Resolved**: {'Yes' if error.resolved else 'No'}",
+                    "",
+                ]
+            )
 
             if error.recovery_attempts:
-                report_lines.extend([
-                    "**Recovery Attempts:**",
-                    ""
-                ])
+                report_lines.extend(["**Recovery Attempts:**", ""])
                 for attempt in error.recovery_attempts:
-                    report_lines.append(f"- {attempt.strategy.value}: {attempt.description}")
+                    report_lines.append(
+                        f"- {attempt.strategy.value}: {attempt.description}"
+                    )
                 report_lines.append("")
 
             # Add troubleshooting guidance
             guidance = self._get_troubleshooting_guidance(error)
             if guidance:
-                report_lines.extend([
-                    "**Troubleshooting Guidance:**",
-                    ""
-                ])
+                report_lines.extend(["**Troubleshooting Guidance:**", ""])
                 for guide in guidance:
                     report_lines.append(f"- {guide}")
                 report_lines.append("")
@@ -606,52 +635,64 @@ class ErrorHandler:
         guidance = []
 
         if error_context.category == ErrorCategory.ENVIRONMENT:
-            guidance.extend([
-                "Check that all required system dependencies are installed",
-                "Verify Python version compatibility (3.9, 3.10, or 3.11)",
-                "Ensure virtual display is available for GUI tests (install xvfb)",
-                "Check Qt dependencies if running GUI-related tests"
-            ])
+            guidance.extend(
+                [
+                    "Check that all required system dependencies are installed",
+                    "Verify Python version compatibility (3.9, 3.10, or 3.11)",
+                    "Ensure virtual display is available for GUI tests (install xvfb)",
+                    "Check Qt dependencies if running GUI-related tests",
+                ]
+            )
 
         elif error_context.category == ErrorCategory.DEPENDENCY:
-            guidance.extend([
-                "Run 'pip install -r requirements.txt' to install Python dependencies",
-                "Check for conflicting package versions",
-                "Consider using a fresh virtual environment",
-                "Verify that all development dependencies are installed"
-            ])
+            guidance.extend(
+                [
+                    "Run 'pip install -r requirements.txt' to install Python dependencies",
+                    "Check for conflicting package versions",
+                    "Consider using a fresh virtual environment",
+                    "Verify that all development dependencies are installed",
+                ]
+            )
 
         elif error_context.category == ErrorCategory.CONFIGURATION:
-            guidance.extend([
-                "Check configuration file syntax (JSON/YAML)",
-                "Verify all required configuration keys are present",
-                "Check file permissions for configuration files",
-                "Consider using default configuration as fallback"
-            ])
+            guidance.extend(
+                [
+                    "Check configuration file syntax (JSON/YAML)",
+                    "Verify all required configuration keys are present",
+                    "Check file permissions for configuration files",
+                    "Consider using default configuration as fallback",
+                ]
+            )
 
         elif error_context.category == ErrorCategory.RESOURCE:
-            guidance.extend([
-                "Check available disk space",
-                "Monitor memory usage during execution",
-                "Clean up temporary files and caches",
-                "Consider reducing parallelism or batch sizes"
-            ])
+            guidance.extend(
+                [
+                    "Check available disk space",
+                    "Monitor memory usage during execution",
+                    "Clean up temporary files and caches",
+                    "Consider reducing parallelism or batch sizes",
+                ]
+            )
 
         elif error_context.category == ErrorCategory.TIMEOUT:
-            guidance.extend([
-                "Increase timeout values in configuration",
-                "Check network connectivity for remote operations",
-                "Consider running tests in smaller batches",
-                "Monitor system load during execution"
-            ])
+            guidance.extend(
+                [
+                    "Increase timeout values in configuration",
+                    "Check network connectivity for remote operations",
+                    "Consider running tests in smaller batches",
+                    "Monitor system load during execution",
+                ]
+            )
 
         elif error_context.category == ErrorCategory.PERMISSION:
-            guidance.extend([
-                "Check file and directory permissions",
-                "Ensure write access to output directories",
-                "Consider running with appropriate user privileges",
-                "Verify Git repository permissions"
-            ])
+            guidance.extend(
+                [
+                    "Check file and directory permissions",
+                    "Ensure write access to output directories",
+                    "Consider running with appropriate user privileges",
+                    "Verify Git repository permissions",
+                ]
+            )
 
         return guidance
 
@@ -667,7 +708,7 @@ class ErrorHandler:
             "by_category": {},
             "by_severity": {},
             "by_component": {},
-            "recovery_success_rate": 0.0
+            "recovery_success_rate": 0.0,
         }
 
         for error in self.error_history:
@@ -685,7 +726,9 @@ class ErrorHandler:
 
         # Calculate recovery success rate
         if stats["total_errors"] > 0:
-            stats["recovery_success_rate"] = stats["resolved_errors"] / stats["total_errors"]
+            stats["recovery_success_rate"] = (
+                stats["resolved_errors"] / stats["total_errors"]
+            )
 
         return stats
 
@@ -693,7 +736,9 @@ class ErrorHandler:
         """Clear the error history."""
         self.error_history.clear()
 
-    def save_error_report(self, filepath: str, errors: List[ErrorContext] = None) -> None:
+    def save_error_report(
+        self, filepath: str, errors: List[ErrorContext] = None
+    ) -> None:
         """
         Save error report to file.
 
@@ -705,7 +750,7 @@ class ErrorHandler:
 
         report = self.generate_error_report(errors)
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(report)
 
         self.logger.info(f"Error report saved to: {filepath}")

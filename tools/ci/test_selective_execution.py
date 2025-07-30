@@ -6,9 +6,9 @@ This script demonstrates the complete workflow of selective check execution
 including CLI parsing, task filtering, dependency resolution, and orchestration.
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -17,14 +17,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ci.check_orchestrator import CheckOrchestrator
 from ci.cli_parser import CLIParser
-from ci.models import CheckTask, CheckResult, CheckStatus
 from ci.interfaces import CheckerFactory, CheckerInterface
+from ci.models import CheckResult, CheckStatus, CheckTask
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
 
 class MockChecker(CheckerInterface):
     """Mock checker for testing purposes."""
@@ -56,32 +56,40 @@ class MockChecker(CheckerInterface):
             status=CheckStatus.SUCCESS,
             duration=1.0,
             output=f"Mock {self.name} completed successfully",
-            metadata={'mock': True}
+            metadata={"mock": True},
         )
+
 
 class MockCodeQualityChecker(MockChecker):
     def __init__(self, config):
-        super().__init__(config, 'Code Quality', 'code_quality')
+        super().__init__(config, "Code Quality", "code_quality")
+
 
 class MockTestRunner(MockChecker):
     def __init__(self, config):
-        super().__init__(config, 'Test Runner', 'test_runner', ['code_quality'])
+        super().__init__(config, "Test Runner", "test_runner", ["code_quality"])
+
 
 class MockSecurityScanner(MockChecker):
     def __init__(self, config):
-        super().__init__(config, 'Security Scanner', 'security_scanner')
+        super().__init__(config, "Security Scanner", "security_scanner")
+
 
 class MockPerformanceAnalyzer(MockChecker):
     def __init__(self, config):
-        super().__init__(config, 'Performance Analyzer', 'performance_analyzer', ['test_runner'])
+        super().__init__(
+            config, "Performance Analyzer", "performance_analyzer", ["test_runner"]
+        )
+
 
 def setup_mock_checkers():
     """Set up mock checkers for testing."""
     # Register mock checkers
-    CheckerFactory.register_checker('code_quality', MockCodeQualityChecker)
-    CheckerFactory.register_checker('test_runner', MockTestRunner)
-    CheckerFactory.register_checker('security_scanner', MockSecurityScanner)
-    CheckerFactory.register_checker('performance_analyzer', MockPerformanceAnalyzer)
+    CheckerFactory.register_checker("code_quality", MockCodeQualityChecker)
+    CheckerFactory.register_checker("test_runner", MockTestRunner)
+    CheckerFactory.register_checker("security_scanner", MockSecurityScanner)
+    CheckerFactory.register_checker("performance_analyzer", MockPerformanceAnalyzer)
+
 
 def test_selective_execution_workflow():
     """Test the complete selective execution workflow."""
@@ -90,10 +98,7 @@ def test_selective_execution_workflow():
     # Setup
     setup_mock_checkers()
 
-    config = {
-        'max_parallel_tasks': 2,
-        'checkers': {}
-    }
+    config = {"max_parallel_tasks": 2, "checkers": {}}
 
     orchestrator = CheckOrchestrator(config)
     parser = CLIParser(orchestrator)
@@ -101,7 +106,7 @@ def test_selective_execution_workflow():
     try:
         # Test 1: Select specific checks
         print("\n1. Testing specific check selection...")
-        args = parser.parse_args(['run', 'code_quality', 'test_runner'])
+        args = parser.parse_args(["run", "code_quality", "test_runner"])
 
         # Validate arguments
         errors = parser.validate_args(args)
@@ -114,52 +119,58 @@ def test_selective_execution_workflow():
         print(f"Created {len(tasks)} tasks: {[t.name for t in tasks]}")
 
         # Filter tasks (should include dependencies)
-        filtered_tasks = orchestrator.filter_tasks_by_selection(tasks, ['test_runner'])
-        print(f"Filtered to {len(filtered_tasks)} tasks: {[t.name for t in filtered_tasks]}")
+        filtered_tasks = orchestrator.filter_tasks_by_selection(tasks, ["test_runner"])
+        print(
+            f"Filtered to {len(filtered_tasks)} tasks: {[t.name for t in filtered_tasks]}"
+        )
 
         # Should include code_quality as dependency of test_runner
         task_names = [t.name for t in filtered_tasks]
-        assert 'test_runner' in task_names
+        assert "test_runner" in task_names
         # Note: dependency resolution happens at execution time, not filtering
 
         print("✓ Specific check selection works")
 
         # Test 2: Exclude checks
         print("\n2. Testing check exclusion...")
-        args = parser.parse_args(['run', '--all', '--exclude', 'security_scanner'])
+        args = parser.parse_args(["run", "--all", "--exclude", "security_scanner"])
         tasks = parser.create_tasks_from_args(args)
         task_types = [t.check_type for t in tasks]
 
-        assert 'security_scanner' not in task_types
-        assert 'code_quality' in task_types
-        assert 'test_runner' in task_types
+        assert "security_scanner" not in task_types
+        assert "code_quality" in task_types
+        assert "test_runner" in task_types
         print(f"Excluded security_scanner, remaining: {task_types}")
         print("✓ Check exclusion works")
 
         # Test 3: Multiple Python versions
         print("\n3. Testing multiple Python versions...")
-        args = parser.parse_args(['run', 'code_quality', '--python-versions', '3.9', '3.10'])
+        args = parser.parse_args(
+            ["run", "code_quality", "--python-versions", "3.9", "3.10"]
+        )
         tasks = parser.create_tasks_from_args(args)
 
         python_versions = [t.python_version for t in tasks]
-        assert '3.9' in python_versions
-        assert '3.10' in python_versions
+        assert "3.9" in python_versions
+        assert "3.10" in python_versions
         assert len(tasks) == 2  # 1 check × 2 versions
         print(f"Created tasks for Python versions: {python_versions}")
         print("✓ Multiple Python versions work")
 
         # Test 4: Execution plan
         print("\n4. Testing execution plan creation...")
-        args = parser.parse_args(['run', 'performance_analyzer'])  # Has dependencies
+        args = parser.parse_args(["run", "performance_analyzer"])  # Has dependencies
         tasks = parser.create_tasks_from_args(args)
 
         plan = orchestrator.create_execution_plan(tasks)
-        print(f"Execution plan: {plan['total_tasks']} tasks, {plan['execution_levels']} levels")
+        print(
+            f"Execution plan: {plan['total_tasks']} tasks, {plan['execution_levels']} levels"
+        )
         print("✓ Execution plan creation works")
 
         # Test 5: Actual task execution (mock)
         print("\n5. Testing task execution...")
-        args = parser.parse_args(['run', 'code_quality'])
+        args = parser.parse_args(["run", "code_quality"])
         tasks = parser.create_tasks_from_args(args)
 
         results = orchestrator.execute_checks(tasks)
@@ -177,8 +188,10 @@ def test_selective_execution_workflow():
     except Exception as e:
         print(f"✗ Selective execution workflow test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def test_check_availability_validation():
     """Test check availability validation."""
@@ -186,7 +199,7 @@ def test_check_availability_validation():
 
     setup_mock_checkers()
 
-    config = {'checkers': {}}
+    config = {"checkers": {}}
     orchestrator = CheckOrchestrator(config)
     parser = CLIParser(orchestrator)
 
@@ -196,19 +209,19 @@ def test_check_availability_validation():
         print(f"Available checks: {available_checks}")
 
         # Test invalid check validation
-        errors = orchestrator.validate_check_selection(['invalid_check'])
+        errors = orchestrator.validate_check_selection(["invalid_check"])
         assert len(errors) > 0
         print(f"Invalid check correctly caught: {errors[0]}")
 
         # Test valid check validation
-        errors = orchestrator.validate_check_selection(['code_quality'])
+        errors = orchestrator.validate_check_selection(["code_quality"])
         assert len(errors) == 0
         print("Valid check passes validation")
 
         # Test check info retrieval
-        info = orchestrator.get_check_info('code_quality')
+        info = orchestrator.get_check_info("code_quality")
         assert info is not None
-        assert info['name'] == 'Code Quality'
+        assert info["name"] == "Code Quality"
         print(f"Check info retrieved: {info['name']}")
 
         print("✓ Check availability validation tests passed")
@@ -218,33 +231,46 @@ def test_check_availability_validation():
         print(f"✗ Check availability validation test failed: {e}")
         return False
 
+
 def test_dependency_resolution_with_selection():
     """Test dependency resolution with selective execution."""
     print("Testing dependency resolution with selection...")
 
     setup_mock_checkers()
 
-    config = {'checkers': {}}
+    config = {"checkers": {}}
     orchestrator = CheckOrchestrator(config)
 
     try:
         # Create tasks with dependencies
         tasks = [
             CheckTask(name="code_quality", check_type="code_quality", dependencies=[]),
-            CheckTask(name="test_runner", check_type="test_runner", dependencies=["code_quality"]),
-            CheckTask(name="security_scanner", check_type="security_scanner", dependencies=[]),
-            CheckTask(name="performance_analyzer", check_type="performance_analyzer", dependencies=["test_runner"]),
+            CheckTask(
+                name="test_runner",
+                check_type="test_runner",
+                dependencies=["code_quality"],
+            ),
+            CheckTask(
+                name="security_scanner", check_type="security_scanner", dependencies=[]
+            ),
+            CheckTask(
+                name="performance_analyzer",
+                check_type="performance_analyzer",
+                dependencies=["test_runner"],
+            ),
         ]
 
         # Test selecting a task with dependencies
-        filtered_tasks = orchestrator.filter_tasks_by_selection(tasks, ['performance_analyzer'])
+        filtered_tasks = orchestrator.filter_tasks_by_selection(
+            tasks, ["performance_analyzer"]
+        )
         task_names = [t.name for t in filtered_tasks]
 
         # Should include all dependencies
-        assert 'performance_analyzer' in task_names
-        assert 'test_runner' in task_names
-        assert 'code_quality' in task_names
-        assert 'security_scanner' not in task_names  # Not a dependency
+        assert "performance_analyzer" in task_names
+        assert "test_runner" in task_names
+        assert "code_quality" in task_names
+        assert "security_scanner" not in task_names  # Not a dependency
 
         print(f"Selected performance_analyzer, got tasks: {task_names}")
         print("✓ Dependency resolution with selection works")
@@ -261,13 +287,14 @@ def test_dependency_resolution_with_selection():
         print(f"✗ Dependency resolution with selection test failed: {e}")
         return False
 
+
 def test_cli_integration():
     """Test complete CLI integration."""
     print("Testing CLI integration...")
 
     setup_mock_checkers()
 
-    config = {'checkers': {}}
+    config = {"checkers": {}}
     orchestrator = CheckOrchestrator(config)
     parser = CLIParser(orchestrator)
 
@@ -282,10 +309,10 @@ def test_cli_integration():
         parser.print_available_checks(detailed=True)
 
         # Test info command output
-        parser.print_check_info('code_quality')
+        parser.print_check_info("code_quality")
 
         # Test plan command output
-        args = parser.parse_args(['plan', 'test_runner'])
+        args = parser.parse_args(["plan", "test_runner"])
         tasks = parser.create_tasks_from_args(args)
         parser.print_execution_plan(tasks)
 
@@ -295,6 +322,7 @@ def test_cli_integration():
     except Exception as e:
         print(f"✗ CLI integration test failed: {e}")
         return False
+
 
 def main():
     """Run all integration tests."""
@@ -326,6 +354,7 @@ def main():
     else:
         print("❌ Some integration tests failed")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

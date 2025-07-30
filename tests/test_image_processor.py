@@ -11,21 +11,20 @@ Tests the integrated ImageProcessor functionality including:
 Author: Kiro AI Integration System
 """
 
-import unittest
-import tempfile
 import shutil
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
-
 import sys
+import tempfile
+import unittest
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.image_processor import CS4CodingImageProcessor
 from integration.config_manager import ConfigManager
+from integration.image_processor import CS4CodingImageProcessor
 from integration.logging_system import LoggerSystem
-from integration.models import ImageMetadata, AIComponent, ProcessingStatus
+from integration.models import AIComponent, ImageMetadata, ProcessingStatus
 
 
 class TestCS4CodingImageProcessor(unittest.TestCase):

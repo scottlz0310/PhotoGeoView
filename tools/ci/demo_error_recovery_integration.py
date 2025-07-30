@@ -9,18 +9,19 @@ handling and resource management for the CI simulation tool.
 Author: Kiro (AI Integration and Quality Assurance)
 """
 
-import sys
 import os
-import time
+import sys
 import tempfile
+import time
 from pathlib import Path
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from error_recovery_system import ErrorRecoverySystem
-from interfaces import EnvironmentError, DependencyError, ConfigurationError
 from error_handler import ErrorCategory
+from error_recovery_system import ErrorRecoverySystem
+from interfaces import ConfigurationError, DependencyError, EnvironmentError
+
 
 def demonstrate_error_recovery():
     """Demonstrate the complete error recovery system."""
@@ -30,15 +31,12 @@ def demonstrate_error_recovery():
 
     # Initialize the system
     config = {
-        'error_handler': {
-            'auto_recovery_enabled': True,
-            'max_retry_attempts': 2
+        "error_handler": {"auto_recovery_enabled": True, "max_retry_attempts": 2},
+        "resource_manager": {
+            "monitoring_enabled": False,  # Disable for demo
+            "max_memory_percent": 80.0,
+            "max_disk_percent": 90.0,
         },
-        'resource_manager': {
-            'monitoring_enabled': False,  # Disable for demo
-            'max_memory_percent': 80.0,
-            'max_disk_percent': 90.0
-        }
     }
 
     system = ErrorRecoverySystem(config)
@@ -55,9 +53,7 @@ def demonstrate_error_recovery():
         raise EnvironmentError("Python 3.12 not found")
     except Exception as e:
         error_context = system.handle_error_with_resources(
-            error=e,
-            component="python_manager",
-            operation="version_check"
+            error=e, component="python_manager", operation="version_check"
         )
         print(f"   ✓ Handled: {error_context.category.value} error")
         print(f"   ✓ Severity: {error_context.severity.value}")
@@ -68,12 +64,12 @@ def demonstrate_error_recovery():
     # 2. Dependency Error
     print("2. Dependency Error:")
     try:
-        raise DependencyError(["missing-package", "another-missing"], "Required packages not found")
+        raise DependencyError(
+            ["missing-package", "another-missing"], "Required packages not found"
+        )
     except Exception as e:
         error_context = system.handle_error_with_resources(
-            error=e,
-            component="dependency_checker",
-            operation="validate_requirements"
+            error=e, component="dependency_checker", operation="validate_requirements"
         )
         print(f"   ✓ Handled: {error_context.category.value} error")
         print(f"   ✓ Missing deps: {e.missing_dependencies}")
@@ -86,12 +82,12 @@ def demonstrate_error_recovery():
         raise MemoryError("Cannot allocate memory")
     except Exception as e:
         error_context = system.handle_error_with_resources(
-            error=e,
-            component="test_runner",
-            operation="run_large_test_suite"
+            error=e, component="test_runner", operation="run_large_test_suite"
         )
         print(f"   ✓ Handled: {error_context.category.value} error")
-        print(f"   ✓ Resource context included: {'resource_usage' in error_context.environment_info}")
+        print(
+            f"   ✓ Resource context included: {'resource_usage' in error_context.environment_info}"
+        )
 
     print()
 
@@ -142,7 +138,11 @@ def demonstrate_error_recovery():
     print("💡 Recovery Suggestions")
     print("-" * 20)
 
-    for category in [ErrorCategory.ENVIRONMENT, ErrorCategory.DEPENDENCY, ErrorCategory.RESOURCE]:
+    for category in [
+        ErrorCategory.ENVIRONMENT,
+        ErrorCategory.DEPENDENCY,
+        ErrorCategory.RESOURCE,
+    ]:
         suggestions = system.get_recovery_suggestions(category)
         print(f"{category.value.title()} Errors:")
         for suggestion in suggestions[:2]:  # Show first 2 suggestions
@@ -180,11 +180,11 @@ def demonstrate_error_recovery():
 
     health_report = system.generate_health_report()
     # Show first 15 lines of the report
-    report_lines = health_report.split('\n')[:15]
+    report_lines = health_report.split("\n")[:15]
     for line in report_lines:
         print(line)
 
-    if len(health_report.split('\n')) > 15:
+    if len(health_report.split("\n")) > 15:
         print("... (truncated)")
 
     print()
@@ -203,23 +203,34 @@ def demonstrate_error_recovery():
 
     return system
 
+
 def demonstrate_error_patterns():
     """Demonstrate common error patterns and their handling."""
 
     print("\n🔍 Common Error Patterns Demo")
     print("=" * 30)
 
-    system = ErrorRecoverySystem({
-        'error_handler': {'auto_recovery_enabled': True},
-        'resource_manager': {'monitoring_enabled': False}
-    })
+    system = ErrorRecoverySystem(
+        {
+            "error_handler": {"auto_recovery_enabled": True},
+            "resource_manager": {"monitoring_enabled": False},
+        }
+    )
 
     # Pattern 1: Cascading errors
     print("1. Cascading Errors Pattern:")
     errors = [
         (ConfigurationError("Invalid config file"), "config_manager", "load_config"),
-        (EnvironmentError("Python version mismatch"), "python_manager", "setup_environment"),
-        (DependencyError(["pytest"], "Missing test framework"), "test_runner", "initialize")
+        (
+            EnvironmentError("Python version mismatch"),
+            "python_manager",
+            "setup_environment",
+        ),
+        (
+            DependencyError(["pytest"], "Missing test framework"),
+            "test_runner",
+            "initialize",
+        ),
     ]
 
     for error, component, operation in errors:
@@ -253,6 +264,7 @@ def demonstrate_error_patterns():
     print(f"   Categories: {list(stats['by_category'].keys())}")
 
     return system
+
 
 if __name__ == "__main__":
     # Run the main demonstration

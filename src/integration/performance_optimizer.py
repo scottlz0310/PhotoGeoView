@@ -15,20 +15,21 @@ import gc
 import threading
 import time
 import weakref
-from typing import Dict, Any, List, Optional, Callable, Set, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
 from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+
 import psutil
 
-from .models import AIComponent, PerformanceMetrics
 from .config_manager import ConfigManager
-from .unified_cache import UnifiedCacheSystem
-from .performance_monitor import KiroPerformanceMonitor
+from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
-from .error_handling import IntegratedErrorHandler, ErrorCategory
+from .models import AIComponent, PerformanceMetrics
+from .performance_monitor import KiroPerformanceMonitor
+from .unified_cache import UnifiedCacheSystem
 
 
 @dataclass

@@ -6,11 +6,12 @@ This script tests the configuration loading, validation, and environment
 variable override functionality.
 """
 
+import json
 import os
 import tempfile
-import json
-import yaml
 from pathlib import Path
+
+import yaml
 from config_manager import ConfigManager
 
 

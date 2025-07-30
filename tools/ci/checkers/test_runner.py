@@ -6,17 +6,17 @@ supporting unit tests, integration tests, performance tests, and AI compatibilit
 with detailed result analysis and reporting.
 """
 
+import json
+import logging
+import os
+import re
 import subprocess
 import sys
-import os
-import json
-import re
 import time
-import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from ..interfaces import CheckerInterface
@@ -119,7 +119,7 @@ class TestRunner(CheckerInterface):
                 )
             else:
                 # For pytest plugins, try to import them
-                import_name = tool.replace('-', '_')
+                import_name = tool.replace("-", "_")
                 # Special cases for pytest plugins
                 if tool == "pytest-xdist":
                     import_name = "xdist"
@@ -185,7 +185,11 @@ class TestRunner(CheckerInterface):
                     with open(pyproject_path, "rb") as f:
                         pyproject_data = tomllib.load(f)
 
-                    pytest_config = pyproject_data.get("tool", {}).get("pytest", {}).get("ini_options", {})
+                    pytest_config = (
+                        pyproject_data.get("tool", {})
+                        .get("pytest", {})
+                        .get("ini_options", {})
+                    )
                     merged_config.update(pytest_config)
                 else:
                     self.logger.warning(
@@ -243,14 +247,16 @@ class TestRunner(CheckerInterface):
             for pattern in config["patterns"]:
                 for test_file in self.test_root.rglob(pattern):
                     if test_file.is_file() and test_file.suffix == ".py":
-                        test_suites.append(TestSuite(
-                            name=test_file.stem,
-                            path=str(test_file.relative_to(self.project_root)),
-                            test_type=test_type,
-                            markers=config["markers"],
-                            timeout=config.get("timeout"),
-                            requires_display=config.get("requires_display", False),
-                        ))
+                        test_suites.append(
+                            TestSuite(
+                                name=test_file.stem,
+                                path=str(test_file.relative_to(self.project_root)),
+                                test_type=test_type,
+                                markers=config["markers"],
+                                timeout=config.get("timeout"),
+                                requires_display=config.get("requires_display", False),
+                            )
+                        )
 
         # Remove duplicates (files that match multiple patterns)
         unique_suites = {}
@@ -279,7 +285,9 @@ class TestRunner(CheckerInterface):
             CheckResult containing the outcome of all tests
         """
         start_time = time.time()
-        test_types = kwargs.get("test_types", ["unit", "integration", "performance", "ai_compatibility"])
+        test_types = kwargs.get(
+            "test_types", ["unit", "integration", "performance", "ai_compatibility"]
+        )
         python_version = kwargs.get("python_version")
         parallel = kwargs.get("parallel", self.config.get("parallel", True))
         coverage = kwargs.get("coverage", self.config.get("coverage", True))
@@ -308,7 +316,9 @@ class TestRunner(CheckerInterface):
                 continue
 
             all_results[test_type] = result
-            combined_output.append(f"=== {test_type.title()} Tests ===\n{result.output}")
+            combined_output.append(
+                f"=== {test_type.title()} Tests ===\n{result.output}"
+            )
 
             if result.status == CheckStatus.FAILURE:
                 overall_status = CheckStatus.FAILURE
@@ -326,16 +336,13 @@ class TestRunner(CheckerInterface):
 
         # Generate summary
         total_tests = sum(
-            result.metadata.get("tests_collected", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_collected", 0) for result in all_results.values()
         )
         passed_tests = sum(
-            result.metadata.get("tests_passed", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_passed", 0) for result in all_results.values()
         )
         failed_tests = sum(
-            result.metadata.get("tests_failed", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_failed", 0) for result in all_results.values()
         )
 
         summary = f"Executed {total_tests} tests: {passed_tests} passed, {failed_tests} failed"
@@ -364,7 +371,9 @@ class TestRunner(CheckerInterface):
             },
         )
 
-    def run_unit_tests(self, parallel: bool = True, coverage: bool = True) -> CheckResult:
+    def run_unit_tests(
+        self, parallel: bool = True, coverage: bool = True
+    ) -> CheckResult:
         """
         Run unit tests with pytest.
 
@@ -406,7 +415,7 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "unit_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
         return self._execute_pytest(cmd, "Unit Tests", start_time, json_report_path)
 
@@ -442,7 +451,9 @@ class TestRunner(CheckerInterface):
         cmd.extend(["-m", "integration"])
 
         # Add test paths
-        integration_suites = [s for s in self.test_suites if s.test_type == "integration"]
+        integration_suites = [
+            s for s in self.test_suites if s.test_type == "integration"
+        ]
         if integration_suites:
             cmd.extend([s.path for s in integration_suites])
         else:
@@ -452,9 +463,11 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "integration_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "Integration Tests", start_time, json_report_path, env=env)
+        return self._execute_pytest(
+            cmd, "Integration Tests", start_time, json_report_path, env=env
+        )
 
     def run_performance_tests(self) -> CheckResult:
         """
@@ -480,7 +493,9 @@ class TestRunner(CheckerInterface):
         cmd.extend(["-m", "performance or slow"])
 
         # Add test paths
-        performance_suites = [s for s in self.test_suites if s.test_type == "performance"]
+        performance_suites = [
+            s for s in self.test_suites if s.test_type == "performance"
+        ]
         if performance_suites:
             cmd.extend([s.path for s in performance_suites])
         else:
@@ -490,9 +505,11 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "performance_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "Performance Tests", start_time, json_report_path)
+        return self._execute_pytest(
+            cmd, "Performance Tests", start_time, json_report_path
+        )
 
     def run_ai_compatibility_tests(self) -> CheckResult:
         """
@@ -529,17 +546,19 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "ai_compatibility_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "AI Compatibility Tests", start_time, json_report_path, env=env)
+        return self._execute_pytest(
+            cmd, "AI Compatibility Tests", start_time, json_report_path, env=env
+        )
 
     def _execute_pytest(
         self,
         cmd: List[str],
         test_name: str,
         start_time: float,
-        json_report_path: Path,
-        env: Optional[Dict[str, str]] = None
+        json_report_path: Optional[Path],
+        env: Optional[Dict[str, str]] = None,
     ) -> CheckResult:
         """
         Execute pytest command and parse results.
@@ -567,7 +586,9 @@ class TestRunner(CheckerInterface):
             duration = time.time() - start_time
 
             # Parse JSON report if available
-            test_data = self._parse_json_report(json_report_path)
+            test_data = (
+                self._parse_json_report(json_report_path) if json_report_path else {}
+            )
 
             # Parse pytest output
             output_data = self._parse_pytest_output(result.stdout, result.stderr)
@@ -624,7 +645,9 @@ class TestRunner(CheckerInterface):
                     "tests_failed": test_data.get("failed", 0),
                     "tests_skipped": test_data.get("skipped", 0),
                     "test_duration": test_data.get("duration", duration),
-                    "json_report_path": str(json_report_path),
+                    "json_report_path": (
+                        str(json_report_path) if json_report_path else None
+                    ),
                     "configuration": self.pytest_config,
                 },
             )
@@ -655,7 +678,7 @@ class TestRunner(CheckerInterface):
                 metadata={"exception": str(e), "command": " ".join(cmd)},
             )
 
-    def _parse_json_report(self, json_report_path: Path) -> Dict[str, Any]:
+    def _parse_json_report(self, json_report_path: Optional[Path]) -> Dict[str, Any]:
         """
         Parse pytest JSON report if available.
 
@@ -665,7 +688,7 @@ class TestRunner(CheckerInterface):
         Returns:
             Dictionary containing parsed test data
         """
-        if not json_report_path.exists():
+        if not json_report_path or not json_report_path.exists():
             return {}
 
         try:
@@ -728,10 +751,7 @@ class TestRunner(CheckerInterface):
             True if virtual display should be set up
         """
         # Check if we're in a headless environment
-        return (
-            os.environ.get("DISPLAY") is None and
-            os.environ.get("CI") is not None
-        )
+        return os.environ.get("DISPLAY") is None and os.environ.get("CI") is not None
 
     def _setup_virtual_display(self) -> Dict[str, str]:
         """
@@ -782,12 +802,13 @@ class TestRunner(CheckerInterface):
                         report_file.unlink()
                     except Exception as e:
                         self.logger.warning(f"Failed to clean up {report_file}: {e}")
+
     def run_matrix_tests(
         self,
         test_types: List[str],
         python_versions: List[str],
         parallel: bool = True,
-        coverage: bool = True
+        coverage: bool = True,
     ) -> CheckResult:
         """
         Run tests across multiple Python versions in a matrix configuration.
@@ -802,7 +823,9 @@ class TestRunner(CheckerInterface):
             CheckResult containing matrix test results
         """
         start_time = time.time()
-        self.logger.info(f"Starting matrix testing across Python versions: {python_versions}")
+        self.logger.info(
+            f"Starting matrix testing across Python versions: {python_versions}"
+        )
 
         # Discover available Python versions
         available_versions = self._discover_python_versions()
@@ -822,7 +845,9 @@ class TestRunner(CheckerInterface):
                 output="❌ No valid Python versions found for matrix testing",
                 errors=["No valid Python versions available"],
                 warnings=[],
-                suggestions=["Install the required Python versions or check your configuration"],
+                suggestions=[
+                    "Install the required Python versions or check your configuration"
+                ],
                 metadata={
                     "requested_versions": python_versions,
                     "available_versions": list(available_versions.keys()),
@@ -851,7 +876,9 @@ class TestRunner(CheckerInterface):
 
         # Analyze matrix results
         for version, version_results in matrix_results.items():
-            combined_output.append(f"=== Python {version} Results ===\n{version_results.output}")
+            combined_output.append(
+                f"=== Python {version} Results ===\n{version_results.output}"
+            )
 
             if version_results.status == CheckStatus.FAILURE:
                 overall_status = CheckStatus.FAILURE
@@ -861,8 +888,12 @@ class TestRunner(CheckerInterface):
             ):
                 overall_status = CheckStatus.WARNING
 
-            all_errors.extend([f"Python {version}: {error}" for error in version_results.errors])
-            all_warnings.extend([f"Python {version}: {warning}" for warning in version_results.warnings])
+            all_errors.extend(
+                [f"Python {version}: {error}" for error in version_results.errors]
+            )
+            all_warnings.extend(
+                [f"Python {version}: {warning}" for warning in version_results.warnings]
+            )
             all_suggestions.extend(version_results.suggestions)
 
         # Generate matrix comparison report
@@ -873,16 +904,13 @@ class TestRunner(CheckerInterface):
 
         # Calculate totals across all versions
         total_tests = sum(
-            result.metadata.get("total_tests", 0)
-            for result in matrix_results.values()
+            result.metadata.get("total_tests", 0) for result in matrix_results.values()
         )
         passed_tests = sum(
-            result.metadata.get("tests_passed", 0)
-            for result in matrix_results.values()
+            result.metadata.get("tests_passed", 0) for result in matrix_results.values()
         )
         failed_tests = sum(
-            result.metadata.get("tests_failed", 0)
-            for result in matrix_results.values()
+            result.metadata.get("tests_failed", 0) for result in matrix_results.values()
         )
 
         return CheckResult(
@@ -895,7 +923,8 @@ class TestRunner(CheckerInterface):
             suggestions=all_suggestions,
             metadata={
                 "matrix_results": {
-                    version: result.to_dict() for version, result in matrix_results.items()
+                    version: result.to_dict()
+                    for version, result in matrix_results.items()
                 },
                 "python_versions_tested": valid_versions,
                 "test_types_run": test_types,
@@ -961,8 +990,8 @@ class TestRunner(CheckerInterface):
             )
 
             if result.returncode == 0:
-                for line in result.stdout.strip().split('\n'):
-                    version_match = re.match(r'^(\d+\.\d+)', line.strip())
+                for line in result.stdout.strip().split("\n"):
+                    version_match = re.match(r"^(\d+\.\d+)", line.strip())
                     if version_match:
                         version = version_match.group(1)
                         if version not in available_versions:
@@ -981,8 +1010,8 @@ class TestRunner(CheckerInterface):
             )
 
             if result.returncode == 0:
-                for line in result.stdout.split('\n'):
-                    if 'python' in line.lower():
+                for line in result.stdout.split("\n"):
+                    if "python" in line.lower():
                         # This is a simplified check - in practice, you'd want to
                         # activate the environment and check the Python version
                         pass
@@ -997,7 +1026,7 @@ class TestRunner(CheckerInterface):
         test_types: List[str],
         python_versions: List[str],
         available_versions: Dict[str, str],
-        coverage: bool
+        coverage: bool,
     ) -> Dict[str, CheckResult]:
         """
         Run matrix tests in parallel across Python versions.
@@ -1021,7 +1050,7 @@ class TestRunner(CheckerInterface):
                     version,
                     available_versions[version],
                     test_types,
-                    coverage
+                    coverage,
                 ): version
                 for version in python_versions
             }
@@ -1052,7 +1081,7 @@ class TestRunner(CheckerInterface):
         test_types: List[str],
         python_versions: List[str],
         available_versions: Dict[str, str],
-        coverage: bool
+        coverage: bool,
     ) -> Dict[str, CheckResult]:
         """
         Run matrix tests sequentially across Python versions.
@@ -1073,10 +1102,7 @@ class TestRunner(CheckerInterface):
 
             try:
                 result = self._run_tests_for_version(
-                    version,
-                    available_versions[version],
-                    test_types,
-                    coverage
+                    version, available_versions[version], test_types, coverage
                 )
                 matrix_results[version] = result
 
@@ -1100,7 +1126,7 @@ class TestRunner(CheckerInterface):
         python_version: str,
         python_executable: str,
         test_types: List[str],
-        coverage: bool
+        coverage: bool,
     ) -> CheckResult:
         """
         Run tests for a specific Python version.
@@ -1131,13 +1157,9 @@ class TestRunner(CheckerInterface):
                         python_executable, coverage=coverage
                     )
                 elif test_type == "integration":
-                    result = self._run_integration_tests_with_python(
-                        python_executable
-                    )
+                    result = self._run_integration_tests_with_python(python_executable)
                 elif test_type == "performance":
-                    result = self._run_performance_tests_with_python(
-                        python_executable
-                    )
+                    result = self._run_performance_tests_with_python(python_executable)
                 elif test_type == "ai_compatibility":
                     result = self._run_ai_compatibility_tests_with_python(
                         python_executable
@@ -1146,7 +1168,9 @@ class TestRunner(CheckerInterface):
                     continue
 
                 all_results[test_type] = result
-                combined_output.append(f"=== {test_type.title()} Tests ===\n{result.output}")
+                combined_output.append(
+                    f"=== {test_type.title()} Tests ===\n{result.output}"
+                )
 
                 if result.status == CheckStatus.FAILURE:
                     overall_status = CheckStatus.FAILURE
@@ -1169,16 +1193,13 @@ class TestRunner(CheckerInterface):
 
         # Calculate totals for this version
         total_tests = sum(
-            result.metadata.get("tests_collected", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_collected", 0) for result in all_results.values()
         )
         passed_tests = sum(
-            result.metadata.get("tests_passed", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_passed", 0) for result in all_results.values()
         )
         failed_tests = sum(
-            result.metadata.get("tests_failed", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_failed", 0) for result in all_results.values()
         )
 
         return CheckResult(
@@ -1225,9 +1246,13 @@ class TestRunner(CheckerInterface):
             cmd.append("tests/")
 
         # Add JSON report for parsing
-        json_report_path = self.project_root / "reports" / f"unit_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        json_report_path = (
+            self.project_root
+            / "reports"
+            / f"unit_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        )
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
         return self._execute_pytest(cmd, "Unit Tests", start_time, json_report_path)
 
@@ -1246,18 +1271,26 @@ class TestRunner(CheckerInterface):
         cmd.extend(["-m", "integration"])
 
         # Add test paths
-        integration_suites = [s for s in self.test_suites if s.test_type == "integration"]
+        integration_suites = [
+            s for s in self.test_suites if s.test_type == "integration"
+        ]
         if integration_suites:
             cmd.extend([s.path for s in integration_suites])
         else:
             cmd.extend(["tests/", "-k", "integration"])
 
         # Add JSON report for parsing
-        json_report_path = self.project_root / "reports" / f"integration_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        json_report_path = (
+            self.project_root
+            / "reports"
+            / f"integration_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        )
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "Integration Tests", start_time, json_report_path, env=env)
+        return self._execute_pytest(
+            cmd, "Integration Tests", start_time, json_report_path, env=env
+        )
 
     def _run_performance_tests_with_python(self, python_executable: str) -> CheckResult:
         """Run performance tests with a specific Python executable."""
@@ -1269,25 +1302,40 @@ class TestRunner(CheckerInterface):
 
         # Add benchmark options if available
         if self._is_tool_available("pytest-benchmark"):
-            cmd.extend(["--benchmark-only", f"--benchmark-json=reports/benchmark_{python_executable.replace('/', '_').replace('.', '_')}.json"])
+            cmd.extend(
+                [
+                    "--benchmark-only",
+                    f"--benchmark-json=reports/benchmark_{python_executable.replace('/', '_').replace('.', '_')}.json",
+                ]
+            )
 
         cmd.extend(["-m", "performance or slow"])
 
         # Add test paths
-        performance_suites = [s for s in self.test_suites if s.test_type == "performance"]
+        performance_suites = [
+            s for s in self.test_suites if s.test_type == "performance"
+        ]
         if performance_suites:
             cmd.extend([s.path for s in performance_suites])
         else:
             cmd.extend(["tests/", "-k", "performance or benchmark"])
 
         # Add JSON report for parsing
-        json_report_path = self.project_root / "reports" / f"performance_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        json_report_path = (
+            self.project_root
+            / "reports"
+            / f"performance_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        )
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "Performance Tests", start_time, json_report_path)
+        return self._execute_pytest(
+            cmd, "Performance Tests", start_time, json_report_path
+        )
 
-    def _run_ai_compatibility_tests_with_python(self, python_executable: str) -> CheckResult:
+    def _run_ai_compatibility_tests_with_python(
+        self, python_executable: str
+    ) -> CheckResult:
         """Run AI compatibility tests with a specific Python executable."""
         start_time = time.time()
 
@@ -1309,13 +1357,21 @@ class TestRunner(CheckerInterface):
             cmd.extend(["tests/", "-k", "ai or copilot or cursor or kiro"])
 
         # Add JSON report for parsing
-        json_report_path = self.project_root / "reports" / f"ai_compatibility_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        json_report_path = (
+            self.project_root
+            / "reports"
+            / f"ai_compatibility_tests_{python_executable.replace('/', '_').replace('.', '_')}.json"
+        )
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "AI Compatibility Tests", start_time, json_report_path, env=env)
+        return self._execute_pytest(
+            cmd, "AI Compatibility Tests", start_time, json_report_path, env=env
+        )
 
-    def _generate_matrix_comparison(self, matrix_results: Dict[str, CheckResult]) -> str:
+    def _generate_matrix_comparison(
+        self, matrix_results: Dict[str, CheckResult]
+    ) -> str:
         """
         Generate a comparison report across Python versions.
 
@@ -1333,7 +1389,9 @@ class TestRunner(CheckerInterface):
 
         # Create comparison table
         headers = ["Version", "Status", "Tests", "Passed", "Failed", "Duration"]
-        lines.append(f"{headers[0]:<10} {headers[1]:<10} {headers[2]:<8} {headers[3]:<8} {headers[4]:<8} {headers[5]:<10}")
+        lines.append(
+            f"{headers[0]:<10} {headers[1]:<10} {headers[2]:<8} {headers[3]:<8} {headers[4]:<8} {headers[5]:<10}"
+        )
         lines.append("-" * 60)
 
         for version, result in sorted(matrix_results.items()):
@@ -1357,7 +1415,9 @@ class TestRunner(CheckerInterface):
 
         return "\n".join(lines)
 
-    def _analyze_version_differences(self, matrix_results: Dict[str, CheckResult]) -> List[str]:
+    def _analyze_version_differences(
+        self, matrix_results: Dict[str, CheckResult]
+    ) -> List[str]:
         """
         Analyze differences between Python version test results.
 
@@ -1406,7 +1466,12 @@ class TestRunner(CheckerInterface):
         return issues
 
     # Update existing test methods to accept python_version parameter
-    def run_unit_tests(self, parallel: bool = True, coverage: bool = True, python_version: Optional[str] = None) -> CheckResult:
+    def run_unit_tests(
+        self,
+        parallel: bool = True,
+        coverage: bool = True,
+        python_version: Optional[str] = None,
+    ) -> CheckResult:
         """
         Run unit tests with pytest.
 
@@ -1468,11 +1533,13 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "unit_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
         return self._execute_pytest(cmd, "Unit Tests", start_time, json_report_path)
 
-    def run_integration_tests(self, parallel: bool = False, python_version: Optional[str] = None) -> CheckResult:
+    def run_integration_tests(
+        self, parallel: bool = False, python_version: Optional[str] = None
+    ) -> CheckResult:
         """
         Run integration tests with proper environment setup.
 
@@ -1486,7 +1553,9 @@ class TestRunner(CheckerInterface):
         if python_version:
             available_versions = self._discover_python_versions()
             if python_version in available_versions:
-                return self._run_integration_tests_with_python(available_versions[python_version])
+                return self._run_integration_tests_with_python(
+                    available_versions[python_version]
+                )
             else:
                 return CheckResult(
                     name="Integration Tests",
@@ -1522,7 +1591,9 @@ class TestRunner(CheckerInterface):
         cmd.extend(["-m", "integration"])
 
         # Add test paths
-        integration_suites = [s for s in self.test_suites if s.test_type == "integration"]
+        integration_suites = [
+            s for s in self.test_suites if s.test_type == "integration"
+        ]
         if integration_suites:
             cmd.extend([s.path for s in integration_suites])
         else:
@@ -1532,11 +1603,15 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "integration_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "Integration Tests", start_time, json_report_path, env=env)
+        return self._execute_pytest(
+            cmd, "Integration Tests", start_time, json_report_path, env=env
+        )
 
-    def run_performance_tests(self, python_version: Optional[str] = None) -> CheckResult:
+    def run_performance_tests(
+        self, python_version: Optional[str] = None
+    ) -> CheckResult:
         """
         Run performance tests with benchmarking.
 
@@ -1549,7 +1624,9 @@ class TestRunner(CheckerInterface):
         if python_version:
             available_versions = self._discover_python_versions()
             if python_version in available_versions:
-                return self._run_performance_tests_with_python(available_versions[python_version])
+                return self._run_performance_tests_with_python(
+                    available_versions[python_version]
+                )
             else:
                 return CheckResult(
                     name="Performance Tests",
@@ -1580,7 +1657,9 @@ class TestRunner(CheckerInterface):
         cmd.extend(["-m", "performance or slow"])
 
         # Add test paths
-        performance_suites = [s for s in self.test_suites if s.test_type == "performance"]
+        performance_suites = [
+            s for s in self.test_suites if s.test_type == "performance"
+        ]
         if performance_suites:
             cmd.extend([s.path for s in performance_suites])
         else:
@@ -1590,11 +1669,15 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "performance_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "Performance Tests", start_time, json_report_path)
+        return self._execute_pytest(
+            cmd, "Performance Tests", start_time, json_report_path
+        )
 
-    def run_ai_compatibility_tests(self, python_version: Optional[str] = None) -> CheckResult:
+    def run_ai_compatibility_tests(
+        self, python_version: Optional[str] = None
+    ) -> CheckResult:
         """
         Run AI compatibility tests for Copilot, Cursor, and Kiro components.
 
@@ -1607,7 +1690,9 @@ class TestRunner(CheckerInterface):
         if python_version:
             available_versions = self._discover_python_versions()
             if python_version in available_versions:
-                return self._run_ai_compatibility_tests_with_python(available_versions[python_version])
+                return self._run_ai_compatibility_tests_with_python(
+                    available_versions[python_version]
+                )
             else:
                 return CheckResult(
                     name="AI Compatibility Tests",
@@ -1649,6 +1734,8 @@ class TestRunner(CheckerInterface):
         # Add JSON report for parsing
         json_report_path = self.project_root / "reports" / "ai_compatibility_tests.json"
         json_report_path.parent.mkdir(parents=True, exist_ok=True)
-        cmd.extend(["--json-report", f"--json-report-file={json_report_path}"])
+        # JSON report removed - using standard pytest output instead
 
-        return self._execute_pytest(cmd, "AI Compatibility Tests", start_time, json_report_path, env=env)
+        return self._execute_pytest(
+            cmd, "AI Compatibility Tests", start_time, json_report_path, env=env
+        )

@@ -9,19 +9,32 @@ Author: Kiro (AI Integration and Quality Assurance)
 
 import logging
 import os
-from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
 try:
-    from .error_handler import ErrorHandler, ErrorContext, ErrorCategory, RecoveryStrategy, RecoveryAction
-    from .resource_manager import ResourceManager, get_resource_manager
+    from .error_handler import (
+        ErrorCategory,
+        ErrorContext,
+        ErrorHandler,
+        RecoveryAction,
+        RecoveryStrategy,
+    )
     from .models import CheckResult, CheckStatus, SeverityLevel
+    from .resource_manager import ResourceManager, get_resource_manager
     from .utils import ensure_directory_exists
 except ImportError:
-    from error_handler import ErrorHandler, ErrorContext, ErrorCategory, RecoveryStrategy, RecoveryAction
-    from resource_manager import ResourceManager, get_resource_manager
+    from error_handler import (
+        ErrorCategory,
+        ErrorContext,
+        ErrorHandler,
+        RecoveryAction,
+        RecoveryStrategy,
+    )
     from models import CheckResult, CheckStatus, SeverityLevel
+    from resource_manager import ResourceManager, get_resource_manager
+
     from utils import ensure_directory_exists
 
 
@@ -59,14 +72,14 @@ class ErrorRecoverySystem:
         self.logger = logging.getLogger(__name__)
 
         # Initialize components
-        error_config = self.config.get('error_handler', {})
-        resource_config = self.config.get('resource_manager', {})
+        error_config = self.config.get("error_handler", {})
+        resource_config = self.config.get("resource_manager", {})
 
         self.error_handler = ErrorHandler(error_config)
         self.resource_manager = get_resource_manager(resource_config)
 
         # System health monitoring
-        self.health_check_interval = self.config.get('health_check_interval', 60)
+        self.health_check_interval = self.config.get("health_check_interval", 60)
         self.last_health_check = datetime.now()
 
         # Recovery strategies that involve resource management
@@ -78,23 +91,27 @@ class ErrorRecoverySystem:
         # Add resource-aware recovery strategies to error handler
         resource_recovery_strategies = {
             ErrorCategory.RESOURCE: [
-                self.error_handler.recovery_strategies[ErrorCategory.RESOURCE][0],  # Keep existing cleanup
-                self.error_handler.recovery_strategies[ErrorCategory.RESOURCE][1],  # Keep existing reduce usage
+                self.error_handler.recovery_strategies[ErrorCategory.RESOURCE][
+                    0
+                ],  # Keep existing cleanup
+                self.error_handler.recovery_strategies[ErrorCategory.RESOURCE][
+                    1
+                ],  # Keep existing reduce usage
                 # Add new resource-aware strategies
                 RecoveryAction(
                     strategy=RecoveryStrategy.AUTO_FIX,
                     description="Force garbage collection and resource cleanup",
                     action_function=self._force_resource_cleanup,
                     success_probability=0.8,
-                    estimated_time=10.0
+                    estimated_time=10.0,
                 ),
                 RecoveryAction(
                     strategy=RecoveryStrategy.FALLBACK,
                     description="Reduce parallelism and batch sizes",
                     action_function=self._reduce_system_load,
                     success_probability=0.7,
-                    estimated_time=5.0
-                )
+                    estimated_time=5.0,
+                ),
             ]
         }
 
@@ -106,7 +123,7 @@ class ErrorRecoverySystem:
         error: Exception,
         component: str,
         operation: str,
-        context: Dict[str, Any] = None
+        context: Dict[str, Any] = None,
     ) -> ErrorContext:
         """
         Handle an error with integrated resource management.
@@ -125,17 +142,16 @@ class ErrorRecoverySystem:
             context = {}
 
         resource_stats = self.resource_manager.get_resource_statistics()
-        context.update({
-            'resource_usage': resource_stats['current_usage'],
-            'tracked_resources': resource_stats['tracked_resources']
-        })
+        context.update(
+            {
+                "resource_usage": resource_stats["current_usage"],
+                "tracked_resources": resource_stats["tracked_resources"],
+            }
+        )
 
         # Handle the error
         error_context = self.error_handler.handle_error(
-            error=error,
-            component=component,
-            operation=operation,
-            context=context
+            error=error, component=component, operation=operation, context=context
         )
 
         # Check if resource issues contributed to the error
@@ -154,8 +170,14 @@ class ErrorRecoverySystem:
         # Check error message for resource-related keywords
         error_msg = str(error_context.error).lower()
         resource_keywords = [
-            'memory', 'disk', 'space', 'timeout', 'resource',
-            'out of memory', 'no space left', 'cannot allocate'
+            "memory",
+            "disk",
+            "space",
+            "timeout",
+            "resource",
+            "out of memory",
+            "no space left",
+            "cannot allocate",
         ]
 
         return any(keyword in error_msg for keyword in resource_keywords)
@@ -188,6 +210,7 @@ class ErrorRecoverySystem:
         try:
             # Force garbage collection
             import gc
+
             gc.collect()
 
             # Clean up temporary files
@@ -216,12 +239,12 @@ class ErrorRecoverySystem:
             self.logger.info("Recommending system load reduction")
 
             # Add recommendation to error context
-            if 'load_reduction_recommended' not in error_context.metadata:
-                error_context.metadata['load_reduction_recommended'] = True
-                error_context.metadata['recommended_actions'] = [
-                    'Reduce parallel execution',
-                    'Decrease batch sizes',
-                    'Increase timeout values'
+            if "load_reduction_recommended" not in error_context.metadata:
+                error_context.metadata["load_reduction_recommended"] = True
+                error_context.metadata["recommended_actions"] = [
+                    "Reduce parallel execution",
+                    "Decrease batch sizes",
+                    "Increase timeout values",
                 ]
 
             return True
@@ -242,16 +265,16 @@ class ErrorRecoverySystem:
 
         # Get resource statistics
         resource_stats = self.resource_manager.get_resource_statistics()
-        current_usage = resource_stats['current_usage']
-        tracked = resource_stats['tracked_resources']
+        current_usage = resource_stats["current_usage"]
+        tracked = resource_stats["tracked_resources"]
 
         # Determine system status
         status = "healthy"
         recommendations = []
 
         # Check error rate
-        error_count = error_stats.get('total_errors', 0)
-        resolved_count = error_stats.get('resolved_errors', 0)
+        error_count = error_stats.get("total_errors", 0)
+        resolved_count = error_stats.get("resolved_errors", 0)
 
         if error_count > 10:
             status = "warning"
@@ -259,43 +282,53 @@ class ErrorRecoverySystem:
 
         if error_count > 0 and resolved_count / error_count < 0.5:
             status = "critical"
-            recommendations.append("Low error resolution rate - check recovery strategies")
+            recommendations.append(
+                "Low error resolution rate - check recovery strategies"
+            )
 
         # Check resource usage
-        memory_ok = current_usage['memory_percent'] < 80
-        disk_ok = current_usage['disk_percent'] < 90
+        memory_ok = current_usage["memory_percent"] < 80
+        disk_ok = current_usage["disk_percent"] < 90
         resource_usage_ok = memory_ok and disk_ok
 
         if not memory_ok:
             if status == "healthy":
                 status = "warning"
-            recommendations.append(f"High memory usage: {current_usage['memory_percent']:.1f}%")
+            recommendations.append(
+                f"High memory usage: {current_usage['memory_percent']:.1f}%"
+            )
 
         if not disk_ok:
             status = "critical"
-            recommendations.append(f"High disk usage: {current_usage['disk_percent']:.1f}%")
+            recommendations.append(
+                f"High disk usage: {current_usage['disk_percent']:.1f}%"
+            )
 
         # Check temporary resources
-        if tracked['temp_resources'] > 100:
+        if tracked["temp_resources"] > 100:
             if status == "healthy":
                 status = "warning"
-            recommendations.append(f"Many temporary resources: {tracked['temp_resources']}")
+            recommendations.append(
+                f"Many temporary resources: {tracked['temp_resources']}"
+            )
 
-        if tracked['total_temp_size_mb'] > 1000:  # 1GB
+        if tracked["total_temp_size_mb"] > 1000:  # 1GB
             if status == "healthy":
                 status = "warning"
-            recommendations.append(f"Large temporary files: {tracked['total_temp_size_mb']:.1f} MB")
+            recommendations.append(
+                f"Large temporary files: {tracked['total_temp_size_mb']:.1f} MB"
+            )
 
         return SystemHealth(
             error_count=error_count,
             resolved_error_count=resolved_count,
             resource_usage_ok=resource_usage_ok,
-            memory_percent=current_usage['memory_percent'],
-            disk_percent=current_usage['disk_percent'],
-            active_temp_resources=tracked['temp_resources'],
+            memory_percent=current_usage["memory_percent"],
+            disk_percent=current_usage["disk_percent"],
+            active_temp_resources=tracked["temp_resources"],
             system_status=status,
             recommendations=recommendations,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
     def generate_health_report(self) -> str:
@@ -305,11 +338,7 @@ class ErrorRecoverySystem:
         error_stats = self.error_handler.get_error_statistics()
 
         # Status emoji
-        status_emoji = {
-            "healthy": "✅",
-            "warning": "⚠️",
-            "critical": "❌"
-        }
+        status_emoji = {"healthy": "✅", "warning": "⚠️", "critical": "❌"}
 
         report_lines = [
             "# CI Simulation System Health Report",
@@ -325,41 +354,49 @@ class ErrorRecoverySystem:
             resolution_rate = (health.resolved_error_count / health.error_count) * 100
             report_lines.append(f"- Resolution Rate: {resolution_rate:.1f}%")
 
-        report_lines.extend([
-            "",
-            "## Resource Usage",
-            f"- Memory: {health.memory_percent:.1f}%",
-            f"- Disk: {health.disk_percent:.1f}%",
-            f"- Temporary Resources: {health.active_temp_resources}",
-            f"- Resource Usage OK: {'Yes' if health.resource_usage_ok else 'No'}",
-        ])
+        report_lines.extend(
+            [
+                "",
+                "## Resource Usage",
+                f"- Memory: {health.memory_percent:.1f}%",
+                f"- Disk: {health.disk_percent:.1f}%",
+                f"- Temporary Resources: {health.active_temp_resources}",
+                f"- Resource Usage OK: {'Yes' if health.resource_usage_ok else 'No'}",
+            ]
+        )
 
         # Add error breakdown if there are errors
-        if error_stats.get('by_category'):
-            report_lines.extend([
-                "",
-                "## Error Breakdown by Category",
-            ])
-            for category, count in error_stats['by_category'].items():
+        if error_stats.get("by_category"):
+            report_lines.extend(
+                [
+                    "",
+                    "## Error Breakdown by Category",
+                ]
+            )
+            for category, count in error_stats["by_category"].items():
                 report_lines.append(f"- {category}: {count}")
 
         # Add recommendations
         if health.recommendations:
-            report_lines.extend([
-                "",
-                "## Recommendations",
-            ])
+            report_lines.extend(
+                [
+                    "",
+                    "## Recommendations",
+                ]
+            )
             for rec in health.recommendations:
                 report_lines.append(f"- {rec}")
 
         # Add resource details
         resource_report = self.resource_manager.generate_resource_report()
-        report_lines.extend([
-            "",
-            "## Detailed Resource Information",
-            "",
-            resource_report.split('\n', 2)[2]  # Skip the header
-        ])
+        report_lines.extend(
+            [
+                "",
+                "## Detailed Resource Information",
+                "",
+                resource_report.split("\n", 2)[2],  # Skip the header
+            ]
+        )
 
         return "\n".join(report_lines)
 
@@ -369,7 +406,7 @@ class ErrorRecoverySystem:
 
         report = self.generate_health_report()
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(report)
 
         self.logger.info(f"System health report saved to: {filepath}")
@@ -414,32 +451,42 @@ class ErrorRecoverySystem:
             usage = self.resource_manager.get_resource_usage()
 
             if usage.memory_percent > 70:
-                suggestions.append("Consider reducing memory usage or increasing available memory")
+                suggestions.append(
+                    "Consider reducing memory usage or increasing available memory"
+                )
 
             if usage.disk_percent > 80:
-                suggestions.append("Clean up temporary files or increase available disk space")
+                suggestions.append(
+                    "Clean up temporary files or increase available disk space"
+                )
 
-            suggestions.extend([
-                "Run resource cleanup: cleanup_temp_files()",
-                "Monitor resource usage during execution",
-                "Consider reducing parallelism or batch sizes"
-            ])
+            suggestions.extend(
+                [
+                    "Run resource cleanup: cleanup_temp_files()",
+                    "Monitor resource usage during execution",
+                    "Consider reducing parallelism or batch sizes",
+                ]
+            )
 
         elif error_category == ErrorCategory.ENVIRONMENT:
-            suggestions.extend([
-                "Check system dependencies installation",
-                "Verify Python version compatibility",
-                "Ensure virtual environment is properly activated",
-                "Check environment variables configuration"
-            ])
+            suggestions.extend(
+                [
+                    "Check system dependencies installation",
+                    "Verify Python version compatibility",
+                    "Ensure virtual environment is properly activated",
+                    "Check environment variables configuration",
+                ]
+            )
 
         elif error_category == ErrorCategory.DEPENDENCY:
-            suggestions.extend([
-                "Run: pip install -r requirements.txt",
-                "Check for package version conflicts",
-                "Consider using a fresh virtual environment",
-                "Verify package availability in current environment"
-            ])
+            suggestions.extend(
+                [
+                    "Run: pip install -r requirements.txt",
+                    "Check for package version conflicts",
+                    "Consider using a fresh virtual environment",
+                    "Verify package availability in current environment",
+                ]
+            )
 
         return suggestions
 

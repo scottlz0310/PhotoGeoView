@@ -10,17 +10,11 @@
   "ui": {
     "theme": "default",
     "thumbnail_size": 150,
-    "window_geometry": "b'\\x01\\xd9\\xd0\\xcb\\x00\\x03\\x00\\x00\\xff\\xff\\xff\\xfd\\xff\\xff\\xff\\xe2\\x00\\x00\\x04\\xb2\\x00\\x00\\x03\"\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x04\\xaf\\x00\\x00\\x03\\x1f\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x00\\x0c\\x80\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x04\\xaf\\x00\\x00\\x03\\x1f'",
-    "splitter_states": {
-      "main_splitter": "b'\\x00\\x00\\x00\\xff\\x00\\x00\\x00\\x01\\x00\\x00\\x00\\x02\\x00\\x00\\x01\\x90\\x00\\x00\\x03 \\x01\\xff\\xff\\xff\\xff\\x01\\x00\\x00\\x00\\x01\\x00'"
-    },
+    "window_geometry": null,
+    "splitter_states": {},
     "show_toolbar": true,
     "show_statusbar": true,
-    "animation_enabled": true,
-    "current_folder": "/home/hiro",
-    "high_contrast_mode": false,
-    "large_fonts_mode": false,
-    "transparency_enabled": true
+    "animation_enabled": true
   },
   "core": {
     "image_formats": [

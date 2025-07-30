@@ -10,18 +10,17 @@ Author: Kiro AI Integration System
 """
 
 import json
-import os
-from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
-from datetime import datetime
 import threading
 from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
 
-from .interfaces import IConfigManager
-from .models import AIComponent, ThemeConfiguration, ApplicationState
-from .error_handling import IntegratedErrorHandler, ErrorCategory
-from .logging_system import LoggerSystem
 from .config_migration import ConfigMigrationManager
+from .error_handling import ErrorCategory, IntegratedErrorHandler
+from .interfaces import IConfigManager
+from .logging_system import LoggerSystem
+from .models import AIComponent, ApplicationState
 
 
 class ConfigManager(IConfigManager):
@@ -121,7 +120,8 @@ class ConfigManager(IConfigManager):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_initialization",
-                f"Configuration system initialized with {len(self.config_data)} settings",
+                f"Configuration system initialized with "
+                f"{len(self.config_data)} settings",
             )
 
         except Exception as e:
@@ -1207,7 +1207,8 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_reset",
-                    f"Application state reset to defaults (backup saved: {backup_file})",
+                    f"Application state reset to defaults "
+                    f"(backup saved: {backup_file})",
                 )
 
                 return True

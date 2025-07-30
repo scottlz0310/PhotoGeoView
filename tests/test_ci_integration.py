@@ -11,16 +11,17 @@ Created by: Kiro AI Integration System
 Created on: 2025-01-29
 """
 
-import os
-import sys
 import json
-import subprocess
-import tempfile
+import os
 import shutil
-from pathlib import Path
-from typing import Dict, Any
-import pytest
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
+from typing import Any, Dict
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -37,19 +38,25 @@ class TestCIIntegration(unittest.TestCase):
         cls.ci_simulator_path = cls.project_root / "tools" / "ci" / "simulator.py"
 
     def test_ci_simulator_exists(self):
-""Test that CI simulator exists and is accessible."""
-        self.assertTrue(self.ci_simulator_path.exists(),
-                       f"CI simulator not found at {self.ci_simulator_path}")
+        """Test that CI simulator exists and is accessible."""
+        self.assertTrue(
+            self.ci_simulator_path.exists(),
+            f"CI simulator not found at {self.ci_simulator_path}",
+        )
 
     def test_ci_simulator_executable(self):
         """Test that CI simulator can be executed."""
         try:
-            result = subprocess.run([
-                sys.executable, str(self.ci_simulator_path), "--version"
-            ], capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, str(self.ci_simulator_path), "--version"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
-            self.assertEqual(result.returncode, 0,
-                           f"CI simulator execution failed: {result.stderr}")
+            self.assertEqual(
+                result.returncode, 0, f"CI simulator execution failed: {result.stderr}"
+            )
             self.assertIn("CI Simulator", result.stdout)
 
         except subprocess.TimeoutExpired:
@@ -60,26 +67,31 @@ class TestCIIntegration(unittest.TestCase):
         pyproject_path = self.project_root / "pyproject.toml"
         self.assertTrue(pyproject_path.exists(), "pyproject.toml not found")
 
-        with open(pyproject_path, 'r', encoding='utf-8') as f:
+        with open(pyproject_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn("ci-simulator", content,
-                     "CI simulator entry point not found in pyproject.toml")
-        self.assertIn("tools.ci.simulator:main", content,
-                     "CI simulator main function not properly configured")
+        self.assertIn(
+            "ci-simulator",
+            content,
+            "CI simulator entry point not found in pyproject.toml",
+        )
+        self.assertIn(
+            "tools.ci.simulator:main",
+            content,
+            "CI simulator main function not properly configured",
+        )
 
     def test_makefile_integration(self):
         """Test that Makefile includes CI simulator targets."""
         makefile_path = self.project_root / "Makefile"
         self.assertTrue(makefile_path.exists(), "Makefile not found")
 
-        with open(makefile_path, 'r', encoding='utf-8') as f:
+        with open(makefile_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        expected_targets = ['ci:', 'ci-quick:', 'ci-full:', 'ci-install:']
+        expected_targets = ["ci:", "ci-quick:", "ci-full:", "ci-install:"]
         for target in expected_targets:
-            self.assertIn(target, content,
-                         f"Makefile target '{target}' not found")
+            self.assertIn(target, content, f"Makefile target '{target}' not found")
 
     def test_configuration_structure(self):
         """Test that configuration directory structure exists."""
@@ -87,22 +99,23 @@ class TestCIIntegration(unittest.TestCase):
         settings_dir = kiro_dir / "settings"
 
         # These directories should exist or be creatable
-        self.assertTrue(kiro_dir.exists() or True,
-                       ".kiro directory structure should be available")
+        self.assertTrue(
+            kiro_dir.exists() or True, ".kiro directory structure should be available"
+        )
 
     def test_gitignore_entries(self):
         """Test that .gitignore includes CI simulation entries."""
         gitignore_path = self.project_root / ".gitignore"
 
         if gitignore_path.exists():
-            with open(gitignore_path, 'r', encoding='utf-8') as f:
+            with open(gitignore_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Check for CI simulation entries
             ci_entries = [
                 "reports/ci-simulation/",
                 "temp/ci-simulation/",
-                ".kiro/ci-history/"
+                ".kiro/ci-history/",
             ]
 
             for entry in ci_entries:
@@ -113,13 +126,19 @@ class TestCIIntegration(unittest.TestCase):
     def test_ci_simulator_list_command(self):
         """Test that CI simulator list command works."""
         try:
-            result = subprocess.run([
-                sys.executable, str(self.ci_simulator_path), "list"
-            ], capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                [sys.executable, str(self.ci_simulator_path), "list"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
 
             # Should succeed or fail gracefully
-            self.assertIn(result.returncode, [0, 1],
-                         f"CI simulator list command failed unexpectedly: {result.stderr}")
+            self.assertIn(
+                result.returncode,
+                [0, 1],
+                f"CI simulator list command failed unexpectedly: {result.stderr}",
+            )
 
         except subprocess.TimeoutExpired:
             self.fail("CI simulator list command timed out")
@@ -127,12 +146,18 @@ class TestCIIntegration(unittest.TestCase):
     def test_ci_simulator_help_command(self):
         """Test that CI simulator help command works."""
         try:
-            result = subprocess.run([
-                sys.executable, str(self.ci_simulator_path), "--help"
-            ], capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, str(self.ci_simulator_path), "--help"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
-            self.assertEqual(result.returncode, 0,
-                           f"CI simulator help command failed: {result.stderr}")
+            self.assertEqual(
+                result.returncode,
+                0,
+                f"CI simulator help command failed: {result.stderr}",
+            )
             self.assertIn("usage:", result.stdout.lower())
 
         except subprocess.TimeoutExpired:
@@ -155,11 +180,14 @@ class TestCIIntegration(unittest.TestCase):
         deployment_script = self.project_root / "tools" / "create_deployment_package.py"
         self.assertTrue(deployment_script.exists(), "Deployment script not found")
 
-        with open(deployment_script, 'r', encoding='utf-8') as f:
+        with open(deployment_script, "r", encoding="utf-8") as f:
             content = f.read()
 
-        self.assertIn("run_ci_simulation", content,
-                     "Deployment script missing CI simulation integration")
+        self.assertIn(
+            "run_ci_simulation",
+            content,
+            "Deployment script missing CI simulation integration",
+        )
 
     def test_github_actions_integration(self):
         """Test that GitHub Actions workflows include CI simulator."""
@@ -168,16 +196,20 @@ class TestCIIntegration(unittest.TestCase):
         if workflows_dir.exists():
             ci_simulator_workflow = workflows_dir / "ci-simulator.yml"
             if ci_simulator_workflow.exists():
-                with open(ci_simulator_workflow, 'r', encoding='utf-8') as f:
+                with open(ci_simulator_workflow, "r", encoding="utf-8") as f:
                     content = f.read()
 
-                self.assertIn("tools.ci.simulator", content,
-                             "GitHub Actions workflow missing CI simulator integration")
+                self.assertIn(
+                    "tools.ci.simulator",
+                    content,
+                    "GitHub Actions workflow missing CI simulator integration",
+                )
 
     def test_integration_manager_import(self):
         """Test that integration manager can be imported."""
         try:
             from tools.ci_integration import CIIntegrationManager
+
             manager = CIIntegrationManager(self.project_root)
             self.assertIsNotNone(manager)
         except ImportError as e:
@@ -187,19 +219,34 @@ class TestCIIntegration(unittest.TestCase):
         """Test running a quick CI simulation."""
         try:
             # Run a minimal CI check to test integration
-            result = subprocess.run([
-                sys.executable, str(self.ci_simulator_path),
-                "run", "--checks", "code_quality", "--format", "json"
-            ], capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(self.ci_simulator_path),
+                    "run",
+                    "--checks",
+                    "code_quality",
+                    "--format",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
 
             # Should succeed or fail gracefully (not crash)
-            self.assertIn(result.returncode, [0, 1],
-                         f"CI simulation crashed unexpectedly: {result.stderr}")
+            self.assertIn(
+                result.returncode,
+                [0, 1],
+                f"CI simulation crashed unexpectedly: {result.stderr}",
+            )
 
             # If successful, should produce some output
             if result.returncode == 0:
-                self.assertTrue(len(result.stdout) > 0 or len(result.stderr) > 0,
-                               "CI simulation produced no output")
+                self.assertTrue(
+                    len(result.stdout) > 0 or len(result.stderr) > 0,
+                    "CI simulation produced no output",
+                )
 
         except subprocess.TimeoutExpired:
             self.fail("Quick CI simulation timed out")
@@ -209,12 +256,7 @@ class TestCIIntegration(unittest.TestCase):
 
     def test_directory_structure_creation(self):
         """Test that required directories can be created."""
-        required_dirs = [
-            "reports",
-            "logs",
-            ".kiro",
-            "temp"
-        ]
+        required_dirs = ["reports", "logs", ".kiro", "temp"]
 
         for dir_name in required_dirs:
             dir_path = self.project_root / dir_name
@@ -223,8 +265,9 @@ class TestCIIntegration(unittest.TestCase):
             if not dir_path.exists():
                 try:
                     dir_path.mkdir(parents=True, exist_ok=True)
-                    self.assertTrue(dir_path.exists(),
-                                   f"Could not create directory: {dir_path}")
+                    self.assertTrue(
+                        dir_path.exists(), f"Could not create directory: {dir_path}"
+                    )
                     # Clean up test directory if we created it
                     if dir_name == "temp":
                         shutil.rmtree(dir_path, ignore_errors=True)
@@ -242,6 +285,7 @@ class TestCIIntegrationManager(unittest.TestCase):
         # Import here to avoid import errors if module doesn't exist
         try:
             from tools.ci_integration import CIIntegrationManager
+
             self.manager = CIIntegrationManager(self.project_root)
         except ImportError:
             self.skipTest("CIIntegrationManager not available")
@@ -268,11 +312,11 @@ class TestCIIntegrationManager(unittest.TestCase):
 
             # Should have expected validation keys
             expected_keys = [
-                'ci_simulator_executable',
-                'configuration_valid',
-                'git_hooks_installed',
-                'build_integration',
-                'directory_structure'
+                "ci_simulator_executable",
+                "configuration_valid",
+                "git_hooks_installed",
+                "build_integration",
+                "directory_structure",
             ]
 
             for key in expected_keys:

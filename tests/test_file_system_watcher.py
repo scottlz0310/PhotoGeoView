@@ -4,17 +4,18 @@ FileSystemWatcher のテスト
 FileSystemWatcher クラスの基本機能をテストする。
 """
 
-import pytest
 import tempfile
 import time
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from src.integration.services.file_system_watcher import (
-    FileSystemWatcher,
-    FileChangeType,
-)
+import pytest
+
 from src.integration.logging_system import LoggerSystem
+from src.integration.services.file_system_watcher import (
+    FileChangeType,
+    FileSystemWatcher,
+)
 
 
 class TestFileSystemWatcher:
@@ -225,8 +226,8 @@ class TestFileSystemWatcher:
     def test_image_file_filtering(self):
         """画像ファイルフィルタリングテスト"""
         from src.integration.services.file_system_watcher import (
-            ImageFileEventHandler,
             WATCHDOG_AVAILABLE,
+            ImageFileEventHandler,
         )
 
         if not WATCHDOG_AVAILABLE:

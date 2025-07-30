@@ -3,14 +3,15 @@
 Simple test for ErrorHandler to verify basic functionality
 """
 
-import sys
 import os
+import sys
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from error_handler import ErrorHandler, ErrorCategory, RecoveryStrategy
+from error_handler import ErrorCategory, ErrorHandler, RecoveryStrategy
 from interfaces import DependencyError, EnvironmentError
+
 
 def test_basic_functionality():
     """Test basic error handler functionality."""
@@ -35,7 +36,7 @@ def test_basic_functionality():
     error_context = handler.handle_error(
         error=ValueError("Test error"),
         component="test_component",
-        operation="test_operation"
+        operation="test_operation",
     )
 
     assert error_context.component == "test_component"
@@ -54,6 +55,7 @@ def test_basic_functionality():
     print("✓ Error statistics work correctly")
 
     print("\nAll tests passed! ✅")
+
 
 if __name__ == "__main__":
     test_basic_functionality()

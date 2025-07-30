@@ -7,10 +7,10 @@ task6「包括的な統合テストフレームワークの作成」の完了を
 Author: Kiro AI Integration System
 """
 
+import importlib.util
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict, Any
-import importlib.util
+from typing import Any, Dict, List, Tuple
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))

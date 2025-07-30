@@ -10,21 +10,21 @@ Provides intelligent caching for images, thumbnails, and maps:
 Author: Kiro AI Integration System
 """
 
+import hashlib
+import pickle
 import threading
 import time
-import pickle
-import hashlib
-from typing import Any, Dict, Optional, List, Tuple, Union
-from datetime import datetime, timedelta
-from pathlib import Path
+import weakref
 from collections import OrderedDict
 from dataclasses import dataclass, field
-import weakref
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from .models import AIComponent, CacheEntry
 from .config_manager import ConfigManager
-from .error_handling import IntegratedErrorHandler, ErrorCategory
+from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
+from .models import AIComponent, CacheEntry
 
 
 @dataclass

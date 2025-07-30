@@ -9,29 +9,28 @@ Tests the Kiro-specific components:
 Author: Kiro AI Integration System
 """
 
-import unittest
-import tempfile
 import shutil
-import time
-import threading
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
-
 import sys
+import tempfile
+import threading
+import time
+import unittest
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
+from integration.config_manager import ConfigManager
+from integration.logging_system import LoggerSystem
+from integration.models import AIComponent, ApplicationState, PerformanceMetrics
 from integration.performance_monitor import (
     KiroPerformanceMonitor,
     PerformanceAlert,
     ResourceThresholds,
 )
-from integration.unified_cache import UnifiedCacheSystem, LRUCache, CacheStats
-from integration.state_manager import StateManager, StateChangeEvent
-from integration.config_manager import ConfigManager
-from integration.logging_system import LoggerSystem
-from integration.models import AIComponent, ApplicationState, PerformanceMetrics
+from integration.state_manager import StateChangeEvent, StateManager
+from integration.unified_cache import CacheStats, LRUCache, UnifiedCacheSystem
 
 
 class TestKiroPerformanceMonitor(unittest.TestCase):

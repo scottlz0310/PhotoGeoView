@@ -22,32 +22,32 @@ Kiroの統合ログシステムでエラーハンドリングを行う。
 Author: Kiro AI Integration System
 """
 
-import time
 import asyncio
-from pathlib import Path
-from typing import List, Set, Optional, Dict, Any, AsyncIterator, Callable
+import time
 from datetime import datetime
+from pathlib import Path
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set
 
-from ..models import AIComponent, ProcessingStatus
-from ..logging_system import LoggerSystem
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..image_processor import CS4CodingImageProcessor
+from ..logging_system import LoggerSystem
+from ..models import AIComponent, ProcessingStatus
+from .file_discovery_cache import FileDiscoveryCache, FileDiscoveryResult
 from .file_discovery_errors import (
+    CorruptedFileError,
     FileDiscoveryError,
     FileDiscoveryErrorHandler,
+    FileDiscoveryErrorLevel,
     FileDiscoveryErrorMessages,
+    FileValidationError,
     FolderAccessError,
     FolderNotFoundError,
-    PermissionDeniedError,
-    FileValidationError,
-    CorruptedFileError,
-    UnsupportedFileFormatError,
-    ScanTimeoutError,
     MemoryLimitExceededError,
+    PermissionDeniedError,
+    ScanTimeoutError,
     TooManyFilesError,
-    FileDiscoveryErrorLevel,
+    UnsupportedFileFormatError,
 )
-from .file_discovery_cache import FileDiscoveryCache, FileDiscoveryResult
 
 
 class FileDiscoveryService:
@@ -1396,8 +1396,9 @@ class FileDiscoveryService:
         """
 
         try:
-            import psutil
             import os
+
+            import psutil
 
             process = psutil.Process(os.getpid())
             memory_info = process.memory_info()

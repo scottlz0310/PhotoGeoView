@@ -9,37 +9,37 @@ Author: Kiro AI Integration System
 """
 
 import sys
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, Optional
 
+from PyQt6.QtCore import QSize, Qt, QThread, QTimer, pyqtSignal
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeySequence
 from PyQt6.QtWidgets import (
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QSplitter,
-    QToolBar,
-    QStatusBar,
-    QLabel,
-    QProgressBar,
-    QMenuBar,
-    QMenu,
-    QMessageBox,
     QApplication,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMenu,
+    QMenuBar,
+    QMessageBox,
+    QProgressBar,
+    QSplitter,
+    QStatusBar,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
-from PyQt6.QtGui import QAction, QIcon, QKeySequence, QCloseEvent
 
-from ..models import ApplicationState, AIComponent, PerformanceMetrics
 from ..config_manager import ConfigManager
-from ..state_manager import StateManager
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
+from ..models import AIComponent, ApplicationState, PerformanceMetrics
 from ..services.file_discovery_service import FileDiscoveryService
 from ..services.file_system_watcher import FileSystemWatcher
+from ..state_manager import StateManager
+from .folder_navigator import EnhancedFolderNavigator
 from .theme_manager import IntegratedThemeManager
 from .thumbnail_grid import OptimizedThumbnailGrid
-from .folder_navigator import EnhancedFolderNavigator
 
 
 class IntegratedMainWindow(QMainWindow):
@@ -781,8 +781,9 @@ class IntegratedMainWindow(QMainWindow):
             if not hasattr(self, "memory_label") or self.memory_label is None:
                 return
 
-            import psutil
             import os
+
+            import psutil
 
             # Get current process memory usage
             process = psutil.Process(os.getpid())

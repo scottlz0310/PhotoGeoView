@@ -10,34 +10,35 @@
 Author: Kiro AI Integration System
 """
 
-import unittest
-import tempfile
-import shutil
-import time
-import psutil
-import threading
 import gc
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
-from unittest.mock import Mock, patch
-import sys
 import os
+import shutil
+import sys
+import tempfile
+import threading
+import time
+import unittest
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from unittest.mock import Mock, patch
+
+import psutil
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
 
+from src.integration.config_manager import ConfigManager
+from src.integration.logging_system import LoggerSystem
+from src.integration.models import AIComponent
 from src.integration.services.file_discovery_service import FileDiscoveryService
-from src.integration.services.paginated_file_discovery import PaginatedFileDiscovery
 from src.integration.services.memory_aware_file_discovery import (
     MemoryAwareFileDiscovery,
 )
-from src.integration.config_manager import ConfigManager
+from src.integration.services.paginated_file_discovery import PaginatedFileDiscovery
 from src.integration.state_manager import StateManager
-from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent
 
 
 @dataclass

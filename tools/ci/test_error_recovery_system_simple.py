@@ -3,15 +3,16 @@
 Simple test for ErrorRecoverySystem to verify integration functionality
 """
 
-import sys
 import os
+import sys
 import tempfile
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from error_recovery_system import ErrorRecoverySystem, get_error_recovery_system
-from interfaces import EnvironmentError, DependencyError
+from interfaces import DependencyError, EnvironmentError
+
 
 def test_integrated_functionality():
     """Test integrated error recovery system functionality."""
@@ -19,8 +20,8 @@ def test_integrated_functionality():
 
     # Initialize system
     config = {
-        'error_handler': {'auto_recovery_enabled': True},
-        'resource_manager': {'monitoring_enabled': False}
+        "error_handler": {"auto_recovery_enabled": True},
+        "resource_manager": {"monitoring_enabled": False},
     }
     system = ErrorRecoverySystem(config)
     print("✓ ErrorRecoverySystem initialized successfully")
@@ -29,12 +30,12 @@ def test_integrated_functionality():
     error_context = system.handle_error_with_resources(
         error=EnvironmentError("Test environment error"),
         component="test_component",
-        operation="test_operation"
+        operation="test_operation",
     )
 
     assert error_context.component == "test_component"
-    assert 'resource_usage' in error_context.environment_info
-    assert 'tracked_resources' in error_context.environment_info
+    assert "resource_usage" in error_context.environment_info
+    assert "tracked_resources" in error_context.environment_info
     print("✓ Error handling with resource context works")
 
     # Test system health check
@@ -64,41 +65,43 @@ def test_integrated_functionality():
 
     print("\nIntegration tests passed! ✅")
 
+
 def test_resource_related_error_handling():
     """Test handling of resource-related errors."""
     print("\nTesting resource-related error handling...")
 
-    system = ErrorRecoverySystem({
-        'error_handler': {'auto_recovery_enabled': True},
-        'resource_manager': {'monitoring_enabled': False}
-    })
+    system = ErrorRecoverySystem(
+        {
+            "error_handler": {"auto_recovery_enabled": True},
+            "resource_manager": {"monitoring_enabled": False},
+        }
+    )
 
     # Test memory error
     memory_error = MemoryError("Out of memory")
     error_context = system.handle_error_with_resources(
-        error=memory_error,
-        component="memory_test",
-        operation="allocation"
+        error=memory_error, component="memory_test", operation="allocation"
     )
 
     # Should be classified as resource error
     from error_handler import ErrorCategory
+
     assert error_context.category == ErrorCategory.RESOURCE
     print("✓ Memory error classified as resource error")
 
     # Test timeout error (often resource-related)
     import subprocess
+
     timeout_error = subprocess.TimeoutExpired("test_cmd", 30)
     error_context = system.handle_error_with_resources(
-        error=timeout_error,
-        component="timeout_test",
-        operation="execution"
+        error=timeout_error, component="timeout_test", operation="execution"
     )
 
     assert error_context.category == ErrorCategory.TIMEOUT
     print("✓ Timeout error handled correctly")
 
     print("Resource-related error handling tests passed! ✅")
+
 
 if __name__ == "__main__":
     test_integrated_functionality()

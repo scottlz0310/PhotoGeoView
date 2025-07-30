@@ -10,10 +10,10 @@ This script thoroughly tests the Black formatter functionality including:
 - Integration with the full code quality checker
 """
 
-import sys
 import os
-import tempfile
 import shutil
+import sys
+import tempfile
 from pathlib import Path
 
 # Add the project root to the Python path
@@ -30,7 +30,8 @@ def create_test_files():
 
     # Create a well-formatted file
     good_file = test_dir / "good_format.py"
-    good_file.write_text('''"""Well formatted Python file."""
+    good_file.write_text(
+        '''"""Well formatted Python file."""
 
 def hello_world():
     """Print hello world."""
@@ -47,11 +48,13 @@ class TestClass:
     def get_name(self) -> str:
         """Get the name."""
         return self.name
-''')
+'''
+    )
 
     # Create a poorly formatted file
     bad_file = test_dir / "bad_format.py"
-    bad_file.write_text('''# Poorly formatted Python file
+    bad_file.write_text(
+        """# Poorly formatted Python file
 def hello_world(  ):
     print( "Hello, World!" )
 
@@ -61,15 +64,18 @@ class TestClass:
 
     def get_name( self ):
         return self.name
-''')
+"""
+    )
 
     # Create a file with syntax errors
     syntax_error_file = test_dir / "syntax_error.py"
-    syntax_error_file.write_text('''# File with syntax errors
+    syntax_error_file.write_text(
+        """# File with syntax errors
 def broken_function(
     print("This is broken")
     return "incomplete"
-''')
+"""
+    )
 
     return test_dir
 
@@ -79,12 +85,7 @@ def test_black_configuration():
     print("=== Testing Black Configuration ===")
 
     config = {
-        "tools": {
-            "black": {
-                "line_length": 100,
-                "target_version": ["py39", "py310"]
-            }
-        }
+        "tools": {"black": {"line_length": 100, "target_version": ["py39", "py310"]}}
     }
 
     checker = CodeQualityChecker(config)
@@ -95,8 +96,10 @@ def test_black_configuration():
     print(f"Target versions: {checker.black_config['target_version']}")
     print(f"Config source: {black_status['config_source']}")
 
-    assert black_status['available'], "Black should be available"
-    assert checker.black_config['line_length'] == 100, "Custom line length should be set"
+    assert black_status["available"], "Black should be available"
+    assert (
+        checker.black_config["line_length"] == 100
+    ), "Custom line length should be set"
 
     print("✅ Configuration test passed\n")
 
@@ -127,7 +130,9 @@ def test_black_check_mode():
         assert len(result.errors) > 0, "Should report errors"
         # Check for either formatting issues or syntax errors
         error_text = " ".join(result.errors).lower()
-        assert ("formatting issues" in error_text or "syntax errors" in error_text), "Should mention formatting or syntax issues"
+        assert (
+            "formatting issues" in error_text or "syntax errors" in error_text
+        ), "Should mention formatting or syntax issues"
 
         print("✅ Check mode test passed\n")
 
@@ -198,7 +203,10 @@ def test_black_error_handling():
         print(f"Output: {result.output[:200]}...")
 
         # Should handle missing directories gracefully
-        assert result.status in [CheckStatus.SUCCESS, CheckStatus.FAILURE], "Should return valid status"
+        assert result.status in [
+            CheckStatus.SUCCESS,
+            CheckStatus.FAILURE,
+        ], "Should return valid status"
 
         print("✅ Error handling test passed\n")
 
@@ -210,12 +218,7 @@ def test_full_integration():
     """Test Black integration with full code quality checker."""
     print("=== Testing Full Integration ===")
 
-    config = {
-        "tools": {
-            "black": {"line_length": 88}
-        },
-        "auto_fix": False
-    }
+    config = {"tools": {"black": {"line_length": 88}}, "auto_fix": False}
 
     checker = CodeQualityChecker(config)
 
@@ -224,11 +227,15 @@ def test_full_integration():
 
     print(f"Overall status: {result.status}")
     print(f"Duration: {result.duration:.2f}s")
-    print(f"Individual results: {list(result.metadata.get('individual_results', {}).keys())}")
+    print(
+        f"Individual results: {list(result.metadata.get('individual_results', {}).keys())}"
+    )
     print(f"Checks run: {result.metadata.get('checks_run', [])}")
 
-    assert "black" in result.metadata.get('individual_results', {}), "Should include Black results"
-    assert "black" in result.metadata.get('checks_run', []), "Should list Black as run"
+    assert "black" in result.metadata.get(
+        "individual_results", {}
+    ), "Should include Black results"
+    assert "black" in result.metadata.get("checks_run", []), "Should list Black as run"
 
     print("✅ Full integration test passed\n")
 
@@ -249,6 +256,7 @@ def main():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

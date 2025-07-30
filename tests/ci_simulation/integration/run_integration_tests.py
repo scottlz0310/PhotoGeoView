@@ -6,12 +6,13 @@ This script runs comprehensive integration tests that verify the complete
 CI silation workflow using actual project files and real-world scenarios.
 """
 
-import sys
-import os
-import pytest
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 # Add the project root to the path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -21,25 +22,27 @@ sys.path.insert(0, str(project_root / "tools" / "ci"))
 
 def check_dependencies():
     """Check if required dependencies are available for integration tests."""
-    required_tools = ['git', 'python3']
+    required_tools = ["git", "python3"]
     missing_tools = []
 
     for tool in required_tools:
         try:
-            subprocess.run([tool, '--version'],
-                         capture_output=True, check=True)
+            subprocess.run([tool, "--version"], capture_output=True, check=True)
         except (subprocess.CalledProcessError, FileNotFoundError):
             missing_tools.append(tool)
 
     if missing_tools:
-        print(f"⚠️  Warning: Missing tools for full integration testing: {', '.join(missing_tools)}")
+        print(
+            f"⚠️  Warning: Missing tools for full integration testing: {', '.join(missing_tools)}"
+        )
         print("Some integration tests may be skipped.")
 
     return len(missing_tools) == 0
 
 
-def run_integration_tests(test_pattern=None, verbose=False, coverage=False,
-                         parallel=False, include_slow=False):
+def run_integration_tests(
+    test_pattern=None, verbose=False, coverage=False, parallel=False, include_slow=False
+):
     """
     Run integration tests with specified options.
 
@@ -57,7 +60,8 @@ def run_integration_tests(test_pattern=None, verbose=False, coverage=False,
         "--tb=short",  # Short traceback format
         "--strict-markers",  # Strict marker checking
         "-v" if verbose else "-q",  # Verbose or quiet
-        "-m", "integration",  # Only run integration tests
+        "-m",
+        "integration",  # Only run integration tests
     ]
 
     # Add test pattern if specified
@@ -66,12 +70,14 @@ def run_integration_tests(test_pattern=None, verbose=False, coverage=False,
 
     # Add coverage if requested
     if coverage:
-        args.extend([
-            "--cov=tools.ci",
-            "--cov-report=html:reports/integration_coverage",
-            "--cov-report=term-missing",
-            "--cov-append",  # Append to existing coverage data
-        ])
+        args.extend(
+            [
+                "--cov=tools.ci",
+                "--cov-report=html:reports/integration_coverage",
+                "--cov-report=term-missing",
+                "--cov-append",  # Append to existing coverage data
+            ]
+        )
 
     # Add parallel execution if requested
     if parallel:
@@ -100,16 +106,16 @@ def run_specific_integration_suite(suite_name):
     """Run a specific integration test suite."""
 
     suite_patterns = {
-        'end_to_end': 'test_end_to_end_simulation.py',
-        'configuration': 'test_configuration_integration.py',
-        'error_recovery': 'test_error_recovery_integration.py',
-        'full_workflow': 'TestEndToEndSimulation',
-        'config_management': 'TestConfigurationIntegration',
-        'error_handling': 'TestErrorRecoveryIntegration',
-        'resilience': 'TestSystemResilienceIntegration',
-        'multi_python': 'TestMultiplePythonVersions',
-        'git_hooks': 'TestGitHookIntegration',
-        'performance': 'TestPerformanceIntegration'
+        "end_to_end": "test_end_to_end_simulation.py",
+        "configuration": "test_configuration_integration.py",
+        "error_recovery": "test_error_recovery_integration.py",
+        "full_workflow": "TestEndToEndSimulation",
+        "config_management": "TestConfigurationIntegration",
+        "error_handling": "TestErrorRecoveryIntegration",
+        "resilience": "TestSystemResilienceIntegration",
+        "multi_python": "TestMultiplePythonVersions",
+        "git_hooks": "TestGitHookIntegration",
+        "performance": "TestPerformanceIntegration",
     }
 
     if suite_name not in suite_patterns:
@@ -135,8 +141,8 @@ def setup_test_environment():
     integration_reports_dir.mkdir(exist_ok=True)
 
     # Set environment variables for testing
-    os.environ['CI_TESTING'] = 'true'
-    os.environ['CI_INTEGRATION_TESTS'] = 'true'
+    os.environ["CI_TESTING"] = "true"
+    os.environ["CI_INTEGRATION_TESTS"] = "true"
 
     print("✅ Test environment set up successfully")
 
@@ -150,7 +156,7 @@ def cleanup_test_environment():
         "problematic_project*",
         "config_test*",
         "*.tmp",
-        "*.temp"
+        "*.temp",
     ]
 
     # Note: In a real implementation, you might want to clean up
@@ -189,58 +195,50 @@ Examples:
   %(prog)s --pattern "test_config*" # Run configuration tests
   %(prog)s --verbose --coverage     # Run with verbose output and coverage
   %(prog)s --include-slow           # Include slow integration tests
-        """
+        """,
+    )
+
+    parser.add_argument("-k", "--pattern", help="Pattern to match test files/functions")
+
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose output"
     )
 
     parser.add_argument(
-        "-k", "--pattern",
-        help="Pattern to match test files/functions"
+        "-c", "--coverage", action="store_true", help="Enable coverage reporting"
     )
 
     parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output"
+        "-p", "--parallel", action="store_true", help="Run tests in parallel"
     )
 
     parser.add_argument(
-        "-c", "--coverage",
-        action="store_true",
-        help="Enable coverage reporting"
-    )
-
-    parser.add_argument(
-        "-p", "--parallel",
-        action="store_true",
-        help="Run tests in parallel"
-    )
-
-    parser.add_argument(
-        "--include-slow",
-        action="store_true",
-        help="Include slow integration tests"
+        "--include-slow", action="store_true", help="Include slow integration tests"
     )
 
     parser.add_argument(
         "--suite",
         choices=[
-            'end_to_end', 'configuration', 'error_recovery',
-            'full_workflow', 'config_management', 'error_handling',
-            'resilience', 'multi_python', 'git_hooks', 'performance'
+            "end_to_end",
+            "configuration",
+            "error_recovery",
+            "full_workflow",
+            "config_management",
+            "error_handling",
+            "resilience",
+            "multi_python",
+            "git_hooks",
+            "performance",
         ],
-        help="Run specific integration test suite"
+        help="Run specific integration test suite",
     )
 
     parser.add_argument(
-        "--check-deps",
-        action="store_true",
-        help="Check dependencies and exit"
+        "--check-deps", action="store_true", help="Check dependencies and exit"
     )
 
     parser.add_argument(
-        "--setup-only",
-        action="store_true",
-        help="Set up test environment and exit"
+        "--setup-only", action="store_true", help="Set up test environment and exit"
     )
 
     args = parser.parse_args()
@@ -271,7 +269,7 @@ Examples:
                 verbose=args.verbose,
                 coverage=args.coverage,
                 parallel=args.parallel,
-                include_slow=args.include_slow
+                include_slow=args.include_slow,
             )
 
         # Validate and report results

@@ -3,8 +3,8 @@
 Test SecurityScanner with a file that contains security issues.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add the parent directory to the path so we can import our modules
@@ -20,16 +20,21 @@ def test_security_scanner_with_issues():
 
     # Test configuration
     config = {
-        'timeout': 60,
-        'safety': {
-            'ignore_ids': [],
-            'full_report': True
+        "timeout": 60,
+        "safety": {"ignore_ids": [], "full_report": True},
+        "bandit": {
+            "exclude_dirs": [
+                "venv",
+                "env",
+                ".venv",
+                "node_modules",
+                "__pycache__",
+                "build",
+                "dist",
+            ],
+            "skip_tests": False,  # Don't skip tests so we can see B101
+            "confidence_level": "LOW",
         },
-        'bandit': {
-            'exclude_dirs': ['venv', 'env', '.venv', 'node_modules', '__pycache__', 'build', 'dist'],
-            'skip_tests': False,  # Don't skip tests so we can see B101
-            'confidence_level': 'LOW'
-        }
     }
 
     # Create scanner instance
@@ -62,11 +67,13 @@ def test_security_scanner_with_issues():
             print(f"  {i}. {suggestion}")
 
     # Check metadata
-    if bandit_result.metadata and 'issues' in bandit_result.metadata:
-        issues = bandit_result.metadata['issues']
+    if bandit_result.metadata and "issues" in bandit_result.metadata:
+        issues = bandit_result.metadata["issues"]
         print(f"\nDetailed Issues ({len(issues)}):")
         for i, issue in enumerate(issues, 1):
-            print(f"  {i}. {issue['file_path']}:{issue.get('line_number', '?')} - {issue['rule_code']}")
+            print(
+                f"  {i}. {issue['file_path']}:{issue.get('line_number', '?')} - {issue['rule_code']}"
+            )
             print(f"     Severity: {issue['severity']} - {issue['message']}")
 
     # Test full security scan
@@ -83,7 +90,7 @@ def test_security_scanner_with_issues():
 
     # Save detailed report
     report_path = Path("detailed_security_scan_report.md")
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"\nDetailed report saved to: {report_path}")
 
@@ -98,5 +105,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Test failed with error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

@@ -11,13 +11,13 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import sys
-from pathlib import Path
-from typing import Dict, List, Any, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import json
 import subprocess
+import sys
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 
 class ValidationStatus(Enum):

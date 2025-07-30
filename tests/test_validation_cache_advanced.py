@@ -6,18 +6,17 @@
 Author: Kiro AI Integration System
 """
 
-import unittest
+import os
+import sys
 import tempfile
 import time
+import unittest
 from pathlib import Path
-
-import sys
-import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from integration.services.file_discovery_cache import FileDiscoveryCache
 from integration.logging_system import LoggerSystem
+from integration.services.file_discovery_cache import FileDiscoveryCache
 
 
 class TestValidationCacheAdvanced(unittest.TestCase):

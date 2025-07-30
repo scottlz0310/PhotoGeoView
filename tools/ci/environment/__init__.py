@@ -4,9 +4,9 @@ Environment Management Package
 Handles Python versions, Qt dependencies, and virtual display management.
 """
 
-from .python_manager import PythonVersionManager, PythonVersionInfo
-from .qt_manager import QtManager, QtDependencyInfo, QtEnvironmentManager
 from .display_manager import DisplayManager
+from .python_manager import PythonVersionInfo, PythonVersionManager
+from .qt_manager import QtDependencyInfo, QtEnvironmentManager, QtManager
 
 __all__ = [
     "PythonVersionManager",

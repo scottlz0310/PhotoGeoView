@@ -11,36 +11,33 @@ Author: Kiro AI Integration System
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Callable
-from pathlib import Path
-from datetime import datetime
 import threading
 import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
-from .interfaces import (
-    IImageProcessor,
-    IThemeManager,
-    IMapProvider,
-    IConfigManager,
-    IPerformanceMonitor,
-)
+from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .image_processor import CS4CodingImageProcessor
-from .performance_monitor import KiroPerformanceMonitor
-from .unified_cache import UnifiedCacheSystem
-from .state_manager import StateManager
-from .performance_monitor import KiroPerformanceMonitor
-from .unified_cache import UnifiedCacheSystem
-from .state_manager import StateManager
-from .models import (
-    ImageMetadata,
-    ThemeConfiguration,
-    ApplicationState,
-    AIComponent,
-    ProcessingStatus,
-    PerformanceMetrics,
+from .interfaces import (
+    IConfigManager,
+    IImageProcessor,
+    IMapProvider,
+    IPerformanceMonitor,
+    IThemeManager,
 )
-from .error_handling import IntegratedErrorHandler, ErrorCategory
 from .logging_system import LoggerSystem
+from .models import (
+    AIComponent,
+    ApplicationState,
+    ImageMetadata,
+    PerformanceMetrics,
+    ProcessingStatus,
+    ThemeConfiguration,
+)
+from .performance_monitor import KiroPerformanceMonitor
+from .state_manager import StateManager
+from .unified_cache import UnifiedCacheSystem
 
 
 class AppController:

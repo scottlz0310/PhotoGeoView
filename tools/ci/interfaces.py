@@ -6,11 +6,12 @@ that provide extensibility and consistency across all checker implementations.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Any, Protocol
+from typing import Any, Dict, List, Optional, Protocol
+
 try:
-    from .models import CheckResult, SimulationResult, CheckTask, ConfigDict
+    from .models import CheckResult, CheckTask, ConfigDict, SimulationResult
 except ImportError:
-    from models import CheckResult, SimulationResult, CheckTask, ConfigDict
+    from models import CheckResult, CheckTask, ConfigDict, SimulationResult
 
 
 class CheckerInterface(ABC):

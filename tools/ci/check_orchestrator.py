@@ -8,19 +8,19 @@ of multiple checks with dependency resolution, parallel execution, and resource 
 import asyncio
 import concurrent.futures
 import logging
+import os
+import threading
 import time
 from collections import defaultdict, deque
-from typing import Dict, List, Optional, Set, Tuple, Any
 from pathlib import Path
-import threading
-import os
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 try:
-    from .interfaces import OrchestratorInterface, CheckerInterface, CheckerFactory
-    from .models import CheckTask, CheckResult, CheckStatus, ConfigDict
+    from .interfaces import CheckerFactory, CheckerInterface, OrchestratorInterface
+    from .models import CheckResult, CheckStatus, CheckTask, ConfigDict
 except ImportError:
-    from interfaces import OrchestratorInterface, CheckerInterface, CheckerFactory
-    from models import CheckTask, CheckResult, CheckStatus, ConfigDict
+    from interfaces import CheckerFactory, CheckerInterface, OrchestratorInterface
+    from models import CheckResult, CheckStatus, CheckTask, ConfigDict
 
 
 class DependencyResolver:
@@ -61,7 +61,9 @@ class DependencyResolver:
                     graph[dep].append(task.name)
                     in_degree[task.name] += 1
                 else:
-                    self.logger.warning(f"Task '{task.name}' depends on unknown task '{dep}'")
+                    self.logger.warning(
+                        f"Task '{task.name}' depends on unknown task '{dep}'"
+                    )
 
         # Topological sort using Kahn's algorithm
         queue = deque([task for task in in_degree if in_degree[task] == 0])
@@ -128,13 +130,13 @@ class ResourceManager:
         self._lock = threading.Lock()
         self._active_tasks = 0
         self._max_parallel_tasks = self._calculate_max_parallel_tasks()
-        self._memory_threshold = config.get('memory_threshold_percent', 80)
-        self._cpu_threshold = config.get('cpu_threshold_percent', 90)
+        self._memory_threshold = config.get("memory_threshold_percent", 80)
+        self._cpu_threshold = config.get("cpu_threshold_percent", 90)
 
     def _calculate_max_parallel_tasks(self) -> int:
         """Calculate maximum number of parallel tasks based on system resources."""
         cpu_count = os.cpu_count() or 1
-        max_from_config = self.config.get('max_parallel_tasks', cpu_count)
+        max_from_config = self.config.get("max_parallel_tasks", cpu_count)
 
         # Conservative approach: use 75% of available cores
         recommended = max(1, int(cpu_count * 0.75))
@@ -229,7 +231,7 @@ class CheckOrchestrator(OrchestratorInterface):
 
     def _initialize_checkers(self) -> None:
         """Initialize available checkers and determine which ones are available."""
-        checker_configs = self.config.get('checkers', {})
+        checker_configs = self.config.get("checkers", {})
 
         for check_type in CheckerFactory.get_available_checkers():
             try:
@@ -267,8 +269,12 @@ class CheckOrchestrator(OrchestratorInterface):
 
         # Resolve dependencies and group by levels
         try:
-            dependency_levels = self.dependency_resolver.get_dependency_levels(available_tasks)
-            self.logger.info(f"Resolved dependencies into {len(dependency_levels)} levels")
+            dependency_levels = self.dependency_resolver.get_dependency_levels(
+                available_tasks
+            )
+            self.logger.info(
+                f"Resolved dependencies into {len(dependency_levels)} levels"
+            )
         except ValueError as e:
             self.logger.error(f"Dependency resolution failed: {e}")
             return self._create_error_results(tasks, str(e))
@@ -294,7 +300,9 @@ class CheckOrchestrator(OrchestratorInterface):
             if task.check_type in self._available_checks:
                 available_tasks.append(task)
             else:
-                self.logger.warning(f"Task '{task.name}' uses unavailable checker '{task.check_type}'")
+                self.logger.warning(
+                    f"Task '{task.name}' uses unavailable checker '{task.check_type}'"
+                )
         return available_tasks
 
     def _execute_task_level(self, tasks: List[CheckTask]) -> Dict[str, CheckResult]:
@@ -313,7 +321,9 @@ class CheckOrchestrator(OrchestratorInterface):
             # Parallel execution
             return self._execute_tasks_parallel(sorted_tasks)
 
-    def _execute_tasks_sequential(self, tasks: List[CheckTask]) -> Dict[str, CheckResult]:
+    def _execute_tasks_sequential(
+        self, tasks: List[CheckTask]
+    ) -> Dict[str, CheckResult]:
         """Execute tasks sequentially."""
         results = {}
         for task in tasks:
@@ -371,7 +381,7 @@ class CheckOrchestrator(OrchestratorInterface):
             # Prepare task arguments
             kwargs = task.metadata.copy()
             if task.python_version:
-                kwargs['python_version'] = task.python_version
+                kwargs["python_version"] = task.python_version
 
             # Execute the check with timeout
             if task.timeout:
@@ -380,13 +390,17 @@ class CheckOrchestrator(OrchestratorInterface):
                 result = checker.run_check(**kwargs)
 
             # Update result metadata
-            result.metadata.update({
-                'task_name': task.name,
-                'execution_time': time.time() - start_time,
-                'python_version': task.python_version
-            })
+            result.metadata.update(
+                {
+                    "task_name": task.name,
+                    "execution_time": time.time() - start_time,
+                    "python_version": task.python_version,
+                }
+            )
 
-            self.logger.info(f"Task '{task.name}' completed with status: {result.status.value}")
+            self.logger.info(
+                f"Task '{task.name}' completed with status: {result.status.value}"
+            )
             return result
 
         except Exception as e:
@@ -401,20 +415,24 @@ class CheckOrchestrator(OrchestratorInterface):
             except Exception as e:
                 self.logger.warning(f"Cleanup failed for task '{task.name}': {e}")
 
-    def _execute_with_timeout(self, checker: CheckerInterface, timeout: float, **kwargs) -> CheckResult:
+    def _execute_with_timeout(
+        self, checker: CheckerInterface, timeout: float, **kwargs
+    ) -> CheckResult:
         """Execute a checker with timeout."""
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(checker.run_check, **kwargs)
             try:
                 return future.result(timeout=timeout)
             except concurrent.futures.TimeoutError:
-                self.logger.error(f"Checker '{checker.name}' timed out after {timeout} seconds")
+                self.logger.error(
+                    f"Checker '{checker.name}' timed out after {timeout} seconds"
+                )
                 return CheckResult(
                     name=checker.name,
                     status=CheckStatus.FAILURE,
                     duration=timeout,
                     errors=[f"Check timed out after {timeout} seconds"],
-                    output="Execution timed out"
+                    output="Execution timed out",
                 )
 
     def _create_error_result(self, task: CheckTask, error_message: str) -> CheckResult:
@@ -425,14 +443,15 @@ class CheckOrchestrator(OrchestratorInterface):
             duration=0.0,
             errors=[error_message],
             output="",
-            metadata={'task_name': task.name, 'check_type': task.check_type}
+            metadata={"task_name": task.name, "check_type": task.check_type},
         )
 
-    def _create_error_results(self, tasks: List[CheckTask], error_message: str) -> Dict[str, CheckResult]:
+    def _create_error_results(
+        self, tasks: List[CheckTask], error_message: str
+    ) -> Dict[str, CheckResult]:
         """Create error results for all tasks."""
         return {
-            task.name: self._create_error_result(task, error_message)
-            for task in tasks
+            task.name: self._create_error_result(task, error_message) for task in tasks
         }
 
     def resolve_dependencies(self, task_names: List[str]) -> List[str]:
@@ -477,12 +496,16 @@ class CheckOrchestrator(OrchestratorInterface):
         for task in tasks:
             # Check if checker is available
             if task.check_type not in self._available_checks:
-                errors.append(f"Task '{task.name}': checker '{task.check_type}' not available")
+                errors.append(
+                    f"Task '{task.name}': checker '{task.check_type}' not available"
+                )
 
             # Validate dependencies
             for dep in task.dependencies:
                 if not any(t.name == dep for t in tasks):
-                    errors.append(f"Task '{task.name}': dependency '{dep}' not found in task list")
+                    errors.append(
+                        f"Task '{task.name}': dependency '{dep}' not found in task list"
+                    )
 
         # Check for circular dependencies
         try:
@@ -505,15 +528,17 @@ class CheckOrchestrator(OrchestratorInterface):
         """
         return CheckTask(
             name=name,
-            check_type=config.get('type', name),
-            python_version=config.get('python_version'),
-            dependencies=config.get('dependencies', []),
-            timeout=config.get('timeout'),
-            priority=config.get('priority', 0),
-            metadata=config.get('metadata', {})
+            check_type=config.get("type", name),
+            python_version=config.get("python_version"),
+            dependencies=config.get("dependencies", []),
+            timeout=config.get("timeout"),
+            priority=config.get("priority", 0),
+            metadata=config.get("metadata", {}),
         )
 
-    def filter_tasks_by_selection(self, tasks: List[CheckTask], selected_checks: List[str]) -> List[CheckTask]:
+    def filter_tasks_by_selection(
+        self, tasks: List[CheckTask], selected_checks: List[str]
+    ) -> List[CheckTask]:
         """
         Filter tasks based on selected check names with dependency resolution.
 
@@ -528,17 +553,25 @@ class CheckOrchestrator(OrchestratorInterface):
             return tasks
 
         # Validate selected checks
-        invalid_checks = [check for check in selected_checks if check not in self._available_checks]
+        invalid_checks = [
+            check for check in selected_checks if check not in self._available_checks
+        ]
         if invalid_checks:
-            available = ', '.join(sorted(self._available_checks))
-            raise ValueError(f"Invalid check names: {invalid_checks}. Available: {available}")
+            available = ", ".join(sorted(self._available_checks))
+            raise ValueError(
+                f"Invalid check names: {invalid_checks}. Available: {available}"
+            )
 
         # Find tasks matching selected checks
         selected_tasks = []
         task_map = {task.name: task for task in tasks}
 
         for check_name in selected_checks:
-            matching_tasks = [task for task in tasks if task.check_type == check_name or task.name == check_name]
+            matching_tasks = [
+                task
+                for task in tasks
+                if task.check_type == check_name or task.name == check_name
+            ]
             if not matching_tasks:
                 self.logger.warning(f"No tasks found for check '{check_name}'")
             else:
@@ -547,10 +580,14 @@ class CheckOrchestrator(OrchestratorInterface):
         # Add dependencies recursively
         final_tasks = self._add_task_dependencies(selected_tasks, task_map)
 
-        self.logger.info(f"Selected {len(selected_tasks)} tasks, including {len(final_tasks)} with dependencies")
+        self.logger.info(
+            f"Selected {len(selected_tasks)} tasks, including {len(final_tasks)} with dependencies"
+        )
         return final_tasks
 
-    def _add_task_dependencies(self, selected_tasks: List[CheckTask], task_map: Dict[str, CheckTask]) -> List[CheckTask]:
+    def _add_task_dependencies(
+        self, selected_tasks: List[CheckTask], task_map: Dict[str, CheckTask]
+    ) -> List[CheckTask]:
         """
         Recursively add task dependencies to the selection.
 
@@ -576,7 +613,9 @@ class CheckOrchestrator(OrchestratorInterface):
                 if dep_name in task_map and dep_name not in result_tasks:
                     dep_task = task_map[dep_name]
                     to_process.append(dep_task)
-                    self.logger.debug(f"Added dependency '{dep_name}' for task '{current_task.name}'")
+                    self.logger.debug(
+                        f"Added dependency '{dep_name}' for task '{current_task.name}'"
+                    )
 
         return [task_map[name] for name in result_tasks if name in task_map]
 
@@ -596,13 +635,19 @@ class CheckOrchestrator(OrchestratorInterface):
             return errors
 
         # Check for invalid check names
-        invalid_checks = [check for check in selected_checks if check not in self._available_checks]
+        invalid_checks = [
+            check for check in selected_checks if check not in self._available_checks
+        ]
         if invalid_checks:
-            available = ', '.join(sorted(self._available_checks))
-            errors.append(f"Invalid check names: {invalid_checks}. Available checks: {available}")
+            available = ", ".join(sorted(self._available_checks))
+            errors.append(
+                f"Invalid check names: {invalid_checks}. Available checks: {available}"
+            )
 
         # Check for duplicates
-        duplicates = [check for check in set(selected_checks) if selected_checks.count(check) > 1]
+        duplicates = [
+            check for check in set(selected_checks) if selected_checks.count(check) > 1
+        ]
         if duplicates:
             errors.append(f"Duplicate check names: {duplicates}")
 
@@ -626,11 +671,11 @@ class CheckOrchestrator(OrchestratorInterface):
             return None
 
         return {
-            'name': checker.name,
-            'check_type': checker.check_type,
-            'dependencies': checker.dependencies,
-            'is_available': checker.is_available(),
-            'description': checker.__doc__ or "No description available"
+            "name": checker.name,
+            "check_type": checker.check_type,
+            "dependencies": checker.dependencies,
+            "is_available": checker.is_available(),
+            "description": checker.__doc__ or "No description available",
         }
 
     def list_available_checks(self) -> Dict[str, Dict[str, Any]]:
@@ -663,20 +708,23 @@ class CheckOrchestrator(OrchestratorInterface):
             path = Path(file_path)
 
             # Python files
-            if path.suffix == '.py':
-                suggestions.update(['code_quality', 'security_scanner', 'test_runner'])
+            if path.suffix == ".py":
+                suggestions.update(["code_quality", "security_scanner", "test_runner"])
 
             # Test files
-            if 'test' in path.name.lower() or path.parent.name == 'tests':
-                suggestions.add('test_runner')
+            if "test" in path.name.lower() or path.parent.name == "tests":
+                suggestions.add("test_runner")
 
             # Configuration files
-            if path.name in ['pyproject.toml', 'setup.py', 'requirements.txt']:
-                suggestions.update(['security_scanner', 'code_quality'])
+            if path.name in ["pyproject.toml", "setup.py", "requirements.txt"]:
+                suggestions.update(["security_scanner", "code_quality"])
 
             # AI integration files
-            if any(ai_name in path.name.lower() for ai_name in ['copilot', 'cursor', 'kiro']):
-                suggestions.add('ai_component_tester')
+            if any(
+                ai_name in path.name.lower()
+                for ai_name in ["copilot", "cursor", "kiro"]
+            ):
+                suggestions.add("ai_component_tester")
 
         # Filter to only available checks
         return [check for check in suggestions if check in self._available_checks]
@@ -695,46 +743,51 @@ class CheckOrchestrator(OrchestratorInterface):
             dependency_levels = self.dependency_resolver.get_dependency_levels(tasks)
 
             plan = {
-                'total_tasks': len(tasks),
-                'execution_levels': len(dependency_levels),
-                'estimated_duration': self._estimate_execution_time(tasks),
-                'resource_requirements': self._estimate_resource_requirements(tasks),
-                'execution_order': []
+                "total_tasks": len(tasks),
+                "execution_levels": len(dependency_levels),
+                "estimated_duration": self._estimate_execution_time(tasks),
+                "resource_requirements": self._estimate_resource_requirements(tasks),
+                "execution_order": [],
             }
 
             for level, task_names in sorted(dependency_levels.items()):
                 level_info = {
-                    'level': level,
-                    'tasks': task_names,
-                    'parallel_execution': len(task_names) > 1,
-                    'estimated_duration': max(
-                        self._estimate_task_duration(task)
-                        for task in tasks if task.name in task_names
-                    ) if task_names else 0
+                    "level": level,
+                    "tasks": task_names,
+                    "parallel_execution": len(task_names) > 1,
+                    "estimated_duration": (
+                        max(
+                            self._estimate_task_duration(task)
+                            for task in tasks
+                            if task.name in task_names
+                        )
+                        if task_names
+                        else 0
+                    ),
                 }
-                plan['execution_order'].append(level_info)
+                plan["execution_order"].append(level_info)
 
             return plan
 
         except Exception as e:
             self.logger.error(f"Failed to create execution plan: {e}")
             return {
-                'error': str(e),
-                'total_tasks': len(tasks),
-                'execution_levels': 0,
-                'estimated_duration': 0,
-                'execution_order': []
+                "error": str(e),
+                "total_tasks": len(tasks),
+                "execution_levels": 0,
+                "estimated_duration": 0,
+                "execution_order": [],
             }
 
     def _estimate_execution_time(self, tasks: List[CheckTask]) -> float:
         """Estimate total execution time for tasks."""
         # Simple estimation based on task types
         time_estimates = {
-            'code_quality': 30.0,
-            'test_runner': 120.0,
-            'security_scanner': 45.0,
-            'performance_analyzer': 180.0,
-            'ai_component_tester': 90.0
+            "code_quality": 30.0,
+            "test_runner": 120.0,
+            "security_scanner": 45.0,
+            "performance_analyzer": 180.0,
+            "ai_component_tester": 90.0,
         }
 
         total_time = 0.0
@@ -752,44 +805,45 @@ class CheckOrchestrator(OrchestratorInterface):
     def _estimate_task_duration(self, task: CheckTask) -> float:
         """Estimate duration for a single task."""
         time_estimates = {
-            'code_quality': 30.0,
-            'test_runner': 120.0,
-            'security_scanner': 45.0,
-            'performance_analyzer': 180.0,
-            'ai_component_tester': 90.0
+            "code_quality": 30.0,
+            "test_runner": 120.0,
+            "security_scanner": 45.0,
+            "performance_analyzer": 180.0,
+            "ai_component_tester": 90.0,
         }
         return time_estimates.get(task.check_type, 60.0)
 
     def _estimate_resource_requirements(self, tasks: List[CheckTask]) -> Dict[str, Any]:
         """Estimate resource requirements for tasks."""
         return {
-            'max_parallel_tasks': min(len(tasks), self.resource_manager.max_parallel_tasks),
-            'estimated_memory_usage': len(tasks) * 100,  # MB per task
-            'requires_display': any(
-                task.check_type in ['test_runner', 'ai_component_tester']
+            "max_parallel_tasks": min(
+                len(tasks), self.resource_manager.max_parallel_tasks
+            ),
+            "estimated_memory_usage": len(tasks) * 100,  # MB per task
+            "requires_display": any(
+                task.check_type in ["test_runner", "ai_component_tester"]
                 for task in tasks
             ),
-            'requires_network': any(
-                task.check_type in ['security_scanner']
-                for task in tasks
-            )
+            "requires_network": any(
+                task.check_type in ["security_scanner"] for task in tasks
+            ),
         }
 
     def get_resource_usage(self) -> Dict[str, Any]:
         """Get current resource usage information."""
         try:
             return {
-                'active_tasks': self.resource_manager.active_tasks,
-                'max_parallel_tasks': self.resource_manager.max_parallel_tasks,
-                'memory_percent': psutil.virtual_memory().percent,
-                'cpu_percent': psutil.cpu_percent(interval=0.1),
-                'available_checks': len(self._available_checks),
-                'total_checkers': len(CheckerFactory.get_available_checkers())
+                "active_tasks": self.resource_manager.active_tasks,
+                "max_parallel_tasks": self.resource_manager.max_parallel_tasks,
+                "memory_percent": psutil.virtual_memory().percent,
+                "cpu_percent": psutil.cpu_percent(interval=0.1),
+                "available_checks": len(self._available_checks),
+                "total_checkers": len(CheckerFactory.get_available_checkers()),
             }
         except Exception as e:
             self.logger.warning(f"Failed to get resource usage: {e}")
             return {
-                'active_tasks': self.resource_manager.active_tasks,
-                'max_parallel_tasks': self.resource_manager.max_parallel_tasks,
-                'error': str(e)
+                "active_tasks": self.resource_manager.active_tasks,
+                "max_parallel_tasks": self.resource_manager.max_parallel_tasks,
+                "error": str(e),
             }

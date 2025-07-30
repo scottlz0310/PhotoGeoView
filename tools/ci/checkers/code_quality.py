@@ -6,16 +6,16 @@ Black formatting, isort import sorting, flake8 style checking,
 and mypy type checking with detailed error reporting and auto-fix capabilities.
 """
 
+import json
+import logging
+import os
+import re
 import subprocess
 import sys
-import os
-import json
-import re
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-import logging
 import time
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from ..interfaces import CheckerInterface
@@ -476,7 +476,9 @@ class CodeQualityChecker(CheckerInterface):
                     if result.stderr:
                         errors.append(f"Error details: {result.stderr}")
                     warnings = []
-                    suggestions = ["Fix syntax errors in the reported files before running Black"]
+                    suggestions = [
+                        "Fix syntax errors in the reported files before running Black"
+                    ]
                     output = f"❌ Syntax errors found:\n{result.stderr}"
                 else:
                     status = CheckStatus.FAILURE

@@ -7,11 +7,17 @@ creating detailed, human-readable reports with error summaries and fix suggestio
 
 import os
 from datetime import datetime
-from typing import Dict, List, Optional
 from pathlib import Path
+from typing import Dict, List, Optional
 
 from ..interfaces import ReporterInterface
-from ..models import SimulationResult, CheckResult, CheckStatus, SeverityLevel, RegressionIssue
+from ..models import (
+    CheckResult,
+    CheckStatus,
+    RegressionIssue,
+    SeverityLevel,
+    SimulationResult,
+)
 
 
 class MarkdownReporter(ReporterInterface):
@@ -54,7 +60,7 @@ class MarkdownReporter(ReporterInterface):
         report_content = self._generate_report_content(result)
 
         # Write to file
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(report_content)
 
         return output_path
@@ -70,7 +76,7 @@ class MarkdownReporter(ReporterInterface):
             self._generate_error_analysis(result),
             self._generate_fix_suggestions(result),
             self._generate_configuration_info(result),
-            self._generate_footer()
+            self._generate_footer(),
         ]
 
         return "\n\n".join(filter(None, sections))
@@ -92,7 +98,9 @@ class MarkdownReporter(ReporterInterface):
         successful_checks = len(result.successful_checks)
         failed_checks = len(result.failed_checks)
 
-        success_rate = (successful_checks / total_checks * 100) if total_checks > 0 else 0
+        success_rate = (
+            (successful_checks / total_checks * 100) if total_checks > 0 else 0
+        )
 
         summary = f"""## Executive Summary
 
@@ -105,7 +113,9 @@ class MarkdownReporter(ReporterInterface):
 - **Success Rate:** {self._get_success_rate_indicator(success_rate)}"""
 
         if result.regression_issues:
-            summary += f"\n- **Regressions Detected:** {len(result.regression_issues)} ⚠️"
+            summary += (
+                f"\n- **Regressions Detected:** {len(result.regression_issues)} ⚠️"
+            )
 
         return summary
 
@@ -114,7 +124,10 @@ class MarkdownReporter(ReporterInterface):
         if not result.check_results:
             return "## Check Results\n\nNo checks were executed."
 
-        table_rows = ["| Check | Status | Duration | Issues |", "|-------|--------|----------|--------|"]
+        table_rows = [
+            "| Check | Status | Duration | Issues |",
+            "|-------|--------|----------|--------|",
+        ]
 
         for check_name, check_result in result.check_results.items():
             status_indicator = self._get_status_emoji(check_result.status)
@@ -122,7 +135,9 @@ class MarkdownReporter(ReporterInterface):
             issues = len(check_result.errors) + len(check_result.warnings)
             issues_text = f"{issues} issues" if issues > 0 else "✓"
 
-            table_rows.append(f"| {check_name} | {status_indicator} {check_result.status.value} | {duration} | {issues_text} |")
+            table_rows.append(
+                f"| {check_name} | {status_indicator} {check_result.status.value} | {duration} | {issues_text} |"
+            )
 
         return f"""## Check Results Summary
 
@@ -176,8 +191,11 @@ class MarkdownReporter(ReporterInterface):
 
         # Add metadata if relevant
         if check_result.metadata:
-            relevant_metadata = {k: v for k, v in check_result.metadata.items()
-                               if k not in ['internal_id', 'temp_files']}
+            relevant_metadata = {
+                k: v
+                for k, v in check_result.metadata.items()
+                if k not in ["internal_id", "temp_files"]
+            }
             if relevant_metadata:
                 detail += f"\n\n**Additional Information:**"
                 for key, value in relevant_metadata.items():
@@ -205,7 +223,7 @@ class MarkdownReporter(ReporterInterface):
         sections.append(f"**Total Regressions Detected:** {total_regressions}")
 
         # Add severity breakdown
-        severity_order = ['critical', 'high', 'medium', 'low', 'info']
+        severity_order = ["critical", "high", "medium", "low", "info"]
         for severity in severity_order:
             if severity in by_severity:
                 count = len(by_severity[severity])
@@ -224,12 +242,16 @@ class MarkdownReporter(ReporterInterface):
             sections.append(f"#### {severity.title()} Severity {emoji}")
 
             for issue in issues:
-                change_direction = "↗️" if issue.current_value > issue.baseline_value else "↘️"
-                sections.append(f"""**{issue.test_name}**
+                change_direction = (
+                    "↗️" if issue.current_value > issue.baseline_value else "↘️"
+                )
+                sections.append(
+                    f"""**{issue.test_name}**
 - **Baseline:** {issue.baseline_value:.2f} {issue.metric_type}
 - **Current:** {issue.current_value:.2f} {issue.metric_type} {change_direction}
 - **Change:** {issue.regression_percentage:+.1f}%
-- **Description:** {issue.description}""")
+- **Description:** {issue.description}"""
+                )
 
         return "\n\n".join(sections)
 
@@ -239,8 +261,12 @@ class MarkdownReporter(ReporterInterface):
         all_warnings = []
 
         for check_result in result.check_results.values():
-            all_errors.extend([(check_result.name, error) for error in check_result.errors])
-            all_warnings.extend([(check_result.name, warning) for warning in check_result.warnings])
+            all_errors.extend(
+                [(check_result.name, error) for error in check_result.errors]
+            )
+            all_warnings.extend(
+                [(check_result.name, warning) for warning in check_result.warnings]
+            )
 
         if not all_errors and not all_warnings:
             return ""
@@ -331,7 +357,7 @@ class MarkdownReporter(ReporterInterface):
             CheckStatus.FAILURE: "❌",
             CheckStatus.WARNING: "⚠️",
             CheckStatus.SKIPPED: "⏭️",
-            CheckStatus.IN_PROGRESS: "🔄"
+            CheckStatus.IN_PROGRESS: "🔄",
         }
         return emoji_map.get(status, "❓")
 
@@ -342,7 +368,7 @@ class MarkdownReporter(ReporterInterface):
             SeverityLevel.HIGH: "🟠",
             SeverityLevel.MEDIUM: "🟡",
             SeverityLevel.LOW: "🔵",
-            SeverityLevel.INFO: "ℹ️"
+            SeverityLevel.INFO: "ℹ️",
         }
         return emoji_map.get(severity, "❓")
 
@@ -365,25 +391,44 @@ class MarkdownReporter(ReporterInterface):
             "Security Issues": [],
             "Performance Issues": [],
             "Configuration Errors": [],
-            "Other Errors": []
+            "Other Errors": [],
         }
 
         for check_name, error in errors:
             error_lower = error.lower()
 
-            if any(keyword in error_lower for keyword in ['syntax', 'invalid syntax', 'unexpected token']):
+            if any(
+                keyword in error_lower
+                for keyword in ["syntax", "invalid syntax", "unexpected token"]
+            ):
                 categories["Syntax Errors"].append((check_name, error))
-            elif any(keyword in error_lower for keyword in ['import', 'module', 'no module named']):
+            elif any(
+                keyword in error_lower
+                for keyword in ["import", "module", "no module named"]
+            ):
                 categories["Import Errors"].append((check_name, error))
-            elif any(keyword in error_lower for keyword in ['type', 'mypy', 'annotation']):
+            elif any(
+                keyword in error_lower for keyword in ["type", "mypy", "annotation"]
+            ):
                 categories["Type Errors"].append((check_name, error))
-            elif any(keyword in error_lower for keyword in ['test', 'assert', 'failed']):
+            elif any(
+                keyword in error_lower for keyword in ["test", "assert", "failed"]
+            ):
                 categories["Test Failures"].append((check_name, error))
-            elif any(keyword in error_lower for keyword in ['security', 'vulnerability', 'bandit', 'safety']):
+            elif any(
+                keyword in error_lower
+                for keyword in ["security", "vulnerability", "bandit", "safety"]
+            ):
                 categories["Security Issues"].append((check_name, error))
-            elif any(keyword in error_lower for keyword in ['performance', 'slow', 'timeout', 'memory']):
+            elif any(
+                keyword in error_lower
+                for keyword in ["performance", "slow", "timeout", "memory"]
+            ):
                 categories["Performance Issues"].append((check_name, error))
-            elif any(keyword in error_lower for keyword in ['config', 'configuration', 'setting']):
+            elif any(
+                keyword in error_lower
+                for keyword in ["config", "configuration", "setting"]
+            ):
                 categories["Configuration Errors"].append((check_name, error))
             else:
                 categories["Other Errors"].append((check_name, error))
@@ -399,34 +444,64 @@ class MarkdownReporter(ReporterInterface):
         failed_checks = result.failed_checks
 
         # Check for common issues
-        has_import_errors = any('import' in ' '.join(check.errors).lower() for check in failed_checks)
-        has_type_errors = any('mypy' in check.name.lower() for check in failed_checks if not check.is_successful)
-        has_format_errors = any('black' in check.name.lower() or 'isort' in check.name.lower()
-                               for check in failed_checks)
-        has_test_failures = any('test' in check.name.lower() for check in failed_checks)
-        has_security_issues = any('security' in check.name.lower() for check in failed_checks)
+        has_import_errors = any(
+            "import" in " ".join(check.errors).lower() for check in failed_checks
+        )
+        has_type_errors = any(
+            "mypy" in check.name.lower()
+            for check in failed_checks
+            if not check.is_successful
+        )
+        has_format_errors = any(
+            "black" in check.name.lower() or "isort" in check.name.lower()
+            for check in failed_checks
+        )
+        has_test_failures = any("test" in check.name.lower() for check in failed_checks)
+        has_security_issues = any(
+            "security" in check.name.lower() for check in failed_checks
+        )
 
         if has_import_errors:
-            suggestions.append("Check your Python environment and ensure all required dependencies are installed")
-            suggestions.append("Run 'pip install -r requirements.txt' to install missing dependencies")
+            suggestions.append(
+                "Check your Python environment and ensure all required dependencies are installed"
+            )
+            suggestions.append(
+                "Run 'pip install -r requirements.txt' to install missing dependencies"
+            )
 
         if has_type_errors:
-            suggestions.append("Review type annotations and ensure they match the actual usage")
-            suggestions.append("Consider adding '# type: ignore' comments for unavoidable type issues")
+            suggestions.append(
+                "Review type annotations and ensure they match the actual usage"
+            )
+            suggestions.append(
+                "Consider adding '# type: ignore' comments for unavoidable type issues"
+            )
 
         if has_format_errors:
-            suggestions.append("Run 'black .' and 'isort .' to automatically fix formatting issues")
+            suggestions.append(
+                "Run 'black .' and 'isort .' to automatically fix formatting issues"
+            )
 
         if has_test_failures:
-            suggestions.append("Review test failures and update tests to match current implementation")
+            suggestions.append(
+                "Review test failures and update tests to match current implementation"
+            )
             suggestions.append("Check if test data or fixtures need to be updated")
 
         if has_security_issues:
-            suggestions.append("Review security scan results and update vulnerable dependencies")
-            suggestions.append("Consider using 'pip-audit' for additional security scanning")
+            suggestions.append(
+                "Review security scan results and update vulnerable dependencies"
+            )
+            suggestions.append(
+                "Consider using 'pip-audit' for additional security scanning"
+            )
 
         if result.regression_issues:
-            suggestions.append("Investigate performance regressions and optimize affected code paths")
-            suggestions.append("Consider profiling the application to identify bottlenecks")
+            suggestions.append(
+                "Investigate performance regressions and optimize affected code paths"
+            )
+            suggestions.append(
+                "Consider profiling the application to identify bottlenecks"
+            )
 
         return suggestions

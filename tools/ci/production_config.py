@@ -12,20 +12,22 @@ AI貢献者:
 """
 
 import json
-import os
-import sys
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
 import logging
 import multiprocessing
-import psutil
-from dataclasses import dataclass, asdict
+import os
+import sys
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import psutil
 
 
 @dataclass
 class PerformanceConfig:
     """パフォーマンス設定"""
+
     max_parallel_jobs: int = 4
     memory_limit_mb: int = 2048
     timeout_seconds: int = 3600
@@ -38,6 +40,7 @@ class PerformanceConfig:
 @dataclass
 class ProductionLoggingConfig:
     """本番ログ設定"""
+
     level: str = "INFO"
     file_rotation: bool = True
     max_file_size_mb: int = 100
@@ -51,6 +54,7 @@ class ProductionLoggingConfig:
 @dataclass
 class ScalabilityConfig:
     """スケーラビリティ設定"""
+
     large_codebase_mode: bool = False
     file_count_threshold: int = 10000
     line_count_threshold: int = 1000000
@@ -63,6 +67,7 @@ class ScalabilityConfig:
 @dataclass
 class MonitoringConfig:
     """監視設定"""
+
     metrics_enabled: bool = True
     health_checks: bool = True
     performance_tracking: bool = True
@@ -74,6 +79,7 @@ class MonitoringConfig:
 @dataclass
 class ProductionConfig:
     """本番設定"""
+
     environment: str = "production"
     performance: PerformanceConfig = None
     logging: ProductionLoggingConfig = None
@@ -107,13 +113,13 @@ class ProductionConfigManager:
 
     def _setup_logger(self) -> logging.Logger:
         """ロガーのセットアップ"""
-        logger = logging.getLogger('production_config')
+        logger = logging.getLogger("production_config")
         logger.setLevel(logging.INFO)
 
         if not logger.handlers:
             handler = logging.StreamHandler()
             formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
@@ -131,15 +137,19 @@ class ProductionConfigManager:
             "test_files": 0,
             "large_files": 0,
             "binary_files": 0,
-            "directories": 0
+            "directories": 0,
         }
 
         try:
             for root, dirs, files in os.walk(self.project_root):
                 # Skip common ignore directories
-                dirs[:] = [d for d in dirs if not d.startswith('.') and d not in [
-                    '__pycache__', 'node_modules', 'venv', 'build', 'dist'
-                ]]
+                dirs[:] = [
+                    d
+                    for d in dirs
+                    if not d.startswith(".")
+                    and d
+                    not in ["__pycache__", "node_modules", "venv", "build", "dist"]
+                ]
 
                 characteristics["directories"] += len(dirs)
 
@@ -147,7 +157,7 @@ class ProductionConfigManager:
                     file_path = Path(root) / file
 
                     # Skip hidden files and common ignore patterns
-                    if file.startswith('.') or file.endswith(('.pyc', '.pyo')):
+                    if file.startswith(".") or file.endswith((".pyc", ".pyo")):
                         continue
 
                     characteristics["total_files"] += 1
@@ -161,17 +171,22 @@ class ProductionConfigManager:
                             continue
 
                         # Count Python files
-                        if file.endswith('.py'):
+                        if file.endswith(".py"):
                             characteristics["python_files"] += 1
 
                             # Count test files
-                            if 'test' in file.lower() or 'test' in str(file_path).lower():
+                            if (
+                                "test" in file.lower()
+                                or "test" in str(file_path).lower()
+                            ):
                                 characteristics["test_files"] += 1
 
                         # Count lines for text files
                         if file_size < 10 * 1024 * 1024:  # Skip files larger than 10MB
                             try:
-                                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                with open(
+                                    file_path, "r", encoding="utf-8", errors="ignore"
+                                ) as f:
                                     lines = sum(1 for _ in f)
                                     characteristics["total_lines"] += lines
 
@@ -194,9 +209,9 @@ class ProductionConfigManager:
     def _is_binary_file(self, file_path: Path) -> bool:
         """バイナリファイルの判定"""
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 chunk = f.read(1024)
-                return b'\0' in chunk
+                return b"\0" in chunk
         except (OSError, PermissionError):
             return True
 
@@ -209,9 +224,9 @@ class ProductionConfigManager:
 
         # Determine if this is a large codebase
         is_large_codebase = (
-            characteristics["total_files"] > 10000 or
-            characteristics["total_lines"] > 1000000 or
-            characteristics["python_files"] > 1000
+            characteristics["total_files"] > 10000
+            or characteristics["total_lines"] > 1000000
+            or characteristics["python_files"] > 1000
         )
 
         # Performance configuration
@@ -222,7 +237,7 @@ class ProductionConfigManager:
             cache_enabled=True,
             cache_ttl_hours=48 if is_large_codebase else 24,
             incremental_checks=is_large_codebase,
-            file_change_detection=True
+            file_change_detection=True,
         )
 
         # Logging configuration
@@ -234,7 +249,7 @@ class ProductionConfigManager:
             structured_logging=True,
             performance_metrics=True,
             error_tracking=True,
-            log_retention_days=60 if is_large_codebase else 30
+            log_retention_days=60 if is_large_codebase else 30,
         )
 
         # Scalability configuration
@@ -245,7 +260,7 @@ class ProductionConfigManager:
             batch_processing=is_large_codebase,
             batch_size=200 if is_large_codebase else 100,
             distributed_execution=False,  # Can be enabled for very large codebases
-            worker_nodes=[]
+            worker_nodes=[],
         )
 
         # Monitoring configuration
@@ -258,9 +273,9 @@ class ProductionConfigManager:
                 "memory_usage_percent": 80.0,
                 "cpu_usage_percent": 90.0,
                 "disk_usage_percent": 85.0,
-                "execution_time_minutes": 60.0 if is_large_codebase else 30.0
+                "execution_time_minutes": 60.0 if is_large_codebase else 30.0,
             },
-            notification_channels=[]
+            notification_channels=[],
         )
 
         config = ProductionConfig(
@@ -268,10 +283,12 @@ class ProductionConfigManager:
             performance=performance_config,
             logging=logging_config,
             scalability=scalability_config,
-            monitoring=monitoring_config
+            monitoring=monitoring_config,
         )
 
-        self.logger.info(f"Generated configuration for {'large' if is_large_codebase else 'standard'} codebase")
+        self.logger.info(
+            f"Generated configuration for {'large' if is_large_codebase else 'standard'} codebase"
+        )
         return config
 
     def save_config(self, config: ProductionConfig) -> bool:
@@ -285,10 +302,10 @@ class ProductionConfigManager:
                 "cpu_count": self.cpu_count,
                 "memory_gb": round(self.memory_gb, 2),
                 "disk_space_gb": round(self.disk_space_gb, 2),
-                "platform": sys.platform
+                "platform": sys.platform,
             }
 
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(config_dict, f, indent=2, ensure_ascii=False)
 
             self.logger.info(f"Production configuration saved to: {self.config_file}")
@@ -304,7 +321,7 @@ class ProductionConfigManager:
             return None
 
         try:
-            with open(self.config_file, 'r', encoding='utf-8') as f:
+            with open(self.config_file, "r", encoding="utf-8") as f:
                 config_dict = json.load(f)
 
             # Remove metadata fields
@@ -313,13 +330,21 @@ class ProductionConfigManager:
 
             # Convert nested dictionaries to dataclasses
             if "performance" in config_dict:
-                config_dict["performance"] = PerformanceConfig(**config_dict["performance"])
+                config_dict["performance"] = PerformanceConfig(
+                    **config_dict["performance"]
+                )
             if "logging" in config_dict:
-                config_dict["logging"] = ProductionLoggingConfig(**config_dict["logging"])
+                config_dict["logging"] = ProductionLoggingConfig(
+                    **config_dict["logging"]
+                )
             if "scalability" in config_dict:
-                config_dict["scalability"] = ScalabilityConfig(**config_dict["scalability"])
+                config_dict["scalability"] = ScalabilityConfig(
+                    **config_dict["scalability"]
+                )
             if "monitoring" in config_dict:
-                config_dict["monitoring"] = MonitoringConfig(**config_dict["monitoring"])
+                config_dict["monitoring"] = MonitoringConfig(
+                    **config_dict["monitoring"]
+                )
 
             config = ProductionConfig(**config_dict)
             self.logger.info("Production configuration loaded successfully")
@@ -337,38 +362,42 @@ class ProductionConfigManager:
             # Load existing CI config
             ci_config = {}
             if ci_config_file.exists():
-                with open(ci_config_file, 'r', encoding='utf-8') as f:
+                with open(ci_config_file, "r", encoding="utf-8") as f:
                     ci_config = json.load(f)
 
             # Update with production optimizations
-            ci_config.update({
-                "timeout": production_config.performance.timeout_seconds,
-                "parallel_jobs": production_config.performance.max_parallel_jobs,
-                "cache_enabled": production_config.performance.cache_enabled,
-                "incremental_checks": production_config.performance.incremental_checks,
-                "large_codebase_mode": production_config.scalability.large_codebase_mode,
-                "batch_processing": production_config.scalability.batch_processing,
-                "batch_size": production_config.scalability.batch_size,
-                "memory_limit_mb": production_config.performance.memory_limit_mb,
-                "logging": {
-                    "level": production_config.logging.level,
-                    "structured": production_config.logging.structured_logging,
-                    "performance_metrics": production_config.logging.performance_metrics,
-                    "file_rotation": production_config.logging.file_rotation,
-                    "max_file_size_mb": production_config.logging.max_file_size_mb
-                },
-                "monitoring": {
-                    "enabled": production_config.monitoring.metrics_enabled,
-                    "resource_monitoring": production_config.monitoring.resource_monitoring,
-                    "alert_thresholds": production_config.monitoring.alert_thresholds
+            ci_config.update(
+                {
+                    "timeout": production_config.performance.timeout_seconds,
+                    "parallel_jobs": production_config.performance.max_parallel_jobs,
+                    "cache_enabled": production_config.performance.cache_enabled,
+                    "incremental_checks": production_config.performance.incremental_checks,
+                    "large_codebase_mode": production_config.scalability.large_codebase_mode,
+                    "batch_processing": production_config.scalability.batch_processing,
+                    "batch_size": production_config.scalability.batch_size,
+                    "memory_limit_mb": production_config.performance.memory_limit_mb,
+                    "logging": {
+                        "level": production_config.logging.level,
+                        "structured": production_config.logging.structured_logging,
+                        "performance_metrics": production_config.logging.performance_metrics,
+                        "file_rotation": production_config.logging.file_rotation,
+                        "max_file_size_mb": production_config.logging.max_file_size_mb,
+                    },
+                    "monitoring": {
+                        "enabled": production_config.monitoring.metrics_enabled,
+                        "resource_monitoring": production_config.monitoring.resource_monitoring,
+                        "alert_thresholds": production_config.monitoring.alert_thresholds,
+                    },
                 }
-            })
+            )
 
             # Save updated CI config
-            with open(ci_config_file, 'w', encoding='utf-8') as f:
+            with open(ci_config_file, "w", encoding="utf-8") as f:
                 json.dump(ci_config, f, indent=2, ensure_ascii=False)
 
-            self.logger.info("CI Simulator configuration updated with production settings")
+            self.logger.info(
+                "CI Simulator configuration updated with production settings"
+            )
             return True
 
         except Exception as e:
@@ -384,7 +413,7 @@ class ProductionConfigManager:
             "checks": {},
             "recommendations": [],
             "warnings": [],
-            "errors": []
+            "errors": [],
         }
 
         # Check system resources
@@ -417,7 +446,7 @@ class ProductionConfigManager:
         required_dirs = [
             self.project_root / "logs",
             self.project_root / "reports",
-            self.project_root / ".kiro" / "ci-history"
+            self.project_root / ".kiro" / "ci-history",
         ]
 
         for dir_path in required_dirs:
@@ -435,6 +464,7 @@ class ProductionConfigManager:
                 # Try relative import
                 import sys
                 from pathlib import Path
+
                 ci_path = Path(__file__).parent
                 if str(ci_path) not in sys.path:
                     sys.path.insert(0, str(ci_path))
@@ -458,7 +488,9 @@ class ProductionConfigManager:
                 "Consider increasing test coverage (current test file ratio is low)"
             )
 
-        self.logger.info(f"Production readiness: {'✅ Ready' if validation_results['overall_ready'] else '❌ Not Ready'}")
+        self.logger.info(
+            f"Production readiness: {'✅ Ready' if validation_results['overall_ready'] else '❌ Not Ready'}"
+        )
         return validation_results
 
     def setup_production_environment(self) -> bool:
@@ -482,7 +514,7 @@ class ProductionConfigManager:
                 self.project_root / "logs",
                 self.project_root / "reports" / "production",
                 self.project_root / ".kiro" / "ci-history",
-                self.project_root / "temp" / "ci-production"
+                self.project_root / "temp" / "ci-production",
             ]
 
             for directory in directories:
@@ -522,7 +554,7 @@ class ProductionConfigManager:
 """
 
         config_file = self.project_root / "logs" / "logrotate.conf"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             f.write(logrotate_config)
 
         self.logger.debug(f"Log rotation configuration created: {config_file}")
@@ -536,11 +568,11 @@ class ProductionConfigManager:
             "performance_tracking": monitoring_config.performance_tracking,
             "resource_monitoring": monitoring_config.resource_monitoring,
             "alert_thresholds": monitoring_config.alert_thresholds,
-            "notification_channels": monitoring_config.notification_channels or []
+            "notification_channels": monitoring_config.notification_channels or [],
         }
 
         monitoring_file = self.config_dir / "monitoring.json"
-        with open(monitoring_file, 'w', encoding='utf-8') as f:
+        with open(monitoring_file, "w", encoding="utf-8") as f:
             json.dump(monitoring_settings, f, indent=2, ensure_ascii=False)
 
         self.logger.debug(f"Monitoring configuration created: {monitoring_file}")
@@ -552,9 +584,17 @@ def main():
 
     parser = argparse.ArgumentParser(description="Production Configuration Manager")
     parser.add_argument("--project-root", type=Path, help="Project root path")
-    parser.add_argument("--setup", action="store_true", help="Setup production environment")
-    parser.add_argument("--validate", action="store_true", help="Validate production readiness")
-    parser.add_argument("--generate-config", action="store_true", help="Generate optimized configuration")
+    parser.add_argument(
+        "--setup", action="store_true", help="Setup production environment"
+    )
+    parser.add_argument(
+        "--validate", action="store_true", help="Validate production readiness"
+    )
+    parser.add_argument(
+        "--generate-config",
+        action="store_true",
+        help="Generate optimized configuration",
+    )
 
     args = parser.parse_args()
 
@@ -563,7 +603,9 @@ def main():
 
     if args.setup:
         success = manager.setup_production_environment()
-        print(f"Production environment setup: {'✅ Success' if success else '❌ Failed'}")
+        print(
+            f"Production environment setup: {'✅ Success' if success else '❌ Failed'}"
+        )
         sys.exit(0 if success else 1)
 
     elif args.validate:
@@ -571,7 +613,9 @@ def main():
 
         print("Production Readiness Validation")
         print("=" * 40)
-        print(f"Overall Status: {'✅ Ready' if results['overall_ready'] else '❌ Not Ready'}")
+        print(
+            f"Overall Status: {'✅ Ready' if results['overall_ready'] else '❌ Not Ready'}"
+        )
 
         if results["checks"]:
             print("\nChecks:")

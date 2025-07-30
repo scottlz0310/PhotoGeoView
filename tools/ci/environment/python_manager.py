@@ -7,26 +7,27 @@ for CI/CD simulation. It supports pyenv, conda, and system Python installations.
 Author: Kiro (AI Integration and Quality Assurance)
 """
 
+import json
+import logging
 import os
+import shutil
 import subprocess
 import sys
 import venv
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
-import logging
-import shutil
-import json
 
 try:
     from ..models import CheckResult, CheckStatus
     from ..utils import run_command
 except ImportError:
     # Fallback for direct execution
-    import sys
     import os
+    import sys
 
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from models import CheckResult, CheckStatus
+
     from utils import run_command
 
 

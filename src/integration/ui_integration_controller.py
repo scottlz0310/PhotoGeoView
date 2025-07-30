@@ -7,26 +7,26 @@ Author: Kiro AI Integration System
 """
 
 import asyncio
-from typing import Optional, Dict, Any, List, Callable
-from pathlib import Path
-from datetime import datetime
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal, QTimer, QThread, QMutex
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QMutex, QObject, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QApplication
 
-from .models import ImageMetadata, ApplicationState, AIComponent, ProcessingStatus
 from .config_manager import ConfigManager
-from .state_manager import StateManager
+from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .image_processor import CS4CodingImageProcessor
+from .logging_system import LoggerSystem
+from .models import AIComponent, ApplicationState, ImageMetadata, ProcessingStatus
+from .performance_monitor import KiroPerformanceMonitor
+from .state_manager import StateManager
+from .ui.folder_navigator import EnhancedFolderNavigator
 from .ui.theme_manager import IntegratedThemeManager
 from .ui.thumbnail_grid import OptimizedThumbnailGrid
-from .ui.folder_navigator import EnhancedFolderNavigator
 from .unified_cache import UnifiedCacheSystem
-from .performance_monitor import KiroPerformanceMonitor
-from .logging_system import LoggerSystem
-from .error_handling import IntegratedErrorHandler, ErrorCategory
 
 
 @dataclass

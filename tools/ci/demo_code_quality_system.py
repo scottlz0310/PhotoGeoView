@@ -6,8 +6,8 @@ This script demonstrates the comprehensive code quality checking system
 with Black, isort, flake8, and mypy integration.
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add the project root to the Python path
@@ -26,28 +26,25 @@ def main():
 
     # Configuration for all tools
     config = {
-        'tools': {
-            'black': {
-                'line_length': 88,
-                'target_version': ['py39', 'py310', 'py311']
+        "tools": {
+            "black": {"line_length": 88, "target_version": ["py39", "py310", "py311"]},
+            "isort": {
+                "profile": "black",
+                "line_length": 88,
+                "known_first_party": ["src", "tools"],
+                "known_third_party": ["PyQt6", "PIL", "folium", "pytest"],
             },
-            'isort': {
-                'profile': 'black',
-                'line_length': 88,
-                'known_first_party': ['src', 'tools'],
-                'known_third_party': ['PyQt6', 'PIL', 'folium', 'pytest']
+            "flake8": {
+                "max_line_length": 88,
+                "ignore": ["E203", "W503", "E501"],  # Added E501 for demo
+                "exclude": [".git", "__pycache__", "build", "dist", ".venv", ".eggs"],
             },
-            'flake8': {
-                'max_line_length': 88,
-                'ignore': ['E203', 'W503', 'E501'],  # Added E501 for demo
-                'exclude': ['.git', '__pycache__', 'build', 'dist', '.venv', '.eggs']
+            "mypy": {
+                "python_version": "3.9",
+                "warn_return_any": True,
+                "disallow_untyped_defs": True,
+                "check_untyped_defs": True,
             },
-            'mypy': {
-                'python_version': '3.9',
-                'warn_return_any': True,
-                'disallow_untyped_defs': True,
-                'check_untyped_defs': True
-            }
         }
     }
 
@@ -62,7 +59,7 @@ def main():
     # Test individual tools
     print("\n2. Testing Individual Tools:")
 
-    tools = ['black', 'isort', 'flake8', 'mypy']
+    tools = ["black", "isort", "flake8", "mypy"]
     individual_results = {}
 
     for tool in tools:
@@ -71,13 +68,13 @@ def main():
         print(f"   - Available: {available}")
 
         if available:
-            if tool == 'black':
+            if tool == "black":
                 result = checker.run_black(auto_fix=False)
-            elif tool == 'isort':
+            elif tool == "isort":
                 result = checker.run_isort(auto_fix=False)
-            elif tool == 'flake8':
+            elif tool == "flake8":
                 result = checker.run_flake8()
-            elif tool == 'mypy':
+            elif tool == "mypy":
                 result = checker.run_mypy()
 
             individual_results[tool] = result
@@ -87,8 +84,8 @@ def main():
             print(f"   - Warnings: {len(result.warnings)}")
 
             # Show sample issues if any
-            if hasattr(result, 'metadata') and 'issues' in result.metadata:
-                issues = result.metadata['issues']
+            if hasattr(result, "metadata") and "issues" in result.metadata:
+                issues = result.metadata["issues"]
                 if issues:
                     print(f"   - Issues found: {len(issues)}")
                     print(f"   - Sample issue: {issues[0]['message'][:50]}...")
@@ -96,8 +93,7 @@ def main():
     # Test comprehensive check
     print("\n3. Running Comprehensive Code Quality Check...")
     comprehensive_result = checker.run_check(
-        check_types=['black', 'isort', 'flake8', 'mypy'],
-        auto_fix=False
+        check_types=["black", "isort", "flake8", "mypy"], auto_fix=False
     )
 
     print(f"   Overall Status: {comprehensive_result.status.value}")
@@ -109,14 +105,17 @@ def main():
     # Show configuration details
     print("\n4. Configuration Details:")
     metadata = comprehensive_result.metadata
-    if 'configuration' in metadata:
-        for tool, tool_config in metadata['configuration'].items():
+    if "configuration" in metadata:
+        for tool, tool_config in metadata["configuration"].items():
             print(f"   {tool}: {len(tool_config)} settings")
 
     # Show summary
     print("\n5. Summary:")
-    success_count = sum(1 for result in individual_results.values()
-                       if result.status == CheckStatus.SUCCESS)
+    success_count = sum(
+        1
+        for result in individual_results.values()
+        if result.status == CheckStatus.SUCCESS
+    )
     total_count = len(individual_results)
 
     print(f"   Tools tested: {total_count}")

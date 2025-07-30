@@ -6,12 +6,14 @@ for the CI/CD simulation tool.
 """
 
 import json
-import os
-import yaml
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Union
 import logging
-from dataclasses import dataclass, asdict
+import os
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
+import yaml
+
 try:
     from .gitignore_manager import GitignoreManager
 except ImportError:

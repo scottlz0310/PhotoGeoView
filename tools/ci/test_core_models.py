@@ -6,22 +6,22 @@ This script validates that the core data models and interfaces
 are properly implemented and can be used correctly.
 """
 
-import sys
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
 # Add the tools directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from ci.interfaces import CheckerFactory, CISimulationError
 from ci.models import (
     CheckResult,
     CheckStatus,
-    SimulationResult,
     RegressionIssue,
     SeverityLevel,
+    SimulationResult,
 )
-from ci.interfaces import CheckerFactory, CISimulationError
 
 
 def test_check_result():

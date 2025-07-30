@@ -29,13 +29,13 @@ Author: Kiro AI Integration System
 """
 
 import time
-from pathlib import Path
-from typing import List, Iterator, Optional, Dict, Any, Set
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Set
 
-from ..models import AIComponent
 from ..logging_system import LoggerSystem
+from ..models import AIComponent
 from .file_discovery_service import FileDiscoveryService
 
 

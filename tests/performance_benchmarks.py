@@ -6,24 +6,24 @@ Performance Benchmarks for AI Integration
 Author: Kiro AI Integration System
 """
 
-import time
-import psutil
-import threading
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from datetime import datetime
 import json
 import statistics
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import sys
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import psutil
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.controllers import AppController
-from integration.performance_monitor import KiroPerformanceMonitor
 from integration.logging_system import LoggerSystem
+from integration.performance_monitor import KiroPerformanceMonitor
 
 
 @dataclass

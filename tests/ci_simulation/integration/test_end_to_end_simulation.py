@@ -5,24 +5,26 @@ These tests run the complete CI simulation workflow using actual
 PhotoGeoView project files to verify real-world functionality.
 """
 
-import pytest
 import os
-import sys
-import tempfile
 import shutil
 import subprocess
+import sys
+import tempfile
+
+import pytest
+
 importon
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 # Add the tools/ci directory to the path for imports
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "tools" / "ci"))
 
-from simulator import CISimulator
+from check_orchestrator import CheckOrchestrator
 from config_manager import ConfigManager
 from models import CheckStatus, SimulationResult
-from check_orchestrator import CheckOrchestrator
+from simulator import CISimulator
 
 
 @pytest.mark.integration
@@ -42,7 +44,8 @@ class TestEndToEndSimulation:
 
         # Create a sample Python module
         (src_dir / "__init__.py").write_text("")
-        (src_dir / "main.py").write_text('''
+        (src_dir / "main.py").write_text(
+            '''
 """Main module for test project."""
 
 import sys
@@ -87,14 +90,16 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-''')
+'''
+        )
 
         # Create test files
         tests_dir = project_dir / "tests"
         tests_dir.mkdir()
 
         (tests_dir / "__init__.py").write_text("")
-        (tests_dir / "test_main.py").write_text('''
+        (tests_dir / "test_main.py").write_text(
+            '''
 """Tests for main module."""
 
 import pytest
@@ -166,10 +171,12 @@ def test_performance_batch_processing():
 
     assert result == 100
     assert end_time - start_time < 1.0  # Should complete in less than 1 second
-''')
+'''
+        )
 
         # Create requirements.txt
-        (project_dir / "requirements.txt").write_text('''
+        (project_dir / "requirements.txt").write_text(
+            """
 pytest>=7.0.0
 black>=22.0.0
 isort>=5.0.0
@@ -177,10 +184,12 @@ flake8>=4.0.0
 mypy>=0.900
 safety>=2.0.0
 bandit>=1.7.0
-''')
+"""
+        )
 
         # Create pyproject.toml
-        (project_dir / "pyproject.toml").write_text('''
+        (project_dir / "pyproject.toml").write_text(
+            """
 [tool.black]
 line-length = 88
 target-version = ['py39', 'py310', 'py311']
@@ -200,10 +209,12 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-''')
+"""
+        )
 
         # Create CI config
-        (project_dir / "ci-config.yaml").write_text('''
+        (project_dir / "ci-config.yaml").write_text(
+            """
 python_versions:
   - "3.10"
   - "3.11"
@@ -242,7 +253,8 @@ checkers:
   performance:
     enabled: false
     regression_threshold: 30.0
-''')
+"""
+        )
 
         return project_dir
 
@@ -260,53 +272,69 @@ checkers:
             simulator = CISimulator(str(config_path))
 
             # Mock external tool availability
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"  # All tools available
 
                 # Mock subprocess calls for external tools
-                with patch('subprocess.run') as mock_run:
+                with patch("subprocess.run") as mock_run:
                     # Configure mock responses for different tools
                     def mock_subprocess(*args, **kwargs):
-                        cmd = args[0] if args else kwargs.get('args', [])
+                        cmd = args[0] if args else kwargs.get("args", [])
                         if not cmd:
                             return Mock(returncode=0, stdout="", stderr="")
 
-                        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else str(cmd)
+                        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
 
                         # Black formatter
-                        if 'black' in cmd_str:
-                            if '--check' in cmd_str:
-                                return Mock(returncode=0, stdout="All done! ✨ 🍰 ✨", stderr="")
+                        if "black" in cmd_str:
+                            if "--check" in cmd_str:
+                                return Mock(
+                                    returncode=0, stdout="All done! ✨ 🍰 ✨", stderr=""
+                                )
                             else:
-                                return Mock(returncode=0, stdout="reformatted 1 file", stderr="")
+                                return Mock(
+                                    returncode=0, stdout="reformatted 1 file", stderr=""
+                                )
 
                         # isort
-                        elif 'isort' in cmd_str:
-                            return Mock(returncode=0, stdout="Skipped 0 files", stderr="")
+                        elif "isort" in cmd_str:
+                            return Mock(
+                                returncode=0, stdout="Skipped 0 files", stderr=""
+                            )
 
                         # flake8
-                        elif 'flake8' in cmd_str:
+                        elif "flake8" in cmd_str:
                             return Mock(returncode=0, stdout="", stderr="")
 
                         # mypy
-                        elif 'mypy' in cmd_str:
-                            return Mock(returncode=0, stdout="Success: no issues found", stderr="")
+                        elif "mypy" in cmd_str:
+                            return Mock(
+                                returncode=0,
+                                stdout="Success: no issues found",
+                                stderr="",
+                            )
 
                         # pytest
-                        elif 'pytest' in cmd_str:
+                        elif "pytest" in cmd_str:
                             return Mock(
                                 returncode=0,
                                 stdout="collected 6 items\n\ntests/test_main.py::TestPhotoProcessor::test_init_default_config PASSED\ntests/test_main.py::TestPhotoProcessor::test_init_with_config PASSED\ntests/test_main.py::TestPhotoProcessor::test_process_image_success PASSED\ntests/test_main.py::TestPhotoProcessor::test_process_image_empty_path PASSED\ntests/test_main.py::TestPhotoProcessor::test_batch_process_success PASSED\ntests/test_main.py::TestPhotoProcessor::test_batch_process_with_errors PASSED\n\n6 passed in 0.12s",
-                                stderr=""
+                                stderr="",
                             )
 
                         # safety
-                        elif 'safety' in cmd_str:
-                            return Mock(returncode=0, stdout="All good! No known security vulnerabilities found.", stderr="")
+                        elif "safety" in cmd_str:
+                            return Mock(
+                                returncode=0,
+                                stdout="All good! No known security vulnerabilities found.",
+                                stderr="",
+                            )
 
                         # bandit
-                        elif 'bandit' in cmd_str:
-                            return Mock(returncode=0, stdout="No issues identified.", stderr="")
+                        elif "bandit" in cmd_str:
+                            return Mock(
+                                returncode=0, stdout="No issues identified.", stderr=""
+                            )
 
                         # Default success
                         else:
@@ -317,17 +345,22 @@ checkers:
                     # Run the simulation
                     result = simulator.run(
                         checks=["code_quality", "security", "tests"],
-                        python_versions=["3.10"]
+                        python_versions=["3.10"],
                     )
 
                     # Verify results
                     assert isinstance(result, SimulationResult)
-                    assert result.overall_status in [CheckStatus.SUCCESS, CheckStatus.WARNING]
+                    assert result.overall_status in [
+                        CheckStatus.SUCCESS,
+                        CheckStatus.WARNING,
+                    ]
                     assert len(result.check_results) > 0
                     assert "3.10" in result.python_versions_tested
 
                     # Verify specific checks were run
-                    check_names = [check.name for check in result.check_results.values()]
+                    check_names = [
+                        check.name for check in result.check_results.values()
+                    ]
                     assert any("Code Quality" in name for name in check_names)
                     assert any("Security" in name for name in check_names)
                     assert any("Test" in name for name in check_names)
@@ -335,7 +368,9 @@ checkers:
                     # Verify reports were generated
                     reports_dir = project_dir / "reports"
                     if reports_dir.exists():
-                        report_files = list(reports_dir.glob("*.md")) + list(reports_dir.glob("*.json"))
+                        report_files = list(reports_dir.glob("*.md")) + list(
+                            reports_dir.glob("*.json")
+                        )
                         assert len(report_files) > 0
 
         finally:
@@ -347,7 +382,8 @@ checkers:
 
         # Create a file with code quality issues
         problematic_file = project_dir / "src" / "problematic.py"
-        problematic_file.write_text('''
+        problematic_file.write_text(
+            """
 # This file has intentional code quality issues
 
 import os,sys
@@ -369,7 +405,8 @@ class BadClass:
 
 # Long line that exceeds the line length limit and should be flagged by flake8 and black formatter
 very_long_variable_name = "This is a very long string that definitely exceeds the maximum line length and should be flagged"
-''')
+"""
+        )
 
         original_cwd = os.getcwd()
         os.chdir(project_dir)
@@ -378,36 +415,37 @@ very_long_variable_name = "This is a very long string that definitely exceeds th
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
+                with patch("subprocess.run") as mock_run:
+
                     def mock_subprocess_with_issues(*args, **kwargs):
-                        cmd = args[0] if args else kwargs.get('args', [])
-                        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else str(cmd)
+                        cmd = args[0] if args else kwargs.get("args", [])
+                        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
 
                         # Black formatter finds issues
-                        if 'black' in cmd_str and '--check' in cmd_str:
+                        if "black" in cmd_str and "--check" in cmd_str:
                             return Mock(
                                 returncode=1,
                                 stdout="",
-                                stderr="would reformat src/problematic.py"
+                                stderr="would reformat src/problematic.py",
                             )
 
                         # flake8 finds issues
-                        elif 'flake8' in cmd_str:
+                        elif "flake8" in cmd_str:
                             return Mock(
                                 returncode=1,
                                 stdout="src/problematic.py:4:9: E401 multiple imports on one line\nsrc/problematic.py:7:17: E711 comparison to None should be 'if cond is None:'\nsrc/problematic.py:10:11: E225 missing whitespace around operator",
-                                stderr=""
+                                stderr="",
                             )
 
                         # mypy finds issues
-                        elif 'mypy' in cmd_str:
+                        elif "mypy" in cmd_str:
                             return Mock(
                                 returncode=1,
                                 stdout="src/problematic.py:7: error: Function is missing a type annotation",
-                                stderr=""
+                                stderr="",
                             )
 
                         # Other tools succeed
@@ -420,7 +458,10 @@ very_long_variable_name = "This is a very long string that definitely exceeds th
                     result = simulator.run(checks=["code_quality"])
 
                     # Should have warnings or failures due to code quality issues
-                    assert result.overall_status in [CheckStatus.WARNING, CheckStatus.FAILURE]
+                    assert result.overall_status in [
+                        CheckStatus.WARNING,
+                        CheckStatus.FAILURE,
+                    ]
 
                     # Check that errors were captured
                     failed_checks = result.failed_checks
@@ -439,7 +480,8 @@ very_long_variable_name = "This is a very long string that definitely exceeds th
 
         # Create a test file with failing tests
         failing_test = project_dir / "tests" / "test_failing.py"
-        failing_test.write_text('''
+        failing_test.write_text(
+            '''
 """Tests that are designed to fail."""
 
 import pytest
@@ -460,7 +502,8 @@ def test_assertion_error():
 def test_exception():
     """This test raises an exception."""
     raise ValueError("Test exception")
-''')
+'''
+        )
 
         original_cwd = os.getcwd()
         os.chdir(project_dir)
@@ -469,20 +512,21 @@ def test_exception():
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
+                with patch("subprocess.run") as mock_run:
+
                     def mock_subprocess_with_test_failures(*args, **kwargs):
-                        cmd = args[0] if args else kwargs.get('args', [])
-                        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else str(cmd)
+                        cmd = args[0] if args else kwargs.get("args", [])
+                        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
 
                         # pytest with failures
-                        if 'pytest' in cmd_str:
+                        if "pytest" in cmd_str:
                             return Mock(
                                 returncode=1,
                                 stdout="collected 9 items\n\ntests/test_main.py::TestPhotoProcessor::test_init_default_config PASSED\ntests/test_failing.py::test_always_fails FAILED\ntests/test_failing.py::test_assertion_error FAILED\ntests/test_failing.py::test_exception FAILED\n\n6 passed, 3 failed in 0.25s",
-                                stderr="FAILED tests/test_failing.py::test_always_fails - assert False\nFAILED tests/test_failing.py::test_assertion_error - AssertionError: Expected 10, got 5\nFAILED tests/test_failing.py::test_exception - ValueError: Test exception"
+                                stderr="FAILED tests/test_failing.py::test_always_fails - assert False\nFAILED tests/test_failing.py::test_assertion_error - AssertionError: Expected 10, got 5\nFAILED tests/test_failing.py::test_exception - ValueError: Test exception",
                             )
 
                         # Other tools succeed
@@ -498,10 +542,14 @@ def test_exception():
                     assert result.overall_status == CheckStatus.FAILURE
 
                     # Check that test failures were captured
-                    test_results = [r for r in result.check_results.values() if "Test" in r.name]
+                    test_results = [
+                        r for r in result.check_results.values() if "Test" in r.name
+                    ]
                     assert len(test_results) > 0
 
-                    failed_test_result = next((r for r in test_results if not r.is_successful), None)
+                    failed_test_result = next(
+                        (r for r in test_results if not r.is_successful), None
+                    )
                     assert failed_test_result is not None
                     assert len(failed_test_result.errors) > 0
 
@@ -514,7 +562,8 @@ def test_exception():
 
         # Create a file with security issues
         vulnerable_file = project_dir / "src" / "vulnerable.py"
-        vulnerable_file.write_text('''
+        vulnerable_file.write_text(
+            '''
 """File with intentional security vulnerabilities."""
 
 import subprocess
@@ -544,7 +593,8 @@ def generate_temp_file():
 # Hardcoded password - VULNERABLE
 PASSWORD = "admin123"
 API_KEY = "sk-1234567890abcdef"
-''')
+'''
+        )
 
         original_cwd = os.getcwd()
         os.chdir(project_dir)
@@ -553,28 +603,29 @@ API_KEY = "sk-1234567890abcdef"
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
+                with patch("subprocess.run") as mock_run:
+
                     def mock_subprocess_with_security_issues(*args, **kwargs):
-                        cmd = args[0] if args else kwargs.get('args', [])
-                        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else str(cmd)
+                        cmd = args[0] if args else kwargs.get("args", [])
+                        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
 
                         # bandit finds security issues
-                        if 'bandit' in cmd_str:
+                        if "bandit" in cmd_str:
                             return Mock(
                                 returncode=1,
                                 stdout="Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified\nIssue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory\nIssue: [B105:hardcoded_password_string] Possible hardcoded password",
-                                stderr=""
+                                stderr="",
                             )
 
                         # safety might find vulnerable dependencies
-                        elif 'safety' in cmd_str:
+                        elif "safety" in cmd_str:
                             return Mock(
                                 returncode=1,
                                 stdout="VULNERABILITY: Package 'requests' version 2.25.1 has known security vulnerabilities",
-                                stderr=""
+                                stderr="",
                             )
 
                         # Other tools succeed
@@ -590,17 +641,28 @@ API_KEY = "sk-1234567890abcdef"
                     assert result.overall_status == CheckStatus.FAILURE
 
                     # Check that security issues were captured
-                    security_results = [r for r in result.check_results.values() if "Security" in r.name]
+                    security_results = [
+                        r for r in result.check_results.values() if "Security" in r.name
+                    ]
                     assert len(security_results) > 0
 
-                    failed_security_result = next((r for r in security_results if not r.is_successful), None)
+                    failed_security_result = next(
+                        (r for r in security_results if not r.is_successful), None
+                    )
                     assert failed_security_result is not None
                     assert len(failed_security_result.errors) > 0
 
                     # Check for specific security issue types
-                    error_text = ' '.join(failed_security_result.errors)
-                    assert any(keyword in error_text.lower() for keyword in
-                             ['subprocess', 'hardcoded', 'vulnerability', 'security'])
+                    error_text = " ".join(failed_security_result.errors)
+                    assert any(
+                        keyword in error_text.lower()
+                        for keyword in [
+                            "subprocess",
+                            "hardcoded",
+                            "vulnerability",
+                            "security",
+                        ]
+                    )
 
         finally:
             os.chdir(original_cwd)
@@ -616,11 +678,13 @@ API_KEY = "sk-1234567890abcdef"
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
-                    mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
+                with patch("subprocess.run") as mock_run:
+                    mock_run.return_value = Mock(
+                        returncode=0, stdout="Success", stderr=""
+                    )
 
                     # Run simulation
                     result = simulator.run(checks=["code_quality", "tests"])
@@ -663,11 +727,13 @@ API_KEY = "sk-1234567890abcdef"
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
-                    mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
+                with patch("subprocess.run") as mock_run:
+                    mock_run.return_value = Mock(
+                        returncode=0, stdout="Success", stderr=""
+                    )
 
                     # Run simulation
                     result = simulator.run(checks=["code_quality"])
@@ -698,25 +764,25 @@ class TestMultiplePythonVersions:
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
+                with patch("subprocess.run") as mock_run:
                     # Mock different responses for different Python versions
                     def mock_subprocess_multi_python(*args, **kwargs):
-                        cmd = args[0] if args else kwargs.get('args', [])
-                        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else str(cmd)
+                        cmd = args[0] if args else kwargs.get("args", [])
+                        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
 
                         # Simulate version-specific behavior
-                        if 'python3.9' in cmd_str:
+                        if "python3.9" in cmd_str:
                             # Python 3.9 might have different mypy results
-                            if 'mypy' in cmd_str:
+                            if "mypy" in cmd_str:
                                 return Mock(
                                     returncode=1,
                                     stdout="src/main.py:15: error: Unsupported syntax for Python 3.9",
-                                    stderr=""
+                                    stderr="",
                                 )
-                        elif 'python3.11' in cmd_str:
+                        elif "python3.11" in cmd_str:
                             # Python 3.11 succeeds
                             pass
 
@@ -728,7 +794,7 @@ class TestMultiplePythonVersions:
                     # Run simulation with multiple Python versions
                     result = simulator.run(
                         checks=["code_quality", "tests"],
-                        python_versions=["3.10", "3.11"]
+                        python_versions=["3.10", "3.11"],
                     )
 
                     # Verify results
@@ -739,13 +805,16 @@ class TestMultiplePythonVersions:
 
                     # Should have results for each version
                     version_specific_results = [
-                        r for r in result.check_results.values()
+                        r
+                        for r in result.check_results.values()
                         if r.python_version is not None
                     ]
 
                     # May have version-specific results
                     if version_specific_results:
-                        python_versions_in_results = {r.python_version for r in version_specific_results}
+                        python_versions_in_results = {
+                            r.python_version for r in version_specific_results
+                        }
                         assert len(python_versions_in_results) > 0
 
         finally:
@@ -766,9 +835,11 @@ class TestGitHookIntegration:
 
         try:
             # Initialize git repo
-            subprocess.run(['git', 'init'], check=True, capture_output=True)
-            subprocess.run(['git', 'config', 'user.email', 'test@example.com'], check=True)
-            subprocess.run(['git', 'config', 'user.name', 'Test User'], check=True)
+            subprocess.run(["git", "init"], check=True, capture_output=True)
+            subprocess.run(
+                ["git", "config", "user.email", "test@example.com"], check=True
+            )
+            subprocess.run(["git", "config", "user.name", "Test User"], check=True)
 
             config_path = project_dir / "ci-config.yaml"
             simulator = CISimulator(str(config_path))
@@ -783,7 +854,10 @@ class TestGitHookIntegration:
 
                 # Check hook content
                 hook_content = hook_path.read_text()
-                assert "ci-simulation" in hook_content.lower() or "simulator" in hook_content.lower()
+                assert (
+                    "ci-simulation" in hook_content.lower()
+                    or "simulator" in hook_content.lower()
+                )
 
                 # Check that hook is executable
                 assert os.access(hook_path, os.X_OK)
@@ -806,7 +880,8 @@ class TestPerformanceIntegration:
 
         # Create a performance test
         perf_test = project_dir / "tests" / "test_performance.py"
-        perf_test.write_text('''
+        perf_test.write_text(
+            '''
 """Performance tests."""
 
 import time
@@ -846,7 +921,8 @@ def test_memory_usage():
     assert memory_size < 10000
 
     return {"memory_usage": memory_size}
-''')
+'''
+        )
 
         original_cwd = os.getcwd()
         os.chdir(project_dir)
@@ -861,20 +937,21 @@ def test_memory_usage():
 
             simulator = CISimulator(str(config_path))
 
-            with patch('shutil.which') as mock_which:
+            with patch("shutil.which") as mock_which:
                 mock_which.return_value = "/usr/bin/tool"
 
-                with patch('subprocess.run') as mock_run:
+                with patch("subprocess.run") as mock_run:
+
                     def mock_performance_subprocess(*args, **kwargs):
-                        cmd = args[0] if args else kwargs.get('args', [])
-                        cmd_str = ' '.join(cmd) if isinstance(cmd, list) else str(cmd)
+                        cmd = args[0] if args else kwargs.get("args", [])
+                        cmd_str = " ".join(cmd) if isinstance(cmd, list) else str(cmd)
 
                         # Mock performance test results
-                        if 'pytest' in cmd_str and 'performance' in cmd_str:
+                        if "pytest" in cmd_str and "performance" in cmd_str:
                             return Mock(
                                 returncode=0,
                                 stdout="test_performance.py::test_processing_speed PASSED\ntest_performance.py::test_memory_usage PASSED\n\n2 passed in 0.05s",
-                                stderr=""
+                                stderr="",
                             )
 
                         return Mock(returncode=0, stdout="Success", stderr="")
@@ -889,7 +966,8 @@ def test_memory_usage():
 
                     # Look for performance-related results
                     perf_results = [
-                        r for r in result.check_results.values()
+                        r
+                        for r in result.check_results.values()
                         if "performance" in r.name.lower()
                     ]
 

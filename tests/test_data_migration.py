@@ -6,13 +6,14 @@ Tests the data migration functionality for AI integration.
 Author: Kiro AI Integration System
 """
 
-import pytest
 import json
 import sqlite3
 import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import Mock, patch
+
+import pytest
 
 from src.integration.data_migration import (
     DataMigrationManager,
@@ -20,9 +21,9 @@ from src.integration.data_migration import (
     MigrationStatus,
 )
 from src.integration.data_validation import DataValidator
-from src.integration.models import ImageMetadata, ThemeConfiguration, ApplicationState
-from src.integration.logging_system import LoggerSystem
 from src.integration.error_handling import IntegratedErrorHandler
+from src.integration.logging_system import LoggerSystem
+from src.integration.models import ApplicationState, ImageMetadata, ThemeConfiguration
 
 
 class TestDataMigrationManager:

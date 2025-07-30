@@ -26,16 +26,16 @@ watchdogライブラリを使用してクロスプラットフォーム対応の
 Author: Kiro AI Integration System
 """
 
-import time
 import threading
-from pathlib import Path
-from typing import Dict, Any, Optional, Callable, List, Set
+import time
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set
 
 try:
+    from watchdog.events import FileSystemEvent, FileSystemEventHandler
     from watchdog.observers import Observer
-    from watchdog.events import FileSystemEventHandler, FileSystemEvent
 
     WATCHDOG_AVAILABLE = True
 except ImportError:
@@ -44,9 +44,9 @@ except ImportError:
     FileSystemEventHandler = None
     FileSystemEvent = None
 
-from ..models import AIComponent
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
+from ..models import AIComponent
 
 
 class FileChangeType(Enum):

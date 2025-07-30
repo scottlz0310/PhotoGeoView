@@ -6,9 +6,9 @@ This script tests the SecurityScanner functionality including
 safety vulnerability scanning and bandit security linting.
 """
 
-import sys
-import os
 import json
+import os
+import sys
 from pathlib import Path
 
 # Add the parent directory to the path so we can import our modules
@@ -24,16 +24,21 @@ def test_security_scanner():
 
     # Test configuration
     config = {
-        'timeout': 60,
-        'safety': {
-            'ignore_ids': [],
-            'full_report': True
+        "timeout": 60,
+        "safety": {"ignore_ids": [], "full_report": True},
+        "bandit": {
+            "exclude_dirs": [
+                "venv",
+                "env",
+                ".venv",
+                "node_modules",
+                "__pycache__",
+                "build",
+                "dist",
+            ],
+            "skip_tests": True,
+            "confidence_level": "LOW",
         },
-        'bandit': {
-            'exclude_dirs': ['venv', 'env', '.venv', 'node_modules', '__pycache__', 'build', 'dist'],
-            'skip_tests': True,
-            'confidence_level': 'LOW'
-        }
     }
 
     # Create scanner instance
@@ -95,7 +100,7 @@ def test_security_scanner():
 
     # Save report to file for inspection
     report_path = Path("security_scan_report.md")
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
     print(f"Report saved to: {report_path}")
 
@@ -118,5 +123,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Test failed with error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

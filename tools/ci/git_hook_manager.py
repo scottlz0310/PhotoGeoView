@@ -5,15 +5,15 @@ This module provides comprehensive Git hook management functionality,
 including installation, configuration, and execution of CI simulation hooks.
 """
 
+import json
+import logging
 import os
 import stat
 import subprocess
 import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Any
-import logging
-import json
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class GitHookManager:
@@ -25,21 +25,21 @@ class GitHookManager:
     """
 
     SUPPORTED_HOOKS = {
-        'pre-commit': {
-            'description': 'Run fast checks before commit',
-            'default_checks': ['code_quality'],
-            'timeout': 300  # 5 minutes
+        "pre-commit": {
+            "description": "Run fast checks before commit",
+            "default_checks": ["code_quality"],
+            "timeout": 300,  # 5 minutes
         },
-        'pre-push': {
-            'description': 'Run comprehensive checks before push',
-            'default_checks': ['code_quality', 'test_runner', 'security_scanner'],
-            'timeout': 1800  # 30 minutes
+        "pre-push": {
+            "description": "Run comprehensive checks before push",
+            "default_checks": ["code_quality", "test_runner", "security_scanner"],
+            "timeout": 1800,  # 30 minutes
         },
-        'commit-msg': {
-            'description': 'Validate commit message format',
-            'default_checks': [],
-            'timeout': 30
-        }
+        "commit-msg": {
+            "description": "Validate commit message format",
+            "default_checks": [],
+            "timeout": 30,
+        },
     }
 
     def __init__(self, config: Dict[str, Any]):
@@ -48,11 +48,11 @@ class GitHookManager:
 
         Args:
             config: Configuration dicti
-    """
+        """
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.git_dir = self._find_git_directory()
-        self.hooks_dir = self.git_dir / 'hooks' if self.git_dir else None
+        self.hooks_dir = self.git_dir / "hooks" if self.git_dir else None
 
     def _find_git_directory(self) -> Optional[Path]:
         """
@@ -65,13 +65,13 @@ class GitHookManager:
 
         # Look for .git directory in current and parent directories
         for path in [current_dir] + list(current_dir.parents):
-            git_dir = path / '.git'
+            git_dir = path / ".git"
             if git_dir.exists():
                 if git_dir.is_file():
                     # Handle Git worktrees
-                    with open(git_dir, 'r') as f:
+                    with open(git_dir, "r") as f:
                         git_dir_content = f.read().strip()
-                        if git_dir_content.startswith('gitdir: '):
+                        if git_dir_content.startswith("gitdir: "):
                             git_dir = Path(git_dir_content[8:])
                 return git_dir
 
@@ -86,8 +86,9 @@ class GitHookManager:
         """
         return self.git_dir is not None
 
-    def install_hook(self, hook_type: str, checks: Optional[List[str]] = None,
-                    force: bool = False) -> bool:
+    def install_hook(
+        self, hook_type: str, checks: Optional[List[str]] = None, force: bool = False
+    ) -> bool:
         """
         Install a Git hook for CI simulation.
 
@@ -115,12 +116,14 @@ class GitHookManager:
 
             # Check if hook already exists
             if hook_path.exists() and not force:
-                self.logger.warning(f"Hook {hook_type} already exists. Use --force to overwrite.")
+                self.logger.warning(
+                    f"Hook {hook_type} already exists. Use --force to overwrite."
+                )
                 return False
 
             # Backup existing hook if it exists
             if hook_path.exists():
-                backup_path = hook_path.with_suffix('.backup')
+                backup_path = hook_path.with_suffix(".backup")
                 hook_path.rename(backup_path)
                 self.logger.info(f"Backed up existing hook to {backup_path}")
 
@@ -128,7 +131,7 @@ class GitHookManager:
             hook_script = self._generate_hook_script(hook_type, checks)
 
             # Write hook script
-            with open(hook_path, 'w', encoding='utf-8') as f:
+            with open(hook_path, "w", encoding="utf-8") as f:
                 f.write(hook_script)
 
             # Make hook executable
@@ -174,7 +177,7 @@ class GitHookManager:
             hook_path.unlink()
 
             # Restore backup if it exists
-            backup_path = hook_path.with_suffix('.backup')
+            backup_path = hook_path.with_suffix(".backup")
             if backup_path.exists():
                 backup_path.rename(hook_path)
                 self.logger.info(f"Restored backup hook from {backup_path}")
@@ -205,11 +208,15 @@ class GitHookManager:
             hook_path = self.hooks_dir / hook_type
 
             hooks_info[hook_type] = {
-                'installed': hook_path.exists(),
-                'is_ours': self._is_our_hook(hook_path) if hook_path.exists() else False,
-                'executable': self._is_executable(hook_path) if hook_path.exists() else False,
-                'description': self.SUPPORTED_HOOKS[hook_type]['description'],
-                'config': self._load_hook_config(hook_type)
+                "installed": hook_path.exists(),
+                "is_ours": (
+                    self._is_our_hook(hook_path) if hook_path.exists() else False
+                ),
+                "executable": (
+                    self._is_executable(hook_path) if hook_path.exists() else False
+                ),
+                "description": self.SUPPORTED_HOOKS[hook_type]["description"],
+                "config": self._load_hook_config(hook_type),
             }
 
         return hooks_info
@@ -242,7 +249,7 @@ class GitHookManager:
                 [str(hook_path)],
                 capture_output=True,
                 text=True,
-                timeout=self.SUPPORTED_HOOKS[hook_type]['timeout']
+                timeout=self.SUPPORTED_HOOKS[hook_type]["timeout"],
             )
 
             if result.returncode == 0:
@@ -251,7 +258,9 @@ class GitHookManager:
                     self.logger.debug(f"Hook output: {result.stdout}")
                 return True
             else:
-                self.logger.error(f"Hook {hook_type} test failed with exit code {result.returncode}")
+                self.logger.error(
+                    f"Hook {hook_type} test failed with exit code {result.returncode}"
+                )
                 if result.stderr:
                     self.logger.error(f"Hook error: {result.stderr}")
                 return False
@@ -263,7 +272,9 @@ class GitHookManager:
             self.logger.error(f"Failed to test {hook_type} hook: {e}")
             return False
 
-    def _generate_hook_script(self, hook_type: str, checks: Optional[List[str]] = None) -> str:
+    def _generate_hook_script(
+        self, hook_type: str, checks: Optional[List[str]] = None
+    ) -> str:
         """
         Generate Git hook script content.
 
@@ -275,21 +286,21 @@ class GitHookManager:
             Hook script content
         """
         if checks is None:
-            checks = self.SUPPORTED_HOOKS[hook_type]['default_checks']
+            checks = self.SUPPORTED_HOOKS[hook_type]["default_checks"]
 
         python_executable = sys.executable
-        simulator_path = Path(__file__).parent / 'simulator.py'
+        simulator_path = Path(__file__).parent / "simulator.py"
         simulator_path = simulator_path.resolve()
 
         # Get hook configuration
         hook_config = self.SUPPORTED_HOOKS[hook_type]
-        timeout = hook_config['timeout']
+        timeout = hook_config["timeout"]
 
         # Build check arguments
-        check_args = ' '.join(checks) if checks else ''
+        check_args = " ".join(checks) if checks else ""
 
         # Generate script based on hook type
-        if hook_type == 'pre-commit':
+        if hook_type == "pre-commit":
             return f"""#!/bin/sh
 # PhotoGeoView CI Simulation Pre-commit Hook
 # Generated by CI Simulator on {datetime.now().isoformat()}
@@ -328,7 +339,7 @@ echo "✅ CI simulation passed. Proceeding with commit."
 exit 0
 """
 
-        elif hook_type == 'pre-push':
+        elif hook_type == "pre-push":
             return f"""#!/bin/sh
 # PhotoGeoView CI Simulation Pre-push Hook
 # Generated by CI Simulator on {datetime.now().isoformat()}
@@ -386,7 +397,7 @@ echo "✅ Full CI simulation passed. Proceeding with push."
 exit 0
 """
 
-        elif hook_type == 'commit-msg':
+        elif hook_type == "commit-msg":
             return f"""#!/bin/sh
 # PhotoGeoView CI Simulation Commit Message Hook
 # Generated by CI Simulator on {datetime.now().isoformat()}
@@ -415,7 +426,7 @@ exit 0
 
     def _make_executable(self, file_path: Path) -> None:
         """Make a file executable."""
-        if os.name != 'nt':  # Unix-like systems
+        if os.name != "nt":  # Unix-like systems
             current_permissions = file_path.stat().st_mode
             file_path.chmod(current_permissions | stat.S_IEXEC)
         # On Windows, files are executable by default
@@ -425,7 +436,7 @@ exit 0
         if not file_path.exists():
             return False
 
-        if os.name == 'nt':  # Windows
+        if os.name == "nt":  # Windows
             return True  # Files are executable by default on Windows
         else:  # Unix-like systems
             return os.access(file_path, os.X_OK)
@@ -436,28 +447,31 @@ exit 0
             return False
 
         try:
-            with open(hook_path, 'r', encoding='utf-8') as f:
+            with open(hook_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                return 'PhotoGeoView CI Simulation' in content and 'Generated by CI Simulator' in content
+                return (
+                    "PhotoGeoView CI Simulation" in content
+                    and "Generated by CI Simulator" in content
+                )
         except Exception:
             return False
 
     def _save_hook_config(self, hook_type: str, checks: Optional[List[str]]) -> None:
         """Save hook configuration."""
         try:
-            config_dir = Path('.kiro/ci-hooks')
+            config_dir = Path(".kiro/ci-hooks")
             config_dir.mkdir(parents=True, exist_ok=True)
 
-            config_file = config_dir / f'{hook_type}.json'
+            config_file = config_dir / f"{hook_type}.json"
 
             config = {
-                'hook_type': hook_type,
-                'checks': checks or self.SUPPORTED_HOOKS[hook_type]['default_checks'],
-                'installed_at': datetime.now().isoformat(),
-                'timeout': self.SUPPORTED_HOOKS[hook_type]['timeout']
+                "hook_type": hook_type,
+                "checks": checks or self.SUPPORTED_HOOKS[hook_type]["default_checks"],
+                "installed_at": datetime.now().isoformat(),
+                "timeout": self.SUPPORTED_HOOKS[hook_type]["timeout"],
             }
 
-            with open(config_file, 'w', encoding='utf-8') as f:
+            with open(config_file, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2)
 
         except Exception as e:
@@ -466,12 +480,12 @@ exit 0
     def _load_hook_config(self, hook_type: str) -> Optional[Dict[str, Any]]:
         """Load hook configuration."""
         try:
-            config_file = Path('.kiro/ci-hooks') / f'{hook_type}.json'
+            config_file = Path(".kiro/ci-hooks") / f"{hook_type}.json"
 
             if not config_file.exists():
                 return None
 
-            with open(config_file, 'r', encoding='utf-8') as f:
+            with open(config_file, "r", encoding="utf-8") as f:
                 return json.load(f)
 
         except Exception as e:
@@ -481,7 +495,7 @@ exit 0
     def _remove_hook_config(self, hook_type: str) -> None:
         """Remove hook configuration."""
         try:
-            config_file = Path('.kiro/ci-hooks') / f'{hook_type}.json'
+            config_file = Path(".kiro/ci-hooks") / f"{hook_type}.json"
 
             if config_file.exists():
                 config_file.unlink()
@@ -497,14 +511,14 @@ exit 0
             Dictionary with hook status information
         """
         status = {
-            'git_repository': self.is_git_repository(),
-            'git_dir': str(self.git_dir) if self.git_dir else None,
-            'hooks_dir': str(self.hooks_dir) if self.hooks_dir else None,
-            'hooks': {}
+            "git_repository": self.is_git_repository(),
+            "git_dir": str(self.git_dir) if self.git_dir else None,
+            "hooks_dir": str(self.hooks_dir) if self.hooks_dir else None,
+            "hooks": {},
         }
 
         if self.is_git_repository():
-            status['hooks'] = self.list_hooks()
+            status["hooks"] = self.list_hooks()
 
         return status
 
@@ -516,8 +530,8 @@ exit 0
             Dictionary mapping hook types to installation success
         """
         recommended_hooks = {
-            'pre-commit': ['code_quality'],
-            'pre-push': ['code_quality', 'test_runner', 'security_scanner']
+            "pre-commit": ["code_quality"],
+            "pre-push": ["code_quality", "test_runner", "security_scanner"],
         }
 
         results = {}
@@ -566,23 +580,23 @@ exit 0
         validation_results = {}
 
         if not self.is_git_repository():
-            return {'general': ['Not in a Git repository']}
+            return {"general": ["Not in a Git repository"]}
 
         hooks_info = self.list_hooks()
 
         for hook_type, info in hooks_info.items():
             errors = []
 
-            if info['installed']:
-                if not info['is_ours']:
-                    errors.append('Hook was not created by CI Simulator')
+            if info["installed"]:
+                if not info["is_ours"]:
+                    errors.append("Hook was not created by CI Simulator")
 
-                if not info['executable']:
-                    errors.append('Hook is not executable')
+                if not info["executable"]:
+                    errors.append("Hook is not executable")
 
                 # Test hook execution
                 if not self.test_hook(hook_type):
-                    errors.append('Hook test execution failed')
+                    errors.append("Hook test execution failed")
 
             validation_results[hook_type] = errors
 

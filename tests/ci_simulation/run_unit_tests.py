@@ -6,11 +6,12 @@ This script runs all unit tests for the CI simulation tool components
 and provides detailed reporting of test results.
 """
 
-import sys
-import os
-import pytest
 import argparse
+import os
+import sys
 from pathlib import Path
+
+import pytest
 
 # Add the project root to the path
 project_root = Path(__file__).parent.parent.parent
@@ -43,22 +44,27 @@ def run_tests(test_pattern=None, verbose=False, coverage=False, parallel=False):
 
     # Add coverage if requested
     if coverage:
-        args.extend([
-            "--cov=tools.ci",
-            "--cov-report=html:reports/coverage",
-            "--cov-report=term-missing",
-            "--cov-fail-under=80"
-        ])
+        args.extend(
+            [
+                "--cov=tools.ci",
+                "--cov-report=html:reports/coverage",
+                "--cov-report=term-missing",
+                "--cov-fail-under=80",
+            ]
+        )
 
     # Add parallel execution if requested
     if parallel:
         args.extend(["-n", "auto"])
 
     # Add markers for different test types
-    args.extend([
-        "-m", "not integration",  # Skip integration tests by default
-        "--durations=10"  # Show 10 slowest tests
-    ])
+    args.extend(
+        [
+            "-m",
+            "not integration",  # Skip integration tests by default
+            "--durations=10",  # Show 10 slowest tests
+        ]
+    )
 
     print(f"Running tests with arguments: {' '.join(args)}")
     print("-" * 60)
@@ -76,40 +82,37 @@ def main():
         description="Run unit tests for CI simulation tool"
     )
 
+    parser.add_argument("-k", "--pattern", help="Pattern to match test files/functions")
+
     parser.add_argument(
-        "-k", "--pattern",
-        help="Pattern to match test files/functions"
+        "-v", "--verbose", action="store_true", help="Enable verbose output"
     )
 
     parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output"
+        "-c", "--coverage", action="store_true", help="Enable coverage reporting"
     )
 
     parser.add_argument(
-        "-c", "--coverage",
-        action="store_true",
-        help="Enable coverage reporting"
+        "-p", "--parallel", action="store_true", help="Run tests in parallel"
     )
 
     parser.add_argument(
-        "-p", "--parallel",
-        action="store_true",
-        help="Run tests in parallel"
-    )
-
-    parser.add_argument(
-        "--integration",
-        action="store_true",
-        help="Include integration tests"
+        "--integration", action="store_true", help="Include integration tests"
     )
 
     parser.add_argument(
         "--component",
-        choices=["models", "interfaces", "config", "checkers", "environment",
-                "reporters", "orchestrator", "error_handling"],
-        help="Run tests for specific component only"
+        choices=[
+            "models",
+            "interfaces",
+            "config",
+            "checkers",
+            "environment",
+            "reporters",
+            "orchestrator",
+            "error_handling",
+        ],
+        help="Run tests for specific component only",
     )
 
     args = parser.parse_args()
@@ -124,7 +127,7 @@ def main():
             "environment": "test_environment_managers",
             "reporters": "test_reporters",
             "orchestrator": "test_orchestrator",
-            "error_handling": "test_orchestrator_and_error_handling"
+            "error_handling": "test_orchestrator_and_error_handling",
         }
         args.pattern = component_patterns.get(args.component, args.pattern)
 
@@ -138,7 +141,7 @@ def main():
         test_pattern=args.pattern,
         verbose=args.verbose,
         coverage=args.coverage,
-        parallel=args.parallel
+        parallel=args.parallel,
     )
 
     # Print summary

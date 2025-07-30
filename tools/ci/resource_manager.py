@@ -8,28 +8,30 @@ monitoring, and graceful shutdown procedures.
 Author: Kiro (AI Integration and Quality Assurance)
 """
 
+import atexit
+import logging
 import os
-import sys
 import shutil
+import signal
+import sys
 import tempfile
 import threading
 import time
-import signal
-import atexit
-import logging
-import psutil
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Set, Callable
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set
+
+import psutil
 
 try:
-    from .utils import ensure_directory_exists, get_project_root, formuration
     from .models import CheckStatus
+    from .utils import ensure_directory_exists, formuration, get_project_root
 except ImportError:
-    from utils import ensure_directory_exists, get_project_root, format_duration
     from models import CheckStatus
+
+    from utils import ensure_directory_exists, format_duration, get_project_root
 
 
 @dataclass
@@ -85,11 +87,11 @@ class ResourceManager:
         self.resource_locks: Dict[str, threading.Lock] = {}
 
         # Configuration
-        self.max_memory_percent = self.config.get('max_memory_percent', 80.0)
-        self.max_disk_percent = self.config.get('max_disk_percent', 90.0)
-        self.cleanup_interval = self.config.get('cleanup_interval', 300)  # 5 minutes
-        self.temp_file_max_age = self.config.get('temp_file_max_age', 3600)  # 1 hour
-        self.monitoring_enabled = self.config.get('monitoring_enabled', True)
+        self.max_memory_percent = self.config.get("max_memory_percent", 80.0)
+        self.max_disk_percent = self.config.get("max_disk_percent", 90.0)
+        self.cleanup_interval = self.config.get("cleanup_interval", 300)  # 5 minutes
+        self.temp_file_max_age = self.config.get("temp_file_max_age", 3600)  # 1 hour
+        self.monitoring_enabled = self.config.get("monitoring_enabled", True)
 
         # Monitoring thread
         self._monitoring_thread: Optional[threading.Thread] = None
@@ -122,9 +124,7 @@ class ResourceManager:
 
         self._shutdown_event.clear()
         self._monitoring_thread = threading.Thread(
-            target=self._monitoring_loop,
-            daemon=True,
-            name="ResourceMonitor"
+            target=self._monitoring_loop, daemon=True, name="ResourceMonitor"
         )
         self._monitoring_thread.start()
         self.logger.info("Resource monitoring started")
@@ -147,8 +147,7 @@ class ResourceManager:
                 # Keep only recent history (last 24 hours)
                 cutoff_time = datetime.now() - timedelta(hours=24)
                 self._resource_history = [
-                    u for u in self._resource_history
-                    if u.timestamp > cutoff_time
+                    u for u in self._resource_history if u.timestamp > cutoff_time
                 ]
 
                 # Check for resource issues
@@ -173,7 +172,7 @@ class ResourceManager:
             memory_available_mb = memory.available / (1024 * 1024)
 
             # Disk information
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_percent = (disk.used / disk.total) * 100
             disk_used_gb = disk.used / (1024 * 1024 * 1024)
             disk_available_gb = disk.free / (1024 * 1024 * 1024)
@@ -199,7 +198,7 @@ class ResourceManager:
                 disk_available_gb=disk_available_gb,
                 cpu_percent=cpu_percent,
                 process_count=process_count,
-                open_files=open_files
+                open_files=open_files,
             )
 
         except Exception as e:
@@ -213,7 +212,7 @@ class ResourceManager:
                 disk_available_gb=0.0,
                 cpu_percent=0.0,
                 process_count=0,
-                open_files=0
+                open_files=0,
             )
 
     def _check_resource_limits(self, usage: ResourceUsage) -> None:
@@ -241,6 +240,7 @@ class ResourceManager:
 
         # Force garbage collection
         import gc
+
         gc.collect()
 
         # Clean up old temporary files
@@ -279,8 +279,7 @@ class ResourceManager:
             # Clean up old resource history
             cutoff_time = datetime.now() - timedelta(hours=24)
             self._resource_history = [
-                u for u in self._resource_history
-                if u.timestamp > cutoff_time
+                u for u in self._resource_history if u.timestamp > cutoff_time
             ]
 
         except Exception as e:
@@ -291,7 +290,7 @@ class ResourceManager:
         path: str,
         resource_type: str = "file",
         cleanup_function: Optional[Callable] = None,
-        metadata: Dict[str, Any] = None
+        metadata: Dict[str, Any] = None,
     ) -> str:
         """
         Register a temporary resource for cleanup.
@@ -328,7 +327,7 @@ class ResourceManager:
             created_at=datetime.now(),
             size_bytes=size_bytes,
             cleanup_function=cleanup_function,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         self.temp_resources[resource_id] = resource
@@ -430,7 +429,9 @@ class ResourceManager:
                     success = True
 
             if success:
-                self.logger.debug(f"Cleaned up resource: {resource_id} -> {resource.path}")
+                self.logger.debug(
+                    f"Cleaned up resource: {resource_id} -> {resource.path}"
+                )
 
         except Exception as e:
             self.logger.error(f"Error cleaning up resource {resource_id}: {e}")
@@ -649,20 +650,23 @@ class ResourceManager:
                 "active_processes": len(self.active_processes),
                 "total_temp_size_mb": sum(
                     r.size_bytes for r in self.temp_resources.values()
-                ) / (1024 * 1024),
+                )
+                / (1024 * 1024),
             },
             "limits": {
                 "max_memory_percent": self.max_memory_percent,
                 "max_disk_percent": self.max_disk_percent,
-            }
+            },
         }
 
         # Add historical data if available
         if self._resource_history:
             recent_history = self._resource_history[-10:]  # Last 10 measurements
             stats["history"] = {
-                "avg_memory_percent": sum(u.memory_percent for u in recent_history) / len(recent_history),
-                "avg_cpu_percent": sum(u.cpu_percent for u in recent_history) / len(recent_history),
+                "avg_memory_percent": sum(u.memory_percent for u in recent_history)
+                / len(recent_history),
+                "avg_cpu_percent": sum(u.cpu_percent for u in recent_history)
+                / len(recent_history),
                 "measurements": len(self._resource_history),
             }
 
@@ -698,20 +702,24 @@ class ResourceManager:
         # Add historical data if available
         if "history" in stats:
             history = stats["history"]
-            report_lines.extend([
-                "",
-                "## Historical Averages",
-                f"- Average Memory: {history['avg_memory_percent']:.1f}%",
-                f"- Average CPU: {history['avg_cpu_percent']:.1f}%",
-                f"- Measurements: {history['measurements']}",
-            ])
+            report_lines.extend(
+                [
+                    "",
+                    "## Historical Averages",
+                    f"- Average Memory: {history['avg_memory_percent']:.1f}%",
+                    f"- Average CPU: {history['avg_cpu_percent']:.1f}%",
+                    f"- Measurements: {history['measurements']}",
+                ]
+            )
 
         # Add temporary resource details
         if self.temp_resources:
-            report_lines.extend([
-                "",
-                "## Temporary Resources Details",
-            ])
+            report_lines.extend(
+                [
+                    "",
+                    "## Temporary Resources Details",
+                ]
+            )
 
             for resource_id, resource in self.temp_resources.items():
                 age = datetime.now() - resource.created_at
@@ -729,7 +737,7 @@ class ResourceManager:
 
         report = self.generate_resource_report()
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(report)
 
         self.logger.info(f"Resource report saved to: {filepath}")

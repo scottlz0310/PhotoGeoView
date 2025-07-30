@@ -2,19 +2,21 @@
 Unit tests for environment management components.
 """
 
-import pytest
 import os
 import subprocess
-from unittest.mock import Mock, patch, MagicMock, call
-from pathlib import Path
 
 # Import environment managers
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ci'))
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, call, patch
 
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
+
+from environment.display_manager import DisplayManager
 from environment.python_manager import PythonManager
 from environment.qt_manager import QtManager
-from environment.display_manager import DisplayManager
 from interfaces import EnvironmentError
 
 
@@ -27,7 +29,7 @@ class TestPythonManager:
         assert manager.supported_versions == ["3.9", "3.10", "3.11", "3.12"]
         assert manager.current_version is None
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_get_current_python_version(self, mock_run):
         """Test getting current Python version."""
         mock_run.return_value.returncode = 0
@@ -40,7 +42,7 @@ class TestPythonManager:
         assert version == "3.10.5"
         assert manager.current_version == "3.10.5"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_get_current_python_version_failure(self, mock_run):
         """Test getting Python version when command fails."""
         mock_run.side_effect = FileNotFoundError("python not found")
@@ -50,7 +52,7 @@ class TestPythonManager:
 
         assert version is None
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_detect_available_versions_pyenv(self, mock_run):
         """Test detecting available Python versions with pyenv."""
         # Mock pyenv versions command
@@ -66,9 +68,10 @@ class TestPythonManager:
         assert "3.11.3" in versions
         assert len(versions) == 3
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_detect_available_versions_conda(self, mock_run):
         """Test detecting available Python versions with conda."""
+
         # Mock conda failing, then conda env list succeeding
         def side_effect(*args, **kwargs):
             if "pyenv" in args[0]:
@@ -92,9 +95,11 @@ class TestPythonManager:
         versions = manager.detect_available_versions()
 
         assert len(versions) >= 1  # At least the current version
-ubprocess.run')
+
+    @patch("subprocess.run")
     def test_detect_available_versions_system_only(self, mock_run):
         """Test detecting versions when only system Python is available."""
+
         def side_effect(*args, **kwargs):
             if "pyenv" in args[0] or "conda" in args[0]:
                 raise FileNotFoundError("command not found")
@@ -113,7 +118,7 @@ ubprocess.run')
         assert "3.10.5" in versions
         assert len(versions) == 1
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_is_version_available(self, mock_run):
         """Test checking if a specific Python version is available."""
         mock_run.return_value.returncode = 0
@@ -125,7 +130,7 @@ ubprocess.run')
         assert manager.is_version_available("3.10") is True
         assert manager.is_version_available("3.10.5") is True
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_is_version_available_not_found(self, mock_run):
         """Test checking unavailable Python version."""
         mock_run.side_effect = FileNotFoundError("python3.8 not found")
@@ -134,7 +139,7 @@ ubprocess.run')
 
         assert manager.is_version_available("3.8") is False
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_setup_virtual_environment(self, mock_run, temp_dir):
         """Test setting up virtual environment."""
         mock_run.return_value.returncode = 0
@@ -149,7 +154,7 @@ ubprocess.run')
         assert success is True
         mock_run.assert_called()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_setup_virtual_environment_failure(self, mock_run, temp_dir):
         """Test virtual environment setup failure."""
         mock_run.return_value.returncode = 1
@@ -163,7 +168,7 @@ ubprocess.run')
 
         assert success is False
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_activate_virtual_environment(self, mock_run, temp_dir):
         """Test activating virtual environment."""
         venv_path = os.path.join(temp_dir, "test_venv")
@@ -171,7 +176,7 @@ ubprocess.run')
 
         # Create fake activate script
         activate_script = os.path.join(venv_path, "bin", "activate")
-        with open(activate_script, 'w') as f:
+        with open(activate_script, "w") as f:
             f.write("# Virtual environment activation script")
 
         manager = PythonManager()
@@ -190,7 +195,7 @@ ubprocess.run')
         with pytest.raises(EnvironmentError):
             manager.activate_virtual_environment(venv_path)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_requirements(self, mock_run, temp_dir):
         """Test installing requirements in virtual environment."""
         mock_run.return_value.returncode = 0
@@ -199,7 +204,7 @@ ubprocess.run')
 
         # Create requirements file
         requirements_file = os.path.join(temp_dir, "requirements.txt")
-        with open(requirements_file, 'w') as f:
+        with open(requirements_file, "w") as f:
             f.write("pytest>=7.0.0\nblack>=22.0.0\n")
 
         manager = PythonManager()
@@ -208,7 +213,7 @@ ubprocess.run')
         assert success is True
         mock_run.assert_called()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_requirements_failure(self, mock_run, temp_dir):
         """Test requirements installation failure."""
         mock_run.return_value.returncode = 1
@@ -216,7 +221,7 @@ ubprocess.run')
         mock_run.return_value.stderr = "Failed to install packages"
 
         requirements_file = os.path.join(temp_dir, "requirements.txt")
-        with open(requirements_file, 'w') as f:
+        with open(requirements_file, "w") as f:
             f.write("nonexistent-package==999.999.999\n")
 
         manager = PythonManager()
@@ -230,27 +235,26 @@ ubprocess.run')
             "python_version": "3.10",
             "virtual_env": True,
             "venv_path": os.path.join(temp_dir, "test_venv"),
-            "requirements_file": None
+            "requirements_file": None,
         }
 
         manager = PythonManager()
 
-        with patch.object(manager, 'is_version_available', return_value=True), \
-             patch.object(manager, 'setup_virtual_environment', return_value=True):
+        with (
+            patch.object(manager, "is_version_available", return_value=True),
+            patch.object(manager, "setup_virtual_environment", return_value=True),
+        ):
 
             success = manager.setup_environment(requirements)
             assert success is True
 
     def test_setup_environment_unsupported_version(self):
         """Test environment setup with unsupported Python version."""
-        requirements = {
-            "python_version": "2.7",
-            "virtual_env": True
-        }
+        requirements = {"python_version": "2.7", "virtual_env": True}
 
         manager = PythonManager()
 
-        with patch.object(manager, 'is_version_available', return_value=False):
+        with patch.object(manager, "is_version_available", return_value=False):
             success = manager.setup_environment(requirements)
             assert success is False
 
@@ -262,7 +266,7 @@ ubprocess.run')
         manager = PythonManager()
         manager.active_venv = venv_path
 
-        with patch('shutil.rmtree') as mock_rmtree:
+        with patch("shutil.rmtree") as mock_rmtree:
             manager.cleanup_environment()
             mock_rmtree.assert_called_once_with(venv_path)
 
@@ -289,9 +293,10 @@ class TestQtManager:
         assert manager.required_packages == ["PyQt5", "PyQt6", "PySide2", "PySide6"]
         assert manager.available_qt is None
 
-    @patch('importlib.import_module')
+    @patch("importlib.import_module")
     def test_detect_qt_installation_pyqt5(self, mock_import):
         """Test detecting PyQt5 installation."""
+
         def side_effect(module_name):
             if module_name == "PyQt5":
                 return Mock()
@@ -307,9 +312,10 @@ class TestQtManager:
         assert qt_info["version"] == "PyQt5"
         assert qt_info["packages"] == ["PyQt5"]
 
-    @patch('importlib.import_module')
+    @patch("importlib.import_module")
     def test_detect_qt_installation_multiple(self, mock_import):
         """Test detecting multiple Qt installations."""
+
         def side_effect(module_name):
             if module_name in ["PyQt5", "PySide6"]:
                 return Mock()
@@ -326,7 +332,7 @@ class TestQtManager:
         assert "PyQt5" in qt_info["packages"]
         assert "PySide6" in qt_info["packages"]
 
-    @patch('importlib.import_module')
+    @patch("importlib.import_module")
     def test_detect_qt_installation_none(self, mock_import):
         """Test when no Qt installation is found."""
         mock_import.side_effect = ImportError("No module found")
@@ -337,7 +343,7 @@ class TestQtManager:
         assert qt_info["available"] is False
         assert qt_info["packages"] == []
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_check_system_qt_libraries_linux(self, mock_run):
         """Test checking system Qt libraries on Linux."""
         mock_run.return_value.returncode = 0
@@ -346,13 +352,13 @@ class TestQtManager:
 
         manager = QtManager()
 
-        with patch('platform.system', return_value='Linux'):
+        with patch("platform.system", return_value="Linux"):
             libraries = manager.check_system_qt_libraries()
 
             assert len(libraries) > 0
             assert any("Qt5" in lib for lib in libraries)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_check_system_qt_libraries_windows(self, mock_run):
         """Test checking system Qt libraries on Windows."""
         mock_run.return_value.returncode = 0
@@ -361,13 +367,13 @@ class TestQtManager:
 
         manager = QtManager()
 
-        with patch('platform.system', return_value='Windows'):
+        with patch("platform.system", return_value="Windows"):
             libraries = manager.check_system_qt_libraries()
 
             assert len(libraries) > 0
             assert any("Qt5" in lib for lib in libraries)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_check_system_qt_libraries_macos(self, mock_run):
         """Test checking system Qt libraries on macOS."""
         mock_run.return_value.returncode = 0
@@ -376,7 +382,7 @@ class TestQtManager:
 
         manager = QtManager()
 
-        with patch('platform.system', return_value='Darwin'):
+        with patch("platform.system", return_value="Darwin"):
             libraries = manager.check_system_qt_libraries()
 
             assert len(libraries) > 0
@@ -400,7 +406,7 @@ class TestQtManager:
         # Should not set offscreen platform when not headless
         assert env_vars.get("QT_QPA_PLATFORM") != "offscreen"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_qt_dependencies_pip(self, mock_run):
         """Test installing Qt dependencies via pip."""
         mock_run.return_value.returncode = 0
@@ -413,7 +419,7 @@ class TestQtManager:
         assert success is True
         mock_run.assert_called()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_install_qt_dependencies_failure(self, mock_run):
         """Test Qt dependencies installation failure."""
         mock_run.return_value.returncode = 1
@@ -427,19 +433,15 @@ class TestQtManager:
 
     def test_setup_environment(self):
         """Test complete Qt environment setup."""
-        requirements = {
-            "qt_required": True,
-            "headless": True,
-            "preferred_qt": "PyQt5"
-        }
+        requirements = {"qt_required": True, "headless": True, "preferred_qt": "PyQt5"}
 
         manager = QtManager()
 
-        with patch.object(manager, 'detect_qt_installation') as mock_detect:
+        with patch.object(manager, "detect_qt_installation") as mock_detect:
             mock_detect.return_value = {
                 "available": True,
                 "version": "PyQt5",
-                "packages": ["PyQt5"]
+                "packages": ["PyQt5"],
             }
 
             success = manager.setup_environment(requirements)
@@ -456,18 +458,12 @@ class TestQtManager:
 
     def test_setup_environment_qt_missing(self):
         """Test environment setup when Qt is required but missing."""
-        requirements = {
-            "qt_required": True,
-            "headless": True
-        }
+        requirements = {"qt_required": True, "headless": True}
 
         manager = QtManager()
 
-        with patch.object(manager, 'detect_qt_installation') as mock_detect:
-            mock_detect.return_value = {
-                "available": False,
-                "packages": []
-            }
+        with patch.object(manager, "detect_qt_installation") as mock_detect:
+            mock_detect.return_value = {"available": False, "packages": []}
 
             success = manager.setup_environment(requirements)
             assert success is False
@@ -502,7 +498,7 @@ class TestDisplayManager:
         assert manager.display_number is None
         assert manager.xvfb_process is None
 
-    @patch('subprocess.Popen')
+    @patch("subprocess.Popen")
     def test_start_virtual_display_success(self, mock_popen):
         """Test starting virtual display successfully."""
         mock_process = Mock()
@@ -516,7 +512,7 @@ class TestDisplayManager:
         assert manager.display_number is not None
         assert manager.xvfb_process == mock_process
 
-    @patch('subprocess.Popen')
+    @patch("subprocess.Popen")
     def test_start_virtual_display_failure(self, mock_popen):
         """Test virtual display start failure."""
         mock_popen.side_effect = FileNotFoundError("Xvfb not found")
@@ -527,7 +523,7 @@ class TestDisplayManager:
         assert success is False
         assert manager.xvfb_process is None
 
-    @patch('subprocess.Popen')
+    @patch("subprocess.Popen")
     def test_start_virtual_display_custom_settings(self, mock_popen):
         """Test starting virtual display with custom settings."""
         mock_process = Mock()
@@ -536,9 +532,7 @@ class TestDisplayManager:
 
         manager = DisplayManager()
         success = manager.start_virtual_display(
-            display_number=99,
-            screen_size="1920x1080",
-            color_depth=24
+            display_number=99, screen_size="1920x1080", color_depth=24
         )
 
         assert success is True
@@ -571,7 +565,7 @@ class TestDisplayManager:
         manager = DisplayManager()
         manager.xvfb_process = mock_process
 
-        with patch('time.sleep'):  # Speed up the test
+        with patch("time.sleep"):  # Speed up the test
             manager.stop_virtual_display()
 
         mock_process.terminate.assert_called()
@@ -595,7 +589,7 @@ class TestDisplayManager:
 
         assert env_vars == {}
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_is_display_available(self, mock_run):
         """Test checking if display is available."""
         mock_run.return_value.returncode = 0
@@ -607,7 +601,7 @@ class TestDisplayManager:
 
         assert available is True
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_is_display_available_not_running(self, mock_run):
         """Test checking display availability when not running."""
         mock_run.return_value.returncode = 1
@@ -621,14 +615,11 @@ class TestDisplayManager:
 
     def test_setup_environment_headless(self):
         """Test setting up headless environment."""
-        requirements = {
-            "headless": True,
-            "display_required": True
-        }
+        requirements = {"headless": True, "display_required": True}
 
         manager = DisplayManager()
 
-        with patch.object(manager, 'start_virtual_display', return_value=True):
+        with patch.object(manager, "start_virtual_display", return_value=True):
             success = manager.setup_environment(requirements)
             assert success is True
 
@@ -643,14 +634,11 @@ class TestDisplayManager:
 
     def test_setup_environment_display_start_failure(self):
         """Test environment setup when display start fails."""
-        requirements = {
-            "headless": True,
-            "display_required": True
-        }
+        requirements = {"headless": True, "display_required": True}
 
         manager = DisplayManager()
 
-        with patch.object(manager, 'start_virtual_display', return_value=False):
+        with patch.object(manager, "start_virtual_display", return_value=False):
             success = manager.setup_environment(requirements)
             assert success is False
 
@@ -677,7 +665,7 @@ class TestDisplayManager:
 
         # With display
         manager.display_number = 99
-        with patch.object(manager, 'is_display_available', return_value=True):
+        with patch.object(manager, "is_display_available", return_value=True):
             assert manager.is_environment_ready() is True
 
 
@@ -686,17 +674,13 @@ class TestEnvironmentManagerIntegration:
 
     def test_all_managers_implement_interface(self):
         """Test that all managers implement the interface correctly."""
-        managers = [
-            PythonManager(),
-            QtManager(),
-            DisplayManager()
-        ]
+        managers = [PythonManager(), QtManager(), DisplayManager()]
 
         for manager in managers:
             # Test required methods exist
-            assert callable(getattr(manager, 'setup_environment'))
-            assert callable(getattr(manager, 'cleanup_environment'))
-            assert callable(getattr(manager, 'is_environment_ready'))
+            assert callable(getattr(manager, "setup_environment"))
+            assert callable(getattr(manager, "cleanup_environment"))
+            assert callable(getattr(manager, "is_environment_ready"))
 
     def test_combined_environment_setup(self, temp_dir):
         """Test setting up combined environment with all managers."""
@@ -710,12 +694,14 @@ class TestEnvironmentManagerIntegration:
             "venv_path": os.path.join(temp_dir, "test_venv"),
             "qt_required": True,
             "headless": True,
-            "display_required": True
+            "display_required": True,
         }
 
-        with patch.object(python_manager, 'setup_environment', return_value=True), \
-             patch.object(qt_manager, 'setup_environment', return_value=True), \
-             patch.object(display_manager, 'setup_environment', return_value=True):
+        with (
+            patch.object(python_manager, "setup_environment", return_value=True),
+            patch.object(qt_manager, "setup_environment", return_value=True),
+            patch.object(display_manager, "setup_environment", return_value=True),
+        ):
 
             # Setup all environments
             python_success = python_manager.setup_environment(requirements)
@@ -764,7 +750,7 @@ class TestEnvironmentManagerIntegration:
         qt_manager.available_qt = "PyQt5"
         display_manager.display_number = 99
 
-        with patch.object(display_manager, 'is_display_available', return_value=True):
+        with patch.object(display_manager, "is_display_available", return_value=True):
             assert python_manager.is_environment_ready() is True
             assert qt_manager.is_environment_ready() is True
             assert display_manager.is_environment_ready() is True

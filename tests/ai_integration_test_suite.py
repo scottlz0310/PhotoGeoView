@@ -12,32 +12,31 @@ AI Integration Test Suite
 Author: Kiro AI Integration System
 """
 
-import unittest
-import time
-import threading
-import tempfile
-import shutil
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timedelta
-import json
 import asyncio
+import json
+import shutil
+import sys
+import tempfile
+import threading
+import time
+import unittest
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-
-import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.controllers import AppController
 from integration.config_manager import ConfigManager
+from integration.controllers import AppController
+from integration.error_handling import ErrorCategory, IntegratedErrorHandler
 from integration.logging_system import LoggerSystem
-from integration.performance_monitor import KiroPerformanceMonitor
-from integration.unified_cache import UnifiedCacheSystem
-from integration.state_manager import StateManager
 from integration.models import AIComponent, PerformanceMetrics
-from integration.error_handling import IntegratedErrorHandler, ErrorCategory
+from integration.performance_monitor import KiroPerformanceMonitor
+from integration.state_manager import StateManager
+from integration.unified_cache import UnifiedCacheSystem
 
 
 @dataclass

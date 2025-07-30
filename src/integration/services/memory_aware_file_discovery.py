@@ -29,16 +29,17 @@ MemoryAwareFileDiscovery - メモリ管理機能付きファイル検出
 Author: Kiro AI Integration System
 """
 
-import time
-import psutil
 import gc
-from pathlib import Path
-from typing import List, Optional, Dict, Any, Set
-from datetime import datetime
+import time
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
-from ..models import AIComponent
+import psutil
+
 from ..logging_system import LoggerSystem
+from ..models import AIComponent
 from .file_discovery_service import FileDiscoveryService
 
 

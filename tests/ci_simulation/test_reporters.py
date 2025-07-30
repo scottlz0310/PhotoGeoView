@@ -2,22 +2,30 @@
 Unit tests for report generation components.
 """
 
-import pytest
-import os
 import json
-import tempfile
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+import os
 
 # Import reporters
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ci'))
+import tempfile
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import Mock, mock_open, patch
 
-from reporters.markdown_reporter import MarkdownReporter
-from reporters.json_reporter import JSONReporter
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
+
+from models import (
+    CheckResult,
+    CheckStatus,
+    RegressionIssue,
+    SeverityLevel,
+    SimulationResult,
+)
 from reporters.history_tracker import HistoryTracker
-from models import CheckResult, CheckStatus, SimulationResult, RegressionIssue, SeverityLevel
+from reporters.json_reporter import JSONReporter
+from reporters.markdown_reporter import MarkdownReporter
 
 
 class TestMarkdownReporter:
@@ -41,7 +49,7 @@ class TestMarkdownReporter:
         assert os.path.exists(output_path)
 
         # Check report content
-        with open(output_as f:
+        with open(output_path) as f:
             content = f.read()
 
         assert "# CI Simulation Report" in content
@@ -56,7 +64,7 @@ class TestMarkdownReporter:
             total_duration=3.0,
             check_results={"failed_check": sample_failed_check_result},
             python_versions_tested=["3.10"],
-            summary="Test failed"
+            summary="Test failed",
         )
 
         reporter = MarkdownReporter()
@@ -66,7 +74,7 @@ class TestMarkdownReporter:
 
         assert os.path.exists(result_path)
 
-        with open(result_path, 'r') as f:
+        with open(result_path, "r") as f:
             content = f.read()
 
         assert "❌ FAILURE" in content
@@ -81,7 +89,7 @@ class TestMarkdownReporter:
             current_value=150.0,
             regression_percentage=50.0,
             severity=SeverityLevel.HIGH,
-            description="Performance degraded by 50%"
+            description="Performance degraded by 50%",
         )
 
         simulation_result = SimulationResult(
@@ -90,7 +98,7 @@ class TestMarkdownReporter:
             check_results={"test": sample_check_result},
             python_versions_tested=["3.10"],
             summary="Test completed with regressions",
-            regression_issues=[regression]
+            regression_issues=[regression],
         )
 
         reporter = MarkdownReporter()
@@ -98,7 +106,7 @@ class TestMarkdownReporter:
 
         result_path = reporter.generate_report(simulation_result, output_path)
 
-        with open(result_path, 'r') as f:
+        with open(result_path, "r") as f:
             content = f.read()
 
         assert "## Performance Regressions" in content
@@ -132,7 +140,7 @@ class TestMarkdownReporter:
             name="test_with_suggestions",
             status=CheckStatus.WARNING,
             duration=1.0,
-            suggestions=["Fix indentation", "Add type hints"]
+            suggestions=["Fix indentation", "Add type hints"],
         )
 
         reporter = MarkdownReporter()
@@ -151,7 +159,7 @@ class TestMarkdownReporter:
             current_value=80.0,
             regression_percentage=60.0,
             severity=SeverityLevel.CRITICAL,
-            description="Memory usage increased significantly"
+            description="Memory usage increased significantly",
         )
 
         reporter = MarkdownReporter()
@@ -179,9 +187,18 @@ class TestMarkdownReporter:
         summary = reporter._generate_summary_section(sample_simulation_result)
 
         assert "## Summary" in summary
-        assert f"**Overall Status:** {sample_simulation_result.overall_status.value.upper()}" in summary
-        assert f"**Total Duration:** {sample_simulation_result.total_duration:.2f}s" in summary
-        assert f"**Python Versions:** {', '.join(sample_simulation_result.python_versions_tested)}" in summary
+        assert (
+            f"**Overall Status:** {sample_simulation_result.overall_status.value.upper()}"
+            in summary
+        )
+        assert (
+            f"**Total Duration:** {sample_simulation_result.total_duration:.2f}s"
+            in summary
+        )
+        assert (
+            f"**Python Versions:** {', '.join(sample_simulation_result.python_versions_tested)}"
+            in summary
+        )
 
     def test_generate_check_results_section(self, sample_simulation_result):
         """Test generating check results section."""
@@ -214,7 +231,7 @@ class TestJSONReporter:
         assert os.path.exists(output_path)
 
         # Check report content
-        with open(output_path, 'r') as f:
+        with open(output_path, "r") as f:
             data = json.load(f)
 
         assert data["overall_status"] == sample_simulation_result.overall_status.value
@@ -228,7 +245,7 @@ class TestJSONReporter:
         sample_simulation_result.configuration = {
             "python_versions": ["3.10", "3.11"],
             "timeout": 300,
-            "parallel_jobs": 2
+            "parallel_jobs": 2,
         }
 
         reporter = JSONReporter()
@@ -236,7 +253,7 @@ class TestJSONReporter:
 
         result_path = reporter.generate_report(sample_simulation_result, output_path)
 
-        with open(result_path, 'r') as f:
+        with open(result_path, "r") as f:
             data = json.load(f)
 
         assert "configuration" in data["metadata"]
@@ -251,7 +268,7 @@ class TestJSONReporter:
             current_value=150.0,
             regression_percentage=50.0,
             severity=SeverityLevel.HIGH,
-            description="Performance degraded"
+            description="Performance degraded",
         )
 
         simulation_result = SimulationResult(
@@ -260,7 +277,7 @@ class TestJSONReporter:
             check_results={"test": sample_check_result},
             python_versions_tested=["3.10"],
             summary="Test with regressions",
-            regression_issues=[regression]
+            regression_issues=[regression],
         )
 
         reporter = JSONReporter()
@@ -268,7 +285,7 @@ class TestJSONReporter:
 
         result_path = reporter.generate_report(simulation_result, output_path)
 
-        with open(result_path, 'r') as f:
+        with open(result_path, "r") as f:
             data = json.load(f)
 
         assert "regression_issues" in data
@@ -298,7 +315,9 @@ class TestJSONReporter:
     def test_serialize_check_results(self, sample_simulation_result):
         """Test check results serialization."""
         reporter = JSONReporter()
-        serialized = reporter._serialize_check_results(sample_simulation_result.check_results)
+        serialized = reporter._serialize_check_results(
+            sample_simulation_result.check_results
+        )
 
         assert isinstance(serialized, dict)
         assert "test_check" in serialized
@@ -332,7 +351,7 @@ class TestHistoryTracker:
         assert saved_path.endswith(".json")
 
         # Verify saved content
-        with open(saved_path, 'r') as f:
+        with open(saved_path, "r") as f:
             data = json.load(f)
 
         assert data["overall_status"] == sample_simulation_result.overall_status.value
@@ -351,7 +370,9 @@ class TestHistoryTracker:
 
         assert loaded_result.overall_status == sample_simulation_result.overall_status
         assert loaded_result.total_duration == sample_simulation_result.total_duration
-        assert len(loaded_result.check_results) == len(sample_simulation_result.check_results)
+        assert len(loaded_result.check_results) == len(
+            sample_simulation_result.check_results
+        )
 
     def test_get_recent_results(self, sample_simulation_result, temp_dir):
         """Test getting recent simulation results."""
@@ -365,7 +386,7 @@ class TestHistoryTracker:
                 total_duration=float(i + 1),
                 check_results={},
                 python_versions_tested=["3.10"],
-                summary=f"Test {i}"
+                summary=f"Test {i}",
             )
             tracker.save_simulation_result(result)
 
@@ -396,7 +417,7 @@ class TestHistoryTracker:
                 total_duration=float(i * 10 + 100),  # 100, 110, 120, ...
                 check_results={},
                 python_versions_tested=["3.10"],
-                summary=f"Test {i}"
+                summary=f"Test {i}",
             )
             tracker.save_simulation_result(result)
 
@@ -424,7 +445,7 @@ class TestHistoryTracker:
                 total_duration=float(i + 1),
                 check_results={},
                 python_versions_tested=["3.10"],
-                summary=f"Test {i}"
+                summary=f"Test {i}",
             )
             tracker.save_simulation_result(result)
 
@@ -447,7 +468,7 @@ class TestHistoryTracker:
                 total_duration=float(i + 1),
                 check_results={},
                 python_versions_tested=["3.10"],
-                summary=f"Test {i}"
+                summary=f"Test {i}",
             )
             tracker.save_simulation_result(result)
 
@@ -468,7 +489,7 @@ class TestHistoryTracker:
                 name="performance_test",
                 status=CheckStatus.SUCCESS,
                 duration=1.0,
-                metadata={"benchmark_results": {"test_speed": float(100 + i * 10)}}
+                metadata={"benchmark_results": {"test_speed": float(100 + i * 10)}},
             )
 
             result = SimulationResult(
@@ -476,7 +497,7 @@ class TestHistoryTracker:
                 total_duration=float(i + 1),
                 check_results={"performance": check_result},
                 python_versions_tested=["3.10"],
-                summary=f"Test {i}"
+                summary=f"Test {i}",
             )
             tracker.save_simulation_result(result)
 
@@ -496,14 +517,14 @@ class TestHistoryTracker:
         trends_data = {
             "last_updated": datetime.now().isoformat(),
             "success_rate": 0.85,
-            "average_duration": 120.5
+            "average_duration": 120.5,
         }
 
         tracker._update_trends_file(trends_data)
 
         assert os.path.exists(tracker.trends_file)
 
-        with open(tracker.trends_file, 'r') as f:
+        with open(tracker.trends_file, "r") as f:
             saved_data = json.load(f)
 
         assert saved_data["success_rate"] == 0.85
@@ -518,7 +539,7 @@ class TestHistoryTracker:
         trends_data = {"success_rate": 0.9, "average_duration": 100.0}
         os.makedirs(history_dir, exist_ok=True)
 
-        with open(tracker.trends_file, 'w') as f:
+        with open(tracker.trends_file, "w") as f:
             json.dump(trends_data, f)
 
         loaded_trends = tracker._load_trends_file()
@@ -541,53 +562,51 @@ class TestReporterIntegration:
 
     def test_all_reporters_implement_interface(self):
         """Test that all reporters implement the interface correctly."""
-        reporters = [
-            MarkdownReporter(),
-            JSONReporter()
-        ]
+        reporters = [MarkdownReporter(), JSONReporter()]
 
         for reporter in reporters:
             # Test required properties
-            assert hasattr(reporter, 'format_name')
-            assert hasattr(reporter, 'file_extension')
+            assert hasattr(reporter, "format_name")
+            assert hasattr(reporter, "file_extension")
 
             # Test required methods
-            assert callable(getattr(reporter, 'generate_report'))
-            assert callable(getattr(reporter, 'validate_output_path'))
+            assert callable(getattr(reporter, "generate_report"))
+            assert callable(getattr(reporter, "validate_output_path"))
 
     def test_multiple_report_formats(self, sample_simulation_result, temp_dir):
         """Test generating reports in multiple formats."""
-        reporters = {
-            'markdown': MarkdownReporter(),
-            'json': JSONReporter()
-        }
+        reporters = {"markdown": MarkdownReporter(), "json": JSONReporter()}
 
         report_paths = {}
 
         for format_name, reporter in reporters.items():
             output_path = os.path.join(
-                temp_dir,
-                f"test_report{reporter.file_extension}"
+                temp_dir, f"test_report{reporter.file_extension}"
             )
 
-            result_path = reporter.generate_report(sample_simulation_result, output_path)
+            result_path = reporter.generate_report(
+                sample_simulation_result, output_path
+            )
             report_paths[format_name] = result_path
 
             assert os.path.exists(result_path)
 
         # Verify both files were created
-        assert os.path.exists(report_paths['markdown'])
-        assert os.path.exists(report_paths['json'])
+        assert os.path.exists(report_paths["markdown"])
+        assert os.path.exists(report_paths["json"])
 
         # Verify content is different but related
-        with open(report_paths['markdown'], 'r') as f:
+        with open(report_paths["markdown"], "r") as f:
             md_content = f.read()
 
-        with open(report_paths['json'], 'r') as f:
+        with open(report_paths["json"], "r") as f:
             json_content = json.load(f)
 
         assert "# CI Simulation Report" in md_content
-        assert json_content["overall_status"] == sample_simulation_result.overall_status.value
+        assert (
+            json_content["overall_status"]
+            == sample_simulation_result.overall_status.value
+        )
 
     def test_history_tracking_with_reports(self, sample_simulation_result, temp_dir):
         """Test history tracking integration with report generation."""
@@ -626,7 +645,9 @@ class TestReporterIntegration:
         with pytest.raises((OSError, IOError)):
             reporter.generate_report(sample_simulation_result, invalid_path)
 
-    def test_history_tracker_concurrent_access(self, sample_simulation_result, temp_dir):
+    def test_history_tracker_concurrent_access(
+        self, sample_simulation_result, temp_dir
+    ):
         """Test history tracker with concurrent access simulation."""
         history_dir = os.path.join(temp_dir, "concurrent_history")
 

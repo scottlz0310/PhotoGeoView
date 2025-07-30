@@ -9,18 +9,25 @@ improvement suggestions and quality metrics tracking.
 import json
 import os
 import shutil
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, field
 from statistics import mean, median
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..models import SimulationResult, CheckResult, CheckStatus, SeverityLevel, RegressionIssue
+from ..models import (
+    CheckResult,
+    CheckStatus,
+    RegressionIssue,
+    SeverityLevel,
+    SimulationResult,
+)
 
 
 @dataclass
 class TrendData:
     """Represents trend data for a specific metric over time."""
+
     metric_name: str
     values: List[float] = field(default_factory=list)
     timestamps: List[datetime] = field(default_factory=list)
@@ -33,13 +40,14 @@ class TrendData:
             "values": self.values,
             "timestamps": [ts.isoformat() for ts in self.timestamps],
             "trend_direction": self.trend_direction,
-            "trend_strength": self.trend_strength
+            "trend_strength": self.trend_strength,
         }
 
 
 @dataclass
 class QualityMetrics:
     """Quality metrics for a specific time period."""
+
     timestamp: datetime
     success_rate: float
     total_checks: int
@@ -60,7 +68,7 @@ class QualityMetrics:
             "regression_count": self.regression_count,
             "critical_issues": self.critical_issues,
             "error_count": self.error_count,
-            "warning_count": self.warning_count
+            "warning_count": self.warning_count,
         }
 
 
@@ -107,7 +115,7 @@ class HistoryTracker:
 
         # Save detailed results
         results_file = execution_dir / "results.json"
-        with open(results_file, 'w', encoding='utf-8') as f:
+        with open(results_file, "w", encoding="utf-8") as f:
             json.dump(result.to_dict(), f, indent=2, ensure_ascii=False)
 
         # Save summary
@@ -118,7 +126,7 @@ class HistoryTracker:
         benchmark_data = self._extract_benchmark_data(result)
         if benchmark_data:
             benchmark_file = execution_dir / "benchmark.json"
-            with open(benchmark_file, 'w', encoding='utf-8') as f:
+            with open(benchmark_file, "w", encoding="utf-8") as f:
                 json.dump(benchmark_data, f, indent=2, ensure_ascii=False)
 
         # Update trends and metrics
@@ -127,7 +135,9 @@ class HistoryTracker:
 
         return str(execution_dir)
 
-    def get_execution_history(self, limit: Optional[int] = None) -> List[SimulationResult]:
+    def get_execution_history(
+        self, limit: Optional[int] = None
+    ) -> List[SimulationResult]:
         """
         Retrieve execution history.
 
@@ -141,7 +151,8 @@ class HistoryTracker:
 
         # Get all execution directories
         execution_dirs = [
-            d for d in self.history_dir.iterdir()
+            d
+            for d in self.history_dir.iterdir()
             if d.is_dir() and d.name != "__pycache__"
         ]
 
@@ -155,7 +166,7 @@ class HistoryTracker:
             results_file = execution_dir / "results.json"
             if results_file.exists():
                 try:
-                    with open(results_file, 'r', encoding='utf-8') as f:
+                    with open(results_file, "r", encoding="utf-8") as f:
                         data = json.load(f)
                     history_entries.append(SimulationResult.from_dict(data))
                 except Exception as e:
@@ -178,8 +189,7 @@ class HistoryTracker:
 
         # Filter by date
         recent_history = [
-            result for result in history
-            if result.timestamp >= cutoff_date
+            result for result in history if result.timestamp >= cutoff_date
         ]
 
         if len(recent_history) < 2:
@@ -195,7 +205,9 @@ class HistoryTracker:
         timestamps = []
         for result in recent_history:
             if result.check_results:
-                success_rate = len(result.successful_checks) / len(result.check_results) * 100
+                success_rate = (
+                    len(result.successful_checks) / len(result.check_results) * 100
+                )
                 success_rates.append(success_rate)
                 timestamps.append(result.timestamp)
 
@@ -214,7 +226,9 @@ class HistoryTracker:
         # Analyze error count trend
         error_counts = []
         for result in recent_history:
-            total_errors = sum(len(check.errors) for check in result.check_results.values())
+            total_errors = sum(
+                len(check.errors) for check in result.check_results.values()
+            )
             error_counts.append(total_errors)
 
         if error_counts:
@@ -311,7 +325,11 @@ class HistoryTracker:
         if python_version_issues:
             suggestions.extend(python_version_issues)
 
-        return suggestions if suggestions else ["No specific improvement suggestions at this time"]
+        return (
+            suggestions
+            if suggestions
+            else ["No specific improvement suggestions at this time"]
+        )
 
     def cleanup_old_history(self, days_to_keep: int = 90) -> int:
         """
@@ -358,7 +376,7 @@ class HistoryTracker:
             return []
 
         try:
-            with open(self.metrics_file, 'r', encoding='utf-8') as f:
+            with open(self.metrics_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             cutoff_date = datetime.now() - timedelta(days=days)
@@ -367,17 +385,19 @@ class HistoryTracker:
             for entry in data.get("metrics", []):
                 timestamp = datetime.fromisoformat(entry["timestamp"])
                 if timestamp >= cutoff_date:
-                    metrics.append(QualityMetrics(
-                        timestamp=timestamp,
-                        success_rate=entry["success_rate"],
-                        total_checks=entry["total_checks"],
-                        failed_checks=entry["failed_checks"],
-                        total_duration=entry["total_duration"],
-                        regression_count=entry["regression_count"],
-                        critical_issues=entry["critical_issues"],
-                        error_count=entry["error_count"],
-                        warning_count=entry["warning_count"]
-                    ))
+                    metrics.append(
+                        QualityMetrics(
+                            timestamp=timestamp,
+                            success_rate=entry["success_rate"],
+                            total_checks=entry["total_checks"],
+                            failed_checks=entry["failed_checks"],
+                            total_duration=entry["total_duration"],
+                            regression_count=entry["regression_count"],
+                            critical_issues=entry["critical_issues"],
+                            error_count=entry["error_count"],
+                            warning_count=entry["warning_count"],
+                        )
+                    )
 
             return sorted(metrics, key=lambda x: x.timestamp)
 
@@ -385,7 +405,9 @@ class HistoryTracker:
             print(f"Warning: Could not load quality metrics: {e}")
             return []
 
-    def _save_execution_summary(self, result: SimulationResult, summary_file: Path) -> None:
+    def _save_execution_summary(
+        self, result: SimulationResult, summary_file: Path
+    ) -> None:
         """Save a brief summary of the execution."""
         summary_content = f"""# CI Execution Summary
 
@@ -403,10 +425,12 @@ class HistoryTracker:
 {result.summary}
 """
 
-        with open(summary_file, 'w', encoding='utf-8') as f:
+        with open(summary_file, "w", encoding="utf-8") as f:
             f.write(summary_content)
 
-    def _extract_benchmark_data(self, result: SimulationResult) -> Optional[Dict[str, Any]]:
+    def _extract_benchmark_data(
+        self, result: SimulationResult
+    ) -> Optional[Dict[str, Any]]:
         """Extract benchmark data from simulation result."""
         benchmark_data = {}
 
@@ -422,7 +446,7 @@ class HistoryTracker:
 
         if self.trends_file.exists():
             try:
-                with open(self.trends_file, 'r', encoding='utf-8') as f:
+                with open(self.trends_file, "r", encoding="utf-8") as f:
                     trends_data = json.load(f)
             except Exception:
                 trends_data = {}
@@ -437,11 +461,14 @@ class HistoryTracker:
             "timestamp": timestamp,
             "success_rate": (
                 len(result.successful_checks) / len(result.check_results) * 100
-                if result.check_results else 0
+                if result.check_results
+                else 0
             ),
             "duration": result.total_duration,
-            "error_count": sum(len(check.errors) for check in result.check_results.values()),
-            "regression_count": len(result.regression_issues)
+            "error_count": sum(
+                len(check.errors) for check in result.check_results.values()
+            ),
+            "regression_count": len(result.regression_issues),
         }
 
         trends_data["executions"].append(execution_data)
@@ -449,7 +476,7 @@ class HistoryTracker:
         # Keep only last 100 executions
         trends_data["executions"] = trends_data["executions"][-100:]
 
-        with open(self.trends_file, 'w', encoding='utf-8') as f:
+        with open(self.trends_file, "w", encoding="utf-8") as f:
             json.dump(trends_data, f, indent=2, ensure_ascii=False)
 
     def _update_quality_metrics(self, result: SimulationResult) -> None:
@@ -458,24 +485,30 @@ class HistoryTracker:
 
         if self.metrics_file.exists():
             try:
-                with open(self.metrics_file, 'r', encoding='utf-8') as f:
+                with open(self.metrics_file, "r", encoding="utf-8") as f:
                     metrics_data = json.load(f)
             except Exception:
                 metrics_data = {"metrics": []}
 
         # Create new metrics entry
         total_errors = sum(len(check.errors) for check in result.check_results.values())
-        total_warnings = sum(len(check.warnings) for check in result.check_results.values())
-        critical_issues = len([
-            issue for issue in result.regression_issues
-            if issue.severity == SeverityLevel.CRITICAL
-        ])
+        total_warnings = sum(
+            len(check.warnings) for check in result.check_results.values()
+        )
+        critical_issues = len(
+            [
+                issue
+                for issue in result.regression_issues
+                if issue.severity == SeverityLevel.CRITICAL
+            ]
+        )
 
         new_metrics = QualityMetrics(
             timestamp=result.timestamp,
             success_rate=(
                 len(result.successful_checks) / len(result.check_results) * 100
-                if result.check_results else 0
+                if result.check_results
+                else 0
             ),
             total_checks=len(result.check_results),
             failed_checks=len(result.failed_checks),
@@ -483,7 +516,7 @@ class HistoryTracker:
             regression_count=len(result.regression_issues),
             critical_issues=critical_issues,
             error_count=total_errors,
-            warning_count=total_warnings
+            warning_count=total_warnings,
         )
 
         metrics_data["metrics"].append(new_metrics.to_dict())
@@ -491,10 +524,12 @@ class HistoryTracker:
         # Keep only last 200 entries
         metrics_data["metrics"] = metrics_data["metrics"][-200:]
 
-        with open(self.metrics_file, 'w', encoding='utf-8') as f:
+        with open(self.metrics_file, "w", encoding="utf-8") as f:
             json.dump(metrics_data, f, indent=2, ensure_ascii=False)
 
-    def _calculate_trend(self, metric_name: str, values: List[float], timestamps: List[datetime]) -> TrendData:
+    def _calculate_trend(
+        self, metric_name: str, values: List[float], timestamps: List[datetime]
+    ) -> TrendData:
         """Calculate trend for a specific metric."""
         if len(values) < 2:
             return TrendData(metric_name=metric_name)
@@ -519,20 +554,26 @@ class HistoryTracker:
         if abs(slope) < 0.1:
             trend_direction = "stable"
         elif slope > 0:
-            trend_direction = "improving" if metric_name == "success_rate" else "degrading"
+            trend_direction = (
+                "improving" if metric_name == "success_rate" else "degrading"
+            )
         else:
-            trend_direction = "degrading" if metric_name == "success_rate" else "improving"
+            trend_direction = (
+                "degrading" if metric_name == "success_rate" else "improving"
+            )
 
         # Normalize slope to -1.0 to 1.0 range
         max_value = max(values) if values else 1
-        trend_strength = min(1.0, max(0.0, abs(slope) / max_value)) if max_value > 0 else 0
+        trend_strength = (
+            min(1.0, max(0.0, abs(slope) / max_value)) if max_value > 0 else 0
+        )
 
         return TrendData(
             metric_name=metric_name,
             values=values,
             timestamps=timestamps,
             trend_direction=trend_direction,
-            trend_strength=trend_strength
+            trend_strength=trend_strength,
         )
 
     def _save_trends(self, trends: Dict[str, TrendData]) -> None:
@@ -540,7 +581,7 @@ class HistoryTracker:
         trends_dict = {name: trend.to_dict() for name, trend in trends.items()}
         trends_dict["last_updated"] = datetime.now().isoformat()
 
-        with open(self.trends_file, 'w', encoding='utf-8') as f:
+        with open(self.trends_file, "w", encoding="utf-8") as f:
             json.dump(trends_dict, f, indent=2, ensure_ascii=False)
 
     def _analyze_common_errors(self, history: List[SimulationResult]) -> List[str]:
@@ -555,7 +596,9 @@ class HistoryTracker:
                     error_patterns[normalized] = error_patterns.get(normalized, 0) + 1
 
         # Return top 5 most common error patterns
-        sorted_patterns = sorted(error_patterns.items(), key=lambda x: x[1], reverse=True)
+        sorted_patterns = sorted(
+            error_patterns.items(), key=lambda x: x[1], reverse=True
+        )
         return [pattern for pattern, count in sorted_patterns[:5]]
 
     def _identify_frequent_failures(self, history: List[SimulationResult]) -> List[str]:
@@ -573,12 +616,16 @@ class HistoryTracker:
         failure_rates = {}
         for check_name in total_runs:
             if total_runs[check_name] >= 3:  # Only consider checks run at least 3 times
-                failure_rate = failure_counts.get(check_name, 0) / total_runs[check_name]
+                failure_rate = (
+                    failure_counts.get(check_name, 0) / total_runs[check_name]
+                )
                 if failure_rate >= 0.3:  # 30% or higher failure rate
                     failure_rates[check_name] = failure_rate
 
         # Return checks sorted by failure rate
-        sorted_failures = sorted(failure_rates.items(), key=lambda x: x[1], reverse=True)
+        sorted_failures = sorted(
+            failure_rates.items(), key=lambda x: x[1], reverse=True
+        )
         return [check_name for check_name, rate in sorted_failures]
 
     def _identify_slow_checks(self, history: List[SimulationResult]) -> List[str]:
@@ -603,7 +650,9 @@ class HistoryTracker:
         sorted_slow = sorted(slow_checks.items(), key=lambda x: x[1], reverse=True)
         return [check_name for check_name, duration in sorted_slow]
 
-    def _analyze_python_version_issues(self, history: List[SimulationResult]) -> List[str]:
+    def _analyze_python_version_issues(
+        self, history: List[SimulationResult]
+    ) -> List[str]:
         """Analyze Python version specific issues."""
         suggestions = []
         version_failures = {}
@@ -630,11 +679,11 @@ class HistoryTracker:
         import re
 
         # Remove file paths and line numbers
-        normalized = re.sub(r'/[^\s]+\.py:\d+', '<file>', error)
-        normalized = re.sub(r'line \d+', 'line <num>', normalized)
+        normalized = re.sub(r"/[^\s]+\.py:\d+", "<file>", error)
+        normalized = re.sub(r"line \d+", "line <num>", normalized)
 
         # Remove specific values but keep structure
-        normalized = re.sub(r'\d+', '<num>', normalized)
-        normalized = re.sub(r"'[^']*'", '<value>', normalized)
+        normalized = re.sub(r"\d+", "<num>", normalized)
+        normalized = re.sub(r"'[^']*'", "<value>", normalized)
 
         return normalized.strip()[:100]  # Limit length

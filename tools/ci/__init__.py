@@ -11,7 +11,4 @@ from .cli_parser import CLIParser
 __version__ = "1.0.0"
 __author__ = "PhotoGeoView Development Team"
 
-__all__ = [
-    'CheckOrchestrator',
-    'CLIParser'
-]
+__all__ = ["CheckOrchestrator", "CLIParser"]

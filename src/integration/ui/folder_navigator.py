@@ -28,34 +28,34 @@ Author: Kiro AI Integration System
 """
 
 import os
-from typing import List, Optional, Dict, Any
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+from PyQt6.QtCore import QModelIndex, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QFileSystemModel, QIcon, QStandardItem, QStandardItemModel
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
-    QLineEdit,
-    QTreeView,
-    QLabel,
     QComboBox,
-    QFrame,
     QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
     QMenu,
     QMessageBox,
+    QPushButton,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QModelIndex, QTimer
-from PyQt6.QtGui import QIcon, QStandardItemModel, QStandardItem, QFileSystemModel
 
-from ..models import AIComponent
 from ..config_manager import ConfigManager
-from ..state_manager import StateManager
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
+from ..models import AIComponent
 from ..services.file_discovery_service import FileDiscoveryService
-from ..services.file_system_watcher import FileSystemWatcher, FileChangeType
+from ..services.file_system_watcher import FileChangeType, FileSystemWatcher
+from ..state_manager import StateManager
 
 
 class EnhancedFolderNavigator(QWidget):
@@ -1480,8 +1480,8 @@ class EnhancedFolderNavigator(QWidget):
 
         try:
             if self.current_folder:
-                import subprocess
                 import platform
+                import subprocess
 
                 system = platform.system()
                 if system == "Windows":

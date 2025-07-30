@@ -25,10 +25,7 @@ def main():
     # Create configuration
     config = {
         "tools": {
-            "black": {
-                "line_length": 88,
-                "target_version": ["py39", "py310", "py311"]
-            }
+            "black": {"line_length": 88, "target_version": ["py39", "py310", "py311"]}
         }
     }
 
@@ -75,8 +72,8 @@ def main():
     print(f"  Checks run: {full_result.metadata.get('checks_run', [])}")
 
     # Show configuration used
-    config_used = full_result.metadata.get('configuration', {})
-    if 'black' in config_used:
+    config_used = full_result.metadata.get("configuration", {})
+    if "black" in config_used:
         print(f"  Black config: {config_used['black']}")
 
     print("\n✅ Black formatter integration demo completed!")

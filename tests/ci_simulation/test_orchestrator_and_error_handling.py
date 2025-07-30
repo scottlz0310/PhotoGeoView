@@ -2,29 +2,40 @@
 Unit tests for check orchestrator and error handling components.
 """
 
-import pytest
 import os
-import time
-import threading
-from unittest.mock import Mock, patch, MagicMock, call
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 # Import components
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ci'))
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeoutError
+from unittest.mock import MagicMock, Mock, call, patch
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
 
 from check_orchestrator import CheckOrchestrator
 from error_handler import ErrorHandler
 from error_recovery_system import ErrorRecoverySystem
+from interfaces import CheckerError, CheckerInterface, DependencyError, EnvironmentError
 from models import CheckResult, CheckStatus, CheckTask, SimulationResult
-from interfaces import CheckerInterface, CheckerError, EnvironmentError, DependencyError
 
 
 class MockChecker(CheckerInterface):
     """Mock checker for testing."""
 
-    def __init__(self, config, name="mock_checker", check_type="test",
-                 dependencies=None, available=True, duration=1.0, status=CheckStatus.SUCCESS):
+    def __init__(
+        self,
+        config,
+        name="mock_checker",
+        check_type="test",
+        dependencies=None,
+        available=True,
+        duration=1.0,
+        status=CheckStatus.SUCCESS,
+    ):
         super().__init__(config)
         self._name = name
         self._check_type = check_type
@@ -60,7 +71,7 @@ class MockChecker(CheckerInterface):
             name=self.name,
             status=self._status,
             duration=self._duration,
-            output=f"Mock check {self.name} completed"
+            output=f"Mock check {self.name} completed",
         )
 
 
@@ -111,10 +122,7 @@ class TestCheckOrchestrator:
         orchestrator.register_checker("test1", checker1)
         orchestrator.register_checker("test2", checker2)
 
-        tasks = [
-            CheckTask("task1", "test1"),
-            CheckTask("task2", "test2")
-        ]
+        tasks = [CheckTask("task1", "test1"), CheckTask("task2", "test2")]
 
         start_time = time.time()
         results = orchestrator.execute_checks(tasks)
@@ -140,10 +148,7 @@ class TestCheckOrchestrator:
         orchestrator.register_checker("test1", checker1)
         orchestrator.register_checker("test2", checker2)
 
-        tasks = [
-            CheckTask("task1", "test1"),
-            CheckTask("task2", "test2")
-        ]
+        tasks = [CheckTask("task1", "test1"), CheckTask("task2", "test2")]
 
         start_time = time.time()
         results = orchestrator.execute_checks(tasks)
@@ -185,7 +190,7 @@ class TestCheckOrchestrator:
             "b": MockChecker(sample_config, "b", "b", dependencies=["a"]),
             "c": MockChecker(sample_config, "c", "c", dependencies=["a"]),
             "d": MockChecker(sample_config, "d", "d", dependencies=["b", "c"]),
-            "e": MockChecker(sample_config, "e", "e", dependencies=["d"])
+            "e": MockChecker(sample_config, "e", "e", dependencies=["d"]),
         }
 
         for check_type, checker in checkers.items():
@@ -226,14 +231,16 @@ class TestCheckOrchestrator:
         orchestrator = CheckOrchestrator(sample_config)
 
         checker1 = MockChecker(sample_config, "base", "base", dependencies=[])
-        checker2 = MockChecker(sample_config, "dependent", "dependent", dependencies=["base"])
+        checker2 = MockChecker(
+            sample_config, "dependent", "dependent", dependencies=["base"]
+        )
 
         orchestrator.register_checker("base", checker1)
         orchestrator.register_checker("dependent", checker2)
 
         tasks = [
             CheckTask("dependent_task", "dependent"),
-            CheckTask("base_task", "base")  # Intentionally out of order
+            CheckTask("base_task", "base"),  # Intentionally out of order
         ]
 
         results = orchestrator.execute_checks(tasks)
@@ -250,15 +257,19 @@ class TestCheckOrchestrator:
         """Test executing checks when one fails."""
         orchestrator = CheckOrchestrator(sample_config)
 
-        checker1 = MockChecker(sample_config, "success", "success", status=CheckStatus.SUCCESS)
-        checker2 = MockChecker(sample_config, "failure", "failure", status=CheckStatus.FAILURE)
+        checker1 = MockChecker(
+            sample_config, "success", "success", status=CheckStatus.SUCCESS
+        )
+        checker2 = MockChecker(
+            sample_config, "failure", "failure", status=CheckStatus.FAILURE
+        )
 
         orchestrator.register_checker("success", checker1)
         orchestrator.register_checker("failure", checker2)
 
         tasks = [
             CheckTask("success_task", "success"),
-            CheckTask("failure_task", "failure")
+            CheckTask("failure_task", "failure"),
         ]
 
         results = orchestrator.execute_checks(tasks)
@@ -329,7 +340,7 @@ class TestCheckOrchestrator:
         tasks = [
             CheckTask("low_task", "low", priority=1),
             CheckTask("high_task", "high", priority=10),
-            CheckTask("medium_task", "medium", priority=5)
+            CheckTask("medium_task", "medium", priority=5),
         ]
 
         orchestrator.execute_checks(tasks)
@@ -454,8 +465,9 @@ class TestErrorHandler:
         handler = ErrorHandler()
 
         def recovery_strategy(error):
-            return CheckResult("recovered", CheckStatus.WARNING, 0.0,
-                             output="Recovered from error")
+            return CheckResult(
+                "recovered", CheckStatus.WARNING, 0.0, output="Recovered from error"
+            )
 
         handler.register_recovery_strategy(CheckerError, recovery_strategy)
 
@@ -555,8 +567,9 @@ class TestErrorRecoverySystem:
         recovery_system.retry_delay = 0.1  # Speed up test
 
         # Create a checker that always fails
-        checker = MockChecker(sample_config, "failing_checker", "test",
-                            status=CheckStatus.FAILURE)
+        checker = MockChecker(
+            sample_config, "failing_checker", "test", status=CheckStatus.FAILURE
+        )
 
         task = CheckTask("failing_task", "test")
         result = recovery_system.execute_with_retry(task, checker)
@@ -578,11 +591,7 @@ class TestErrorRecoverySystem:
         """Test getting retry statistics."""
         recovery_system = ErrorRecoverySystem()
 
-        recovery_system.retry_counts = {
-            "task1": 2,
-            "task2": 0,
-            "task3": 1
-        }
+        recovery_system.retry_counts = {"task1": 2, "task2": 0, "task3": 1}
 
         stats = recovery_system.get_retry_statistics()
 
@@ -630,8 +639,9 @@ class TestIntegratedErrorHandling:
         orchestrator.error_handler = error_handler
 
         # Create a failing checker
-        failing_checker = MockChecker(sample_config, "failing", "failing",
-                                    status=CheckStatus.FAILURE)
+        failing_checker = MockChecker(
+            sample_config, "failing", "failing", status=CheckStatus.FAILURE
+        )
         orchestrator.register_checker("failing", failing_checker)
 
         task = CheckTask("failing_task", "failing")
@@ -683,8 +693,9 @@ class TestIntegratedErrorHandling:
 
         # Create various types of checkers
         success_checker = MockChecker(sample_config, "success", "success")
-        failing_checker = MockChecker(sample_config, "failing", "failing",
-                                    status=CheckStatus.FAILURE)
+        failing_checker = MockChecker(
+            sample_config, "failing", "failing", status=CheckStatus.FAILURE
+        )
 
         # Flaky checker that succeeds on second attempt
         flaky_checker = MockChecker(sample_config, "flaky", "flaky")
@@ -706,7 +717,7 @@ class TestIntegratedErrorHandling:
         tasks = [
             CheckTask("success_task", "success"),
             CheckTask("failing_task", "failing"),
-            CheckTask("flaky_task", "flaky")
+            CheckTask("flaky_task", "flaky"),
         ]
 
         results = orchestrator.execute_checks(tasks)

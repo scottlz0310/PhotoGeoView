@@ -10,25 +10,25 @@
 Author: Kiro AI Integration System
 """
 
-import unittest
-import tempfile
 import shutil
-import time
-from pathlib import Path
-from typing import List, Dict, Any, Optional
-from unittest.mock import Mock, patch, MagicMock
 import sys
+import tempfile
+import time
+import unittest
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from unittest.mock import MagicMock, Mock, patch
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.integration.services.file_discovery_service import FileDiscoveryService
-from src.integration.ui.folder_navigator import EnhancedFolderNavigator
-from src.integration.ui.thumbnail_grid import OptimizedThumbnailGrid
 from src.integration.config_manager import ConfigManager
-from src.integration.state_manager import StateManager
 from src.integration.logging_system import LoggerSystem
 from src.integration.models import AIComponent
+from src.integration.services.file_discovery_service import FileDiscoveryService
+from src.integration.state_manager import StateManager
+from src.integration.ui.folder_navigator import EnhancedFolderNavigator
+from src.integration.ui.thumbnail_grid import OptimizedThumbnailGrid
 
 
 class FileListDisplayIntegrationTest(unittest.TestCase):

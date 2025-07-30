@@ -10,20 +10,20 @@ Provides centralized state coordination across AI components:
 Author: Kiro AI Integration System
 """
 
-import threading
-import json
 import asyncio
-from typing import Dict, Any, Optional, List, Callable, Union
+import copy
+import json
+import threading
+from collections import defaultdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
-from collections import defaultdict
-import copy
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from .models import ApplicationState, AIComponent, ImageMetadata, ThemeConfiguration
 from .config_manager import ConfigManager
-from .error_handling import IntegratedErrorHandler, ErrorCategory
+from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
+from .models import AIComponent, ApplicationState, ImageMetadata, ThemeConfiguration
 
 
 @dataclass

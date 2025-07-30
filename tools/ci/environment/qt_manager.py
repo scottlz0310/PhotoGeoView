@@ -7,26 +7,27 @@ for headless testing in CI/CD environments.
 Author: Kiro (AI Integration and Quality Assurance)
 """
 
+import logging
 import os
-import subprocess
-import sys
 import platform
 import shutil
+import subprocess
+import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-import logging
-import time
 
 try:
     from ..models import CheckResult, CheckStatus
     from ..utils import run_command
 except ImportError:
     # Fallback for direct execution
-    import sys
     import os
+    import sys
 
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from models import CheckResult, CheckStatus
+
     from utils import run_command
 
 

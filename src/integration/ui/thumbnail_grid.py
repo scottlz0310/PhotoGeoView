@@ -28,43 +28,43 @@ Author: Kiro AI Integration System
 """
 
 import asyncio
-from typing import List, Optional, Dict, Any
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QScrollArea,
-    QLabel,
-    QGridLayout,
-    QPushButton,
-    QSlider,
-    QSpinBox,
-    QFrame,
-    QMenu,
-    QSizePolicy,
-)
 from PyQt6.QtCore import (
-    Qt,
-    QSize,
-    pyqtSignal,
-    QTimer,
-    QThread,
-    QObject,
     QMutex,
     QMutexLocker,
+    QObject,
+    QSize,
+    Qt,
+    QThread,
+    QTimer,
+    pyqtSignal,
 )
-from PyQt6.QtGui import QPixmap, QIcon, QPainter, QColor, QFont
+from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
+from PyQt6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMenu,
+    QPushButton,
+    QScrollArea,
+    QSizePolicy,
+    QSlider,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
-from ..models import ImageMetadata, AIComponent, ProcessingStatus
 from ..config_manager import ConfigManager
-from ..state_manager import StateManager
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
+from ..models import AIComponent, ImageMetadata, ProcessingStatus
+from ..state_manager import StateManager
 
 
 class ThumbnailItem(QLabel):
@@ -474,7 +474,7 @@ class OptimizedThumbnailGrid(QWidget):
             maximum: 最大値（0の場合は不定進行状況）
         """
         try:
-            from PyQt6.QtWidgets import QProgressBar, QVBoxLayout, QLabel
+            from PyQt6.QtWidgets import QLabel, QProgressBar, QVBoxLayout
 
             # 既存のインジケーターを削除
             if self.progress_indicator:
@@ -1020,9 +1020,9 @@ class OptimizedThumbnailGrid(QWidget):
                 self._empty_placeholder.deleteLater()
 
             # 新しいプレースホルダーを作成
-            from PyQt6.QtWidgets import QLabel
             from PyQt6.QtCore import Qt
             from PyQt6.QtGui import QFont
+            from PyQt6.QtWidgets import QLabel
 
             self._empty_placeholder = QLabel(self.grid_widget)
             self._empty_placeholder.setText(

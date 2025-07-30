@@ -6,9 +6,10 @@ This script tests the .gitignore management, backup, and pattern detection funct
 """
 
 import os
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
 from gitignore_manager import GitignoreManager
 
 

@@ -10,11 +10,12 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import pytest
 import sys
 from pathlib import Path
+from typing import Any, Dict, List
 from unittest.mock import Mock, patch
-from typing import Dict, Any, List
+
+import pytest
 
 # プロジェクトルートをパスに追加
 project_root = Path(__file__).parent.parent.parent
@@ -29,10 +30,10 @@ class TestAIComponentCompatibility:
         # CS4Coding の画像処理 + CursorBLD の UI
         try:
 
-            from src.integration.image_processor import CS4CodingImageProcessor
-            from src.integration.ui.theme_manager import IntegratedThemeManager
             from src.integration.config_manager import ConfigManager
+            from src.integration.image_processor import CS4CodingImageProcessor
             from src.integration.state_manager import StateManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
 
             config_manager = ConfigManager()
             state_manager = StateManager()
@@ -77,10 +78,10 @@ class TestAIComponentCompatibility:
         # CursorBLD の UI + Kiro の統合制御
         try:
 
-            from src.integration.ui.theme_manager import IntegratedThemeManager
-            from src.integration.controllers import AppController
             from src.integration.config_manager import ConfigManager
+            from src.integration.controllers import AppController
             from src.integration.state_manager import StateManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
 
             config_manager = ConfigManager()
             state_manager = StateManager()
@@ -142,8 +143,8 @@ class TestAIInterfaceCompatibility:
     def test_image_processor_interface(self):
         """画像プロセッサーインターフェーステスト"""
         try:
-            from src.integration.interfaces import IImageProcessor
             from src.integration.image_processor import CS4CodingImageProcessor
+            from src.integration.interfaces import IImageProcessor
 
             # インターフェース実装確認
             processor = CS4CodingImageProcessor()
@@ -183,15 +184,16 @@ class TestAIInterfaceCompatibility:
     def test_data_model_compatibility(self):
         """データモデル互換性テスト"""
         try:
-            from src.integration.models import (
-                ImageMetadata,
-                ThemeConfiguration,
-                ApplicationState,
-            )
+            from datetime import datetime
 
             # データモデルの初期化テスト
             from pathlib import Path
-            from datetime import datetime
+
+            from src.integration.models import (
+                ApplicationState,
+                ImageMetadata,
+                ThemeConfiguration,
+            )
 
             # ImageMetadata テスト
             metadata = ImageMetadata(
@@ -299,9 +301,9 @@ class TestAIPerformanceCompatibility:
         """キャッシュシステム互換性テスト"""
         try:
 
-            from src.integration.unified_cache import UnifiedCacheSystem
             from src.integration.config_manager import ConfigManager
             from src.integration.logging_system import LoggerSystem
+            from src.integration.unified_cache import UnifiedCacheSystem
 
             config_manager = ConfigManager()
             logger_system = LoggerSystem()
@@ -340,8 +342,8 @@ class TestAIErrorHandlingCompatibility:
         """エラーハンドラー互換性テスト"""
         try:
             from src.integration.error_handling import (
-                IntegratedErrorHandler,
                 ErrorCategory,
+                IntegratedErrorHandler,
             )
 
             # エラーハンドラーの初期化

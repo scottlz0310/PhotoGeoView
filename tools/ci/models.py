@@ -6,11 +6,11 @@ the CI simulation system, including check results, simulation outcomes,
 and regression analysis data.
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime
 import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 
 class CheckStatus(Enum):

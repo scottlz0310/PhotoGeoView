@@ -11,16 +11,16 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import shutil
-import zipfile
-import tarfile
 import json
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Any, Optional
+import os
+import shutil
 import subprocess
 import sys
-import os
+import tarfile
+import zipfile
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class DeploymentPackageCreator:
@@ -457,7 +457,6 @@ if __name__ == "__main__":
         print(f"✅ デプロイメントマニフェスト: {manifest_path}")
         return manifest_path
 
-
     def run_ci_simulation(self) -> bool:
         """Run comprehensive CI simulation before deployment."""
         print("Running comprehensive CI simulation...")
@@ -474,15 +473,25 @@ if __name__ == "__main__":
             ci_reports_dir.mkdir(parents=True, exist_ok=True)
 
             # Run full CI simulation with all Python versions
-            result = subprocess.run([
-                sys.executable,
-                "-m", "tools.ci.simulator",
-                "run",
-                "--all",
-                "--format", "both",
-                "--output-dir", str(ci_reports_dir),
-                "--timeout", "1800"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=1800)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "tools.ci.simulator",
+                    "run",
+                    "--all",
+                    "--format",
+                    "both",
+                    "--output-dir",
+                    str(ci_reports_dir),
+                    "--timeout",
+                    "1800",
+                ],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=1800,
+            )
 
             if result.returncode == 0:
                 print("✅ CI simulation passed")
@@ -497,48 +506,66 @@ if __name__ == "__main__":
                         with open(latest_report, "r", encoding="utf-8") as f:
                             ci_data = json.load(f)
 
-                        print(f"CI Summary: {ci_data.get('summary', 'No summary available')}")
+                        print(
+                            f"CI Summary: {ci_data.get('summary', 'No summary available')}"
+                        )
 
                         # Check for critical issues
-                        overall_status = ci_data.get('overall_status', 'UNKNOWN')
-                        if overall_status == 'FAILURE':
+                        overall_status = ci_data.get("overall_status", "UNKNOWN")
+                        if overall_status == "FAILURE":
                             print("❌ CI simulation found critical issues")
 
                             # Show failed checks
-                            check_results = ci_data.get('check_results', {})
-                            failed_checks = [name for name, result in check_results.items()
-                                           if result.get('status') == 'FAILURE']
+                            check_results = ci_data.get("check_results", {})
+                            failed_checks = [
+                                name
+                                for name, result in check_results.items()
+                                if result.get("status") == "FAILURE"
+                            ]
                             if failed_checks:
                                 print(f"Failed checks: {', '.join(failed_checks)}")
 
                                 # Show specific errors for failed checks
-                                for check_name in failed_checks[:3]:  # Show details for first 3 failed checks
+                                for check_name in failed_checks[
+                                    :3
+                                ]:  # Show details for first 3 failed checks
                                     check_result = check_results[check_name]
-                                    errors = check_result.get('errors', [])
+                                    errors = check_result.get("errors", [])
                                     if errors:
                                         print(f"\n{check_name} errors:")
-                                        for error in errors[:2]:  # Show first 2 errors per check
+                                        for error in errors[
+                                            :2
+                                        ]:  # Show first 2 errors per check
                                             print(f"  - {error}")
                                         if len(errors) > 2:
-                                            print(f"  - ... and {len(errors) - 2} more errors")
+                                            print(
+                                                f"  - ... and {len(errors) - 2} more errors"
+                                            )
 
                             return False
-                        elif overall_status == 'WARNING':
+                        elif overall_status == "WARNING":
                             print("⚠️ CI simulation completed with warnings")
 
                             # Show warning details
-                            check_results = ci_data.get('check_results', {})
-                            warning_checks = [name for name, result in check_results.items()
-                                            if result.get('status') == 'WARNING']
+                            check_results = ci_data.get("check_results", {})
+                            warning_checks = [
+                                name
+                                for name, result in check_results.items()
+                                if result.get("status") == "WARNING"
+                            ]
                             if warning_checks:
-                                print(f"Checks with warnings: {', '.join(warning_checks)}")
+                                print(
+                                    f"Checks with warnings: {', '.join(warning_checks)}"
+                                )
 
                         # Show performance metrics if available
-                        python_versions = ci_data.get('python_versions_tested', [])
+                        python_versions = ci_data.get("python_versions_tested", [])
                         if python_versions:
-                            print(f"Tested Python versions: {', '.join(python_versions)}")
+                            print(
+                                f"Tested Python versions: {', '.join(python_versions)}"
+                            )
 
-                        duration = ci_data.get('total_duration', 0)
+                        duration = ci_data.get("total_duration", 0)
                         print(f"CI simulation duration: {duration:.2f} seconds")
 
                     except (json.JSONDecodeError, IOError) as e:

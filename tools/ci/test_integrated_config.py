@@ -6,10 +6,11 @@ This script tests the integration between configuration management and
 .gitignore management features.
 """
 
+import json
 import os
 import tempfile
-import json
 from pathlib import Path
+
 from config_manager import ConfigManager
 
 

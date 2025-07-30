@@ -5,12 +5,12 @@ This module handles .gitignore file management, including detection,
 updating, and backup functionality for CI simulation-specific patterns.
 """
 
+import logging
 import os
 import shutil
-from pathlib import Path
-from typing import List, Set, Optional
 from datetime import datetime
-import logging
+from pathlib import Path
+from typing import List, Optional, Set
 
 
 class GitignoreManager:

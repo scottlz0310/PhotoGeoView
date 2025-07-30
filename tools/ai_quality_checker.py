@@ -12,13 +12,13 @@ AI貢献者:
 """
 
 import ast
+import json
 import re
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
-import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class AIComponent(Enum):

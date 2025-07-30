@@ -5,16 +5,16 @@ This module implements comprehensive AI component testing for Copilot, Cursor, a
 components with demo script testing, AI compatibility verification, and integration testing.
 """
 
+import json
+import logging
+import os
 import subprocess
 import sys
-import os
-import json
 import time
-import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from ..interfaces import CheckerInterface
@@ -202,7 +202,7 @@ class AIComponentTester(CheckerInterface):
                 )
             else:
                 # For other tools, try to import them
-                import_name = tool.replace('-', '_')
+                import_name = tool.replace("-", "_")
                 # Special cases for pytest plugins
                 if tool == "pytest-asyncio":
                     import_name = "pytest_asyncio"
@@ -258,7 +258,9 @@ class AIComponentTester(CheckerInterface):
 
             component_result = self._test_ai_component(component, include_demos)
             all_results[component] = component_result
-            combined_output.append(f"=== {component.title()} Component Tests ===\n{component_result.output}")
+            combined_output.append(
+                f"=== {component.title()} Component Tests ===\n{component_result.output}"
+            )
 
             if component_result.status == CheckStatus.FAILURE:
                 overall_status = CheckStatus.FAILURE
@@ -276,7 +278,9 @@ class AIComponentTester(CheckerInterface):
         if include_compatibility and len(components) > 1:
             compatibility_result = self._test_ai_compatibility(components)
             all_results["compatibility"] = compatibility_result
-            combined_output.append(f"=== AI Compatibility Tests ===\n{compatibility_result.output}")
+            combined_output.append(
+                f"=== AI Compatibility Tests ===\n{compatibility_result.output}"
+            )
 
             if compatibility_result.status == CheckStatus.FAILURE:
                 overall_status = CheckStatus.FAILURE
@@ -294,16 +298,13 @@ class AIComponentTester(CheckerInterface):
 
         # Generate summary
         total_tests = sum(
-            result.metadata.get("tests_run", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_run", 0) for result in all_results.values()
         )
         passed_tests = sum(
-            result.metadata.get("tests_passed", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_passed", 0) for result in all_results.values()
         )
         failed_tests = sum(
-            result.metadata.get("tests_failed", 0)
-            for result in all_results.values()
+            result.metadata.get("tests_failed", 0) for result in all_results.values()
         )
 
         return CheckResult(
@@ -328,7 +329,9 @@ class AIComponentTester(CheckerInterface):
             },
         )
 
-    def _test_ai_component(self, component: str, include_demos: bool = True) -> CheckResult:
+    def _test_ai_component(
+        self, component: str, include_demos: bool = True
+    ) -> CheckResult:
         """
         Test a specific AI component.
 
@@ -352,21 +355,31 @@ class AIComponentTester(CheckerInterface):
 
         # Run component-specific tests
         if component_info.test_files:
-            test_results = self._run_component_tests(component, component_info.test_files)
+            test_results = self._run_component_tests(
+                component, component_info.test_files
+            )
 
         # Run demo scripts if requested
         if include_demos and component_info.demo_scripts:
-            demo_results = self._run_demo_scripts(component, component_info.demo_scripts)
+            demo_results = self._run_demo_scripts(
+                component, component_info.demo_scripts
+            )
 
         # Analyze results
         total_tests = len(test_results) + len(demo_results)
-        passed_tests = sum(1 for r in test_results + demo_results if r.status == "passed")
-        failed_tests = sum(1 for r in test_results + demo_results if r.status == "failed")
+        passed_tests = sum(
+            1 for r in test_results + demo_results if r.status == "passed"
+        )
+        failed_tests = sum(
+            1 for r in test_results + demo_results if r.status == "failed"
+        )
 
         # Determine overall status
         if failed_tests > 0:
             status = CheckStatus.FAILURE
-            errors.append(f"{failed_tests} out of {total_tests} tests failed for {component}")
+            errors.append(
+                f"{failed_tests} out of {total_tests} tests failed for {component}"
+            )
         elif total_tests == 0:
             status = CheckStatus.WARNING
             warnings.append(f"No tests found for {component} component")
@@ -381,7 +394,9 @@ class AIComponentTester(CheckerInterface):
             output_lines.append(f"\nComponent Tests ({len(test_results)} tests):")
             for result in test_results:
                 status_icon = "✅" if result.status == "passed" else "❌"
-                output_lines.append(f"  {status_icon} {result.script_name}: {result.duration:.2f}s")
+                output_lines.append(
+                    f"  {status_icon} {result.script_name}: {result.duration:.2f}s"
+                )
                 if result.error_message:
                     output_lines.append(f"    Error: {result.error_message}")
 
@@ -389,7 +404,9 @@ class AIComponentTester(CheckerInterface):
             output_lines.append(f"\nDemo Scripts ({len(demo_results)} demos):")
             for result in demo_results:
                 status_icon = "✅" if result.status == "passed" else "❌"
-                output_lines.append(f"  {status_icon} {result.script_name}: {result.duration:.2f}s")
+                output_lines.append(
+                    f"  {status_icon} {result.script_name}: {result.duration:.2f}s"
+                )
                 if result.error_message:
                     output_lines.append(f"    Error: {result.error_message}")
 
@@ -411,11 +428,15 @@ class AIComponentTester(CheckerInterface):
                 "tests_failed": failed_tests,
                 "test_results": [r.__dict__ for r in test_results],
                 "demo_results": [r.__dict__ for r in demo_results],
-                "dependencies_checked": self._check_component_dependencies(component_info),
+                "dependencies_checked": self._check_component_dependencies(
+                    component_info
+                ),
             },
         )
 
-    def _run_component_tests(self, component: str, test_files: List[str]) -> List[DemoTestResult]:
+    def _run_component_tests(
+        self, component: str, test_files: List[str]
+    ) -> List[DemoTestResult]:
         """
         Run component-specific test files.
 
@@ -432,14 +453,16 @@ class AIComponentTester(CheckerInterface):
             test_path = self.project_root / test_file
             if not test_path.exists():
                 self.logger.warning(f"Test file not found: {test_file}")
-                results.append(DemoTestResult(
-                    script_name=test_file,
-                    component=component,
-                    status="skipped",
-                    duration=0.0,
-                    output="",
-                    error_message=f"Test file not found: {test_file}"
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=test_file,
+                        component=component,
+                        status="skipped",
+                        duration=0.0,
+                        output="",
+                        error_message=f"Test file not found: {test_file}",
+                    )
+                )
                 continue
 
             start_time = time.time()
@@ -447,11 +470,13 @@ class AIComponentTester(CheckerInterface):
             try:
                 # Run pytest on the specific test file
                 cmd = [
-                    sys.executable, "-m", "pytest",
+                    sys.executable,
+                    "-m",
+                    "pytest",
                     str(test_path),
                     "-v",
                     "--tb=short",
-                    f"--timeout={self.ai_config['timeout']}"
+                    f"--timeout={self.ai_config['timeout']}",
                 ]
 
                 result = subprocess.run(
@@ -471,40 +496,48 @@ class AIComponentTester(CheckerInterface):
                     status = "failed"
                     error_message = result.stderr or "Test execution failed"
 
-                results.append(DemoTestResult(
-                    script_name=test_file,
-                    component=component,
-                    status=status,
-                    duration=duration,
-                    output=result.stdout,
-                    error_message=error_message
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=test_file,
+                        component=component,
+                        status=status,
+                        duration=duration,
+                        output=result.stdout,
+                        error_message=error_message,
+                    )
+                )
 
             except subprocess.TimeoutExpired:
                 duration = time.time() - start_time
-                results.append(DemoTestResult(
-                    script_name=test_file,
-                    component=component,
-                    status="failed",
-                    duration=duration,
-                    output="",
-                    error_message="Test execution timed out"
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=test_file,
+                        component=component,
+                        status="failed",
+                        duration=duration,
+                        output="",
+                        error_message="Test execution timed out",
+                    )
+                )
 
             except Exception as e:
                 duration = time.time() - start_time
-                results.append(DemoTestResult(
-                    script_name=test_file,
-                    component=component,
-                    status="failed",
-                    duration=duration,
-                    output="",
-                    error_message=str(e)
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=test_file,
+                        component=component,
+                        status="failed",
+                        duration=duration,
+                        output="",
+                        error_message=str(e),
+                    )
+                )
 
         return results
 
-    def _run_demo_scripts(self, component: str, demo_scripts: List[str]) -> List[DemoTestResult]:
+    def _run_demo_scripts(
+        self, component: str, demo_scripts: List[str]
+    ) -> List[DemoTestResult]:
         """
         Run demo scripts for a component.
 
@@ -521,14 +554,16 @@ class AIComponentTester(CheckerInterface):
             demo_path = self.project_root / demo_script
             if not demo_path.exists():
                 self.logger.warning(f"Demo script not found: {demo_script}")
-                results.append(DemoTestResult(
-                    script_name=demo_script,
-                    component=component,
-                    status="skipped",
-                    duration=0.0,
-                    output="",
-                    error_message=f"Demo script not found: {demo_script}"
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=demo_script,
+                        component=component,
+                        status="skipped",
+                        duration=0.0,
+                        output="",
+                        error_message=f"Demo script not found: {demo_script}",
+                    )
+                )
                 continue
 
             start_time = time.time()
@@ -559,36 +594,42 @@ class AIComponentTester(CheckerInterface):
                     status = "failed"
                     error_message = result.stderr or "Demo script execution failed"
 
-                results.append(DemoTestResult(
-                    script_name=demo_script,
-                    component=component,
-                    status=status,
-                    duration=duration,
-                    output=result.stdout,
-                    error_message=error_message
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=demo_script,
+                        component=component,
+                        status=status,
+                        duration=duration,
+                        output=result.stdout,
+                        error_message=error_message,
+                    )
+                )
 
             except subprocess.TimeoutExpired:
                 duration = time.time() - start_time
-                results.append(DemoTestResult(
-                    script_name=demo_script,
-                    component=component,
-                    status="failed",
-                    duration=duration,
-                    output="",
-                    error_message="Demo script execution timed out"
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=demo_script,
+                        component=component,
+                        status="failed",
+                        duration=duration,
+                        output="",
+                        error_message="Demo script execution timed out",
+                    )
+                )
 
             except Exception as e:
                 duration = time.time() - start_time
-                results.append(DemoTestResult(
-                    script_name=demo_script,
-                    component=component,
-                    status="failed",
-                    duration=duration,
-                    output="",
-                    error_message=str(e)
-                ))
+                results.append(
+                    DemoTestResult(
+                        script_name=demo_script,
+                        component=component,
+                        status="failed",
+                        duration=duration,
+                        output="",
+                        error_message=str(e),
+                    )
+                )
 
         return results
 
@@ -611,7 +652,9 @@ class AIComponentTester(CheckerInterface):
         suggestions = []
 
         # Run the AI integration test suite if available
-        integration_test_path = self.project_root / "tests" / "ai_integration_test_suite.py"
+        integration_test_path = (
+            self.project_root / "tests" / "ai_integration_test_suite.py"
+        )
         if integration_test_path.exists():
             compatibility_result = self._run_integration_test_suite()
             compatibility_tests.append(compatibility_result)
@@ -634,7 +677,9 @@ class AIComponentTester(CheckerInterface):
         # Determine overall status
         if failed_tests > 0:
             status = CheckStatus.FAILURE
-            errors.append(f"{failed_tests} out of {total_tests} compatibility tests failed")
+            errors.append(
+                f"{failed_tests} out of {total_tests} compatibility tests failed"
+            )
         elif total_tests == 0:
             status = CheckStatus.WARNING
             warnings.append("No compatibility tests were run")
@@ -647,10 +692,14 @@ class AIComponentTester(CheckerInterface):
         output_lines.append(f"Components: {', '.join(components)}")
 
         if compatibility_tests:
-            output_lines.append(f"\nCompatibility Tests ({len(compatibility_tests)} tests):")
+            output_lines.append(
+                f"\nCompatibility Tests ({len(compatibility_tests)} tests):"
+            )
             for result in compatibility_tests:
                 status_icon = "✅" if result.status == "passed" else "❌"
-                output_lines.append(f"  {status_icon} {result.script_name}: {result.duration:.2f}s")
+                output_lines.append(
+                    f"  {status_icon} {result.script_name}: {result.duration:.2f}s"
+                )
                 if result.error_message:
                     output_lines.append(f"    Error: {result.error_message}")
 
@@ -689,11 +738,13 @@ class AIComponentTester(CheckerInterface):
 
             # Run the integration test suite
             cmd = [
-                sys.executable, "-m", "pytest",
+                sys.executable,
+                "-m",
+                "pytest",
                 "tests/ai_integration_test_suite.py",
                 "-v",
                 "--tb=short",
-                f"--timeout={self.ai_config['timeout']}"
+                f"--timeout={self.ai_config['timeout']}",
             ]
 
             result = subprocess.run(
@@ -720,7 +771,7 @@ class AIComponentTester(CheckerInterface):
                 status=status,
                 duration=duration,
                 output=result.stdout,
-                error_message=error_message
+                error_message=error_message,
             )
 
         except Exception as e:
@@ -731,7 +782,7 @@ class AIComponentTester(CheckerInterface):
                 status="failed",
                 duration=duration,
                 output="",
-                error_message=str(e)
+                error_message=str(e),
             )
 
     def _test_config_compatibility(self, components: List[str]) -> List[DemoTestResult]:
@@ -756,53 +807,63 @@ class AIComponentTester(CheckerInterface):
                     config_path = self.project_root / config_file
 
                     if not config_path.exists():
-                        results.append(DemoTestResult(
-                            script_name=f"config_check_{component}",
-                            component=component,
-                            status="failed",
-                            duration=0.0,
-                            output="",
-                            error_message=f"Config file not found: {config_file}"
-                        ))
+                        results.append(
+                            DemoTestResult(
+                                script_name=f"config_check_{component}",
+                                component=component,
+                                status="failed",
+                                duration=0.0,
+                                output="",
+                                error_message=f"Config file not found: {config_file}",
+                            )
+                        )
                         continue
 
                     # Try to load and validate the config file
                     try:
-                        with open(config_path, 'r', encoding='utf-8') as f:
+                        with open(config_path, "r", encoding="utf-8") as f:
                             json.load(f)  # Validate JSON format
 
-                        results.append(DemoTestResult(
-                            script_name=f"config_check_{component}",
-                            component=component,
-                            status="passed",
-                            duration=time.time() - start_time,
-                            output=f"Config file valid: {config_file}",
-                            error_message=None
-                        ))
+                        results.append(
+                            DemoTestResult(
+                                script_name=f"config_check_{component}",
+                                component=component,
+                                status="passed",
+                                duration=time.time() - start_time,
+                                output=f"Config file valid: {config_file}",
+                                error_message=None,
+                            )
+                        )
 
                     except json.JSONDecodeError as e:
-                        results.append(DemoTestResult(
-                            script_name=f"config_check_{component}",
-                            component=component,
-                            status="failed",
-                            duration=time.time() - start_time,
-                            output="",
-                            error_message=f"Invalid JSON in {config_file}: {str(e)}"
-                        ))
+                        results.append(
+                            DemoTestResult(
+                                script_name=f"config_check_{component}",
+                                component=component,
+                                status="failed",
+                                duration=time.time() - start_time,
+                                output="",
+                                error_message=f"Invalid JSON in {config_file}: {str(e)}",
+                            )
+                        )
 
         except Exception as e:
-            results.append(DemoTestResult(
-                script_name="config_compatibility_test",
-                component="compatibility",
-                status="failed",
-                duration=time.time() - start_time,
-                output="",
-                error_message=str(e)
-            ))
+            results.append(
+                DemoTestResult(
+                    script_name="config_compatibility_test",
+                    component="compatibility",
+                    status="failed",
+                    duration=time.time() - start_time,
+                    output="",
+                    error_message=str(e),
+                )
+            )
 
         return results
 
-    def _test_dependency_compatibility(self, components: List[str]) -> List[DemoTestResult]:
+    def _test_dependency_compatibility(
+        self, components: List[str]
+    ) -> List[DemoTestResult]:
         """
         Test dependency compatibility between AI components.
 
@@ -826,54 +887,68 @@ class AIComponentTester(CheckerInterface):
             for dependency in all_dependencies:
                 try:
                     result = subprocess.run(
-                        [sys.executable, "-c", f"import {dependency.replace('-', '_')}"],
+                        [
+                            sys.executable,
+                            "-c",
+                            f"import {dependency.replace('-', '_')}",
+                        ],
                         capture_output=True,
                         text=True,
                         timeout=10,
                     )
 
                     if result.returncode == 0:
-                        results.append(DemoTestResult(
-                            script_name=f"dependency_check_{dependency}",
-                            component="compatibility",
-                            status="passed",
-                            duration=time.time() - start_time,
-                            output=f"Dependency available: {dependency}",
-                            error_message=None
-                        ))
+                        results.append(
+                            DemoTestResult(
+                                script_name=f"dependency_check_{dependency}",
+                                component="compatibility",
+                                status="passed",
+                                duration=time.time() - start_time,
+                                output=f"Dependency available: {dependency}",
+                                error_message=None,
+                            )
+                        )
                     else:
-                        results.append(DemoTestResult(
+                        results.append(
+                            DemoTestResult(
+                                script_name=f"dependency_check_{dependency}",
+                                component="compatibility",
+                                status="failed",
+                                duration=time.time() - start_time,
+                                output="",
+                                error_message=f"Dependency not available: {dependency}",
+                            )
+                        )
+
+                except Exception as e:
+                    results.append(
+                        DemoTestResult(
                             script_name=f"dependency_check_{dependency}",
                             component="compatibility",
                             status="failed",
                             duration=time.time() - start_time,
                             output="",
-                            error_message=f"Dependency not available: {dependency}"
-                        ))
-
-                except Exception as e:
-                    results.append(DemoTestResult(
-                        script_name=f"dependency_check_{dependency}",
-                        component="compatibility",
-                        status="failed",
-                        duration=time.time() - start_time,
-                        output="",
-                        error_message=f"Error checking {dependency}: {str(e)}"
-                    ))
+                            error_message=f"Error checking {dependency}: {str(e)}",
+                        )
+                    )
 
         except Exception as e:
-            results.append(DemoTestResult(
-                script_name="dependency_compatibility_test",
-                component="compatibility",
-                status="failed",
-                duration=time.time() - start_time,
-                output="",
-                error_message=str(e)
-            ))
+            results.append(
+                DemoTestResult(
+                    script_name="dependency_compatibility_test",
+                    component="compatibility",
+                    status="failed",
+                    duration=time.time() - start_time,
+                    output="",
+                    error_message=str(e),
+                )
+            )
 
         return results
 
-    def _check_component_dependencies(self, component_info: AIComponentInfo) -> Dict[str, bool]:
+    def _check_component_dependencies(
+        self, component_info: AIComponentInfo
+    ) -> Dict[str, bool]:
         """
         Check if component dependencies are available.
 
@@ -909,10 +984,12 @@ class AIComponentTester(CheckerInterface):
         env_vars = {}
 
         # Setup Qt environment for headless execution
-        env_vars.update({
-            "QT_QPA_PLATFORM": "offscreen",
-            "QT_LOGGING_RULES": "*.debug=false",
-        })
+        env_vars.update(
+            {
+                "QT_QPA_PLATFORM": "offscreen",
+                "QT_LOGGING_RULES": "*.debug=false",
+            }
+        )
 
         # Setup display for GUI tests if needed
         if os.environ.get("CI") is not None:
@@ -933,19 +1010,30 @@ class AIComponentTester(CheckerInterface):
             status[component_name] = {
                 "name": component_info.name,
                 "focus_area": component_info.focus_area,
-                "demo_scripts_available": len([
-                    script for script in component_info.demo_scripts
-                    if (self.project_root / script).exists()
-                ]),
-                "test_files_available": len([
-                    test_file for test_file in component_info.test_files
-                    if (self.project_root / test_file).exists()
-                ]),
-                "config_files_available": len([
-                    config_file for config_file in component_info.config_files
-                    if (self.project_root / config_file).exists()
-                ]),
-                "dependencies_available": self._check_component_dependencies(component_info),
+                "demo_scripts_available": len(
+                    [
+                        script
+                        for script in component_info.demo_scripts
+                        if (self.project_root / script).exists()
+                    ]
+                ),
+                "test_files_available": len(
+                    [
+                        test_file
+                        for test_file in component_info.test_files
+                        if (self.project_root / test_file).exists()
+                    ]
+                ),
+                "config_files_available": len(
+                    [
+                        config_file
+                        for config_file in component_info.config_files
+                        if (self.project_root / config_file).exists()
+                    ]
+                ),
+                "dependencies_available": self._check_component_dependencies(
+                    component_info
+                ),
             }
 
         return {

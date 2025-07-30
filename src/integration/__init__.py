@@ -11,13 +11,14 @@ Created: 2025-01-25
 __version__ = "1.0.0"
 __author__ = "Kiro AI Integration System"
 
-# Integration layer exports
-from .interfaces import IImageProcessor, IThemeManager, IMapProvider, IConfigManager
-from .controllers import AppController
-from .models import ImageMetadata, ThemeConfiguration, ApplicationState
-from .error_handling import IntegratedErrorHandler, ErrorCategory
-from .logging_system import LoggerSystem
 from .config_manager import ConfigManager
+from .controllers import AppController
+from .error_handling import ErrorCategory, IntegratedErrorHandler
+
+# Integration layer exports
+from .interfaces import IConfigManager, IImageProcessor, IMapProvider, IThemeManager
+from .logging_system import LoggerSystem
+from .models import ApplicationState, ImageMetadata, ThemeConfiguration
 from .state_manager import StateManager
 
 __all__ = [

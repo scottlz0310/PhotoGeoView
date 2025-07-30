@@ -2,16 +2,23 @@
 Unit tests for core interfaces and abstract classes.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
 from abc import ABC
+from unittest.mock import MagicMock, Mock
 
+import pytest
 from interfaces import (
-    CheckerInterface, EnvironmentManagerInterface, ReporterInterface,
-    OrchestratorInterface, CheckerFactory, CISimulationError,
-    CheckerError, EnvironmentError, ConfigurationError,pendencyError
+    CheckerError,
+    CheckerFactory,
+    CheckerInterface,
+    CISimulationError,
+    ConfigurationError,
+    EnvironmentError,
+    EnvironmentManagerInterface,
+    OrchestratorInterface,
+    ReporterInterface,
+    pendencyError,
 )
-from models import CheckResult, CheckStatus, SimulationResult, CheckTask
+from models import CheckResult, CheckStatus, CheckTask, SimulationResult
 
 
 class ConcreteChecker(CheckerInterface):
@@ -43,7 +50,7 @@ class ConcreteChecker(CheckerInterface):
             name=self.name,
             status=CheckStatus.SUCCESS,
             duration=1.0,
-            output="Test check completed"
+            output="Test check completed",
         )
 
 
@@ -215,10 +222,13 @@ class TestCheckerFactory:
 
     def test_register_invalid_checker(self):
         """Test registering an invalid checker class."""
+
         class InvalidChecker:
             pass
 
-        with pytest.raises(ValueError, match="Checker class must implement CheckerInterface"):
+        with pytest.raises(
+            ValueError, match="Checker class must implement CheckerInterface"
+        ):
             CheckerFactory.register_checker("invalid", InvalidChecker)
 
     def test_create_checker(self, sample_config):
@@ -319,6 +329,7 @@ class TestProtocols:
 
     def test_configurable_protocol(self):
         """Test Configurable protocol."""
+
         class ConfigurableClass:
             def configure(self, config):
                 self.config = config
@@ -329,6 +340,7 @@ class TestProtocols:
 
     def test_validatable_protocol(self):
         """Test Validatable protocol."""
+
         class ValidatableClass:
             def __init__(self, valid=True):
                 self.valid = valid
@@ -344,6 +356,7 @@ class TestProtocols:
 
     def test_serializable_protocol(self):
         """Test Serializable protocol."""
+
         class SerializableClass:
             def __init__(self, data):
                 self.data = data
@@ -382,7 +395,9 @@ class TestInterfaceIntegration:
         # Cleanup
         checker.cleanup()
 
-    def test_multiple_interface_implementations(self, sample_config, sample_simulation_result):
+    def test_multiple_interface_implementations(
+        self, sample_config, sample_simulation_result
+    ):
         """Test using multiple interface implementations together."""
         # Create instances of different interfaces
         checker = ConcreteChecker(sample_config)

@@ -6,24 +6,23 @@ Unit Tests for AI Integration Components
 Author: Kiro AI Integration System
 """
 
-import unittest
-import tempfile
-import shutil
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
 import json
-
+import shutil
 import sys
+import tempfile
+import unittest
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.config_manager import ConfigManager
+from integration.error_handling import ErrorCategory, IntegratedErrorHandler
 from integration.logging_system import LoggerSystem
 from integration.performance_monitor import KiroPerformanceMonitor
-from integration.unified_cache import UnifiedCacheSystem
 from integration.state_manager import StateManager
-from integration.error_handling import IntegratedErrorHandler, ErrorCategory
+from integration.unified_cache import UnifiedCacheSystem
 
 
 class TestConfigManager(unittest.TestCase):

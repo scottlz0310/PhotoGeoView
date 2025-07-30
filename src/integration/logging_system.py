@@ -9,14 +9,14 @@ Provides centralized logging that coordinates between:
 Author: Kiro AI Integration System
 """
 
+import json
 import logging
 import logging.handlers
-import json
 import sys
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from .models import AIComponent, PerformanceMetrics
 
@@ -391,8 +391,9 @@ class LoggerSystem:
             PerformanceMetrics instance
         """
 
-        import psutil
         import os
+
+        import psutil
 
         # Get system metrics
         process = psutil.Process(os.getpid())

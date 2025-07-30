@@ -10,22 +10,22 @@ Comprehensive testing framework for multi-AI integration:
 Author: Kiro AI Integration System
 """
 
-import unittest
 import asyncio
-import time
-import threading
-from typing import Dict, Any, List, Optional, Callable, Tuple
-from pathlib import Path
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import threading
+import time
+import unittest
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from ..models import AIComponent, PerformanceMetrics
 from ..config_manager import ConfigManager
-from ..logging_system import LoggerSystem
-from ..error_handling import IntegratedErrorHandler, ErrorCategory
 from ..controllers import AppController
+from ..error_handling import ErrorCategory, IntegratedErrorHandler
+from ..logging_system import LoggerSystem
+from ..models import AIComponent, PerformanceMetrics
 
 
 @dataclass

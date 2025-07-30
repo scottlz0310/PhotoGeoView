@@ -10,14 +10,15 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import pytest
-import sys
 import asyncio
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, Any, List
-import tempfile
 import json
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # プロジェクトルートをパスに追加
 project_root = Path(__file__).parent.parent.parent
@@ -143,9 +144,9 @@ class TestComprehensiveAIIntegration:
     def test_ui_theme_integration(self):
         """UIテーマ統合テスト"""
         try:
-            from src.integration.ui.theme_manager import IntegratedThemeManager
             from src.integration.config_manager import ConfigManager
             from src.integration.state_manager import StateManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
 
             # テーママネージャーの初期化
             with (
@@ -257,8 +258,8 @@ class TestComprehensiveAIIntegration:
         """エラーハンドリング統合テスト"""
         try:
             from src.integration.error_handling import (
-                IntegratedErrorHandler,
                 ErrorCategory,
+                IntegratedErrorHandler,
             )
 
             # エラーハンドラーの初期化
@@ -280,13 +281,14 @@ class TestComprehensiveAIIntegration:
     def test_data_model_integration(self):
         """データモデル統合テスト"""
         try:
+            from datetime import datetime
+            from pathlib import Path
+
             from src.integration.models import (
+                ApplicationState,
                 ImageMetadata,
                 ThemeConfiguration,
-                ApplicationState,
             )
-            from pathlib import Path
-            from datetime import datetime
 
             # ImageMetadata統合テスト
             metadata = ImageMetadata(
@@ -374,9 +376,9 @@ class TestUserAcceptanceScenarios:
     def test_theme_switching_scenario(self):
         """テーマ切り替えシナリオ"""
         try:
-            from src.integration.ui.theme_manager import IntegratedThemeManager
             from src.integration.config_manager import ConfigManager
             from src.integration.state_manager import StateManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
 
             # シナリオ: ユーザーがテーマを切り替え
             with (
@@ -414,9 +416,9 @@ class TestRequirementValidation:
     def test_requirement_1_1_ui_ux_integration(self):
         """要件1.1: CursorBLD UI/UX統合の検証"""
         try:
-            from src.integration.ui.theme_manager import IntegratedThemeManager
             from src.integration.config_manager import ConfigManager
             from src.integration.state_manager import StateManager
+            from src.integration.ui.theme_manager import IntegratedThemeManager
 
             # CursorBLDのテーマシステムが統合されているか確認
             with (

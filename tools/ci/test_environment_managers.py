@@ -8,9 +8,9 @@ to ensure they work correctly.
 Author: Kiro (AI Integration and Quality Assurance)
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 
 # Add the tools/ci directory to the path
 ci_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,17 +18,17 @@ sys.path.insert(0, ci_dir)
 
 # Import with absolute path handling
 try:
-    from environment import PythonVersionManager, QtEnvironmentManager, DisplayManager
+    from environment import DisplayManager, PythonVersionManager, QtEnvironmentManager
     from models import CheckStatus
 except ImportError:
     # Fallback to direct imports
     sys.path.insert(0, os.path.join(ci_dir, "environment"))
     sys.path.insert(0, os.path.join(ci_dir, ".."))
 
-    from python_manager import PythonVersionManager
-    from qt_manager import QtEnvironmentManager
     from display_manager import DisplayManager
     from models import CheckStatus
+    from python_manager import PythonVersionManager
+    from qt_manager import QtEnvironmentManager
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")

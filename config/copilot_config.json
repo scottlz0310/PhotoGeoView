@@ -1,6 +1,6 @@
 {
   "image_processing": {
-    "high_quality_exif": true,
+    "high_quality_exif": false,
     "detailed_metadata": true,
     "gps_precision": "high",
     "error_recovery": "robust"

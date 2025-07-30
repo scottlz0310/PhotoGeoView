@@ -3,8 +3,8 @@
 Simple test for ResourceManager to verify basic functionality
 """
 
-import sys
 import os
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -14,15 +14,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from resource_manager import ResourceManager, get_resource_manager
 
+
 def test_basic_functionality():
     """Test basic resource manager functionality."""
     print("Testing ResourceManager basic functionality...")
 
     # Initialize resource manager
     config = {
-        'monitoring_enabled': False,  # Disable monitoring for testing
-        'max_memory_percent': 80.0,
-        'max_disk_percent': 90.0
+        "monitoring_enabled": False,  # Disable monitoring for testing
+        "max_memory_percent": 80.0,
+        "max_disk_percent": 90.0,
     }
     manager = ResourceManager(config)
     print("✓ ResourceManager initialized successfully")
@@ -90,11 +91,12 @@ def test_basic_functionality():
 
     print("\nAll tests passed! ✅")
 
+
 def test_cleanup_functionality():
     """Test cleanup functionality."""
     print("\nTesting cleanup functionality...")
 
-    manager = ResourceManager({'monitoring_enabled': False})
+    manager = ResourceManager({"monitoring_enabled": False})
 
     # Create some temporary files
     temp_files = []
@@ -119,6 +121,7 @@ def test_cleanup_functionality():
 
     assert len(manager.temp_resources) == 0
     print("✓ cleanup_all() works correctly")
+
 
 if __name__ == "__main__":
     test_basic_functionality()

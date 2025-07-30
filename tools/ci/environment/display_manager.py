@@ -7,25 +7,26 @@ It's separated from qt_manager.py for better modularity and reusability.
 Author: Kiro (AI Integration and Quality Assurance)
 """
 
+import logging
 import os
-import subprocess
 import platform
 import shutil
-import time
 import signal
+import subprocess
+import time
 from typing import Dict, Optional
-import logging
 
 try:
     from ..models import CheckResult, CheckStatus
     from ..utils import run_command
 except ImportError:
     # Fallback for direct execution
-    import sys
     import os
+    import sys
 
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from models import CheckResult, CheckStatus
+
     from utils import run_command
 
 

@@ -6,10 +6,10 @@ for selective check execution and orchestrator configuration.
 """
 
 import argparse
-import sys
-from typing import List, Dict, Any, Optional
-from pathlib import Path
 import logging
+import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 try:
     from .check_orchestrator import CheckOrchestrator
@@ -41,17 +41,15 @@ class CLIParser:
     def _create_parser(self) -> argparse.ArgumentParser:
         """Create and configure the argument parser."""
         parser = argparse.ArgumentParser(
-            prog='ci-simulator',
-            description='CI/CD Pipeline Simulation Tool for PhotoGeoView',
+            prog="ci-simulator",
+            description="CI/CD Pipeline Simulation Tool for PhotoGeoView",
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=self._get_epilog_text()
+            epilog=self._get_epilog_text(),
         )
 
         # Main command groups
         subparsers = parser.add_subparsers(
-            dest='command',
-            help='Available commands',
-            metavar='COMMAND'
+            dest="command", help="Available commands", metavar="COMMAND"
         )
 
         # Run command (default)
@@ -74,235 +72,220 @@ class CLIParser:
     def _add_run_command(self, subparsers) -> None:
         """Add the 'run' command for executing checks."""
         run_parser = subparsers.add_parser(
-            'run',
-            help='Execute CI checks',
-            description='Execute selected CI checks with dependency resolution'
+            "run",
+            help="Execute CI checks",
+            description="Execute selected CI checks with dependency resolution",
         )
 
         # Check selection
         run_parser.add_argument(
-            'checks',
-            nargs='*',
-            help='Specific checks to run (default: all available checks)'
+            "checks",
+            nargs="*",
+            help="Specific checks to run (default: all available checks)",
         )
 
         run_parser.add_argument(
-            '--all',
-            action='store_true',
-            help='Run all available checks (explicit)'
+            "--all", action="store_true", help="Run all available checks (explicit)"
         )
 
         run_parser.add_argument(
-            '--exclude',
-            nargs='+',
-            metavar='CHECK',
-            help='Exclude specific checks from execution'
+            "--exclude",
+            nargs="+",
+            metavar="CHECK",
+            help="Exclude specific checks from execution",
         )
 
         # Python version selection
         run_parser.add_argument(
-            '--python-versions',
-            nargs='+',
-            metavar='VERSION',
-            help='Python versions to test against (e.g., 3.9 3.10 3.11)'
+            "--python-versions",
+            nargs="+",
+            metavar="VERSION",
+            help="Python versions to test against (e.g., 3.9 3.10 3.11)",
         )
 
         # Execution options
         run_parser.add_argument(
-            '--parallel',
+            "--parallel",
             type=int,
-            metavar='N',
-            help='Maximum number of parallel tasks (default: auto-detect)'
+            metavar="N",
+            help="Maximum number of parallel tasks (default: auto-detect)",
         )
 
         run_parser.add_argument(
-            '--timeout',
+            "--timeout",
             type=float,
-            metavar='SECONDS',
-            help='Global timeout for all checks in seconds'
+            metavar="SECONDS",
+            help="Global timeout for all checks in seconds",
         )
 
         run_parser.add_argument(
-            '--fail-fast',
-            action='store_true',
-            help='Stop execution on first failure'
+            "--fail-fast", action="store_true", help="Stop execution on first failure"
         )
 
         # Output options
         run_parser.add_argument(
-            '--output-dir',
+            "--output-dir",
             type=Path,
-            metavar='DIR',
-            help='Directory for output reports (default: reports/ci-simulation/)'
+            metavar="DIR",
+            help="Directory for output reports (default: reports/ci-simulation/)",
         )
 
         run_parser.add_argument(
-            '--format',
-            choices=['markdown', 'json', 'both'],
-            default='both',
-            help='Report format (default: both)'
+            "--format",
+            choices=["markdown", "json", "both"],
+            default="both",
+            help="Report format (default: both)",
         )
 
         run_parser.add_argument(
-            '--quiet',
-            action='store_true',
-            help='Suppress non-essential output'
+            "--quiet", action="store_true", help="Suppress non-essential output"
         )
 
         run_parser.add_argument(
-            '--verbose',
-            action='store_true',
-            help='Enable verbose output'
+            "--verbose", action="store_true", help="Enable verbose output"
         )
 
     def _add_list_command(self, subparsers) -> None:
         """Add the 'list' command for showing available checks."""
         list_parser = subparsers.add_parser(
-            'list',
-            help='List available checks',
-            description='Display information about available CI checks'
+            "list",
+            help="List available checks",
+            description="Display information about available CI checks",
         )
 
         list_parser.add_argument(
-            '--detailed',
-            action='store_true',
-            help='Show detailed information about each check'
+            "--detailed",
+            action="store_true",
+            help="Show detailed information about each check",
         )
 
         list_parser.add_argument(
-            '--format',
-            choices=['table', 'json', 'yaml'],
-            default='table',
-            help='Output format (default: table)'
+            "--format",
+            choices=["table", "json", "yaml"],
+            default="table",
+            help="Output format (default: table)",
         )
 
     def _add_info_command(self, subparsers) -> None:
         """Add the 'info' command for showing check details."""
         info_parser = subparsers.add_parser(
-            'info',
-            help='Show detailed information about a specific check',
-            description='Display comprehensive information about a CI check'
+            "info",
+            help="Show detailed information about a specific check",
+            description="Display comprehensive information about a CI check",
         )
 
         info_parser.add_argument(
-            'check_name',
-            help='Name of the check to get information about'
+            "check_name", help="Name of the check to get information about"
         )
 
     def _add_plan_command(self, subparsers) -> None:
         """Add the 'plan' command for showing execution plan."""
         plan_parser = subparsers.add_parser(
-            'plan',
-            help='Show execution plan',
-            description='Display the execution plan for selected checks'
+            "plan",
+            help="Show execution plan",
+            description="Display the execution plan for selected checks",
         )
 
         plan_parser.add_argument(
-            'checks',
-            nargs='*',
-            help='Specific checks to plan (default: all available checks)'
+            "checks",
+            nargs="*",
+            help="Specific checks to plan (default: all available checks)",
         )
 
         plan_parser.add_argument(
-            '--exclude',
-            nargs='+',
-            metavar='CHECK',
-            help='Exclude specific checks from plan'
+            "--exclude",
+            nargs="+",
+            metavar="CHECK",
+            help="Exclude specific checks from plan",
         )
 
         plan_parser.add_argument(
-            '--format',
-            choices=['table', 'json', 'graph'],
-            default='table',
-            help='Plan output format (default: table)'
+            "--format",
+            choices=["table", "json", "graph"],
+            default="table",
+            help="Plan output format (default: table)",
         )
 
     def _add_hook_command(self, subparsers) -> None:
         """Add the 'hook' command for Git hook management."""
         hook_parser = subparsers.add_parser(
-            'hook',
-            help='Manage Git hooks',
-            description='Install, configure, and manage Git hooks for CI simulation'
+            "hook",
+            help="Manage Git hooks",
+            description="Install, configure, and manage Git hooks for CI simulation",
         )
 
         hook_subparsers = hook_parser.add_subparsers(
-            dest='hook_action',
-            help='Hook management actions',
-            metavar='ACTION'
+            dest="hook_action", help="Hook management actions", metavar="ACTION"
         )
 
         # Install hook
         install_parser = hook_subparsers.add_parser(
-            'install',
-            help='Install Git hook',
-            description='Install a Git hook for CI simulation'
+            "install",
+            help="Install Git hook",
+            description="Install a Git hook for CI simulation",
         )
         install_parser.add_argument(
-            'hook_type',
-            choices=['pre-commit', 'pre-push', 'commit-msg'],
-            help='Type of hook to install'
+            "hook_type",
+            choices=["pre-commit", "pre-push", "commit-msg"],
+            help="Type of hook to install",
         )
         install_parser.add_argument(
-            '--checks',
-            nargs='+',
-            metavar='CHECK',
-            help='Checks to run in the hook (default: hook-specific defaults)'
+            "--checks",
+            nargs="+",
+            metavar="CHECK",
+            help="Checks to run in the hook (default: hook-specific defaults)",
         )
         install_parser.add_argument(
-            '--force',
-            action='store_true',
-            help='Overwrite existing hook'
+            "--force", action="store_true", help="Overwrite existing hook"
         )
 
         # Uninstall hook
         uninstall_parser = hook_subparsers.add_parser(
-            'uninstall',
-            help='Uninstall Git hook',
-            description='Remove a Git hook installed by CI Simulator'
+            "uninstall",
+            help="Uninstall Git hook",
+            description="Remove a Git hook installed by CI Simulator",
         )
         uninstall_parser.add_argument(
-            'hook_type',
-            choices=['pre-commit', 'pre-push', 'commit-msg'],
-            help='Type of hook to uninstall'
+            "hook_type",
+            choices=["pre-commit", "pre-push", "commit-msg"],
+            help="Type of hook to uninstall",
         )
 
         # List hooks
         list_parser = hook_subparsers.add_parser(
-            'list',
-            help='List Git hooks',
-            description='Show status of all Git hooks'
+            "list", help="List Git hooks", description="Show status of all Git hooks"
         )
         list_parser.add_argument(
-            '--format',
-            choices=['table', 'json'],
-            default='table',
-            help='Output format (default: table)'
+            "--format",
+            choices=["table", "json"],
+            default="table",
+            help="Output format (default: table)",
         )
 
         # Test hook
         test_parser = hook_subparsers.add_parser(
-            'test',
-            help='Test Git hook',
-            description='Test a Git hook by running it manually'
+            "test",
+            help="Test Git hook",
+            description="Test a Git hook by running it manually",
         )
         test_parser.add_argument(
-            'hook_type',
-            choices=['pre-commit', 'pre-push', 'commit-msg'],
-            help='Type of hook to test'
+            "hook_type",
+            choices=["pre-commit", "pre-push", "commit-msg"],
+            help="Type of hook to test",
         )
 
         # Status command
         status_parser = hook_subparsers.add_parser(
-            'status',
-            help='Show hook status',
-            description='Show comprehensive status of Git hooks'
+            "status",
+            help="Show hook status",
+            description="Show comprehensive status of Git hooks",
         )
 
         # Setup recommended hooks
         setup_parser = hook_subparsers.add_parser(
-            'setup',
-            help='Setup recommended hooks',
-            description='Install recommended Git hooks for the project'
+            "setup",
+            help="Setup recommended hooks",
+            description="Install recommended Git hooks for the project",
         )
 
     def _get_epilog_text(self) -> str:
@@ -334,8 +317,11 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
             args = sys.argv[1:]
 
         # Set default command if none provided
-        if not args or (args[0] not in ['run', 'list', 'info', 'plan', 'hook'] and not args[0].startswith('-')):
-            args = ['run'] + args
+        if not args or (
+            args[0] not in ["run", "list", "info", "plan", "hook"]
+            and not args[0].startswith("-")
+        ):
+            args = ["run"] + args
 
         return self.parser.parse_args(args)
 
@@ -351,11 +337,11 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         """
         errors = []
 
-        if args.command == 'run':
+        if args.command == "run":
             errors.extend(self._validate_run_args(args))
-        elif args.command == 'info':
+        elif args.command == "info":
             errors.extend(self._validate_info_args(args))
-        elif args.command == 'plan':
+        elif args.command == "plan":
             errors.extend(self._validate_plan_args(args))
 
         return errors
@@ -402,8 +388,10 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         errors = []
 
         if not self.orchestrator.is_check_available(args.check_name):
-            available = ', '.join(self.orchestrator.get_available_checks())
-            errors.append(f"Check '{args.check_name}' not available. Available: {available}")
+            available = ", ".join(self.orchestrator.get_available_checks())
+            errors.append(
+                f"Check '{args.check_name}' not available. Available: {available}"
+            )
 
         return errors
 
@@ -432,7 +420,7 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         Returns:
             List of CheckTask objects
         """
-        if args.command != 'run':
+        if args.command != "run":
             return []
 
         # Determine which checks to run
@@ -444,8 +432,7 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         # Apply exclusions
         if args.exclude:
             selected_checks = [
-                check for check in selected_checks
-                if check not in args.exclude
+                check for check in selected_checks if check not in args.exclude
             ]
 
         # Create tasks
@@ -464,9 +451,9 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
                     python_version=python_version,
                     timeout=args.timeout,
                     metadata={
-                        'cli_args': vars(args),
-                        'selected_explicitly': check_name in (args.checks or [])
-                    }
+                        "cli_args": vars(args),
+                        "selected_explicitly": check_name in (args.checks or []),
+                    },
                 )
                 tasks.append(task)
 
@@ -484,19 +471,19 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         """
         config = {}
 
-        if args.command == 'run':
+        if args.command == "run":
             if args.parallel:
-                config['max_parallel_tasks'] = args.parallel
+                config["max_parallel_tasks"] = args.parallel
 
             if args.fail_fast:
-                config['fail_fast'] = True
+                config["fail_fast"] = True
 
             if args.output_dir:
-                config['output_dir'] = str(args.output_dir)
+                config["output_dir"] = str(args.output_dir)
 
-            config['report_format'] = args.format
-            config['quiet'] = args.quiet
-            config['verbose'] = args.verbose
+            config["report_format"] = args.format
+            config["quiet"] = args.quiet
+            config["verbose"] = args.verbose
 
         return config
 
@@ -516,7 +503,9 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         """Print help message."""
         self.parser.print_help()
 
-    def print_available_checks(self, detailed: bool = False, format_type: str = 'table') -> None:
+    def print_available_checks(
+        self, detailed: bool = False, format_type: str = "table"
+    ) -> None:
         """
         Print available checks information.
 
@@ -526,18 +515,20 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         """
         checks_info = self.orchestrator.list_available_checks()
 
-        if format_type == 'json':
+        if format_type == "json":
             import json
+
             print(json.dumps(checks_info, indent=2))
-        elif format_type == 'yaml':
+        elif format_type == "yaml":
             try:
                 import yaml
+
                 print(yaml.dump(checks_info, default_flow_style=False))
             except ImportError:
                 print("YAML format requires PyYAML package")
-                format_type = 'table'
+                format_type = "table"
 
-        if format_type == 'table':
+        if format_type == "table":
             if not checks_info:
                 print("No checks available")
                 return
@@ -550,11 +541,11 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
                 if detailed:
                     print(f"  Type: {info.get('check_type', 'unknown')}")
                     print(f"  Available: {info.get('is_available', False)}")
-                    if info.get('dependencies'):
-                        deps = ', '.join(info['dependencies'])
+                    if info.get("dependencies"):
+                        deps = ", ".join(info["dependencies"])
                         print(f"  Dependencies: {deps}")
-                    if info.get('description'):
-                        desc = info['description'].split('\n')[0][:60]
+                    if info.get("description"):
+                        desc = info["description"].split("\n")[0][:60]
                         print(f"  Description: {desc}")
                     print()
 
@@ -577,17 +568,19 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         print(f"Type: {info['check_type']}")
         print(f"Available: {info['is_available']}")
 
-        if info.get('dependencies'):
-            deps = ', '.join(info['dependencies'])
+        if info.get("dependencies"):
+            deps = ", ".join(info["dependencies"])
             print(f"Dependencies: {deps}")
         else:
             print("Dependencies: None")
 
-        if info.get('description'):
+        if info.get("description"):
             print(f"\nDescription:")
-            print(info['description'])
+            print(info["description"])
 
-    def print_execution_plan(self, tasks: List[CheckTask], format_type: str = 'table') -> None:
+    def print_execution_plan(
+        self, tasks: List[CheckTask], format_type: str = "table"
+    ) -> None:
         """
         Print execution plan for tasks.
 
@@ -597,8 +590,9 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         """
         plan = self.orchestrator.create_execution_plan(tasks)
 
-        if format_type == 'json':
+        if format_type == "json":
             import json
+
             print(json.dumps(plan, indent=2))
             return
 
@@ -610,11 +604,11 @@ For more information, visit: https://github.com/PhotoGeoView/ci-simulation
         print(f"Estimated Duration: {plan['estimated_duration']:.1f} seconds")
         print()
 
-        for level_info in plan['execution_order']:
-            level = level_info['level']
-            tasks_in_level = level_info['tasks']
-            parallel = level_info['parallel_execution']
-            duration = level_info['estimated_duration']
+        for level_info in plan["execution_order"]:
+            level = level_info["level"]
+            tasks_in_level = level_info["tasks"]
+            parallel = level_info["parallel_execution"]
+            duration = level_info["estimated_duration"]
 
             print(f"Level {level}: {len(tasks_in_level)} task(s)")
             print(f"  Tasks: {', '.join(tasks_in_level)}")

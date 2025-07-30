@@ -2,24 +2,26 @@
 Unit tests for all checker implementations.
 """
 
-import pytest
 import os
-import tempfile
 import subprocess
-from unittest.mock import Mock, patch, MagicMock, call
-from pathlib import Path
 
 # Import checkers
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ci'))
+import tempfile
+from pathlib import Path
+from unittest.mock import MagicMock, Mock, call, patch
 
-from checkers.code_quality import CodeQualityChecker
-from checkers.security_scanner import SecurityScanne
-om checkers.performance_analyzer import PerformanceAnalyzer
-from checkers.test_runner import TestRunner
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
+
 from checkers.ai_component_tester import AIComponentTester
-from models import CheckResult, CheckStatus
+from checkers.code_quality import CodeQualityChecker
+from checkers.performance_analyzer import PerformanceAnalyzer
+from checkers.security_scanner import SecurityScanner
+from checkers.test_runner import TestRunner
 from interfaces import CheckerError
+from models import CheckResult, CheckStatus
 
 
 class TestCodeQualityChecker:
@@ -36,7 +38,7 @@ class TestCodeQualityChecker:
         assert "flake8" in checker.dependencies
         assert "mypy" in checker.dependencies
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_black_success(self, mock_run, sample_config, temp_dir):
         """Test successful Black formatting check."""
         mock_run.return_value.returncode = 0
@@ -51,7 +53,7 @@ class TestCodeQualityChecker:
         assert result.name == "Black Formatter"
         assert "All done!" in result.output
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_black_failure(self, mock_run, sample_config):
         """Test Black formatting check with errors."""
         mock_run.return_value.returncode = 1
@@ -65,7 +67,7 @@ class TestCodeQualityChecker:
         assert len(result.errors) > 0
         assert "error: cannot use --safe with --fast" in result.errors[0]
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_black_with_auto_fix(self, mock_run, sample_config):
         """Test Black formatting with auto-fix enabled."""
         mock_run.return_value.returncode = 0
@@ -80,7 +82,7 @@ class TestCodeQualityChecker:
         call_args = mock_run.call_args[0][0]
         assert "--check" not in call_args
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_isort_success(self, mock_run, sample_config):
         """Test successful isort check."""
         mock_run.return_value.returncode = 0
@@ -93,7 +95,7 @@ class TestCodeQualityChecker:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "isort Import Sorter"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_isort_with_changes_needed(self, mock_run, sample_config):
         """Test isort check when changes are needed."""
         mock_run.return_value.returncode = 1
@@ -106,7 +108,7 @@ class TestCodeQualityChecker:
         assert result.status == CheckStatus.FAILURE
         assert "Import sorting issues found" in result.errors[0]
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_flake8_success(self, mock_run, sample_config):
         """Test successful flake8 check."""
         mock_run.return_value.returncode = 0
@@ -119,11 +121,13 @@ class TestCodeQualityChecker:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "flake8 Style Checker"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_flake8_with_violations(self, mock_run, sample_config):
         """Test flake8 check with style violations."""
         mock_run.return_value.returncode = 1
-        mock_run.return_value.stdout = "./test.py:1:1: E302 expected 2 blank lines, found 1"
+        mock_run.return_value.stdout = (
+            "./test.py:1:1: E302 expected 2 blank lines, found 1"
+        )
         mock_run.return_value.stderr = ""
 
         checker = CodeQualityChecker(sample_config)
@@ -133,7 +137,7 @@ class TestCodeQualityChecker:
         assert len(result.errors) > 0
         assert "E302" in result.errors[0]
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_mypy_success(self, mock_run, sample_config):
         """Test successful mypy check."""
         mock_run.return_value.returncode = 0
@@ -146,7 +150,7 @@ class TestCodeQualityChecker:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "mypy Type Checker"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_mypy_with_errors(self, mock_run, sample_config):
         """Test mypy check with type errors."""
         mock_run.return_value.returncode = 1
@@ -160,7 +164,7 @@ class TestCodeQualityChecker:
         assert len(result.errors) > 0
         assert "Incompatible types" in result.errors[0]
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_all_quality_checks(self, mock_run, sample_config):
         """Test running all quality checks."""
         mock_run.return_value.returncode = 0
@@ -181,7 +185,7 @@ class TestCodeQualityChecker:
 
     def test_is_available_all_tools_present(self, sample_config):
         """Test is_available when all tools are present."""
-        with patch('shutil.which') as mock_which:
+        with patch("shutil.which") as mock_which:
             mock_which.return_value = "/usr/bin/tool"
 
             checker = CodeQualityChecker(sample_config)
@@ -189,13 +193,13 @@ class TestCodeQualityChecker:
 
     def test_is_available_missing_tools(self, sample_config):
         """Test is_available when tools are missing."""
-        with patch('shutil.which') as mock_which:
+        with patch("shutil.which") as mock_which:
             mock_which.return_value = None
 
             checker = CodeQualityChecker(sample_config)
             assert checker.is_available() is False
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_check_integration(self, mock_run, sample_config):
         """Test the main run_check method."""
         mock_run.return_value.returncode = 0
@@ -221,11 +225,13 @@ class TestSecurityScanner:
         assert "safety" in scanner.dependencies
         assert "bandit" in scanner.dependencies
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_safety_check_success(self, mock_run, sample_config):
         """Test successful safety vulnerability check."""
         mock_run.return_value.returncode = 0
-        mock_run.return_value.stdout = "All good! No known security vulnerabilities found."
+        mock_run.return_value.stdout = (
+            "All good! No known security vulnerabilities found."
+        )
         mock_run.return_value.stderr = ""
 
         scanner = SecurityScanner(sample_config)
@@ -235,11 +241,13 @@ class TestSecurityScanner:
         assert result.name == "Safety Vulnerability Scanner"
         assert "No known security vulnerabilities" in result.output
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_safety_check_with_vulnerabilities(self, mock_run, sample_config):
         """Test safety check with vulnerabilities found."""
         mock_run.return_value.returncode = 1
-        mock_run.return_value.stdout = "VULNERABILITY: django==1.0 has known security vulnerabilities"
+        mock_run.return_value.stdout = (
+            "VULNERABILITY: django==1.0 has known security vulnerabilities"
+        )
         mock_run.return_value.stderr = ""
 
         scanner = SecurityScanner(sample_config)
@@ -249,7 +257,7 @@ class TestSecurityScanner:
         assert len(result.errors) > 0
         assert "django==1.0" in result.errors[0]
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_bandit_scan_success(self, mock_run, sample_config):
         """Test successful bandit security scan."""
         mock_run.return_value.returncode = 0
@@ -262,11 +270,13 @@ class TestSecurityScanner:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Bandit Security Linter"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_bandit_scan_with_issues(self, mock_run, sample_config):
         """Test bandit scan with security issues."""
         mock_run.return_value.returncode = 1
-        mock_run.return_value.stdout = "Issue: [B602:subprocess_popen_with_shell_equals_true]"
+        mock_run.return_value.stdout = (
+            "Issue: [B602:subprocess_popen_with_shell_equals_true]"
+        )
         mock_run.return_value.stderr = ""
 
         scanner = SecurityScanner(sample_config)
@@ -276,7 +286,7 @@ class TestSecurityScanner:
         assert len(result.errors) > 0
         assert "B602" in result.errors[0]
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_full_security_scan(self, mock_run, sample_config):
         """Test running full security scan."""
         mock_run.return_value.returncode = 0
@@ -293,7 +303,7 @@ class TestSecurityScanner:
         for result in results.values():
             assert isinstance(result, CheckResult)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_generate_security_report(self, mock_run, sample_config):
         """Test security report generation."""
         mock_run.return_value.returncode = 0
@@ -321,7 +331,7 @@ class TestPerformanceAnalyzer:
         assert analyzer.check_type == "performance"
         assert "pytest" in analyzer.dependencies
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_benchmarks_success(self, mock_run, sample_config):
         """Test successful benchmark execution."""
         mock_run.return_value.returncode = 0
@@ -334,7 +344,7 @@ class TestPerformanceAnalyzer:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Performance Benchmarks"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_benchmarks_failure(self, mock_run, sample_config):
         """Test benchmark execution with failures."""
         mock_run.return_value.returncode = 1
@@ -365,7 +375,7 @@ class TestPerformanceAnalyzer:
         baseline_data = {"test_speed": 1.0, "test_memory": 80}
         baseline_path = os.path.join(temp_dir, "baseline.json")
 
-        with open(baseline_path, 'w') as f:
+        with open(baseline_path, "w") as f:
             json.dump(baseline_data, f)
 
         analyzer = PerformanceAnalyzer(sample_config)
@@ -385,7 +395,7 @@ class TestPerformanceAnalyzer:
         baseline_data = {"test_critical": 1.0, "test_minor": 2.0}
         baseline_path = os.path.join(temp_dir, "baseline.json")
 
-        with open(baseline_path, 'w') as f:
+        with open(baseline_path, "w") as f:
             json.dump(baseline_data, f)
 
         analyzer = PerformanceAnalyzer(sample_config)
@@ -396,7 +406,9 @@ class TestPerformanceAnalyzer:
         regressions = analyzer.detect_performance_regression(threshold=30.0)
 
         # Should detect the critical regression but not the minor one
-        critical_regressions = [r for r in regressions if r.test_name == "test_critical"]
+        critical_regressions = [
+            r for r in regressions if r.test_name == "test_critical"
+        ]
         assert len(critical_regressions) > 0
 
     def test_save_baseline(self, sample_config, temp_dir):
@@ -411,7 +423,8 @@ class TestPerformanceAnalyzer:
 
         # Verify saved content
         import json
-        with open(analyzer.baseline_path, 'r') as f:
+
+        with open(analyzer.baseline_path, "r") as f:
             saved_data = json.load(f)
 
         assert saved_data == results
@@ -428,7 +441,7 @@ class TestTestRunner:
         assert runner.check_type == "tests"
         assert "pytest" in runner.dependencies
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_unit_tests_success(self, mock_run, sample_config):
         """Test successful unit test execution."""
         mock_run.return_value.returncode = 0
@@ -442,7 +455,7 @@ class TestTestRunner:
         assert result.name == "Unit Tests"
         assert "10 passed" in result.output
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_unit_tests_failure(self, mock_run, sample_config):
         """Test unit test execution with failures."""
         mock_run.return_value.returncode = 1
@@ -455,7 +468,7 @@ class TestTestRunner:
         assert result.status == CheckStatus.FAILURE
         assert len(result.errors) > 0
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_integration_tests(self, mock_run, sample_config):
         """Test integration test execution."""
         mock_run.return_value.returncode = 0
@@ -468,7 +481,7 @@ class TestTestRunner:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Integration Tests"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_ai_compatibility_tests(self, mock_run, sample_config):
         """Test AI compatibility test execution."""
         mock_run.return_value.returncode = 0
@@ -481,7 +494,7 @@ class TestTestRunner:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "AI Compatibility Tests"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_performance_tests(self, mock_run, sample_config):
         """Test performance test execution."""
         mock_run.return_value.returncode = 0
@@ -494,7 +507,7 @@ class TestTestRunner:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Performance Tests"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_demo_scripts(self, mock_run, sample_config):
         """Test demo script execution."""
         mock_run.return_value.returncode = 0
@@ -519,7 +532,7 @@ class TestAIComponentTester:
         assert tester.check_type == "ai_integration"
         assert "pytest" in tester.dependencies
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_test_copilot_components(self, mock_run, sample_config):
         """Test Copilot component testing."""
         mock_run.return_value.returncode = 0
@@ -532,7 +545,7 @@ class TestAIComponentTester:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Copilot Component Tests"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_test_cursor_components(self, mock_run, sample_config):
         """Test Cursor component testing."""
         mock_run.return_value.returncode = 0
@@ -545,7 +558,7 @@ class TestAIComponentTester:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Cursor Component Tests"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_test_kiro_components(self, mock_run, sample_config):
         """Test Kiro component testing."""
         mock_run.return_value.returncode = 0
@@ -558,7 +571,7 @@ class TestAIComponentTester:
         assert result.status == CheckStatus.SUCCESS
         assert result.name == "Kiro Component Tests"
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_ai_integration_tests(self, mock_run, sample_config):
         """Test running all AI integration tests."""
         mock_run.return_value.returncode = 0
@@ -576,7 +589,7 @@ class TestAIComponentTester:
         for result in results.values():
             assert isinstance(result, CheckResult)
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_validate_ai_compatibility(self, mock_run, sample_config):
         """Test AI compatibility validation."""
         mock_run.return_value.returncode = 0
@@ -593,7 +606,7 @@ class TestAIComponentTester:
 class TestCheckerErrorHandling:
     """Test error handling in checkers."""
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_subprocess_timeout_handling(self, mock_run, sample_config):
         """Test handling of subprocess timeouts."""
         mock_run.side_effect = subprocess.TimeoutExpired("black", 30)
@@ -604,7 +617,7 @@ class TestCheckerErrorHandling:
         assert result.status == CheckStatus.FAILURE
         assert "timeout" in result.errors[0].lower()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_subprocess_exception_handling(self, mock_run, sample_config):
         """Test handling of subprocess exceptions."""
         mock_run.side_effect = FileNotFoundError("black command not found")
@@ -624,7 +637,7 @@ class TestCheckerErrorHandling:
 
         assert len(errors) == 0  # Should not crash, just use defaults
 
-    @patch('os.path.exists')
+    @patch("os.path.exists")
     def test_missing_baseline_handling(self, mock_exists, sample_config):
         """Test handling of missing baseline files."""
         mock_exists.return_value = False
@@ -647,22 +660,22 @@ class TestCheckerIntegration:
             SecurityScanner(sample_config),
             PerformanceAnalyzer(sample_config),
             TestRunner(sample_config),
-            AIComponentTester(sample_config)
+            AIComponentTester(sample_config),
         ]
 
         for checker in checkers:
             # Test required properties
-            assert hasattr(checker, 'name')
-            assert hasattr(checker, 'check_type')
-            assert hasattr(checker, 'dependencies')
+            assert hasattr(checker, "name")
+            assert hasattr(checker, "check_type")
+            assert hasattr(checker, "dependencies")
 
             # Test required methods
-            assert callable(getattr(checker, 'is_available'))
-            assert callable(getattr(checker, 'run_check'))
-            assert callable(getattr(checker, 'validate_config'))
-            assert callable(getattr(checker, 'cleanup'))
+            assert callable(getattr(checker, "is_available"))
+            assert callable(getattr(checker, "run_check"))
+            assert callable(getattr(checker, "validate_config"))
+            assert callable(getattr(checker, "cleanup"))
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_checker_cleanup_called(self, mock_run, sample_config):
         """Test that cleanup is properly called."""
         mock_run.return_value.returncode = 0
@@ -688,7 +701,7 @@ class TestCheckerIntegration:
             SecurityScanner(sample_config),
             PerformanceAnalyzer(sample_config),
             TestRunner(sample_config),
-            AIComponentTester(sample_config)
+            AIComponentTester(sample_config),
         ]
 
         for checker in checkers:

@@ -2,15 +2,19 @@
 Unit tests for core data models.
 """
 
-import pytest
 import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
 
+import pytest
 from models import (
-    CheckResult, CheckStatus, SimulationResult, RegressionIssue,
-    CheckTask, SeverityLevel
+    CheckResult,
+    CheckStatus,
+    CheckTask,
+    RegressionIssue,
+    SeverityLevel,
+    SimulationResult,
 )
 
 
@@ -20,9 +24,7 @@ class TestCheckResult:
     def test_check_result_creation(self):
         """Test basic CheckResult creation."""
         result = CheckResult(
-            name="test_check",
-            staeckStatus.SUCCESS,
-            duration=1.5
+            name="test_check", status=CheckStatus.SUCCESS, duration=1.5
         )
 
         assert result.name == "test_check"
@@ -46,7 +48,7 @@ class TestCheckResult:
             warnings=["Warning 1"],
             suggestions=["Suggestion 1", "Suggestion 2"],
             metadata={"test_count": 5, "coverage": 80.0},
-            python_version="3.10"
+            python_version="3.10",
         )
 
         assert result.name == "comprehensive_check"
@@ -92,7 +94,7 @@ class TestCheckResult:
             warnings=["Warning 1"],
             suggestions=["Suggestion 1"],
             metadata={"key": "value"},
-            python_version="3.10"
+            python_version="3.10",
         )
 
         data = result.to_dict()
@@ -121,7 +123,7 @@ class TestCheckResult:
             "suggestions": ["Suggestion 1"],
             "metadata": {"key": "value"},
             "timestamp": timestamp.isoformat(),
-            "python_version": "3.10"
+            "python_version": "3.10",
         }
 
         result = CheckResult.from_dict(data)
@@ -149,7 +151,7 @@ class TestRegressionIssue:
             current_value=150.0,
             regression_percentage=50.0,
             severity=SeverityLevel.HIGH,
-            description="Performance degraded by 50%"
+            description="Performance degraded by 50%",
         )
 
         assert issue.test_name == "performance_test"
@@ -171,7 +173,7 @@ class TestRegressionIssue:
             severity=SeverityLevel.CRITICAL,
             description="Memory usage increased significantly",
             metric_type="memory",
-            threshold_exceeded=True
+            threshold_exceeded=True,
         )
 
         assert issue.test_name == "memory_test"
@@ -186,7 +188,7 @@ class TestRegressionIssue:
             current_value=150.0,
             regression_percentage=50.0,
             severity=SeverityLevel.HIGH,
-            description="Test regression"
+            description="Test regression",
         )
 
         data = issue.to_dict()
@@ -210,7 +212,7 @@ class TestRegressionIssue:
             "severity": "high",
             "description": "Test regression",
             "metric_type": "memory",
-            "threshold_exceeded": True
+            "threshold_exceeded": True,
         }
 
         issue = RegressionIssue.from_dict(data)
@@ -235,7 +237,7 @@ class TestSimulationResult:
             total_duration=5.0,
             check_results={"test": sample_check_result},
             python_versions_tested=["3.10"],
-            summary="All checks passed"
+            summary="All checks passed",
         )
 
         assert result.overall_status == CheckStatus.SUCCESS
@@ -250,65 +252,56 @@ class TestSimulationResult:
 
     def test_is_successful_property(self):
         """Test is_successful property."""
-        success_result = SimulationResult(
-            CheckStatus.SUCCESS, 1.0, {}, [], "Success"
-        )
-        warning_result = SimulationResult(
-            CheckStatus.WARNING, 1.0, {}, [], "Warning"
-        )
-        failure_result = SimulationResult(
-            CheckStatus.FAILURE, 1.0, {}, [], "Failure"
-        )
+        success_result = SimulationResult(CheckStatus.SUCCESS, 1.0, {}, [], "Success")
+        warning_result = SimulationResult(CheckStatus.WARNING, 1.0, {}, [], "Warning")
+        failure_result = SimulationResult(CheckStatus.FAILURE, 1.0, {}, [], "Failure")
 
         assert success_result.is_successful is True
         assert warning_result.is_successful is True
         assert failure_result.is_successful is False
 
-    def test_failed_checks_property(self, sample_check_result, sample_failed_check_result):
+    def test_failed_checks_property(
+        self, sample_check_result, sample_failed_check_result
+    ):
         """Test failed_checks property."""
         result = SimulationResult(
             CheckStatus.WARNING,
             5.0,
-            {
-                "success": sample_check_result,
-                "failure": sample_failed_check_result
-            },
+            {"success": sample_check_result, "failure": sample_failed_check_result},
             ["3.10"],
-            "Mixed results"
+            "Mixed results",
         )
 
         failed = result.failed_checks
         assert len(failed) == 1
         assert failed[0].name == "failed_check"
 
-    def test_successful_checks_property(self, sample_check_result, sample_failed_check_result):
+    def test_successful_checks_property(
+        self, sample_check_result, sample_failed_check_result
+    ):
         """Test successful_checks property."""
         result = SimulationResult(
             CheckStatus.WARNING,
             5.0,
-            {
-                "success": sample_check_result,
-                "failure": sample_failed_check_result
-            },
+            {"success": sample_check_result, "failure": sample_failed_check_result},
             ["3.10"],
-            "Mixed results"
+            "Mixed results",
         )
 
         successful = result.successful_checks
         assert len(successful) == 1
         assert successful[0].name == "test_check"
 
-    def test_get_checks_by_status(self, sample_check_result, sample_failed_check_result):
+    def test_get_checks_by_status(
+        self, sample_check_result, sample_failed_check_result
+    ):
         """Test get_checks_by_status method."""
         result = SimulationResult(
             CheckStatus.WARNING,
             5.0,
-            {
-                "success": sample_check_result,
-                "failure": sample_failed_check_result
-            },
+            {"success": sample_check_result, "failure": sample_failed_check_result},
             ["3.10"],
-            "Mixed results"
+            "Mixed results",
         )
 
         success_checks = result.get_checks_by_status(CheckStatus.SUCCESS)
@@ -338,8 +331,13 @@ class TestSimulationResult:
 
         assert restored.overall_status == sample_simulation_result.overall_status
         assert restored.total_duration == sample_simulation_result.total_duration
-        assert len(restored.check_results) == len(sample_simulation_result.check_results)
-        assert restored.python_versions_tested == sample_simulation_result.python_versions_tested
+        assert len(restored.check_results) == len(
+            sample_simulation_result.check_results
+        )
+        assert (
+            restored.python_versions_tested
+            == sample_simulation_result.python_versions_tested
+        )
         assert restored.summary == sample_simulation_result.summary
 
     def test_save_and_load_from_file(self, sample_simulation_result, temp_dir):
@@ -355,7 +353,9 @@ class TestSimulationResult:
 
         assert loaded_result.overall_status == sample_simulation_result.overall_status
         assert loaded_result.total_duration == sample_simulation_result.total_duration
-        assert len(loaded_result.check_results) == len(sample_simulation_result.check_results)
+        assert len(loaded_result.check_results) == len(
+            sample_simulation_result.check_results
+        )
 
 
 class TestCheckTask:
@@ -363,10 +363,7 @@ class TestCheckTask:
 
     def test_check_task_creation(self):
         """Test basic CheckTask creation."""
-        task = CheckTask(
-            name="test_task",
-            check_type="code_quality"
-        )
+        task = CheckTask(name="test_task", check_type="code_quality")
 
         assert task.name == "test_task"
         assert task.check_type == "code_quality"
@@ -385,7 +382,7 @@ class TestCheckTask:
             dependencies=["code_quality", "tests"],
             timeout=300.0,
             priority=5,
-            metadata={"config": "custom"}
+            metadata={"config": "custom"},
         )
 
         assert task.name == "comprehensive_task"

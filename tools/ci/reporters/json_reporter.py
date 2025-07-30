@@ -8,11 +8,17 @@ creating structured, machadable reports for CI integration and API compatibility
 import json
 import os
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from ..interfaces import ReporterInterface
-from ..models import SimulationResult, CheckResult, CheckStatus, SeverityLevel, RegressionIssue
+from ..models import (
+    CheckResult,
+    CheckStatus,
+    RegressionIssue,
+    SeverityLevel,
+    SimulationResult,
+)
 
 
 class JSONReporter(ReporterInterface):
@@ -54,8 +60,14 @@ class JSONReporter(ReporterInterface):
         report_data = self._generate_report_data(result)
 
         # Write to file with proper formatting
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(report_data, f, indent=2, ensure_ascii=False, default=self._json_serializer)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(
+                report_data,
+                f,
+                indent=2,
+                ensure_ascii=False,
+                default=self._json_serializer,
+            )
 
         return output_path
 
@@ -70,7 +82,7 @@ class JSONReporter(ReporterInterface):
             "performance_metrics": self._generate_performance_metrics(result),
             "configuration": result.configuration,
             "ci_integration": self._generate_ci_integration_data(result),
-            "api_compatibility": self._generate_api_compatibility_data(result)
+            "api_compatibility": self._generate_api_compatibility_data(result),
         }
 
     def _generate_report_metadata(self, result: SimulationResult) -> Dict[str, Any]:
@@ -81,7 +93,7 @@ class JSONReporter(ReporterInterface):
             "format": "json",
             "generated_at": result.timestamp.isoformat(),
             "report_id": f"ci-sim-{result.timestamp.strftime('%Y%m%d-%H%M%S')}",
-            "schema_version": "1.0"
+            "schema_version": "1.0",
         }
 
     def _generate_execution_summary(self, result: SimulationResult) -> Dict[str, Any]:
@@ -98,21 +110,21 @@ class JSONReporter(ReporterInterface):
                 "total_checks": total_checks,
                 "successful_checks": successful_checks,
                 "failed_checks": failed_checks,
-                "success_rate": (successful_checks / total_checks * 100) if total_checks > 0 else 0,
+                "success_rate": (
+                    (successful_checks / total_checks * 100) if total_checks > 0 else 0
+                ),
                 "checks_by_status": {
                     status.value: len(result.get_checks_by_status(status))
                     for status in CheckStatus
-                }
+                },
             },
             "python_versions_tested": result.python_versions_tested,
             "regression_count": len(result.regression_issues),
             "has_critical_issues": any(
                 issue.severity == SeverityLevel.CRITICAL
                 for issue in result.regression_issues
-            ) or any(
-                not check.is_successful
-                for check in result.check_results.values()
             )
+            or any(not check.is_successful for check in result.check_results.values()),
         }
 
     def _generate_check_results_data(self, result: SimulationResult) -> Dict[str, Any]:
@@ -133,14 +145,15 @@ class JSONReporter(ReporterInterface):
                 "metadata": check_result.metadata,
                 "is_successful": check_result.is_successful,
                 "has_errors": check_result.has_errors,
-                "issue_count": len(check_result.errors) + len(check_result.warnings)
+                "issue_count": len(check_result.errors) + len(check_result.warnings),
             }
 
         return {
             "individual_results": check_results_data,
             "summary_by_status": {
                 status.value: [
-                    check_name for check_name, check_result in result.check_results.items()
+                    check_name
+                    for check_name, check_result in result.check_results.items()
                     if check_result.status == status
                 ]
                 for status in CheckStatus
@@ -150,10 +163,10 @@ class JSONReporter(ReporterInterface):
                     "name": check.name,
                     "errors": check.errors,
                     "duration": check.duration,
-                    "python_version": check.python_version
+                    "python_version": check.python_version,
                 }
                 for check in result.failed_checks
-            ]
+            ],
         }
 
     def _generate_regression_data(self, result: SimulationResult) -> Dict[str, Any]:
@@ -163,7 +176,7 @@ class JSONReporter(ReporterInterface):
                 "has_regressions": False,
                 "total_regressions": 0,
                 "regressions_by_severity": {},
-                "regression_details": []
+                "regression_details": [],
             }
 
         # Group by severity
@@ -180,12 +193,17 @@ class JSONReporter(ReporterInterface):
             "regressions_by_severity": {
                 severity: len(issues) for severity, issues in by_severity.items()
             },
-            "regression_details": [issue.to_dict() for issue in result.regression_issues],
-            "critical_regressions": [
+            "regression_details": [
                 issue.to_dict() for issue in result.regression_issues
+            ],
+            "critical_regressions": [
+                issue.to_dict()
+                for issue in result.regression_issues
                 if issue.severity == SeverityLevel.CRITICAL
             ],
-            "performance_impact": self._calculate_performance_impact(result.regression_issues)
+            "performance_impact": self._calculate_performance_impact(
+                result.regression_issues
+            ),
         }
 
     def _generate_error_analysis_data(self, result: SimulationResult) -> Dict[str, Any]:
@@ -195,20 +213,24 @@ class JSONReporter(ReporterInterface):
 
         for check_result in result.check_results.values():
             for error in check_result.errors:
-                all_errors.append({
-                    "check_name": check_result.name,
-                    "error_message": error,
-                    "python_version": check_result.python_version,
-                    "timestamp": check_result.timestamp.isoformat()
-                })
+                all_errors.append(
+                    {
+                        "check_name": check_result.name,
+                        "error_message": error,
+                        "python_version": check_result.python_version,
+                        "timestamp": check_result.timestamp.isoformat(),
+                    }
+                )
 
             for warning in check_result.warnings:
-                all_warnings.append({
-                    "check_name": check_result.name,
-                    "warning_message": warning,
-                    "python_version": check_result.python_version,
-                    "timestamp": check_result.timestamp.isoformat()
-                })
+                all_warnings.append(
+                    {
+                        "check_name": check_result.name,
+                        "warning_message": warning,
+                        "python_version": check_result.python_version,
+                        "timestamp": check_result.timestamp.isoformat(),
+                    }
+                )
 
         # Categorize errors
         error_categories = self._categorize_errors_for_json(all_errors)
@@ -220,14 +242,13 @@ class JSONReporter(ReporterInterface):
             "warnings": all_warnings,
             "error_categories": error_categories,
             "error_patterns": self._identify_error_patterns(all_errors),
-            "most_common_errors": self._get_most_common_errors(all_errors)
+            "most_common_errors": self._get_most_common_errors(all_errors),
         }
 
     def _generate_performance_metrics(self, result: SimulationResult) -> Dict[str, Any]:
         """Generate performance metrics data."""
         check_durations = {
-            name: check.duration
-            for name, check in result.check_results.items()
+            name: check.duration for name, check in result.check_results.items()
         }
 
         durations = list(check_durations.values())
@@ -236,10 +257,20 @@ class JSONReporter(ReporterInterface):
             "total_execution_time": result.total_duration,
             "check_durations": check_durations,
             "performance_statistics": {
-                "average_check_duration": sum(durations) / len(durations) if durations else 0,
-                "longest_check": max(check_durations.items(), key=lambda x: x[1]) if durations else None,
-                "shortest_check": min(check_durations.items(), key=lambda x: x[1]) if durations else None,
-                "total_checks": len(durations)
+                "average_check_duration": (
+                    sum(durations) / len(durations) if durations else 0
+                ),
+                "longest_check": (
+                    max(check_durations.items(), key=lambda x: x[1])
+                    if durations
+                    else None
+                ),
+                "shortest_check": (
+                    min(check_durations.items(), key=lambda x: x[1])
+                    if durations
+                    else None
+                ),
+                "total_checks": len(durations),
             },
             "performance_thresholds": {
                 "slow_checks": [
@@ -251,8 +282,8 @@ class JSONReporter(ReporterInterface):
                     {"name": name, "duration": duration}
                     for name, duration in check_durations.items()
                     if duration > 60.0  # Checks taking more than 1 minute
-                ]
-            }
+                ],
+            },
         }
 
     def _generate_ci_integration_data(self, result: SimulationResult) -> Dict[str, Any]:
@@ -264,33 +295,39 @@ class JSONReporter(ReporterInterface):
                 "total": len(result.check_results),
                 "passed": len(result.successful_checks),
                 "failed": len(result.failed_checks),
-                "skipped": len(result.get_checks_by_status(CheckStatus.SKIPPED))
+                "skipped": len(result.get_checks_by_status(CheckStatus.SKIPPED)),
             },
             "artifacts": {
                 "reports": result.report_paths,
                 "logs": self._get_log_file_paths(),
-                "test_outputs": self._extract_test_outputs(result)
+                "test_outputs": self._extract_test_outputs(result),
             },
             "environment": {
                 "python_versions": result.python_versions_tested,
                 "timestamp": result.timestamp.isoformat(),
-                "duration": result.total_duration
+                "duration": result.total_duration,
             },
             "quality_gates": {
                 "passed": result.is_successful,
                 "success_rate_threshold": 90.0,
                 "actual_success_rate": (
                     len(result.successful_checks) / len(result.check_results) * 100
-                    if result.check_results else 0
+                    if result.check_results
+                    else 0
                 ),
-                "critical_issues": len([
-                    issue for issue in result.regression_issues
-                    if issue.severity == SeverityLevel.CRITICAL
-                ])
-            }
+                "critical_issues": len(
+                    [
+                        issue
+                        for issue in result.regression_issues
+                        if issue.severity == SeverityLevel.CRITICAL
+                    ]
+                ),
+            },
         }
 
-    def _generate_api_compatibility_data(self, result: SimulationResult) -> Dict[str, Any]:
+    def _generate_api_compatibility_data(
+        self, result: SimulationResult
+    ) -> Dict[str, Any]:
         """Generate API-compatible result structure."""
         return {
             "version": "1.0",
@@ -298,7 +335,7 @@ class JSONReporter(ReporterInterface):
                 "status": result.overall_status.value,
                 "success": result.is_successful,
                 "duration": result.total_duration,
-                "timestamp": result.timestamp.isoformat()
+                "timestamp": result.timestamp.isoformat(),
             },
             "checks": [
                 {
@@ -309,7 +346,7 @@ class JSONReporter(ReporterInterface):
                     "duration": check.duration,
                     "errors": len(check.errors),
                     "warnings": len(check.warnings),
-                    "metadata": check.metadata
+                    "metadata": check.metadata,
                 }
                 for name, check in result.check_results.items()
             ],
@@ -319,43 +356,50 @@ class JSONReporter(ReporterInterface):
                 "failed": len(result.failed_checks),
                 "success_rate": (
                     len(result.successful_checks) / len(result.check_results) * 100
-                    if result.check_results else 0
-                )
+                    if result.check_results
+                    else 0
+                ),
             },
             "regressions": [
                 {
                     "test": issue.test_name,
                     "severity": issue.severity.value,
                     "change": issue.regression_percentage,
-                    "description": issue.description
+                    "description": issue.description,
                 }
                 for issue in result.regression_issues
-            ]
+            ],
         }
 
-    def _calculate_performance_impact(self, regression_issues: List[RegressionIssue]) -> Dict[str, Any]:
+    def _calculate_performance_impact(
+        self, regression_issues: List[RegressionIssue]
+    ) -> Dict[str, Any]:
         """Calculate overall performance impact from regressions."""
         if not regression_issues:
             return {"total_impact": 0, "average_regression": 0, "worst_regression": 0}
 
         performance_regressions = [
-            issue for issue in regression_issues
-            if issue.metric_type == "performance"
+            issue for issue in regression_issues if issue.metric_type == "performance"
         ]
 
         if not performance_regressions:
             return {"total_impact": 0, "average_regression": 0, "worst_regression": 0}
 
-        regression_percentages = [abs(issue.regression_percentage) for issue in performance_regressions]
+        regression_percentages = [
+            abs(issue.regression_percentage) for issue in performance_regressions
+        ]
 
         return {
             "total_impact": sum(regression_percentages),
-            "average_regression": sum(regression_percentages) / len(regression_percentages),
+            "average_regression": sum(regression_percentages)
+            / len(regression_percentages),
             "worst_regression": max(regression_percentages),
-            "affected_tests": len(performance_regressions)
+            "affected_tests": len(performance_regressions),
         }
 
-    def _categorize_errors_for_json(self, errors: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+    def _categorize_errors_for_json(
+        self, errors: List[Dict[str, Any]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Categorize errors for JSON output."""
         categories = {
             "syntax_errors": [],
@@ -365,32 +409,53 @@ class JSONReporter(ReporterInterface):
             "security_issues": [],
             "performance_issues": [],
             "configuration_errors": [],
-            "other_errors": []
+            "other_errors": [],
         }
 
         for error in errors:
             error_message = error["error_message"].lower()
 
-            if any(keyword in error_message for keyword in ['syntax', 'invalid syntax', 'unexpected token']):
+            if any(
+                keyword in error_message
+                for keyword in ["syntax", "invalid syntax", "unexpected token"]
+            ):
                 categories["syntax_errors"].append(error)
-            elif any(keyword in error_message for keyword in ['import', 'module', 'no module named']):
+            elif any(
+                keyword in error_message
+                for keyword in ["import", "module", "no module named"]
+            ):
                 categories["import_errors"].append(error)
-            elif any(keyword in error_message for keyword in ['type', 'mypy', 'annotation']):
+            elif any(
+                keyword in error_message for keyword in ["type", "mypy", "annotation"]
+            ):
                 categories["type_errors"].append(error)
-            elif any(keyword in error_message for keyword in ['test', 'assert', 'failed']):
+            elif any(
+                keyword in error_message for keyword in ["test", "assert", "failed"]
+            ):
                 categories["test_failures"].append(error)
-            elif any(keyword in error_message for keyword in ['security', 'vulnerability', 'bandit', 'safety']):
+            elif any(
+                keyword in error_message
+                for keyword in ["security", "vulnerability", "bandit", "safety"]
+            ):
                 categories["security_issues"].append(error)
-            elif any(keyword in error_message for keyword in ['performance', 'slow', 'timeout', 'memory']):
+            elif any(
+                keyword in error_message
+                for keyword in ["performance", "slow", "timeout", "memory"]
+            ):
                 categories["performance_issues"].append(error)
-            elif any(keyword in error_message for keyword in ['config', 'configuration', 'setting']):
+            elif any(
+                keyword in error_message
+                for keyword in ["config", "configuration", "setting"]
+            ):
                 categories["configuration_errors"].append(error)
             else:
                 categories["other_errors"].append(error)
 
         return categories
 
-    def _identify_error_patterns(self, errors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _identify_error_patterns(
+        self, errors: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Identify common error patterns."""
         error_counts = {}
 
@@ -402,7 +467,7 @@ class JSONReporter(ReporterInterface):
                     "pattern": normalized,
                     "count": 0,
                     "checks": [],
-                    "example": error["error_message"]
+                    "example": error["error_message"],
                 }
             error_counts[normalized]["count"] += 1
             error_counts[normalized]["checks"].append(error["check_name"])
@@ -418,28 +483,26 @@ class JSONReporter(ReporterInterface):
         import re
 
         # Remove file paths and line numbers
-        normalized = re.sub(r'/[^\s]+\.py:\d+', '<file>:<line>', error_message)
-        normalized = re.sub(r'line \d+', 'line <num>', normalized)
-        normalized = re.sub(r'\d+', '<num>', normalized)
+        normalized = re.sub(r"/[^\s]+\.py:\d+", "<file>:<line>", error_message)
+        normalized = re.sub(r"line \d+", "line <num>", normalized)
+        normalized = re.sub(r"\d+", "<num>", normalized)
 
         # Remove quotes around variable names
-        normalized = re.sub(r"'[^']*'", '<var>', normalized)
-        normalized = re.sub(r'"[^"]*"', '<var>', normalized)
+        normalized = re.sub(r"'[^']*'", "<var>", normalized)
+        normalized = re.sub(r'"[^"]*"', "<var>", normalized)
 
         return normalized.strip()
 
-    def _get_most_common_errors(self, errors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _get_most_common_errors(
+        self, errors: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Get most common error messages."""
         error_counts = {}
 
         for error in errors:
             message = error["error_message"]
             if message not in error_counts:
-                error_counts[message] = {
-                    "message": message,
-                    "count": 0,
-                    "checks": []
-                }
+                error_counts[message] = {"message": message, "count": 0, "checks": []}
             error_counts[message]["count"] += 1
             error_counts[message]["checks"].append(error["check_name"])
 
@@ -474,9 +537,9 @@ class JSONReporter(ReporterInterface):
         """Custom JSON serializer for datetime and other objects."""
         if isinstance(obj, datetime):
             return obj.isoformat()
-        elif hasattr(obj, 'to_dict'):
+        elif hasattr(obj, "to_dict"):
             return obj.to_dict()
-        elif hasattr(obj, '__dict__'):
+        elif hasattr(obj, "__dict__"):
             return obj.__dict__
         else:
             return str(obj)

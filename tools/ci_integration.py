@@ -12,14 +12,14 @@ Created by: Kiro AI Integration System
 Created on: 2025-01-30
 """
 
-import sys
-import subprocess
+import argparse
 import json
 import shutil
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+import subprocess
+import sys
 from datetime import datetime
-import argparse
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class CIIntegrator:
@@ -43,19 +43,19 @@ class CIIntegrator:
             "timestamp": datetime.now().isoformat(),
             "overall_status": "SUCCESS",
             "checks": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Check if CI simulator exists
         if self.ci_simulator_path.exists():
             results["checks"]["ci_simulator_exists"] = {
                 "status": "SUCCESS",
-                "message": "CI simulator found"
+                "message": "CI simulator found",
             }
         else:
             results["checks"]["ci_simulator_exists"] = {
                 "status": "FAILURE",
-                "message": "CI simulator not found"
+                "message": "CI simulator not found",
             }
             results["overall_status"] = "FAILURE"
             results["recommendations"].append("Install CI simulator components")
@@ -64,96 +64,105 @@ class CIIntegrator:
         pyproject_path = self.project_root / "pyproject.toml"
         if pyproject_path.exists():
             try:
-                with open(pyproject_path, 'r', encoding='utf-8') as f:
+                with open(pyproject_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
-                if 'ci-simulator' in content:
+                if "ci-simulator" in content:
                     results["checks"]["pyproject_integration"] = {
                         "status": "SUCCESS",
-                        "message": "CI simulator integrated in pyproject.toml"
+                        "message": "CI simulator integrated in pyproject.toml",
                     }
                 else:
                     results["checks"]["pyproject_integration"] = {
                         "status": "WARNING",
-                        "message": "CI simulator not found in pyproject.toml scripts"
+                        "message": "CI simulator not found in pyproject.toml scripts",
                     }
-                    results["recommendations"].append("Add CI simulator to pyproject.toml scripts")
+                    results["recommendations"].append(
+                        "Add CI simulator to pyproject.toml scripts"
+                    )
 
             except Exception as e:
                 results["checks"]["pyproject_integration"] = {
                     "status": "FAILURE",
-                    "message": f"Error reading pyproject.toml: {e}"
+                    "message": f"Error reading pyproject.toml: {e}",
                 }
                 results["overall_status"] = "FAILURE"
         else:
             results["checks"]["pyproject_integration"] = {
                 "status": "WARNING",
-                "message": "pyproject.toml not found"
+                "message": "pyproject.toml not found",
             }
 
         # Check Makefile integration
         makefile_path = self.project_root / "Makefile"
         if makefile_path.exists():
             try:
-                with open(makefile_path, 'r', encoding='utf-8') as f:
+                with open(makefile_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
-                if 'tools.ci.simulator' in content:
+                if "tools.ci.simulator" in content:
                     results["checks"]["makefile_integration"] = {
                         "status": "SUCCESS",
-                        "message": "CI simulator integrated in Makefile"
+                        "message": "CI simulator integrated in Makefile",
                     }
                 else:
                     results["checks"]["makefile_integration"] = {
                         "status": "WARNING",
-                        "message": "CI simulator not found in Makefile"
+                        "message": "CI simulator not found in Makefile",
                     }
-                    results["recommendations"].append("Add CI simulator targets to Makefile")
+                    results["recommendations"].append(
+                        "Add CI simulator targets to Makefile"
+                    )
 
             except Exception as e:
                 results["checks"]["makefile_integration"] = {
                     "status": "FAILURE",
-                    "message": f"Error reading Makefile: {e}"
+                    "message": f"Error reading Makefile: {e}",
                 }
         else:
             results["checks"]["makefile_integration"] = {
                 "status": "INFO",
-                "message": "Makefile not found (optional)"
+                "message": "Makefile not found (optional)",
             }
 
         # Check required directories
-        required_dirs = [
-            "tools/ci",
-            "reports",
-            "logs",
-            ".kiro/ci-history"
-        ]
+        required_dirs = ["tools/ci", "reports", "logs", ".kiro/ci-history"]
 
         for dir_path in required_dirs:
             full_path = self.project_root / dir_path
             if full_path.exists():
                 results["checks"][f"directory_{dir_path.replace('/', '_')}"] = {
                     "status": "SUCCESS",
-                    "message": f"Directory {dir_path} exists"
+                    "message": f"Directory {dir_path} exists",
                 }
             else:
                 results["checks"][f"directory_{dir_path.replace('/', '_')}"] = {
                     "status": "WARNING",
-                    "message": f"Directory {dir_path} missing (will be created automatically)"
+                    "message": f"Directory {dir_path} missing (will be created automatically)",
                 }
 
         # Check CI simulator functionality
         if self.ci_simulator_path.exists():
             try:
-                result = subprocess.run([
-                    sys.executable, "-m", "tools.ci.simulator",
-                    "list", "--format", "json"
-                ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "tools.ci.simulator",
+                        "list",
+                        "--format",
+                        "json",
+                    ],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
 
                 if result.returncode == 0:
                     results["checks"]["ci_simulator_functional"] = {
                         "status": "SUCCESS",
-                        "message": "CI simulator is functional"
+                        "message": "CI simulator is functional",
                     }
 
                     # Parse available checks
@@ -163,7 +172,7 @@ class CIIntegrator:
                         results["available_checks"] = available_checks
                         results["checks"]["available_checks_count"] = {
                             "status": "INFO",
-                            "message": f"{len(available_checks)} checks available"
+                            "message": f"{len(available_checks)} checks available",
                         }
                     except json.JSONDecodeError:
                         pass
@@ -171,26 +180,27 @@ class CIIntegrator:
                 else:
                     results["checks"]["ci_simulator_functional"] = {
                         "status": "FAILURE",
-                        "message": f"CI simulator failed to run: {result.stderr}"
+                        "message": f"CI simulator failed to run: {result.stderr}",
                     }
                     results["overall_status"] = "FAILURE"
 
             except subprocess.TimeoutExpired:
                 results["checks"]["ci_simulator_functional"] = {
                     "status": "FAILURE",
-                    "message": "CI simulator timed out"
+                    "message": "CI simulator timed out",
                 }
                 results["overall_status"] = "FAILURE"
             except Exception as e:
                 results["checks"]["ci_simulator_functional"] = {
                     "status": "FAILURE",
-                    "message": f"Error testing CI simulator: {e}"
+                    "message": f"Error testing CI simulator: {e}",
                 }
                 results["overall_status"] = "FAILURE"
 
         # Set overall status based on failures
-        failure_count = sum(1 for check in results["checks"].values()
-                          if check["status"] == "FAILURE")
+        failure_count = sum(
+            1 for check in results["checks"].values() if check["status"] == "FAILURE"
+        )
         if failure_count > 0:
             results["overall_status"] = "FAILURE"
         elif any(check["status"] == "WARNING" for check in results["checks"].values()):
@@ -210,12 +220,24 @@ class CIIntegrator:
 
         try:
             # Run a quick CI check to test integration
-            result = subprocess.run([
-                sys.executable, "-m", "tools.ci.simulator",
-                "run", "--checks", "code_quality",
-                "--format", "json",
-                "--output-dir", "temp/integration-test"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=300)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "tools.ci.simulator",
+                    "run",
+                    "--checks",
+                    "code_quality",
+                    "--format",
+                    "json",
+                    "--output-dir",
+                    "temp/integration-test",
+                ],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
 
             if result.returncode == 0:
                 print("✅ Integration test passed")
@@ -251,10 +273,12 @@ class CIIntegrator:
 
         try:
             # Install pre-commit hook
-            result = subprocess.run([
-                sys.executable, "-m", "tools.ci.simulator",
-                "hook", "setup"
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, "-m", "tools.ci.simulator", "hook", "setup"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             results["setup"] = result.returncode == 0
 
@@ -289,7 +313,7 @@ class CIIntegrator:
         validation_results = self.validate_integration()
 
         # Generate report
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write("# CI Integration Report\n\n")
             f.write(f"**Generated:** {validation_results['timestamp']}\n")
             f.write(f"**Overall Status:** {validation_results['overall_status']}\n\n")
@@ -301,7 +325,7 @@ class CIIntegrator:
                     "SUCCESS": "✅",
                     "WARNING": "⚠️",
                     "FAILURE": "❌",
-                    "INFO": "ℹ️"
+                    "INFO": "ℹ️",
                 }.get(check_result["status"], "❓")
 
                 f.write(f"### {check_name.replace('_', ' ').title()}\n\n")
@@ -332,7 +356,9 @@ class CIIntegrator:
             f.write("```bash\n")
             f.write("make ci-quick\n")
             f.write("# or\n")
-            f.write("python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast\n")
+            f.write(
+                "python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast\n"
+            )
             f.write("```\n\n")
 
             f.write("### Build with CI\n")
@@ -359,7 +385,9 @@ class CIIntegrator:
         Returns:
             True if update was successful
         """
-        workflow_path = self.project_root / ".github" / "workflows" / "ai-integration-ci.yml"
+        workflow_path = (
+            self.project_root / ".github" / "workflows" / "ai-integration-ci.yml"
+        )
 
         if not workflow_path.exists():
             print("GitHub Actions workflow not found")
@@ -367,16 +395,16 @@ class CIIntegrator:
 
         try:
             # Read current workflow
-            with open(workflow_path, 'r', encoding='utf-8') as f:
+            with open(workflow_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Check if CI simulator is already integrated
-            if 'tools.ci.simulator' in content:
+            if "tools.ci.simulator" in content:
                 print("GitHub Actions workflow already uses CI simulator")
                 return True
 
             # Create backup
-            backup_path = workflow_path.with_suffix('.yml.backup')
+            backup_path = workflow_path.with_suffix(".yml.backup")
             shutil.copy2(workflow_path, backup_path)
             print(f"Created backup: {backup_path}")
 
@@ -392,19 +420,19 @@ class CIIntegrator:
 """
 
             # Insert the step after dependency installation
-            lines = content.split('\n')
+            lines = content.split("\n")
             new_lines = []
 
             for i, line in enumerate(lines):
                 new_lines.append(line)
 
                 # Insert CI simulator step after pip install
-                if 'pip install -r requirements.txt' in line:
-                    new_lines.extend(ci_step.split('\n'))
+                if "pip install -r requirements.txt" in line:
+                    new_lines.extend(ci_step.split("\n"))
 
             # Write updated workflow
-            with open(workflow_path, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(new_lines))
+            with open(workflow_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(new_lines))
 
             print("✅ GitHub Actions workflow updated with CI simulator")
             return True
@@ -417,12 +445,18 @@ class CIIntegrator:
 def main():
     """Main entry point for the CI integration tool."""
     parser = argparse.ArgumentParser(description="CI Integration Tool")
-    parser.add_argument("command", choices=[
-        "validate", "test", "setup-hooks", "report", "update-github-actions"
-    ], help="Command to execute")
+    parser.add_argument(
+        "command",
+        choices=["validate", "test", "setup-hooks", "report", "update-github-actions"],
+        help="Command to execute",
+    )
     parser.add_argument("--output", type=Path, help="Output path for reports")
-    parser.add_argument("--format", choices=["json", "markdown"], default="markdown",
-                       help="Output format")
+    parser.add_argument(
+        "--format",
+        choices=["json", "markdown"],
+        default="markdown",
+        help="Output format",
+    )
 
     args = parser.parse_args()
 
@@ -444,7 +478,7 @@ def main():
                     "SUCCESS": "✅",
                     "WARNING": "⚠️",
                     "FAILURE": "❌",
-                    "INFO": "ℹ️"
+                    "INFO": "ℹ️",
                 }.get(check_result["status"], "❓")
 
                 print(f"{status_icon} {check_name}: {check_result['message']}")

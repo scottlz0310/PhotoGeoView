@@ -2,20 +2,22 @@
 Pytest configuration and fixtures for CI simulation tests.
 """
 
-import pytest
-import tempfile
-import shutil
 import os
-from pathlib import Path
-from typing import Dict, Any
-from unittest.mock import Mock, MagicMock
+import shutil
 
 # Add the tools/ci directory to the path for imports
 import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ci'))
+import tempfile
+from pathlib import Path
+from typing import Any, Dict
+from unittest.mock import MagicMock, Mock
 
-from models import CheckResult, CheckStatus, SimulationResult, CheckTask
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
+
 from interfaces import CheckerInterface
+from models import CheckResult, CheckStatus, CheckTask, SimulationResult
 
 
 @pytest.fixture
@@ -30,34 +32,31 @@ def temp_dir():
 def sample_config():
     """Provide a sample configuration for testing."""
     return {
-        'python_versions': ['3.9', '3.10', '3.11'],
-        'timeout': 300,
-        'parallel_jobs': 2,
-        'output_dir': 'reports',
-        'checkers': {
-            'code_quality': {
-                'enabled': True,
-                'black': {'enabled': True, 'lgth': 88},
-                'isort': {'enabled': True},
-                'flake8': {'enabled': True, 'max_line_length': 88},
-                'mypy': {'enabled': True}
+        "python_versions": ["3.9", "3.10", "3.11"],
+        "timeout": 300,
+        "parallel_jobs": 2,
+        "output_dir": "reports",
+        "checkers": {
+            "code_quality": {
+                "enabled": True,
+                "black": {"enabled": True, "lgth": 88},
+                "isort": {"enabled": True},
+                "flake8": {"enabled": True, "max_line_length": 88},
+                "mypy": {"enabled": True},
             },
-            'security': {
-                'enabled': True,
-                'safety': {'enabled': True},
-                'bandit': {'enabled': True}
+            "security": {
+                "enabled": True,
+                "safety": {"enabled": True},
+                "bandit": {"enabled": True},
             },
-            'performance': {
-                'enabled': True,
-                'regression_threshold': 30.0
+            "performance": {"enabled": True, "regression_threshold": 30.0},
+            "tests": {
+                "enabled": True,
+                "unit_tests": True,
+                "integration_tests": True,
+                "ai_tests": True,
             },
-            'tests': {
-                'enabled': True,
-                'unit_tests': True,
-                'integration_tests': True,
-                'ai_tests': True
-            }
-        }
+        },
     }
 
 
@@ -72,7 +71,7 @@ def sample_check_result():
         errors=[],
         warnings=["Minor warning"],
         suggestions=["Consider optimization"],
-        metadata={"test_count": 10, "coverage": 85.5}
+        metadata={"test_count": 10, "coverage": 85.5},
     )
 
 
@@ -87,7 +86,7 @@ def sample_failed_check_result():
         errors=["Syntax error in line 42", "Import error"],
         warnings=[],
         suggestions=["Fix syntax errors", "Check imports"],
-        metadata={"error_count": 2}
+        metadata={"error_count": 2},
     )
 
 
@@ -99,11 +98,14 @@ def sample_simulation_result(sample_check_result, sample_failed_check_result):
         total_duration=5.3,
         check_results={
             "test_check": sample_check_result,
-            "failed_check": sample_failed_check_result
+            "failed_check": sample_failed_check_result,
         },
         python_versions_tested=["3.10", "3.11"],
         summary="2 checks completed: 1 success, 1 failure",
-        report_paths={"markdown": "reports/test_report.md", "json": "reports/test_report.json"}
+        report_paths={
+            "markdown": "reports/test_report.md",
+            "json": "reports/test_report.json",
+        },
     )
 
 
@@ -119,7 +121,7 @@ def mock_checker():
         name="mock_check",
         status=CheckStatus.SUCCESS,
         duration=1.0,
-        output="Mock check completed"
+        output="Mock check completed",
     )
     return checker
 
@@ -129,30 +131,27 @@ def sample_check_tasks():
     """Provide sample CheckTask objects for testing."""
     return [
         CheckTask(
-            name="code_quality",
-            check_type="code_quality",
-            dependencies=[],
-            priority=1
+            name="code_quality", check_type="code_quality", dependencies=[], priority=1
         ),
         CheckTask(
             name="security_scan",
             check_type="security",
             dependencies=["code_quality"],
-            priority=2
+            priority=2,
         ),
         CheckTask(
             name="unit_tests",
             check_type="tests",
             dependencies=["code_quality"],
-            priority=3
-        )
+            priority=3,
+        ),
     ]
 
 
 @pytest.fixture
 def mock_subprocess():
     """Mock subprocess for testing external command execution."""
-    with pytest.mock.patch('subprocess.run') as mock_run:
+    with pytest.mock.patch("subprocess.run") as mock_run:
         mock_run.return_value.returncode = 0
         mock_run.return_value.stdout = "Command executed successfully"
         mock_run.return_value.stderr = ""
@@ -175,8 +174,9 @@ def ci_tools_dir(project_root):
 def sample_python_file(temp_dir):
     """Create a sample Python file for testing."""
     file_path = os.path.join(temp_dir, "sample.py")
-    with open(file_path, 'w') as f:
-        f.write('''
+    with open(file_path, "w") as f:
+        f.write(
+            '''
 def hello_world():
     """A simple hello world function."""
     print("Hello, World!")
@@ -184,7 +184,8 @@ def hello_world():
 
 if __name__ == "__main__":
     hello_world()
-''')
+'''
+        )
     return file_path
 
 
@@ -192,8 +193,9 @@ if __name__ == "__main__":
 def sample_requirements_file(temp_dir):
     """Create a sample requirements.txt file for testing."""
     file_path = os.path.join(temp_dir, "requirements.txt")
-    with open(file_path, 'w') as f:
-        f.write('''
+    with open(file_path, "w") as f:
+        f.write(
+            """
 pytest>=7.0.0
 black>=22.0.0
 isort>=5.0.0
@@ -201,7 +203,8 @@ flake8>=4.0.0
 mypy>=0.900
 safety>=2.0.0
 bandit>=1.7.0
-''')
+"""
+        )
     return file_path
 
 
@@ -213,13 +216,15 @@ def mock_git_repo(temp_dir):
 
     # Create a simple .gitignore file
     gitignore_path = os.path.join(temp_dir, ".gitignore")
-    with open(gitignore_path, 'w') as f:
-        f.write('''
+    with open(gitignore_path, "w") as f:
+        f.write(
+            """
 __pycache__/
 *.pyc
 .pytest_cache/
 .coverage
-''')
+"""
+        )
 
     return temp_dir
 
@@ -233,7 +238,7 @@ def cleanup_test_files():
         "test_report.md",
         "test_report.json",
         "test_config.yaml",
-        "test_results.json"
+        "test_results.json",
     ]
 
     for file in test_files:

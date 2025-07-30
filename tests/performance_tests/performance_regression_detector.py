@@ -10,15 +10,15 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import time
 import json
 import statistics
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Callable
-from dataclasses import dataclass, asdict
+import sys
+import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-import sys
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 # プロジェクトルートをパスに追加
 project_root = Path(__file__).parent.parent.parent
@@ -120,8 +120,9 @@ class PerformanceRegressionDetector:
         iterations: int = 5,
     ) -> PerformanceBenchmark:
         """パフォーマンスを測定"""
-        import psutil
         import os
+
+        import psutil
 
         execution_times = []
         memory_usages = []
@@ -398,8 +399,8 @@ class PerformanceRegressionDetector:
 # テスト用のサンプル関数
 def sample_image_processing_test():
     """サンプル画像処理テスト"""
-    import time
     import random
+    import time
 
     # 画像処理のシミュレーション
     time.sleep(random.uniform(0.01, 0.05))
@@ -413,8 +414,8 @@ def sample_image_processing_test():
 
 def sample_ui_rendering_test():
     """サンプルUIレンダリングテスト"""
-    import time
     import random
+    import time
 
     # UIレンダリングのシミュレーション
     time.sleep(random.uniform(0.005, 0.02))
@@ -429,8 +430,8 @@ def sample_ui_rendering_test():
 
 def sample_integration_test():
     """サンプル統合テスト"""
-    import time
     import random
+    import time
 
     # 統合処理のシミュレーション
     time.sleep(random.uniform(0.02, 0.08))

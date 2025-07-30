@@ -11,25 +11,25 @@ FileDiscoveryCache テストスイート
 Author: Kiro AI Integration System
 """
 
-import unittest
-import tempfile
-import time
-from pathlib import Path
-from datetime import datetime, timedelta
+import os
 
 # テスト用のモックファイルを作成
 import sys
-import os
+import tempfile
+import time
+import unittest
+from datetime import datetime, timedelta
+from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+from integration.logging_system import LoggerSystem
 from integration.services.file_discovery_cache import (
+    CacheMetrics,
     FileDiscoveryCache,
     FileDiscoveryResult,
     FolderScanCache,
-    CacheMetrics,
 )
-from integration.logging_system import LoggerSystem
 
 
 class TestFileDiscoveryCache(unittest.TestCase):

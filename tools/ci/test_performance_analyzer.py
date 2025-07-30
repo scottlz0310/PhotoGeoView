@@ -6,11 +6,11 @@ This script tests the basic functionality of the PerformanceAnalyzer
 to ensure it works correctly with the CI simulation system.
 """
 
-import sys
 import json
+import sys
 import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add the project root to the path
 project_root = Path(__file__).parent.parent.parent
@@ -30,11 +30,11 @@ def test_performance_analyzer():
 
         # Configure the analyzer
         config = {
-            'benchmark_timeout': 60,
-            'memory_sample_interval': 0.1,
-            'regression_threshold': 30.0,
-            'baseline_file': temp_path / 'baseline.json',
-            'results_dir': temp_path / 'results'
+            "benchmark_timeout": 60,
+            "memory_sample_interval": 0.1,
+            "regression_threshold": 30.0,
+            "baseline_file": temp_path / "baseline.json",
+            "results_dir": temp_path / "results",
         }
 
         analyzer = PerformanceAnalyzer(config)
@@ -59,14 +59,14 @@ def test_performance_analyzer():
 
         # Test 3: Check if results were saved
         print("3. Checking result persistence...")
-        results_dir = temp_path / 'results'
+        results_dir = temp_path / "results"
         if results_dir.exists():
             result_files = list(results_dir.glob("performance_results_*.json"))
             print(f"   Result files created: {len(result_files)}")
 
             if result_files:
                 # Load and verify a result file
-                with open(result_files[0], 'r') as f:
+                with open(result_files[0], "r") as f:
                     data = json.load(f)
                 print(f"   Benchmarks in result: {len(data.get('benchmarks', {}))}")
                 print(f"   Metrics in result: {len(data.get('metrics', []))}")
@@ -93,8 +93,8 @@ def test_benchmark_simulation():
         temp_path = Path(temp_dir)
 
         config = {
-            'baseline_file': temp_path / 'baseline.json',
-            'results_dir': temp_path / 'results'
+            "baseline_file": temp_path / "baseline.json",
+            "results_dir": temp_path / "results",
         }
 
         analyzer = PerformanceAnalyzer(config)
@@ -109,7 +109,7 @@ def test_benchmark_simulation():
             ("image_processing", analyzer._benchmark_image_processing),
             ("ui_responsiveness", analyzer._benchmark_ui_responsiveness),
             ("memory_efficiency", analyzer._benchmark_memory_efficiency),
-            ("concurrent_operations", analyzer._benchmark_concurrent_operations)
+            ("concurrent_operations", analyzer._benchmark_concurrent_operations),
         ]
 
         for name, benchmark_func in benchmarks:
@@ -150,6 +150,7 @@ def main():
     except Exception as e:
         print(f"\n💥 Test execution failed: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

@@ -11,21 +11,22 @@ Author: Kiro AI Integration System
 """
 
 import asyncio
+import os
 import threading
 import time
-import psutil
-import os
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
 from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
-from .interfaces import IPerformanceMonitor
-from .models import AIComponent, PerformanceMetrics
+import psutil
+
 from .config_manager import ConfigManager
-from .error_handling import IntegratedErrorHandler, ErrorCategory
+from .error_handling import ErrorCategory, IntegratedErrorHandler
+from .interfaces import IPerformanceMonitor
 from .logging_system import LoggerSystem
+from .models import AIComponent, PerformanceMetrics
 
 
 @dataclass

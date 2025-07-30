@@ -13,16 +13,19 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+
 def test_import():
     """Test that we can import the PerformanceAnalyzer."""
     try:
         from tools.ci.checkers.performance_analyzer import PerformanceAnalyzer
         from tools.ci.models import CheckStatus
+
         print("✅ Import successful")
         return True
     except Exception as e:
         print(f"❌ Import failed: {e}")
         return False
+
 
 def test_instantiation():
     """Test that we can create a PerformanceAnalyzer instance."""
@@ -33,10 +36,10 @@ def test_instantiation():
             temp_path = Path(temp_dir)
 
             config = {
-                'benchmark_timeout': 60,
-                'regression_threshold': 30.0,
-                'baseline_file': temp_path / 'baseline.json',
-                'results_dir': temp_path / 'results'
+                "benchmark_timeout": 60,
+                "regression_threshold": 30.0,
+                "baseline_file": temp_path / "baseline.json",
+                "results_dir": temp_path / "results",
             }
 
             analyzer = PerformanceAnalyzer(config)
@@ -49,8 +52,10 @@ def test_instantiation():
     except Exception as e:
         print(f"❌ Instantiation failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     """Main test function."""
@@ -66,6 +71,7 @@ def main():
     else:
         print("\n❌ Some tests failed!")
         return 1
+
 
 if __name__ == "__main__":
     exit(main())
