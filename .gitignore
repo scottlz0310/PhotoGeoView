@@ -63,7 +63,7 @@ build/
 *.tar.gz
 
 # CI Simulation Tool generated files
-reports/ci-simulation/
+reports/
 .kiro/ci-history/
 logs/ci-simulation.log
 logs/performance.log

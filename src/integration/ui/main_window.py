@@ -38,8 +38,8 @@ from ..services.file_discovery_service import FileDiscoveryService
 from ..services.file_system_watcher import FileSystemWatcher
 from ..state_manager import StateManager
 from .folder_navigator import EnhancedFolderNavigator
+from .simple_thumbnail_grid import SimpleThumbnailGrid
 from .theme_manager import IntegratedThemeManager
-from .thumbnail_grid import OptimizedThumbnailGrid
 
 
 class IntegratedMainWindow(QMainWindow):
@@ -83,7 +83,7 @@ class IntegratedMainWindow(QMainWindow):
 
         # UI components
         self.theme_manager: Optional[IntegratedThemeManager] = None
-        self.thumbnail_grid: Optional[OptimizedThumbnailGrid] = None
+        self.thumbnail_grid: Optional[SimpleThumbnailGrid] = None
         self.folder_navigator: Optional[EnhancedFolderNavigator] = None
 
         # Services
@@ -110,7 +110,6 @@ class IntegratedMainWindow(QMainWindow):
         # Initialize UI
         self._initialize_ui()
         self._setup_monitoring()
-        self._connect_signals()
         self._restore_state()
 
         self.logger_system.log_ai_operation(
@@ -142,6 +141,9 @@ class IntegratedMainWindow(QMainWindow):
 
             # Apply initial theme
             self._apply_initial_theme()
+
+            # Connect signals after all UI components are created
+            self._connect_signals()
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -264,10 +266,17 @@ class IntegratedMainWindow(QMainWindow):
         left_layout.addWidget(self.folder_navigator, 0)
 
         # Thumbnail grid (CursorBLD component with Kiro optimization)
-        self.thumbnail_grid = OptimizedThumbnailGrid(
+        self.thumbnail_grid = SimpleThumbnailGrid(
             self.config_manager, self.state_manager, self.logger_system
         )
         left_layout.addWidget(self.thumbnail_grid, 1)
+
+        # EXIF information panel (Kiro component)
+        from .exif_panel import EXIFPanel
+        self.exif_panel = EXIFPanel(
+            self.config_manager, self.state_manager, self.logger_system
+        )
+        left_layout.addWidget(self.exif_panel, 0)  # 下段に配置
 
         self.main_splitter.addWidget(self.left_panel)
 
@@ -282,21 +291,19 @@ class IntegratedMainWindow(QMainWindow):
         right_splitter = QSplitter(Qt.Orientation.Vertical)
         right_layout.addWidget(right_splitter)
 
-        # Image preview area (placeholder for now)
-        image_preview = QLabel("Image Preview Area")
-        image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        image_preview.setStyleSheet(
-            "border: 1px solid gray; background-color: #f0f0f0;"
+        # Image preview panel (Kiro component)
+        from .image_preview_panel import ImagePreviewPanel
+        self.image_preview_panel = ImagePreviewPanel(
+            self.config_manager, self.state_manager, self.logger_system
         )
-        image_preview.setMinimumHeight(300)
-        right_splitter.addWidget(image_preview)
+        right_splitter.addWidget(self.image_preview_panel)
 
-        # Map area (placeholder for now)
-        map_area = QLabel("Map Area")
-        map_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        map_area.setStyleSheet("border: 1px solid gray; background-color: #f0f0f0;")
-        map_area.setMinimumHeight(200)
-        right_splitter.addWidget(map_area)
+        # Map panel (Kiro component)
+        from .map_panel import MapPanel
+        self.map_panel = MapPanel(
+            self.config_manager, self.state_manager, self.logger_system
+        )
+        right_splitter.addWidget(self.map_panel)
 
         # Set splitter proportions
         right_splitter.setSizes([400, 200])
@@ -386,6 +393,21 @@ class IntegratedMainWindow(QMainWindow):
             self.thumbnail_grid.image_selected.connect(self._on_image_selected)
             # Connect folder changes to thumbnail grid
             self.folder_changed.connect(self._update_thumbnail_grid)
+
+        # Connect EXIF panel signals
+        if self.exif_panel:
+            self.exif_panel.gps_coordinates_updated.connect(self._on_gps_coordinates_updated)
+            # 画像選択時にEXIFパネルに画像を設定
+            self.thumbnail_grid.image_selected.connect(self.exif_panel.set_image)
+
+        # Connect image preview panel signals
+        if self.image_preview_panel:
+            self.image_preview_panel.image_loaded.connect(self._on_image_preview_loaded)
+
+        # Connect map panel signals
+        if self.map_panel:
+            self.map_panel.map_loaded.connect(self._on_map_loaded)
+            self.map_panel.map_error.connect(self._on_map_error)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -526,6 +548,17 @@ class IntegratedMainWindow(QMainWindow):
             # Update status
             self.status_bar.showMessage(f"Selected: {image_path.name}")
 
+            # Update EXIF panel
+            if self.exif_panel:
+                self.exif_panel.set_image(image_path)
+
+            # Update image preview panel
+            if self.image_preview_panel:
+                self.image_preview_panel.set_image(image_path)
+
+            # Extract GPS coordinates and add to map
+            self._extract_and_add_to_map(image_path)
+
             # Emit signal for other components
             self.image_selected.emit(image_path)
 
@@ -535,6 +568,158 @@ class IntegratedMainWindow(QMainWindow):
                 ErrorCategory.UI_ERROR,
                 {"operation": "image_selection_handling", "image": str(image_path)},
                 AIComponent.CURSOR,
+            )
+
+    def _extract_and_add_to_map(self, image_path: Path):
+        """画像からGPS座標を抽出して地図に追加"""
+        try:
+            from ..image_processor import CS4CodingImageProcessor
+
+            # 画像プロセッサーでEXIF情報を抽出
+            image_processor = CS4CodingImageProcessor(
+                self.config_manager, self.logger_system
+            )
+
+            exif_data = image_processor.extract_exif(image_path)
+
+            # GPS座標を取得
+            latitude = exif_data.get("GPS Latitude")
+            longitude = exif_data.get("GPS Longitude")
+
+            if latitude is not None and longitude is not None:
+                # 地図パネルに位置情報を追加
+                if self.map_panel:
+                    self.map_panel.add_image_location(
+                        image_path, latitude, longitude, image_path.name
+                    )
+
+                # ログ出力
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "add_gps_to_map",
+                    f"GPS座標を地図に追加: {image_path.name} ({latitude:.6f}, {longitude:.6f})",
+                    context={"image_path": str(image_path), "latitude": latitude, "longitude": longitude},
+                )
+            else:
+                # GPS座標がない場合のログ
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "no_gps_coordinates",
+                    f"GPS座標なし: {image_path.name}",
+                    context={"image_path": str(image_path)},
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.CORE_ERROR,
+                {"operation": "extract_and_add_to_map", "image_path": str(image_path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_gps_coordinates_updated(self, latitude: float, longitude: float):
+        """Handle GPS coordinates update from EXIF panel"""
+
+        try:
+            # Update state with GPS coordinates
+            self.state_manager.update_state(
+                current_latitude=latitude,
+                current_longitude=longitude
+            )
+
+            # Log GPS coordinates update
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "gps_coordinates_updated",
+                f"GPS coordinates updated: {latitude:.6f}, {longitude:.6f}",
+                context={"latitude": latitude, "longitude": longitude},
+            )
+
+                        # Update map panel
+            if self.map_panel:
+                self.map_panel.set_coordinates(latitude, longitude)
+
+            # Update status bar
+            self.status_bar.showMessage(
+                f"GPS: {latitude:.6f}°, {longitude:.6f}°",
+                3000
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "gps_coordinates_update", "lat": latitude, "lon": longitude},
+                AIComponent.KIRO,
+            )
+
+    def _on_image_preview_loaded(self, image_path: Path):
+        """Handle image preview loaded event"""
+
+        try:
+            # Update status bar
+            self.status_bar.showMessage(f"画像プレビュー読み込み完了: {image_path.name}", 2000)
+
+            # Log the event
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "image_preview_loaded",
+                f"画像プレビュー読み込み完了: {image_path.name}",
+                context={"image_path": str(image_path)},
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "image_preview_loaded", "image_path": str(image_path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_map_loaded(self, latitude: float, longitude: float):
+        """Handle map loaded event"""
+
+        try:
+            # Update status bar
+            self.status_bar.showMessage(f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}", 2000)
+
+            # Log the event
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "map_loaded",
+                f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}",
+                context={"latitude": latitude, "longitude": longitude},
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "map_loaded", "latitude": latitude, "longitude": longitude},
+                AIComponent.KIRO,
+            )
+
+    def _on_map_error(self, error_message: str):
+        """Handle map error event"""
+
+        try:
+            # Update status bar
+            self.status_bar.showMessage(f"地図エラー: {error_message}", 3000)
+
+            # Log the error
+            self.logger_system.log_error(
+                Exception(error_message),
+                "map_error",
+                {"error_message": error_message},
+                AIComponent.KIRO,
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "map_error", "error_message": error_message},
+                AIComponent.KIRO,
             )
 
     def _on_theme_changed(self, theme_name: str):

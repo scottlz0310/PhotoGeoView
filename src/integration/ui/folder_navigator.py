@@ -247,9 +247,10 @@ class EnhancedFolderNavigator(QWidget):
             # Create file system model
             self.file_system_model = QFileSystemModel()
             self.file_system_model.setRootPath("")
+            # Fix: Use QDir.Filter instead of model.Filter
+            from PyQt6.QtCore import QDir
             self.file_system_model.setFilter(
-                self.file_system_model.filter()
-                | self.file_system_model.Filter.NoDotAndDotDot
+                QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot
             )
 
             # Set model to tree view
