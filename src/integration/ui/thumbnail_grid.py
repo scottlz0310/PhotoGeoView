@@ -442,6 +442,9 @@ class OptimizedThumbnailGrid(QWidget):
         )
         self.load_mutex = QMutex()
 
+        # UI components initialization
+        self.performance_label = None
+
         # UI components
         self.scroll_area: Optional[QScrollArea] = None
         self.grid_widget: Optional[QWidget] = None
@@ -1015,6 +1018,94 @@ class OptimizedThumbnailGrid(QWidget):
         空状態用のプレースホルダーを表示する
         """
         try:
+            # Clear existing thumbnails
+            self.clear_thumbnails_safely()
+
+            # Create empty state widget
+            empty_widget = QLabel("No images found in this folder")
+            empty_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty_widget.setStyleSheet(
+                """
+                QLabel {
+                    color: #757575;
+                    font-size: 16px;
+                    font-style: italic;
+                    padding: 40px;
+                }
+                """
+            )
+
+            # Add to grid layout
+            self.grid_layout.addWidget(empty_widget, 0, 0)
+
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.CURSOR,
+                e,
+                "show_empty_placeholder",
+                {"operation": "empty_placeholder"},
+            )
+
+    def _remove_thumbnail_item(self, image_path: Path):
+        """Remove a thumbnail item from the grid"""
+        try:
+            if image_path in self.thumbnail_items:
+                thumbnail_item = self.thumbnail_items[image_path]
+                self.grid_layout.removeWidget(thumbnail_item)
+                thumbnail_item.deleteLater()
+                del self.thumbnail_items[image_path]
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "thumbnail_item_removed",
+                    f"Removed thumbnail: {image_path.name}",
+                    level="DEBUG",
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "remove_thumbnail_item", "image": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _add_thumbnail_item(self, image_path: Path):
+        """Add a new thumbnail item to the grid"""
+        try:
+            if image_path not in self.thumbnail_items:
+                # Create thumbnail item
+                thumbnail_item = ThumbnailItem(image_path, self.thumbnail_size)
+
+                # Connect signals
+                thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
+                thumbnail_item.context_menu_requested.connect(
+                    self._on_context_menu_requested
+                )
+                thumbnail_item.exif_info_requested.connect(self._on_exif_info_requested)
+
+                # Store reference
+                self.thumbnail_items[image_path] = thumbnail_item
+
+                # Load thumbnail asynchronously
+                future = self.thumbnail_executor.submit(
+                    self._load_single_thumbnail, image_path
+                )
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.CURSOR,
+                    "thumbnail_item_added",
+                    f"Added thumbnail: {image_path.name}",
+                    level="DEBUG",
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "add_thumbnail_item", "image": str(image_path)},
+                AIComponent.CURSOR,
+            )
             # 既存のプレースホルダーを削除
             if hasattr(self, "_empty_placeholder"):
                 self._empty_placeholder.deleteLater()
@@ -1197,7 +1288,7 @@ class OptimizedThumbnailGrid(QWidget):
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "create_thumbnail_items"},
+                {"operation": "create_thumbnail_items", "count": len(self.image_list)},
                 AIComponent.CURSOR,
             )
 
@@ -1226,8 +1317,24 @@ class OptimizedThumbnailGrid(QWidget):
     def _load_single_thumbnail(self, image_path: Path):
         """Load a single thumbnail"""
         try:
-            # Emit request signal for caching system
-            self.thumbnail_requested.emit(image_path)
+            # Load image and create thumbnail
+            pixmap = QPixmap(str(image_path))
+
+            if not pixmap.isNull():
+                # Scale to thumbnail size
+                thumbnail = pixmap.scaled(
+                    self.thumbnail_size,
+                    self.thumbnail_size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+
+                # Update thumbnail item on main thread
+                if image_path in self.thumbnail_items:
+                    thumbnail_item = self.thumbnail_items[image_path]
+                    thumbnail_item.set_thumbnail(thumbnail)
+
+            self.loaded_count += 1
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1254,7 +1361,114 @@ class OptimizedThumbnailGrid(QWidget):
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_single_exif", "image": str(image_path)},
-                AIComponent.COPILOT,
+                AIComponent.KIRO,
+            )
+
+    def _update_thumbnail_exif(self, image_path: Path, exif_data: Dict[str, Any]):
+        """Update thumbnail with EXIF data"""
+        try:
+            if image_path in self.thumbnail_items:
+                thumbnail_item = self.thumbnail_items[image_path]
+                thumbnail_item.set_exif_info(exif_data)
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.CURSOR,
+                e,
+                "update_thumbnail_exif",
+                {"image_path": str(image_path)},
+            )
+
+    def _on_thumbnail_clicked(self, image_path: Path):
+        """Handle thumbnail click"""
+        try:
+            self.image_selected.emit(image_path)
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_clicked",
+                f"Thumbnail clicked: {image_path.name}",
+            )
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "thumbnail_click", "image": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _on_context_menu_requested(self, image_path: Path, position):
+        """Handle context menu request"""
+        try:
+            menu = QMenu(self)
+
+            # Add menu actions
+            open_action = menu.addAction("Open")
+            open_action.triggered.connect(lambda: self._open_image(image_path))
+
+            show_info_action = menu.addAction("Show Info")
+            show_info_action.triggered.connect(lambda: self._show_image_info(image_path))
+
+            menu.exec(position.toPoint())
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "context_menu", "image": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _on_exif_info_requested(self, image_path: Path):
+        """Handle EXIF info request"""
+        try:
+            self._show_image_info(image_path)
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "exif_info_request", "image": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _open_image(self, image_path: Path):
+        """Open image in default application"""
+        try:
+            import subprocess
+            import sys
+
+            if sys.platform == "win32":
+                subprocess.run(["start", str(image_path)], shell=True)
+            elif sys.platform == "darwin":
+                subprocess.run(["open", str(image_path)])
+            else:
+                subprocess.run(["xdg-open", str(image_path)])
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.INTEGRATION_ERROR,
+                {"operation": "open_image", "image": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _show_image_info(self, image_path: Path):
+        """Show image information dialog"""
+        try:
+            from PyQt6.QtWidgets import QMessageBox
+
+            info_text = f"Image: {image_path.name}\nPath: {image_path}"
+
+            if image_path in self.exif_cache:
+                exif_data = self.exif_cache[image_path]
+                info_text += f"\n\nEXIF Data:\n{str(exif_data)}"
+
+            QMessageBox.information(self, "Image Information", info_text)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_image_info", "image": str(image_path)},
+                AIComponent.CURSOR,
             )
 
     def set_thumbnail(self, image_path: Path, pixmap: QPixmap):
@@ -1426,6 +1640,55 @@ class OptimizedThumbnailGrid(QWidget):
     def _update_grid_layout(self):
         """Update grid layout based on current size"""
         try:
+            # Calculate optimal column count based on widget width
+            if self.scroll_area:
+                available_width = self.scroll_area.width() - 50  # Account for scrollbar
+                item_width = self.thumbnail_size + 20 + self.spacing
+                new_columns = max(1, available_width // item_width)
+
+                if new_columns != self.columns:
+                    self.columns = new_columns
+                    self._reorganize_grid()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "update_grid_layout"},
+                AIComponent.CURSOR,
+            )
+
+    def _reorganize_grid(self):
+        """Reorganize grid layout with current column count"""
+        try:
+            # Remove all items from layout
+            for i in reversed(range(self.grid_layout.count())):
+                item = self.grid_layout.itemAt(i)
+                if item:
+                    self.grid_layout.removeItem(item)
+
+            # Re-add items with new layout
+            row = 0
+            col = 0
+
+            for image_path in self.image_list:
+                if image_path in self.thumbnail_items:
+                    thumbnail_item = self.thumbnail_items[image_path]
+                    self.grid_layout.addWidget(thumbnail_item, row, col)
+
+                    col += 1
+                    if col >= self.columns:
+                        col = 0
+                        row += 1
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "reorganize_grid"},
+                AIComponent.CURSOR,
+            )
+        try:
             # Calculate optimal columns based on widget width and thumbnail size
             widget_width = self.width()
             if widget_width > 0:
@@ -1546,7 +1809,16 @@ class OptimizedThumbnailGrid(QWidget):
                 self.loaded_count = 0
                 self.total_count = 0
 
-            self.performance_label.setText("Ready")
+            if hasattr(self, "performance_label") and self.performance_label:
+                self.performance_label.setText("Ready")
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "clear_thumbnails"},
+                AIComponent.CURSOR,
+            )
 
         except Exception as e:
             self.error_handler.handle_error(

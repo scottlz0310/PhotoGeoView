@@ -152,6 +152,25 @@ class StateManager:
 
     # Core state management
 
+    def get_state(self) -> ApplicationState:
+        """
+        Get the current application state
+
+        Returns:
+            ApplicationState: Current application state
+        """
+        try:
+            return self.current_state
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.STATE_ERROR,
+                {"operation": "get_state"},
+                AIComponent.KIRO,
+            )
+            # Return default state on error
+            return ApplicationState()
+
     def get_state_value(self, key: str, default: Any = None) -> Any:
         """
         Get a state value

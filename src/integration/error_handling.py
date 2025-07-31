@@ -32,6 +32,7 @@ class ErrorCategory(Enum):
     FILE_ERROR = "file"  # File system errors
     VALIDATION_ERROR = "validation"  # Data validation errors
     PERFORMANCE_ERROR = "performance"  # Performance-related errors
+    STATE_ERROR = "state"  # State management errors
 
 
 class ErrorSeverity(Enum):
