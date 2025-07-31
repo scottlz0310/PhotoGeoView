@@ -357,8 +357,16 @@ class CheckOrchestrator(OrchestratorInterface):
 
     def _execute_single_task_with_throttling(self, task: CheckTask) -> CheckResult:
         """Execute a single task with resource throttling."""
-        # Wait for available resources
+        # Wait for available resources with timeout
+        timeout_seconds = 30  # 30 seconds timeout for resource acquisition
+        start_time = time.time()
+
         while not self.resource_manager.acquire_task_slot():
+            if time.time() - start_time > timeout_seconds:
+                self.logger.error(f"Timeout waiting for resources for task '{task.name}'")
+                return self._create_error_result(
+                    task, f"Timeout waiting for resources after {timeout_seconds} seconds"
+                )
             time.sleep(0.1)
 
         try:

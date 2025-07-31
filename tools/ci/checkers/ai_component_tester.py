@@ -141,8 +141,7 @@ class AIComponentTester(CheckerInterface):
                 ],
                 test_files=[
                     "tests/test_kiro_components.py",
-                    "tests/ai_integration_test_suite.py",
-                    "tests/test_final_integration_verification.py",
+                    "tests/test_final_integration.py",
                 ],
                 config_files=[
                     "config/kiro_config.json",
@@ -573,14 +572,17 @@ class AIComponentTester(CheckerInterface):
                 env = os.environ.copy()
                 env.update(self._setup_demo_environment())
 
-                # Run the demo script
+                # Run the demo script with additional timeout protection
                 cmd = [sys.executable, str(demo_path)]
+
+                # Add additional timeout protection
+                timeout_seconds = min(self.ai_config["demo_script_timeout"], 30)  # Max 30 seconds per demo
 
                 result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
-                    timeout=self.ai_config["demo_script_timeout"],
+                    timeout=timeout_seconds,
                     cwd=self.project_root,
                     env=env,
                 )

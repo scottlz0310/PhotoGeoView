@@ -10,20 +10,20 @@ Demonstrates the Kiro integration layer components:
 Author: Kiro AI Integration System
 """
 
+import asyncio
 import sys
 import time
-import asyncio
 from pathlib import Path
 
 # Add src to path - adjusted for examples folder
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.performance_monitor import KiroPerformanceMonitor
-from integration.unified_cache import UnifiedCacheSystem
-from integration.state_manager import StateManager
 from integration.config_manager import ConfigManager
 from integration.logging_system import LoggerSystem
 from integration.models import AIComponent
+from integration.performance_monitor import KiroPerformanceMonitor
+from integration.state_manager import StateManager
+from integration.unified_cache import UnifiedCacheSystem
 
 
 async def main():
@@ -38,20 +38,17 @@ async def main():
 
     # Initialize performance monitor
     performance_monitor = KiroPerformanceMonitor(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
 
     # Initialize cache system
     cache_system = UnifiedCacheSystem(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
 
     # Initialize state manager
     state_manager = StateManager(
-        config_manager=config_manager,
-        logger_system=logger_system
+        config_manager=config_manager, logger_system=logger_system
     )
 
     print("   ✓ PerformanceMonitor initialized")
@@ -74,7 +71,9 @@ async def main():
         test_key = f"test_{cache_type}_key"
         test_value = f"test_{cache_type}_data_" + "x" * 100  # Some data
 
-        success = cache_system.put(cache_type, test_key, test_value, component=AIComponent.KIRO)
+        success = cache_system.put(
+            cache_type, test_key, test_value, component=AIComponent.KIRO
+        )
         print(f"   ✓ Cached data in {cache_type}: {success}")
 
         # Get the data back
@@ -96,7 +95,7 @@ async def main():
         "current_theme": "demo_theme",
         "thumbnail_size": 200,
         "performance_mode": "performance",
-        "map_zoom": 15
+        "map_zoom": 15,
     }
 
     for key, value in state_changes.items():
@@ -124,7 +123,7 @@ async def main():
         ("thumbnail_generation", 0.2),
         ("exif_extraction", 0.1),
         ("map_rendering", 0.8),
-        ("theme_change", 0.05)
+        ("theme_change", 0.05),
     ]
 
     for operation, duration in operations:
@@ -141,7 +140,7 @@ async def main():
     print(f"   - Memory usage: {perf_metrics['memory']['process_rss_mb']:.1f} MB")
     print(f"   - CPU usage: {perf_metrics['cpu']['process_percent']:.1f}%")
 
-    ai_status = perf_metrics['ai_components']
+    ai_status = perf_metrics["ai_components"]
     for component, status in ai_status.items():
         print(f"   - {component} status: {status}")
 
@@ -152,7 +151,9 @@ async def main():
 
     def state_change_listener(key, old_value, new_value):
         changes_received.append((key, old_value, new_value))
-        print(f"   ✓ State change detected: {key} changed from {old_value} to {new_value}")
+        print(
+            f"   ✓ State change detected: {key} changed from {old_value} to {new_value}"
+        )
 
     # Add listener
     state_manager.add_change_listener("current_theme", state_change_listener)
@@ -211,7 +212,9 @@ async def main():
 
     # Show stats after clearing
     stats_after = cache_system.get_stats()
-    print(f"   Cache entries after clearing 'general': {stats_after['overall']['total_entries']}")
+    print(
+        f"   Cache entries after clearing 'general': {stats_after['overall']['total_entries']}"
+    )
 
     # Test state persistence
     print("\n10. Testing State Persistence...")
@@ -252,13 +255,17 @@ async def main():
     print(f"   - Memory usage: {final_cache_stats['overall']['total_size_mb']:.2f} MB")
 
     print(f"\n   Performance Monitor:")
-    print(f"   - System memory: {final_perf_metrics['memory']['process_rss_mb']:.1f} MB")
+    print(
+        f"   - System memory: {final_perf_metrics['memory']['process_rss_mb']:.1f} MB"
+    )
     print(f"   - CPU usage: {final_perf_metrics['cpu']['process_percent']:.1f}%")
     print(f"   - AI components monitored: {len(final_perf_metrics['ai_components'])}")
 
     print(f"\n   State Manager:")
     print(f"   - Session duration: {final_state_summary['session_duration']:.1f}s")
-    print(f"   - State changes tracked: {len(final_state_summary['performance_operations'])}")
+    print(
+        f"   - State changes tracked: {len(final_state_summary['performance_operations'])}"
+    )
     print(f"   - Current theme: {final_state_summary['current_theme']}")
 
     # Shutdown components
@@ -294,4 +301,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\nDemo error: {e}")
         import traceback
+
         traceback.print_exc()

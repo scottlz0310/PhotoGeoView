@@ -3,7 +3,8 @@
     "qt_theme_manager": true,
     "theme_count": 16,
     "custom_themes": true,
-    "theme_validation": true
+    "theme_validation": true,
+    "current_theme": "dark"
   },
   "ui_optimization": {
     "fast_thumbnails": true,

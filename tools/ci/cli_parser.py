@@ -77,6 +77,13 @@ class CLIParser:
             description="Execute selected CI checks with dependency resolution",
         )
 
+        # Configuration
+        run_parser.add_argument(
+            "--config",
+            type=str,
+            help="Path to configuration file (YAML or JSON)",
+        )
+
         # Check selection
         run_parser.add_argument(
             "checks",

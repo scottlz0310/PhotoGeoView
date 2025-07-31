@@ -7,20 +7,26 @@ Demonstrates the data validation and migration functionality for AI integration.
 Author: Kiro AI Integration System
 """
 
-import sys
 import json
 import sqlite3
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add src to path for imports - adjusted for examples folder
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from integration.data_validation import DataValidator, ValidationSeverity
 from integration.data_migration import DataMigrationManager, MigrationStatus
-from integration.models import ImageMetadata, ThemeConfiguration, ApplicationState, ProcessingStatus, AIComponent
-from integration.logging_system import LoggerSystem
+from integration.data_validation import DataValidator, ValidationSeverity
 from integration.error_handling import IntegratedErrorHandler
+from integration.logging_system import LoggerSystem
+from integration.models import (
+    AIComponent,
+    ApplicationState,
+    ImageMetadata,
+    ProcessingStatus,
+    ThemeConfiguration,
+)
 
 
 def create_sample_data():
@@ -41,7 +47,7 @@ def create_sample_data():
             "thumb_path": str(data_dir / "thumb_1.jpg"),
             "name": "Sample Image 1",
             "created": "2024-01-01 10:00:00",
-            "modified": "2024-01-01 10:00:00"
+            "modified": "2024-01-01 10:00:00",
         },
         {
             "path": str(data_dir / "sample_image_2.jpg"),
@@ -49,11 +55,11 @@ def create_sample_data():
             "thumb_path": str(data_dir / "thumb_2.jpg"),
             "name": "Sample Image 2",
             "created": "2024-01-02 11:00:00",
-            "modified": "2024-01-02 11:00:00"
-        }
+            "modified": "2024-01-02 11:00:00",
+        },
     ]
 
-    with open(data_dir / "image_cache.json", 'w') as f:
+    with open(data_dir / "image_cache.json", "w") as f:
         json.dump(cursor_cache, f, indent=2)
 
     # Create sample theme data
@@ -65,14 +71,14 @@ def create_sample_data():
                 "background": "#2b2b2b",
                 "foreground": "#ffffff",
                 "primary": "#007acc",
-                "secondary": "#6c757d"
+                "secondary": "#6c757d",
             },
             "qt_theme": "dark",
-            "stylesheet": "QWidget { background-color: #2b2b2b; }"
+            "stylesheet": "QWidget { background-color: #2b2b2b; }",
         }
     ]
 
-    with open(data_dir / "themes.json", 'w') as f:
+    with open(data_dir / "themes.json", "w") as f:
         json.dump(theme_data, f, indent=2)
 
     # Create sample CS4Coding EXIF data
@@ -90,17 +96,18 @@ def create_sample_data():
             "gps_lon": 139.6503,
             "gps_alt": 10.5,
             "image_width": 8192,
-            "image_height": 5464
+            "image_height": 5464,
         }
     ]
 
-    with open(data_dir / "exif_data.json", 'w') as f:
+    with open(data_dir / "exif_data.json", "w") as f:
         json.dump(exif_data, f, indent=2)
 
     # Create sample legacy database
     db_file = data_dir / "photogeoview.db"
     with sqlite3.connect(db_file) as conn:
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS images (
                 id INTEGER PRIMARY KEY,
                 path TEXT NOT NULL,
@@ -118,20 +125,52 @@ def create_sample_data():
                 longitude REAL,
                 altitude REAL
             )
-        """)
+        """
+        )
 
         sample_images = [
-            (str(data_dir / "legacy1.jpg"), 1500000, "2024-01-01 12:00:00", "2024-01-01 12:00:00",
-             4000, 3000, "Sony", "A7R IV", 200, 4.0, "1/60", 51.5074, -0.1278, 50.0),
-            (str(data_dir / "legacy2.jpg"), 1800000, "2024-01-02 13:00:00", "2024-01-02 13:00:00",
-             6000, 4000, "Fujifilm", "X-T4", 400, 2.8, "1/125", 48.8566, 2.3522, 35.0)
+            (
+                str(data_dir / "legacy1.jpg"),
+                1500000,
+                "2024-01-01 12:00:00",
+                "2024-01-01 12:00:00",
+                4000,
+                3000,
+                "Sony",
+                "A7R IV",
+                200,
+                4.0,
+                "1/60",
+                51.5074,
+                -0.1278,
+                50.0,
+            ),
+            (
+                str(data_dir / "legacy2.jpg"),
+                1800000,
+                "2024-01-02 13:00:00",
+                "2024-01-02 13:00:00",
+                6000,
+                4000,
+                "Fujifilm",
+                "X-T4",
+                400,
+                2.8,
+                "1/125",
+                48.8566,
+                2.3522,
+                35.0,
+            ),
         ]
 
-        conn.executemany("""
+        conn.executemany(
+            """
             INSERT OR REPLACE INTO images (path, size, created, modified, width, height, camera_make,
                               camera_model, iso, aperture, shutter_speed, latitude, longitude, altitude)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, sample_images)
+        """,
+            sample_images,
+        )
 
     return data_dir
 
@@ -164,12 +203,16 @@ def demonstrate_data_validation():
         width=1920,
         height=1080,
         processing_status=ProcessingStatus.COMPLETED,
-        ai_processor=AIComponent.COPILOT
+        ai_processor=AIComponent.COPILOT,
     )
 
     result = validator.validate_image_metadata(valid_metadata)
-    print(f"   Valid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}")
-    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
+    print(
+        f"   Valid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}"
+    )
+    print(
+        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
+    )
 
     # Create invalid ImageMetadata
     invalid_metadata = ImageMetadata(
@@ -179,12 +222,16 @@ def demonstrate_data_validation():
         modified_date=datetime.now(),
         latitude=95.0,  # Invalid latitude
         longitude=185.0,  # Invalid longitude
-        processing_status=ProcessingStatus.COMPLETED
+        processing_status=ProcessingStatus.COMPLETED,
     )
 
     result = validator.validate_image_metadata(invalid_metadata)
-    print(f"   Invalid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}")
-    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
+    print(
+        f"   Invalid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}"
+    )
+    print(
+        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
+    )
 
     if result.errors:
         print("   Error details:")
@@ -203,18 +250,20 @@ def demonstrate_data_validation():
             "background": "#ffffff",
             "foreground": "#000000",
             "primary": "#007acc",
-            "secondary": "#6c757d"
+            "secondary": "#6c757d",
         },
         accessibility_features={
             "keyboard_navigation": True,
             "focus_indicators": True,
-            "high_contrast": False
-        }
+            "high_contrast": False,
+        },
     )
 
     result = validator.validate_theme_configuration(valid_theme)
     print(f"   Valid theme validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}")
-    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
+    print(
+        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
+    )
 
     # Create invalid theme
     invalid_theme = ThemeConfiguration(
@@ -222,13 +271,17 @@ def demonstrate_data_validation():
         display_name="",  # Empty required field
         color_scheme={
             "background": "invalid_color",  # Invalid color format
-            "foreground": "#gggggg"  # Invalid hex color
-        }
+            "foreground": "#gggggg",  # Invalid hex color
+        },
     )
 
     result = validator.validate_theme_configuration(invalid_theme)
-    print(f"   Invalid theme validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}")
-    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
+    print(
+        f"   Invalid theme validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}"
+    )
+    print(
+        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
+    )
 
     print("\n3. Validating ApplicationState...")
 
@@ -241,12 +294,14 @@ def demonstrate_data_validation():
         image_sort_mode="name",
         fit_mode="fit_window",
         exif_display_mode="detailed",
-        image_sort_ascending=True
+        image_sort_ascending=True,
     )
 
     result = validator.validate_application_state(valid_state)
     print(f"   Valid state validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}")
-    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
+    print(
+        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
+    )
 
     # Create invalid application state
     invalid_state = ApplicationState(
@@ -254,19 +309,21 @@ def demonstrate_data_validation():
         thumbnail_size=1000,  # Outside recommended range
         performance_mode="invalid_mode",  # Invalid mode
         image_sort_mode="invalid_sort",  # Invalid sort mode
-        fit_mode="invalid_fit"  # Invalid fit mode
+        fit_mode="invalid_fit",  # Invalid fit mode
     )
 
     result = validator.validate_application_state(invalid_state)
-    print(f"   Invalid state validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}")
-    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
+    print(
+        f"   Invalid state validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}"
+    )
+    print(
+        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
+    )
 
     print("\n4. Validating Multiple Models...")
 
     results = validator.validate_all_models(
-        image_metadata=valid_metadata,
-        theme_config=valid_theme,
-        app_state=valid_state
+        image_metadata=valid_metadata, theme_config=valid_theme, app_state=valid_state
     )
 
     print(f"   Models validated: {len(results)}")
@@ -291,7 +348,7 @@ def demonstrate_data_migration():
         data_dir=data_dir,
         backup_dir=data_dir / "migration_backups",
         logger_system=logger_system,
-        validator=validator
+        validator=validator,
     )
 
     print("\n1. Migration Manager Status:")
@@ -299,7 +356,7 @@ def demonstrate_data_migration():
     print(f"   Data directory: {status['data_directory']}")
     print(f"   Backup directory: {status['backup_directory']}")
     print(f"   Available migrations: {len(status['available_migrations'])}")
-    for migration in status['available_migrations']:
+    for migration in status["available_migrations"]:
         print(f"     - {migration}")
 
     print("\n2. Running Data Migration...")
@@ -330,7 +387,9 @@ def demonstrate_data_migration():
         total_errors += error_count
 
         print(f"     Operations: {len(results)} total")
-        print(f"     Status: {successful} successful, {partial} partial, {failed} failed, {skipped} skipped")
+        print(
+            f"     Status: {successful} successful, {partial} partial, {failed} failed, {skipped} skipped"
+        )
         print(f"     Objects migrated: {migrated_count}")
         print(f"     Errors: {error_count}")
 
@@ -340,10 +399,12 @@ def demonstrate_data_migration():
                 MigrationStatus.SUCCESS: "✓",
                 MigrationStatus.PARTIAL: "⚠",
                 MigrationStatus.FAILED: "✗",
-                MigrationStatus.SKIPPED: "○"
+                MigrationStatus.SKIPPED: "○",
             }.get(result.status, "?")
 
-            print(f"       {status_symbol} {result.source_type} -> {result.target_model}: {result.migrated_count} objects")
+            print(
+                f"       {status_symbol} {result.source_type} -> {result.target_model}: {result.migrated_count} objects"
+            )
 
             if result.errors:
                 for error in result.errors[:2]:  # Show first 2 errors
@@ -357,7 +418,11 @@ def demonstrate_data_migration():
     print(f"   Total objects migrated: {total_migrated}")
     print(f"   Total errors: {total_errors}")
 
-    overall_status = "SUCCESS" if total_errors == 0 else "PARTIAL" if total_migrated > 0 else "FAILED"
+    overall_status = (
+        "SUCCESS"
+        if total_errors == 0
+        else "PARTIAL" if total_migrated > 0 else "FAILED"
+    )
     print(f"   Overall status: {overall_status}")
 
     # Check for migration report
@@ -418,7 +483,7 @@ def demonstrate_integration():
         print(f"\n2. Validating {migrated_file.name}...")
 
         try:
-            with open(migrated_file, 'r') as f:
+            with open(migrated_file, "r") as f:
                 migrated_data = json.load(f)
 
             if not isinstance(migrated_data, list):
@@ -449,11 +514,27 @@ def demonstrate_integration():
                     # Reconstruct object for validation
                     if model_type == "ImageMetadata":
                         obj = ImageMetadata(
-                            file_path=Path(obj_data.get('file_path', '')),
-                            file_size=obj_data.get('file_size', 0),
-                            created_date=datetime.fromisoformat(obj_data.get('created_date', datetime.now().isoformat())),
-                            modified_date=datetime.fromisoformat(obj_data.get('modified_date', datetime.now().isoformat())),
-                            **{k: v for k, v in obj_data.items() if k not in ['file_path', 'file_size', 'created_date', 'modified_date']}
+                            file_path=Path(obj_data.get("file_path", "")),
+                            file_size=obj_data.get("file_size", 0),
+                            created_date=datetime.fromisoformat(
+                                obj_data.get("created_date", datetime.now().isoformat())
+                            ),
+                            modified_date=datetime.fromisoformat(
+                                obj_data.get(
+                                    "modified_date", datetime.now().isoformat()
+                                )
+                            ),
+                            **{
+                                k: v
+                                for k, v in obj_data.items()
+                                if k
+                                not in [
+                                    "file_path",
+                                    "file_size",
+                                    "created_date",
+                                    "modified_date",
+                                ]
+                            },
                         )
                         result = validator.validate_image_metadata(obj)
                     elif model_type == "ThemeConfiguration":
@@ -461,10 +542,20 @@ def demonstrate_integration():
                         result = validator.validate_theme_configuration(obj)
                     elif model_type == "ApplicationState":
                         obj_data_copy = obj_data.copy()
-                        if 'current_folder' in obj_data_copy and obj_data_copy['current_folder']:
-                            obj_data_copy['current_folder'] = Path(obj_data_copy['current_folder'])
-                        if 'selected_image' in obj_data_copy and obj_data_copy['selected_image']:
-                            obj_data_copy['selected_image'] = Path(obj_data_copy['selected_image'])
+                        if (
+                            "current_folder" in obj_data_copy
+                            and obj_data_copy["current_folder"]
+                        ):
+                            obj_data_copy["current_folder"] = Path(
+                                obj_data_copy["current_folder"]
+                            )
+                        if (
+                            "selected_image" in obj_data_copy
+                            and obj_data_copy["selected_image"]
+                        ):
+                            obj_data_copy["selected_image"] = Path(
+                                obj_data_copy["selected_image"]
+                            )
                         obj = ApplicationState(**obj_data_copy)
                         result = validator.validate_application_state(obj)
 
@@ -475,7 +566,9 @@ def demonstrate_integration():
 
                     if i < 3:  # Show details for first 3 objects
                         status = "✓ VALID" if result.is_valid else "⚠ ISSUES"
-                        print(f"     Object {i+1}: {status} ({result.total_issues} issues)")
+                        print(
+                            f"     Object {i+1}: {status} ({result.total_issues} issues)"
+                        )
 
                 except Exception as e:
                     print(f"     Object {i+1}: ✗ ERROR - {str(e)}")
@@ -487,7 +580,9 @@ def demonstrate_integration():
             total_valid += file_valid
             total_issues += file_issues
 
-            print(f"   File summary: {file_valid}/{sample_size} valid objects, {file_issues} total issues")
+            print(
+                f"   File summary: {file_valid}/{sample_size} valid objects, {file_issues} total issues"
+            )
 
         except Exception as e:
             print(f"   Error processing {migrated_file.name}: {e}")
@@ -498,7 +593,9 @@ def demonstrate_integration():
     print(f"   Total validation issues: {total_issues}")
 
     if total_objects > 0:
-        validity_rate = (total_valid / min(total_objects, len(migrated_files) * 5)) * 100  # Approximate based on sampling
+        validity_rate = (
+            total_valid / min(total_objects, len(migrated_files) * 5)
+        ) * 100  # Approximate based on sampling
         print(f"   Validity rate: {validity_rate:.1f}%")
 
 
@@ -507,6 +604,7 @@ def cleanup_demo_data():
     data_dir = Path("demo_data")
     if data_dir.exists():
         import shutil
+
         shutil.rmtree(data_dir)
         print(f"\n✓ Cleaned up demo data directory: {data_dir}")
 
@@ -545,7 +643,7 @@ def main():
 
         # Ask about cleanup
         response = input("\nClean up demo data files? (y/N): ").strip().lower()
-        if response in ['y', 'yes']:
+        if response in ["y", "yes"]:
             cleanup_demo_data()
         else:
             print(f"\nDemo data preserved in: {data_dir}")
@@ -554,6 +652,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error during demo: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
