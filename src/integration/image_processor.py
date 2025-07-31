@@ -478,6 +478,9 @@ class CS4CodingImageProcessor(IImageProcessor):
         """Extract GPS data from ExifRead tags (CS4Coding implementation)"""
 
         try:
+            gps_data = {}
+            
+            # 緯度・経度の処理
             gps_tags = [
                 "GPS GPSLatitude",
                 "GPS GPSLatitudeRef",
@@ -485,28 +488,63 @@ class CS4CodingImageProcessor(IImageProcessor):
                 "GPS GPSLongitudeRef",
             ]
 
-            if not all(tag in tags for tag in gps_tags):
-                return None
+            if all(tag in tags for tag in gps_tags):
+                lat_tag = tags["GPS GPSLatitude"]
+                lat_ref_tag = tags["GPS GPSLatitudeRef"]
+                lon_tag = tags["GPS GPSLongitude"]
+                lon_ref_tag = tags["GPS GPSLongitudeRef"]
 
-            lat_tag = tags["GPS GPSLatitude"]
-            lat_ref_tag = tags["GPS GPSLatitudeRef"]
-            lon_tag = tags["GPS GPSLongitude"]
-            lon_ref_tag = tags["GPS GPSLongitudeRef"]
+                # Convert to decimal degrees
+                lat_decimal = self._convert_gps_to_decimal(lat_tag, lat_ref_tag)
+                lon_decimal = self._convert_gps_to_decimal(lon_tag, lon_ref_tag)
 
-            # Convert to decimal degrees
-            lat_decimal = self._convert_gps_to_decimal(lat_tag, lat_ref_tag)
-            lon_decimal = self._convert_gps_to_decimal(lon_tag, lon_ref_tag)
-
-            if lat_decimal is not None and lon_decimal is not None:
-                if self.validate_coordinates(lat_decimal, lon_decimal):
-                    return {
-                        "GPS Latitude": f"{lat_decimal:.6f}°",
-                        "GPS Longitude": f"{lon_decimal:.6f}°",
-                        "GPS Coordinates": self._format_coordinates(
-                            lat_decimal, lon_decimal
-                        ),
-                        "gps_coordinates": (lat_decimal, lon_decimal),
-                    }
+                if lat_decimal is not None and lon_decimal is not None:
+                    if self.validate_coordinates(lat_decimal, lon_decimal):
+                        gps_data.update({
+                            "GPS Latitude": lat_decimal,  # 数値として返す
+                            "GPS Longitude": lon_decimal,  # 数値として返す
+                            "GPS Coordinates": self._format_coordinates(
+                                lat_decimal, lon_decimal
+                            ),
+                            "gps_coordinates": (lat_decimal, lon_decimal),
+                        })
+            
+            # 高度の処理
+            if "GPS GPSAltitude" in tags:
+                altitude_tag = tags["GPS GPSAltitude"]
+                altitude_ref_tag = tags.get("GPS GPSAltitudeRef", "0")
+                
+                try:
+                    altitude = self._parse_rational(str(altitude_tag))
+                    if altitude is not None:
+                        # 高度参照（0=海抜、1=海抜以下）
+                        if str(altitude_ref_tag) == "1":
+                            altitude = -altitude
+                        gps_data["GPS Altitude"] = altitude
+                except (ValueError, TypeError):
+                    pass
+            
+            # GPS時刻の処理
+            if "GPS GPSTimeStamp" in tags:
+                gps_time_tag = tags["GPS GPSTimeStamp"]
+                try:
+                    # GPSTimeStampは通常 [時, 分, 秒] の形式
+                    if hasattr(gps_time_tag, '__iter__'):
+                        time_parts = []
+                        for part in gps_time_tag:
+                            time_parts.append(str(self._parse_rational(str(part))))
+                        if len(time_parts) >= 3:
+                            gps_data["GPS Timestamp"] = f"{time_parts[0]}:{time_parts[1]}:{time_parts[2]}"
+                except (ValueError, TypeError):
+                    pass
+            
+            # GPS日付の処理
+            if "GPS GPSDateStamp" in tags:
+                gps_date = str(tags["GPS GPSDateStamp"])
+                if gps_date and gps_date != "None":
+                    gps_data["GPS Date"] = gps_date
+            
+            return gps_data if gps_data else None
 
         except Exception as e:
             self.logger_system.log_error(AIComponent.COPILOT, e, "gps_extraction", {})

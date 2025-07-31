@@ -269,6 +269,13 @@ class IntegratedMainWindow(QMainWindow):
         )
         left_layout.addWidget(self.thumbnail_grid, 1)
 
+        # EXIF information panel (Kiro component)
+        from .exif_panel import EXIFPanel
+        self.exif_panel = EXIFPanel(
+            self.config_manager, self.state_manager, self.logger_system
+        )
+        left_layout.addWidget(self.exif_panel, 0)  # 下段に配置
+
         self.main_splitter.addWidget(self.left_panel)
 
     def _create_right_panel(self):
@@ -386,6 +393,10 @@ class IntegratedMainWindow(QMainWindow):
             self.thumbnail_grid.image_selected.connect(self._on_image_selected)
             # Connect folder changes to thumbnail grid
             self.folder_changed.connect(self._update_thumbnail_grid)
+
+        # Connect EXIF panel signals
+        if self.exif_panel:
+            self.exif_panel.gps_coordinates_updated.connect(self._on_gps_coordinates_updated)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -526,6 +537,10 @@ class IntegratedMainWindow(QMainWindow):
             # Update status
             self.status_bar.showMessage(f"Selected: {image_path.name}")
 
+            # Update EXIF panel
+            if self.exif_panel:
+                self.exif_panel.set_image(image_path)
+
             # Emit signal for other components
             self.image_selected.emit(image_path)
 
@@ -535,6 +550,37 @@ class IntegratedMainWindow(QMainWindow):
                 ErrorCategory.UI_ERROR,
                 {"operation": "image_selection_handling", "image": str(image_path)},
                 AIComponent.CURSOR,
+            )
+
+    def _on_gps_coordinates_updated(self, latitude: float, longitude: float):
+        """Handle GPS coordinates update from EXIF panel"""
+
+        try:
+            # Update state with GPS coordinates
+            self.state_manager.update_state(
+                current_latitude=latitude,
+                current_longitude=longitude
+            )
+
+            # Log GPS coordinates update
+            self.logger_system.log_info(
+                f"GPS coordinates updated: {latitude:.6f}, {longitude:.6f}",
+                {"latitude": latitude, "longitude": longitude},
+                AIComponent.KIRO,
+            )
+
+            # Update status bar
+            self.status_bar.showMessage(
+                f"GPS: {latitude:.6f}°, {longitude:.6f}°", 
+                3000
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "gps_coordinates_update", "lat": latitude, "lon": longitude},
+                AIComponent.KIRO,
             )
 
     def _on_theme_changed(self, theme_name: str):
