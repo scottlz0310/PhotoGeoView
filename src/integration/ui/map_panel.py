@@ -8,11 +8,36 @@ PyQtWebEngineが利用できない場合の代替表示も提供。
 Author: Kiro AI Integration System
 """
 
+import os
+import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtCore import Qt, pyqtSignal, QUrl
+from PyQt6.QtWidgets import (
+    QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget,
+    QFrame, QSizePolicy
+)
+
+# PyQtWebEngineのインポート
+try:
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtWebEngineCore import QWebEngineSettings
+    WEBENGINE_AVAILABLE = True
+except ImportError:
+    WEBENGINE_AVAILABLE = False
+    QWebEngineView = None
+    QWebEngineSettings = None
+
+# foliumのインポート
+try:
+    import folium
+    from folium import plugins
+    folium_available = True
+except ImportError:
+    folium_available = False
+    folium = None
+    plugins = None
 
 from ..config_manager import ConfigManager
 from ..error_handling import ErrorCategory, IntegratedErrorHandler
@@ -51,6 +76,13 @@ class MapPanel(QWidget):
         self.logger_system = logger_system
         self.error_handler = IntegratedErrorHandler(logger_system)
 
+        # 地図プロパティ
+        self.current_map_file: Optional[str] = None
+        self.photo_locations: Dict[str, Tuple[float, float]] = {}
+        self.current_photo: Optional[str] = None
+        self.default_location: Tuple[float, float] = (35.6762, 139.6503)  # Tokyo
+        self.default_zoom: int = 10
+
         # 現在の座標
         self.current_latitude: Optional[float] = None
         self.current_longitude: Optional[float] = None
@@ -61,49 +93,17 @@ class MapPanel(QWidget):
         # 一時ファイル管理
         self.temp_html_file: Optional[Path] = None
 
+        # UIコンポーネント
+        self.web_view: Optional[QWebEngineView] = None
+        self.status_label: Optional[QLabel] = None
+        self.map_widget: Optional[QWidget] = None
+
         # UI初期化
         self._setup_ui()
+        self._setup_connections()
 
-
-
-    def show_fallback_message(self):
-        """フォールバック表示"""
-        error_label = QLabel("""
-        地図の初期化に失敗しました。
-
-        以下を確認してください：
-        • PyQt6-WebEngineがインストールされているか
-        • システムにWebEngineの依存関係があるか
-
-        地図機能は利用できませんが、他の機能は正常に動作します。
-        """)
-        error_label.setStyleSheet("""
-            QLabel {
-                color: #cc0000;
-                background-color: #ffe6e6;
-                border: 1px solid #cc0000;
-                border-radius: 5px;
-                padding: 20px;
-                font-size: 12px;
-            }
-        """)
-        error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # 既存のウィジェットを削除
-        if hasattr(self, 'map_widget'):
-            self.layout().removeWidget(self.map_widget)
-            self.map_widget.deleteLater()
-
-        # エラーメッセージを追加
-        self.layout().addWidget(error_label)
-        self.map_widget = error_label
-
-        # ログ出力
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "webengine_fallback",
-            "WebEngine初期化失敗 - フォールバック表示",
-        )
+        # デフォルト地図で初期化
+        self._initialize_map()
 
     def _setup_ui(self):
         """UIの初期化"""
@@ -112,171 +112,209 @@ class MapPanel(QWidget):
             layout.setContentsMargins(5, 5, 5, 5)
             layout.setSpacing(5)
 
-            # タイトル
-            title_label = QLabel("地図表示")
-            title_label.setStyleSheet("""
-                QLabel {
-                    font-weight: bold;
-                    font-size: 14px;
-                    color: #2c3e50;
-                    padding: 5px;
-                    background-color: #ecf0f1;
-                    border-radius: 3px;
-                }
-            """)
-            layout.addWidget(title_label)
+            # タイトルバー（全画面ボタン付き）
+            title_layout = QHBoxLayout()
 
-            # コントロールエリア
-            self._create_controls()
-            layout.addWidget(self.controls_widget)
+            title_label = QLabel("🗺️ 地図表示")
+            title_label.setStyleSheet("font-weight: bold; padding: 2px;")
+            title_layout.addWidget(title_label)
 
-            # 地図表示エリア
-            self._create_map_display()
-            layout.addWidget(self.map_widget)
+            title_layout.addStretch()
+
+            # 全画面ボタン
+            fullscreen_btn = QPushButton("⛶")
+            fullscreen_btn.setToolTip("全画面表示")
+            fullscreen_btn.setFixedSize(24, 24)
+            fullscreen_btn.clicked.connect(self._toggle_fullscreen)
+            title_layout.addWidget(fullscreen_btn)
+
+            layout.addLayout(title_layout)
+
+            # WebEngineビュー（地図表示用）
+            if WEBENGINE_AVAILABLE and QWebEngineView is not None:
+                self.web_view = QWebEngineView()
+                if self.web_view:
+                    self.web_view.setSizePolicy(
+                        QSizePolicy.Policy.Expanding,
+                        QSizePolicy.Policy.Expanding
+                    )
+
+                    # WebEngine設定
+                    settings = self.web_view.settings()
+                    if settings and QWebEngineSettings is not None:
+                        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+                        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
+
+                    layout.addWidget(self.web_view, 1)
+            else:
+                # WebEngineが利用できない場合のフォールバック
+                self._create_fallback_display()
+                if self.map_widget:
+                    layout.addWidget(self.map_widget, 1)
+
+            # ステータスバー
+            status_frame = QFrame()
+            status_frame.setFrameStyle(QFrame.Shape.StyledPanel)
+            status_frame.setMaximumHeight(30)
+
+            status_layout = QHBoxLayout(status_frame)
+            status_layout.setContentsMargins(5, 5, 5, 5)
+
+            self.status_label = QLabel("準備完了")
+            self.status_label.setStyleSheet("font-size: 11px; color: #666666;")
+            status_layout.addWidget(self.status_label)
+
+            status_layout.addStretch()
+
+            # 地図コントロール
+            reset_btn = QPushButton("🏠")
+            reset_btn.setToolTip("デフォルト表示にリセット")
+            reset_btn.setFixedSize(24, 24)
+            reset_btn.clicked.connect(self._reset_view)
+            status_layout.addWidget(reset_btn)
+
+            refresh_btn = QPushButton("🔄")
+            refresh_btn.setToolTip("地図を更新")
+            refresh_btn.setFixedSize(24, 24)
+            refresh_btn.clicked.connect(self._refresh_map)
+            status_layout.addWidget(refresh_btn)
+
+            layout.addWidget(status_frame)
 
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR, {"operation": "map_panel_setup"}, AIComponent.KIRO
             )
 
-    def _create_controls(self):
-        """コントロールエリアを作成"""
-        self.controls_widget = QWidget()
-        controls_layout = QHBoxLayout(self.controls_widget)
-        controls_layout.setContentsMargins(0, 5, 0, 5)
-
-        # 座標表示
-        self.coordinates_label = QLabel("座標: 未設定")
-        self.coordinates_label.setStyleSheet("""
-            QLabel {
-                font-weight: bold;
-                color: #7f8c8d;
-                padding: 5px 10px;
-                background-color: #ecf0f1;
-                border-radius: 3px;
-            }
-        """)
-        controls_layout.addWidget(self.coordinates_label)
-
-        controls_layout.addStretch()
-
-        # 更新ボタン
-        self.refresh_button = QPushButton("更新")
-        self.refresh_button.setStyleSheet("""
-            QPushButton {
-                background-color: #3498db;
-                color: white;
-                border: none;
-                padding: 5px 15px;
-                border-radius: 3px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-            QPushButton:pressed {
-                background-color: #21618c;
-            }
-        """)
-        self.refresh_button.clicked.connect(self._refresh_map)
-        controls_layout.addWidget(self.refresh_button)
-
-        # クリアボタン
-        self.clear_button = QPushButton("クリア")
-        self.clear_button.setStyleSheet("""
-            QPushButton {
-                background-color: #e74c3c;
-                color: white;
-                border: none;
-                padding: 5px 15px;
-                border-radius: 3px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #c0392b;
-            }
-            QPushButton:pressed {
-                background-color: #a93226;
-            }
-        """)
-        self.clear_button.clicked.connect(self._clear_locations)
-        controls_layout.addWidget(self.clear_button)
-
-        # 全画面ボタン
-        self.fullscreen_button = QPushButton("全画面")
-        self.fullscreen_button.setStyleSheet("""
-            QPushButton {
-                background-color: #27ae60;
-                color: white;
-                border: none;
-                padding: 5px 15px;
-                border-radius: 3px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #229954;
-            }
-            QPushButton:pressed {
-                background-color: #1e8449;
-            }
-        """)
-        self.fullscreen_button.clicked.connect(self._toggle_fullscreen)
-        controls_layout.addWidget(self.fullscreen_button)
-
-    def _create_map_display(self):
-        """地図表示エリアを作成"""
-        # 初期化中のプレースホルダー
-        self.map_widget = QLabel("地図を初期化中...")
+    def _create_fallback_display(self):
+        """WebEngineが利用できない場合のフォールバック表示"""
+        self.map_widget = QLabel("PyQtWebEngineが利用できません。地図機能は利用できませんが、他の機能は正常に動作します。")
         self.map_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.map_widget.setStyleSheet("""
             QLabel {
                 border: 1px solid #bdc3c7;
                 border-radius: 3px;
                 background-color: #f8f9fa;
-                color: #7f8c8d;
+                color: #e74c3c;
                 padding: 20px;
-                font-size: 14px;
+                font-size: 12px;
             }
         """)
 
-    def _show_placeholder(self):
-        """プレースホルダーHTMLを表示"""
+    def _setup_connections(self):
+        """シグナル接続の設定"""
         try:
-            placeholder_html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <title>地図表示</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        background-color: #f8f9fa;
-                        color: #7f8c8d;
-                        text-align: center;
-                    }
-                    .placeholder {
-                        margin-top: 50px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="placeholder">
-                    <h2>地図表示エリア</h2>
-                    <p>GPS座標を設定すると地図が表示されます</p>
-                </div>
-            </body>
-            </html>
-            """
-
-            if WEBENGINE_AVAILABLE:
-                self.map_widget.setHtml(placeholder_html)
+            if self.web_view:
+                self.web_view.loadFinished.connect(self._on_map_loaded)
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "show_placeholder"}, AIComponent.KIRO
+                e, ErrorCategory.UI_ERROR, {"operation": "setup_connections"}, AIComponent.KIRO
+            )
+
+    def _initialize_map(self):
+        """デフォルト位置で地図を初期化"""
+        try:
+            if not folium_available:
+                self._show_error_message("Foliumが利用できません。foliumをインストールしてください。")
+                return
+
+            self._create_map(self.default_location, self.default_zoom)
+            if self.status_label:
+                self.status_label.setText("地図を初期化しました")
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "initialize_map"}, AIComponent.KIRO
+            )
+            self._show_error_message(f"地図の初期化に失敗しました: {e}")
+
+    def _create_map(self, center: Tuple[float, float], zoom: int = 10, markers: Optional[Dict[str, Tuple[float, float]]] = None):
+        """新しいFolium地図を作成"""
+        try:
+            if not folium_available or folium is None:
+                return
+
+            # Folium地図を作成
+            map_obj = folium.Map(
+                location=center,
+                zoom_start=zoom,
+                tiles='OpenStreetMap'
+            )
+
+            # 写真位置のマーカーを追加
+            if markers:
+                for photo_path, (lat, lon) in markers.items():
+                    self._add_photo_marker(map_obj, photo_path, lat, lon)
+
+            # 追加の地図レイヤー
+            if hasattr(folium, 'TileLayer'):
+                folium.TileLayer(
+                    tiles='https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+                    attr='&copy; OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team',
+                    name='OpenStreetMap.HOT',
+                    overlay=False,
+                    control=True
+                ).add_to(map_obj)
+
+            # レイヤーコントロール
+            if hasattr(folium, 'LayerControl'):
+                folium.LayerControl().add_to(map_obj)
+
+            # 全画面プラグイン
+            if plugins and hasattr(plugins, 'Fullscreen'):
+                plugins.Fullscreen().add_to(map_obj)
+
+            # 一時ファイルに保存
+            temp_dir = tempfile.gettempdir()
+            self.current_map_file = os.path.join(temp_dir, "photogeoview_map.html")
+            map_obj.save(self.current_map_file)
+
+            # WebViewに読み込み
+            if self.web_view:
+                self.web_view.load(QUrl.fromLocalFile(self.current_map_file))
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "create_map"}, AIComponent.KIRO
+            )
+            self._show_error_message(f"地図の作成に失敗しました: {e}")
+
+    def _add_photo_marker(self, map_obj: object, photo_path: str, lat: float, lon: float):
+        """写真位置のマーカーを追加"""
+        try:
+            if not folium_available or folium is None:
+                return
+
+            photo_name = Path(photo_path).name
+
+            # カスタムアイコンでマーカーを作成
+            if hasattr(folium, 'Marker'):
+                popup = None
+                icon = None
+
+                if hasattr(folium, 'Popup'):
+                    popup = folium.Popup(f"📸 {photo_name}", max_width=200)
+
+                if hasattr(folium, 'Icon'):
+                    icon = folium.Icon(
+                        icon='camera',
+                        prefix='fa',
+                        color='blue' if photo_path != self.current_photo else 'red'
+                    )
+
+                marker = folium.Marker(
+                    location=[lat, lon],
+                    popup=popup,
+                    tooltip=photo_name,
+                    icon=icon
+                )
+
+                marker.add_to(map_obj)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "add_photo_marker"}, AIComponent.KIRO
             )
 
     def set_coordinates(self, latitude: float, longitude: float):
@@ -286,16 +324,8 @@ class MapPanel(QWidget):
             self.current_longitude = longitude
 
             # 座標表示を更新
-            self.coordinates_label.setText(f"座標: {latitude:.6f}, {longitude:.6f}")
-            self.coordinates_label.setStyleSheet("""
-                QLabel {
-                    font-weight: bold;
-                    color: #27ae60;
-                    padding: 5px 10px;
-                    background-color: #ecf0f1;
-                    border-radius: 3px;
-                }
-            """)
+            if self.status_label:
+                self.status_label.setText(f"座標: {latitude:.6f}, {longitude:.6f}")
 
             # 地図を更新
             self._update_map()
@@ -319,6 +349,10 @@ class MapPanel(QWidget):
             }
 
             self.image_locations.append(location)
+            
+            # photo_locationsにも追加
+            self.photo_locations[str(image_path)] = (latitude, longitude)
+            
             self._update_map()
 
             # ログ出力
@@ -340,183 +374,182 @@ class MapPanel(QWidget):
     def _update_map(self):
         """地図を更新"""
         try:
-            if self.image_locations:
-                locations_text = "地図情報\n\n"
-                for i, location in enumerate(self.image_locations, 1):
-                    locations_text += f"{i}. {location['name']}\n"
-                    locations_text += f"   緯度: {location['lat']:.6f}°\n"
-                    locations_text += f"   経度: {location['lon']:.6f}°\n\n"
-                locations_text += "地図表示にはPyQtWebEngineが必要です"
+            if self.photo_locations:
+                # 全ての位置から中心点を計算
+                lats = [lat for lat, _ in self.photo_locations.values()]
+                lons = [lon for _, lon in self.photo_locations.values()]
 
-                self.map_widget.setText(locations_text)
-                self.map_widget.setStyleSheet("""
-                    QLabel {
-                        border: 1px solid #bdc3c7;
-                        border-radius: 3px;
-                        background-color: #f8f9fa;
-                        color: #27ae60;
-                        padding: 20px;
-                        font-size: 12px;
-                        font-weight: bold;
-                    }
-                """)
+                center_lat = sum(lats) / len(lats)
+                center_lon = sum(lons) / len(lons)
+
+                # 広がりに基づいて適切なズームレベルを決定
+                lat_range = max(lats) - min(lats)
+                lon_range = max(lons) - min(lons)
+                max_range = max(lat_range, lon_range)
+
+                if max_range < 0.01:
+                    zoom = 15
+                elif max_range < 0.1:
+                    zoom = 12
+                elif max_range < 1.0:
+                    zoom = 8
+                else:
+                    zoom = 5
+
+                self._create_map((center_lat, center_lon), zoom, self.photo_locations)
+                
+                if self.status_label:
+                    self.status_label.setText(f"{len(self.photo_locations)}個の写真位置を表示中")
 
                 # 最新の座標でシグナルを発信
-                latest = self.image_locations[-1]
-                self.map_loaded.emit(latest['lat'], latest['lon'])
+                latest = list(self.photo_locations.values())[-1]
+                self.map_loaded.emit(latest[0], latest[1])
 
             elif self.current_latitude is not None and self.current_longitude is not None:
-                map_info = f"地図情報\n\n緯度: {self.current_latitude:.6f}°\n経度: {self.current_longitude:.6f}°\n\n地図表示にはPyQtWebEngineが必要です"
-                self.map_widget.setText(map_info)
-                self.map_widget.setStyleSheet("""
-                    QLabel {
-                        border: 1px solid #bdc3c7;
-                        border-radius: 3px;
-                        background-color: #f8f9fa;
-                        color: #27ae60;
-                        padding: 20px;
-                        font-size: 12px;
-                        font-weight: bold;
-                    }
-                """)
+                # 単一の座標
+                self._create_map((self.current_latitude, self.current_longitude), 15)
+                
+                if self.status_label:
+                    self.status_label.setText(f"座標: {self.current_latitude:.6f}, {self.current_longitude:.6f}")
+                
                 # シグナルを発信
                 self.map_loaded.emit(self.current_latitude, self.current_longitude)
             else:
-                self._show_placeholder()
+                # デフォルト地図を表示
+                self._create_map(self.default_location, self.default_zoom)
 
             # ログ出力
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "update_map",
-                f"地図を更新: {len(self.image_locations)}個の位置情報",
-                context={"locations_count": len(self.image_locations)},
+                f"地図を更新: {len(self.photo_locations)}個の位置情報",
+                context={"locations_count": len(self.photo_locations)},
             )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR, {"operation": "update_map"}, AIComponent.KIRO
             )
-            self._show_error("地図の更新に失敗しました")
+            self._show_error_message("地図の更新に失敗しました")
 
-    def _create_multi_location_map(self, map_provider):
-        """複数位置情報の地図を作成"""
-        try:
-            if not self.image_locations:
-                return None
-
-            # 中心座標の計算
-            center_lat = sum(loc['lat'] for loc in self.image_locations) / len(self.image_locations)
-            center_lon = sum(loc['lon'] for loc in self.image_locations) / len(self.image_locations)
-
-            # 地図を作成
-            map_obj = map_provider.create_map((center_lat, center_lon), 10)
-            if not map_obj:
-                return None
-
-            # 各位置にマーカーを追加
-            for location in self.image_locations:
-                popup_text = f"""
-                <div style="width: 200px;">
-                    <b>{location['name']}</b><br>
-                    <small>緯度: {location['lat']:.6f}</small><br>
-                    <small>経度: {location['lon']:.6f}</small>
-                </div>
-                """
-                map_provider.add_marker(
-                    map_obj,
-                    location['lat'],
-                    location['lon'],
-                    popup_text
-                )
-
-            # HTMLをレンダリング
-            return map_provider.render_html(map_obj)
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "create_multi_location_map"}, AIComponent.KIRO
-            )
-            return None
-
-    def _show_error(self, message: str):
+    def _show_error_message(self, message: str):
         """エラーメッセージを表示"""
         try:
             error_html = f"""
             <!DOCTYPE html>
             <html>
             <head>
-                <meta charset="utf-8">
-                <title>エラー</title>
+                <title>地図エラー</title>
                 <style>
                     body {{
                         font-family: Arial, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
                         margin: 0;
-                        padding: 20px;
-                        background-color: #f8f9fa;
-                        color: #e74c3c;
-                        text-align: center;
+                        background-color: #f0f0f0;
                     }}
-                    .error {{
-                        margin-top: 50px;
+                    .error-container {{
+                        text-align: center;
+                        padding: 20px;
+                        background-color: white;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }}
+                    .error-icon {{
+                        font-size: 48px;
+                        color: #ff6b6b;
+                        margin-bottom: 16px;
+                    }}
+                    .error-message {{
+                        color: #666;
+                        font-size: 16px;
+                        margin-bottom: 8px;
+                    }}
+                    .error-details {{
+                        color: #999;
+                        font-size: 12px;
                     }}
                 </style>
             </head>
             <body>
-                <div class="error">
-                    <h2>エラー</h2>
-                    <p>{message}</p>
+                <div class="error-container">
+                    <div class="error-icon">🗺️</div>
+                    <div class="error-message">地図表示エラー</div>
+                    <div class="error-details">{message}</div>
                 </div>
             </body>
             </html>
             """
 
-            if WEBENGINE_AVAILABLE:
-                self.map_widget.setHtml(error_html)
+            # エラーHTMLを一時ファイルに保存
+            temp_dir = tempfile.gettempdir()
+            error_file = os.path.join(temp_dir, "photogeoview_error.html")
+
+            with open(error_file, 'w', encoding='utf-8') as f:
+                f.write(error_html)
+
+            if self.web_view:
+                self.web_view.load(QUrl.fromLocalFile(error_file))
+            
+            if self.status_label:
+                self.status_label.setText("地図の読み込みに失敗しました")
 
             # シグナルを発信
             self.map_error.emit(message)
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "show_error"}, AIComponent.KIRO
+                e, ErrorCategory.UI_ERROR, {"operation": "show_error_message"}, AIComponent.KIRO
+            )
+
+    def _on_map_loaded(self, success: bool):
+        """地図読み込み完了の処理"""
+        try:
+            if success:
+                if self.status_label:
+                    self.status_label.setText("地図を読み込みました")
+            else:
+                if self.status_label:
+                    self.status_label.setText("地図の読み込みに失敗しました")
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "on_map_loaded"}, AIComponent.KIRO
             )
 
     def _refresh_map(self):
         """地図を再読み込み"""
-        self._update_map()
-
-    def _clear_locations(self):
-        """全ての位置情報をクリア"""
         try:
-            self.image_locations.clear()
-            self.current_latitude = None
-            self.current_longitude = None
-
-            # 座標表示をリセット
-            self.coordinates_label.setText("座標: 未設定")
-            self.coordinates_label.setStyleSheet("""
-                QLabel {
-                    font-weight: bold;
-                    color: #7f8c8d;
-                    padding: 5px 10px;
-                    background-color: #ecf0f1;
-                    border-radius: 3px;
-                }
-            """)
-
-            # 地図をリセット
-            self._show_placeholder()
-
-            # ログ出力
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "clear_locations",
-                "地図位置情報をクリア",
-            )
+            if self.current_map_file and os.path.exists(self.current_map_file):
+                if self.web_view:
+                    self.web_view.reload()
+                if self.status_label:
+                    self.status_label.setText("地図を更新しました")
+            else:
+                self._initialize_map()
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "clear_locations"}, AIComponent.KIRO
+                e, ErrorCategory.UI_ERROR, {"operation": "refresh_map"}, AIComponent.KIRO
+            )
+
+    def _reset_view(self):
+        """地図をデフォルト表示にリセット"""
+        try:
+            if self.photo_locations:
+                # 全ての写真位置を表示
+                self._update_map()
+            else:
+                # デフォルト位置にリセット
+                self._create_map(self.default_location, self.default_zoom)
+                if self.status_label:
+                    self.status_label.setText("デフォルト表示にリセットしました")
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "reset_view"}, AIComponent.KIRO
             )
 
     def _toggle_fullscreen(self):
@@ -524,27 +557,25 @@ class MapPanel(QWidget):
         try:
             if self.isFullScreen():
                 self.showNormal()
-                self.fullscreen_button.setText("全画面")
             else:
                 self.showFullScreen()
-                self.fullscreen_button.setText("戻る")
 
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR, {"operation": "toggle_fullscreen"}, AIComponent.KIRO
             )
 
-    def get_current_coordinates(self) -> Optional[tuple]:
+    def get_current_coordinates(self) -> Optional[Tuple[float, float]]:
         """現在の座標を取得"""
         if self.current_latitude is not None and self.current_longitude is not None:
             return (self.current_latitude, self.current_longitude)
         return None
 
-    def get_image_locations(self) -> List[Dict]:
+    def get_image_locations(self) -> List[Dict[str, Any]]:
         """画像位置情報のリストを取得"""
         return self.image_locations.copy()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         """ウィンドウクローズ時のクリーンアップ"""
         try:
             # 一時ファイルのクリーンアップ
