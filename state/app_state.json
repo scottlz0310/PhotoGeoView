@@ -1,9 +1,9 @@
 {
-  "current_folder": "/home/hiro",
+  "current_folder": "/home/hiro/Samples",
   "selected_image": null,
   "loaded_images": [],
   "current_theme": "default",
-  "thumbnail_size": 200,
+  "thumbnail_size": 151,
   "folder_history": [],
   "ui_layout": {},
   "window_geometry": null,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-07-31 19:45:21.467237",
+  "last_activity": "2025-07-31 20:52:27.746735",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-07-31T19:45:21.468318",
-    "state_changes": 8,
-    "state_accesses": 10
+    "saved_at": "2025-07-31T20:52:27.758059",
+    "state_changes": 10,
+    "state_accesses": 13
   }
 }

@@ -39,7 +39,7 @@ from ..services.file_system_watcher import FileSystemWatcher
 from ..state_manager import StateManager
 from .folder_navigator import EnhancedFolderNavigator
 from .theme_manager import IntegratedThemeManager
-from .thumbnail_grid import OptimizedThumbnailGrid
+from .simple_thumbnail_grid import SimpleThumbnailGrid
 
 
 class IntegratedMainWindow(QMainWindow):
@@ -83,7 +83,7 @@ class IntegratedMainWindow(QMainWindow):
 
         # UI components
         self.theme_manager: Optional[IntegratedThemeManager] = None
-        self.thumbnail_grid: Optional[OptimizedThumbnailGrid] = None
+        self.thumbnail_grid: Optional[SimpleThumbnailGrid] = None
         self.folder_navigator: Optional[EnhancedFolderNavigator] = None
 
         # Services

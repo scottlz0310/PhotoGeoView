@@ -51,6 +51,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMenu,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -414,7 +415,10 @@ class OptimizedThumbnailGrid(QWidget):
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
         # Grid settings
-        self.thumbnail_size = self.state_manager.get_state().thumbnail_size
+        try:
+            self.thumbnail_size = self.state_manager.get_state_value("thumbnail_size", 150)
+        except:
+            self.thumbnail_size = 150  # デフォルト値
         self.columns = 4
         self.spacing = 10
 
@@ -433,17 +437,18 @@ class OptimizedThumbnailGrid(QWidget):
             "memory_usage": 0,
         }
 
-        # Threading
+        # Threading - 初期化を最初に行う
+        self.load_mutex = QMutex()
         self.thumbnail_executor = ThreadPoolExecutor(
             max_workers=4, thread_name_prefix="thumbnail"
         )
         self.exif_executor = ThreadPoolExecutor(
             max_workers=2, thread_name_prefix="exif"
         )
-        self.load_mutex = QMutex()
 
         # UI components initialization
         self.performance_label = None
+        self.progress_indicator = None
 
         # UI components
         self.scroll_area: Optional[QScrollArea] = None
@@ -451,16 +456,13 @@ class OptimizedThumbnailGrid(QWidget):
         self.grid_layout: Optional[QGridLayout] = None
         self.controls_widget: Optional[QWidget] = None
 
-        # Performance monitoring
+        # Initialize UI first
+        self._setup_ui()
+
+        # Performance monitoring - UIの後に開始
         self.performance_timer = QTimer()
         self.performance_timer.timeout.connect(self._monitor_performance)
         self.performance_timer.start(2000)  # Check every 2 seconds
-
-        # Progress indicator for accessibility
-        self.progress_indicator = None
-
-        # Initialize UI
-        self._setup_ui()
 
         self.logger_system.log_ai_operation(
             AIComponent.CURSOR,
@@ -683,11 +685,11 @@ class OptimizedThumbnailGrid(QWidget):
     def set_image_list(self, image_list: List[Path]):
         """Set the list of images to display"""
         try:
-            with QMutexLocker(self.load_mutex):
-                self.image_list = image_list
-                self.total_count = len(image_list)
-                self.loaded_count = 0
-                self.load_start_time = time.time()
+            # 基本的な設定
+            self.image_list = image_list
+            self.total_count = len(image_list)
+            self.loaded_count = 0
+            self.load_start_time = time.time()
 
             # Clear existing thumbnails
             self.clear_thumbnails_safely()
@@ -770,9 +772,8 @@ class OptimizedThumbnailGrid(QWidget):
                     self._add_thumbnail_item(added_file)
 
                 # リストを更新
-                with QMutexLocker(self.load_mutex):
-                    self.image_list = image_list
-                    self.total_count = len(image_list)
+                self.image_list = image_list
+                self.total_count = len(image_list)
 
                 # レイアウトを再構成
                 self._reorganize_grid()
@@ -1314,10 +1315,145 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.KIRO,
             )
 
+    def _load_single_exif(self, image_path: Path):
+        """Load EXIF data for a single image"""
+        try:
+            # This would be implemented with actual EXIF reading
+            # For now, just return empty dict
+            return {}
+        except Exception as e:
+            self.logger_system.log_error(
+                AIComponent.CURSOR,
+                e,
+                "exif_load",
+                {"image_path": str(image_path)},
+            )
+            return {}
+
+    def _on_context_menu_requested(self, image_path: Path, position):
+        """Handle context menu request"""
+        try:
+            # Create context menu
+            menu = QMenu(self)
+
+            # Add menu actions
+            open_action = menu.addAction("Open")
+            open_action.triggered.connect(lambda: self._open_image(image_path))
+
+            properties_action = menu.addAction("Properties")
+            properties_action.triggered.connect(lambda: self._show_properties(image_path))
+
+            # Show menu
+            menu.exec(position.toPoint())
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "context_menu", "image_path": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _on_exif_info_requested(self, image_path: Path):
+        """Handle EXIF info request"""
+        try:
+            # Show EXIF information dialog
+            self._show_exif_dialog(image_path)
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "exif_info", "image_path": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _open_image(self, image_path: Path):
+        """Open image in default application"""
+        try:
+            import subprocess
+            import sys
+
+            if sys.platform.startswith('linux'):
+                subprocess.run(['xdg-open', str(image_path)])
+            elif sys.platform == 'darwin':
+                subprocess.run(['open', str(image_path)])
+            elif sys.platform == 'win32':
+                subprocess.run(['start', str(image_path)], shell=True)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "open_image", "image_path": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _show_properties(self, image_path: Path):
+        """Show image properties dialog"""
+        try:
+            from PyQt6.QtWidgets import QMessageBox
+
+            # Get basic file info
+            stat = image_path.stat()
+            size_mb = stat.st_size / (1024 * 1024)
+
+            info_text = f"""
+File: {image_path.name}
+Path: {image_path.parent}
+Size: {size_mb:.2f} MB
+Modified: {stat.st_mtime}
+            """
+
+            QMessageBox.information(self, "Image Properties", info_text)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_properties", "image_path": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
+    def _show_exif_dialog(self, image_path: Path):
+        """Show EXIF data dialog"""
+        try:
+            from PyQt6.QtWidgets import QMessageBox
+
+            # For now, show basic info
+            QMessageBox.information(
+                self,
+                "EXIF Information",
+                f"EXIF data for {image_path.name}\n(Feature coming soon)"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_exif_dialog", "image_path": str(image_path)},
+                AIComponent.CURSOR,
+            )
+
     def _load_single_thumbnail(self, image_path: Path):
         """Load a single thumbnail"""
         try:
             # Load image and create thumbnail
+            pixmap = QPixmap(str(image_path))
+
+            if not pixmap.isNull():
+                # Scale to thumbnail size
+                scaled_pixmap = pixmap.scaled(
+                    self.thumbnail_size,
+                    self.thumbnail_size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+
+                # Update thumbnail item
+                if image_path in self.thumbnail_items:
+                    self.thumbnail_items[image_path].set_thumbnail(scaled_pixmap)
+
+            self.loaded_count += 1
             pixmap = QPixmap(str(image_path))
 
             if not pixmap.isNull():
@@ -1832,7 +1968,10 @@ class OptimizedThumbnailGrid(QWidget):
         """Refresh theme for all thumbnails"""
         try:
             # Update thumbnail item styles based on current theme
-            current_theme = self.state_manager.get_state().current_theme
+            try:
+                current_theme = self.state_manager.get_state_value("current_theme", "default")
+            except:
+                current_theme = "default"
 
             for thumbnail_item in self.thumbnail_items.values():
                 # Apply theme-specific styling
