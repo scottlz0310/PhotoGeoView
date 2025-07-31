@@ -13,9 +13,9 @@ PhotoGeoView AI統合版メインアプリケーション起動スクリプト
 Author: AI Integration Team (Copilot + Cursor + Kiro)
 """
 
+import logging
 import sys
 from pathlib import Path
-import logging
 
 # プロジェクトルートをパスに追加
 project_root = Path(__file__).parent
@@ -61,9 +61,11 @@ def check_environment():
     logger = logging.getLogger(__name__)
 
     try:
-        import PyQt6  # noqa: F401
-        import PIL  # noqa: F401
         import folium  # noqa: F401
+        import PIL  # noqa: F401
+        import PyQt6  # noqa: F401
+
+        # PyQtWebEngine初期化はQApplication初期化後に行う
 
         message = "✅ 必要な依存関係が確認されました"
         logger.info(message)
@@ -94,12 +96,13 @@ def main():
             sys.exit(1)
 
         # アプリケーションコントローラーをインポート・起動
-        from src.integration.controllers import AppController
-        from src.integration.ui.main_window import IntegratedMainWindow
-        from src.integration.config_manager import ConfigManager
-        from src.integration.state_manager import StateManager
-        from src.integration.logging_system import LoggerSystem
         from PyQt6.QtWidgets import QApplication
+
+        from src.integration.config_manager import ConfigManager
+        from src.integration.controllers import AppController
+        from src.integration.logging_system import LoggerSystem
+        from src.integration.state_manager import StateManager
+        from src.integration.ui.main_window import IntegratedMainWindow
 
         logger = logging.getLogger(__name__)
 
@@ -111,6 +114,34 @@ def main():
         app.setApplicationName("PhotoGeoView AI Integration")
         app.setApplicationVersion("1.0.0")
         app.setOrganizationName("AI Development Team")
+
+        # PyQtWebEngine早期初期化（QApplication初期化後）
+        try:
+            from src.integration.utils.webengine_checker import (
+                get_webengine_status,
+                initialize_webengine_safe,
+            )
+
+            # WebEngineの状態をチェック
+            status = get_webengine_status()
+            if status["available"]:
+                print("✅ PyQtWebEngine利用可能")
+
+                # 初期化を実行
+                success, message = initialize_webengine_safe()
+                if success:
+                    print("✅ PyQtWebEngine初期化完了")
+                else:
+                    print(f"⚠️  PyQtWebEngine初期化エラー: {message}")
+            else:
+                print("⚠️  PyQtWebEngineが利用できません")
+                for error in status["error_messages"]:
+                    print(f"   - {error}")
+
+        except ImportError as e:
+            print(f"⚠️  WebEngineチェッカーが利用できません: {e}")
+        except Exception as e:
+            print(f"⚠️  PyQtWebEngine初期化エラー: {e}")
 
         components_msg = "🎯 システムコンポーネントを初期化中..."
         logger.info(components_msg)

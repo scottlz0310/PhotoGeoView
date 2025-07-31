@@ -110,7 +110,6 @@ class IntegratedMainWindow(QMainWindow):
         # Initialize UI
         self._initialize_ui()
         self._setup_monitoring()
-        self._connect_signals()
         self._restore_state()
 
         self.logger_system.log_ai_operation(
@@ -142,6 +141,9 @@ class IntegratedMainWindow(QMainWindow):
 
             # Apply initial theme
             self._apply_initial_theme()
+
+            # Connect signals after all UI components are created
+            self._connect_signals()
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -296,12 +298,12 @@ class IntegratedMainWindow(QMainWindow):
         )
         right_splitter.addWidget(self.image_preview_panel)
 
-        # Map area (placeholder for now)
-        map_area = QLabel("Map Area")
-        map_area.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        map_area.setStyleSheet("border: 1px solid gray; background-color: #f0f0f0;")
-        map_area.setMinimumHeight(200)
-        right_splitter.addWidget(map_area)
+        # Map panel (Kiro component)
+        from .map_panel import MapPanel
+        self.map_panel = MapPanel(
+            self.config_manager, self.state_manager, self.logger_system
+        )
+        right_splitter.addWidget(self.map_panel)
 
         # Set splitter proportions
         right_splitter.setSizes([400, 200])
@@ -395,10 +397,17 @@ class IntegratedMainWindow(QMainWindow):
         # Connect EXIF panel signals
         if self.exif_panel:
             self.exif_panel.gps_coordinates_updated.connect(self._on_gps_coordinates_updated)
+            # 画像選択時にEXIFパネルに画像を設定
+            self.thumbnail_grid.image_selected.connect(self.exif_panel.set_image)
 
         # Connect image preview panel signals
         if self.image_preview_panel:
             self.image_preview_panel.image_loaded.connect(self._on_image_preview_loaded)
+
+        # Connect map panel signals
+        if self.map_panel:
+            self.map_panel.map_loaded.connect(self._on_map_loaded)
+            self.map_panel.map_error.connect(self._on_map_error)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -547,6 +556,9 @@ class IntegratedMainWindow(QMainWindow):
             if self.image_preview_panel:
                 self.image_preview_panel.set_image(image_path)
 
+            # Extract GPS coordinates and add to map
+            self._extract_and_add_to_map(image_path)
+
             # Emit signal for other components
             self.image_selected.emit(image_path)
 
@@ -556,6 +568,53 @@ class IntegratedMainWindow(QMainWindow):
                 ErrorCategory.UI_ERROR,
                 {"operation": "image_selection_handling", "image": str(image_path)},
                 AIComponent.CURSOR,
+            )
+
+    def _extract_and_add_to_map(self, image_path: Path):
+        """画像からGPS座標を抽出して地図に追加"""
+        try:
+            from ..image_processor import CS4CodingImageProcessor
+
+            # 画像プロセッサーでEXIF情報を抽出
+            image_processor = CS4CodingImageProcessor(
+                self.config_manager, self.logger_system
+            )
+
+            exif_data = image_processor.extract_exif(image_path)
+
+            # GPS座標を取得
+            latitude = exif_data.get("GPS Latitude")
+            longitude = exif_data.get("GPS Longitude")
+
+            if latitude is not None and longitude is not None:
+                # 地図パネルに位置情報を追加
+                if self.map_panel:
+                    self.map_panel.add_image_location(
+                        image_path, latitude, longitude, image_path.name
+                    )
+
+                # ログ出力
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "add_gps_to_map",
+                    f"GPS座標を地図に追加: {image_path.name} ({latitude:.6f}, {longitude:.6f})",
+                    context={"image_path": str(image_path), "latitude": latitude, "longitude": longitude},
+                )
+            else:
+                # GPS座標がない場合のログ
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "no_gps_coordinates",
+                    f"GPS座標なし: {image_path.name}",
+                    context={"image_path": str(image_path)},
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.CORE_ERROR,
+                {"operation": "extract_and_add_to_map", "image_path": str(image_path)},
+                AIComponent.KIRO,
             )
 
     def _on_gps_coordinates_updated(self, latitude: float, longitude: float):
@@ -569,11 +628,16 @@ class IntegratedMainWindow(QMainWindow):
             )
 
             # Log GPS coordinates update
-            self.logger_system.log_info(
-                f"GPS coordinates updated: {latitude:.6f}, {longitude:.6f}",
-                {"latitude": latitude, "longitude": longitude},
+            self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
+                "gps_coordinates_updated",
+                f"GPS coordinates updated: {latitude:.6f}, {longitude:.6f}",
+                context={"latitude": latitude, "longitude": longitude},
             )
+
+                        # Update map panel
+            if self.map_panel:
+                self.map_panel.set_coordinates(latitude, longitude)
 
             # Update status bar
             self.status_bar.showMessage(
@@ -597,10 +661,11 @@ class IntegratedMainWindow(QMainWindow):
             self.status_bar.showMessage(f"画像プレビュー読み込み完了: {image_path.name}", 2000)
 
             # Log the event
-            self.logger_system.log_info(
-                f"画像プレビュー読み込み完了: {image_path.name}",
-                {"image_path": str(image_path)},
+            self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
+                "image_preview_loaded",
+                f"画像プレビュー読み込み完了: {image_path.name}",
+                context={"image_path": str(image_path)},
             )
 
         except Exception as e:
@@ -608,6 +673,52 @@ class IntegratedMainWindow(QMainWindow):
                 e,
                 ErrorCategory.UI_ERROR,
                 {"operation": "image_preview_loaded", "image_path": str(image_path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_map_loaded(self, latitude: float, longitude: float):
+        """Handle map loaded event"""
+
+        try:
+            # Update status bar
+            self.status_bar.showMessage(f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}", 2000)
+
+            # Log the event
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "map_loaded",
+                f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}",
+                context={"latitude": latitude, "longitude": longitude},
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "map_loaded", "latitude": latitude, "longitude": longitude},
+                AIComponent.KIRO,
+            )
+
+    def _on_map_error(self, error_message: str):
+        """Handle map error event"""
+
+        try:
+            # Update status bar
+            self.status_bar.showMessage(f"地図エラー: {error_message}", 3000)
+
+            # Log the error
+            self.logger_system.log_error(
+                Exception(error_message),
+                "map_error",
+                {"error_message": error_message},
+                AIComponent.KIRO,
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "map_error", "error_message": error_message},
                 AIComponent.KIRO,
             )
 
