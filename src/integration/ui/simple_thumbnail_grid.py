@@ -7,11 +7,10 @@ Simple Thumbnail Grid - シンプルサムネイルグリッド
 Author: Kiro AI Integration System
 """
 
-import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QGridLayout,
@@ -90,7 +89,7 @@ class SimpleThumbnailItem(QLabel):
             else:
                 self._show_error()
 
-        except Exception as e:
+        except Exception:
             self._show_error()
 
     def _show_error(self):
@@ -100,11 +99,11 @@ class SimpleThumbnailItem(QLabel):
         self.setPixmap(error_pixmap)
         self.setText("Error")
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, ev):
         """マウスクリック処理"""
-        if event.button() == Qt.MouseButton.LeftButton:
+        if ev.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self.image_path)
-        super().mousePressEvent(event)
+        super().mousePressEvent(ev)
 
 
 class SimpleThumbnailGrid(QWidget):
@@ -162,7 +161,7 @@ class SimpleThumbnailGrid(QWidget):
 
             # コントロール
             self.controls_widget = self._create_controls()
-            lout.addWidget(self.controls_widget)
+            layout.addWidget(self.controls_widget)
 
             # スクロールエリア
             self.scroll_area = QScrollArea()
@@ -343,14 +342,14 @@ class SimpleThumbnailGrid(QWidget):
         """ローディング状態を表示"""
         try:
             self.status_label.setText(f"🔄 {message}")
-        except Exception as e:
+        except Exception:
             pass
 
     def show_error_state(self, error_message: str):
         """エラー状態を表示"""
         try:
             self.status_label.setText(f"❌ {error_message}")
-        except Exception as e:
+        except Exception:
             pass
 
     def show_empty_state(self):
@@ -358,7 +357,7 @@ class SimpleThumbnailGrid(QWidget):
         try:
             self.status_label.setText("No images found")
             self._clear_thumbnails()
-        except Exception as e:
+        except Exception:
             pass
 
     def clear_thumbnails_safely(self):

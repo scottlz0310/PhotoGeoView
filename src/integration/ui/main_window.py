@@ -264,7 +264,7 @@ class IntegratedMainWindow(QMainWindow):
         left_layout.addWidget(self.folder_navigator, 0)
 
         # Thumbnail grid (CursorBLD component with Kiro optimization)
-        self.thumbnail_grid = OptimizedThumbnailGrid(
+        self.thumbnail_grid = SimpleThumbnailGrid(
             self.config_manager, self.state_manager, self.logger_system
         )
         left_layout.addWidget(self.thumbnail_grid, 1)
