@@ -10,6 +10,7 @@ CI checks locally before committing to the repository.
 import argparse
 import json
 import logging
+import os
 import shutil
 import sys
 import time
@@ -170,8 +171,17 @@ class CISimulator:
             Exit code (0 for success, non-zero for failure)
         """
         try:
+            # Check for infinite loop prevention early
+            if os.environ.get('CI_SIMULATION_RUNNING') == 'true':
+                print("ℹ️  CI simulation already running, preventing infinite loop")
+                return 0
+
             # Parse command line arguments
             parsed_args = self.cli_parser.parse_args(args)
+
+            # Set environment variable to prevent infinite loops for run commands
+            if parsed_args.command == "run":
+                os.environ['CI_SIMULATION_RUNNING'] = 'true'
 
             # Validate arguments
             validation_errors = self.cli_parser.validate_args(parsed_args)
@@ -205,6 +215,10 @@ class CISimulator:
 
                 traceback.print_exc()
             return 1
+        finally:
+            # Clean up environment variable to prevent issues
+            if 'CI_SIMULATION_RUNNING' in os.environ:
+                del os.environ['CI_SIMULATION_RUNNING']
 
     def _run_checks(self, args: argparse.Namespace) -> int:
         """

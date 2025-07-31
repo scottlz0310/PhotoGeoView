@@ -98,8 +98,15 @@ def run_command(
         Tuple of (return_code, stdout, stderr)
     """
     try:
+        # Prepare environment to prevent Git hook loops
+        env = os.environ.copy()
+        if command and command[0] == 'git':
+            env['CI_SIMULATION_RUNNING'] = 'true'
+            env['SKIP_CI_HOOKS'] = 'true'
+
         result = subprocess.run(
-            command, cwd=cwd, timeout=timeout, capture_output=capture_output, text=True
+            command, cwd=cwd, timeout=timeout, capture_output=capture_output,
+            text=True, env=env
         )
         return result.returncode, result.stdout or "", result.stderr or ""
     except subprocess.TimeoutExpired:

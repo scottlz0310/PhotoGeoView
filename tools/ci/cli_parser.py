@@ -47,6 +47,11 @@ class CLIParser:
             epilog=self._get_epilog_text(),
         )
 
+        # Global options
+        parser.add_argument(
+            "--version", action="version", version="CI Simulator v1.0.0"
+        )
+
         # Main command groups
         subparsers = parser.add_subparsers(
             dest="command", help="Available commands", metavar="COMMAND"
