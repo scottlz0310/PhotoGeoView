@@ -38,8 +38,8 @@ from ..services.file_discovery_service import FileDiscoveryService
 from ..services.file_system_watcher import FileSystemWatcher
 from ..state_manager import StateManager
 from .folder_navigator import EnhancedFolderNavigator
-from .theme_manager import IntegratedThemeManager
 from .simple_thumbnail_grid import SimpleThumbnailGrid
+from .theme_manager import IntegratedThemeManager
 
 
 class IntegratedMainWindow(QMainWindow):
@@ -289,14 +289,12 @@ class IntegratedMainWindow(QMainWindow):
         right_splitter = QSplitter(Qt.Orientation.Vertical)
         right_layout.addWidget(right_splitter)
 
-        # Image preview area (placeholder for now)
-        image_preview = QLabel("Image Preview Area")
-        image_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        image_preview.setStyleSheet(
-            "border: 1px solid gray; background-color: #f0f0f0;"
+        # Image preview panel (Kiro component)
+        from .image_preview_panel import ImagePreviewPanel
+        self.image_preview_panel = ImagePreviewPanel(
+            self.config_manager, self.state_manager, self.logger_system
         )
-        image_preview.setMinimumHeight(300)
-        right_splitter.addWidget(image_preview)
+        right_splitter.addWidget(self.image_preview_panel)
 
         # Map area (placeholder for now)
         map_area = QLabel("Map Area")
@@ -397,6 +395,10 @@ class IntegratedMainWindow(QMainWindow):
         # Connect EXIF panel signals
         if self.exif_panel:
             self.exif_panel.gps_coordinates_updated.connect(self._on_gps_coordinates_updated)
+
+        # Connect image preview panel signals
+        if self.image_preview_panel:
+            self.image_preview_panel.image_loaded.connect(self._on_image_preview_loaded)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -541,6 +543,10 @@ class IntegratedMainWindow(QMainWindow):
             if self.exif_panel:
                 self.exif_panel.set_image(image_path)
 
+            # Update image preview panel
+            if self.image_preview_panel:
+                self.image_preview_panel.set_image(image_path)
+
             # Emit signal for other components
             self.image_selected.emit(image_path)
 
@@ -571,7 +577,7 @@ class IntegratedMainWindow(QMainWindow):
 
             # Update status bar
             self.status_bar.showMessage(
-                f"GPS: {latitude:.6f}°, {longitude:.6f}°", 
+                f"GPS: {latitude:.6f}°, {longitude:.6f}°",
                 3000
             )
 
@@ -580,6 +586,28 @@ class IntegratedMainWindow(QMainWindow):
                 e,
                 ErrorCategory.UI_ERROR,
                 {"operation": "gps_coordinates_update", "lat": latitude, "lon": longitude},
+                AIComponent.KIRO,
+            )
+
+    def _on_image_preview_loaded(self, image_path: Path):
+        """Handle image preview loaded event"""
+
+        try:
+            # Update status bar
+            self.status_bar.showMessage(f"画像プレビュー読み込み完了: {image_path.name}", 2000)
+
+            # Log the event
+            self.logger_system.log_info(
+                f"画像プレビュー読み込み完了: {image_path.name}",
+                {"image_path": str(image_path)},
+                AIComponent.KIRO,
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "image_preview_loaded", "image_path": str(image_path)},
                 AIComponent.KIRO,
             )
 

@@ -479,7 +479,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         try:
             gps_data = {}
-            
+
             # 緯度・経度の処理
             gps_tags = [
                 "GPS GPSLatitude",
@@ -508,12 +508,12 @@ class CS4CodingImageProcessor(IImageProcessor):
                             ),
                             "gps_coordinates": (lat_decimal, lon_decimal),
                         })
-            
+
             # 高度の処理
             if "GPS GPSAltitude" in tags:
                 altitude_tag = tags["GPS GPSAltitude"]
                 altitude_ref_tag = tags.get("GPS GPSAltitudeRef", "0")
-                
+
                 try:
                     altitude = self._parse_rational(str(altitude_tag))
                     if altitude is not None:
@@ -523,7 +523,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                         gps_data["GPS Altitude"] = altitude
                 except (ValueError, TypeError):
                     pass
-            
+
             # GPS時刻の処理
             if "GPS GPSTimeStamp" in tags:
                 gps_time_tag = tags["GPS GPSTimeStamp"]
@@ -537,13 +537,13 @@ class CS4CodingImageProcessor(IImageProcessor):
                             gps_data["GPS Timestamp"] = f"{time_parts[0]}:{time_parts[1]}:{time_parts[2]}"
                 except (ValueError, TypeError):
                     pass
-            
+
             # GPS日付の処理
             if "GPS GPSDateStamp" in tags:
                 gps_date = str(tags["GPS GPSDateStamp"])
                 if gps_date and gps_date != "None":
                     gps_data["GPS Date"] = gps_date
-            
+
             return gps_data if gps_data else None
 
         except Exception as e:

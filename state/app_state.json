@@ -1,6 +1,6 @@
 {
   "current_folder": "/home/hiro/Samples",
-  "selected_image": "/home/hiro/Samples/PIC001.jpg",
+  "selected_image": "/home/hiro/Samples/taiwan-jiufen.jpg",
   "loaded_images": [],
   "current_theme": "default",
   "thumbnail_size": 151,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-07-31 21:43:12.526086",
+  "last_activity": "2025-07-31 22:02:56.743778",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-07-31T21:43:12.538007",
-    "state_changes": 20,
-    "state_accesses": 50
+    "saved_at": "2025-07-31T22:02:56.744132",
+    "state_changes": 10,
+    "state_accesses": 20
   }
 }

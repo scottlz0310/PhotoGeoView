@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-07-31 21:36:43.471334",
+  "last_activity": "2025-07-31 21:57:59.660044",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-07-31T21:36:43.472062",
-    "state_changes": 17,
-    "state_accesses": 20
+    "saved_at": "2025-07-31T21:57:59.660376",
+    "state_changes": 1,
+    "state_accesses": 2
   }
 }
