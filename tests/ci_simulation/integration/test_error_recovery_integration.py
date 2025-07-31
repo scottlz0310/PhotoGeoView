@@ -11,7 +11,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, side_effect
+from unittest.mock import Mock, patch
 
 import pytest
 

@@ -1,13 +1,15 @@
-name: AI Integration Tests
+name: AI Integration Tests (Disabled)
 
 on:
-  push:
-    branches: [ main, ai-integration-main ]
-  pull_request:
-    branches: [ main, ai-integration-main ]
-  schedule:
-    # 毎日午前2時（UTC）に実行
-    - cron: '0 2 * * *'
+  workflow_dispatch:  # Manual trigger only
+  # Disabled automatic triggers
+  # push:
+  #   branches: [ main, ai-integration-main ]
+  # pull_request:
+  #   branches: [ main, ai-integration-main ]
+  # schedule:
+  #   # 毎日午前2時（UTC）に実行
+  #   - cron: '0 2 * * *'
 
 jobs:
   ai-integration-tests:

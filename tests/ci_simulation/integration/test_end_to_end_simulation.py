@@ -12,8 +12,6 @@ import sys
 import tempfile
 
 import pytest
-
-importon
 from pathlib import Path
 from unittest.mock import Mock, patch
 

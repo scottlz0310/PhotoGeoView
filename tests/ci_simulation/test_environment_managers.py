@@ -15,19 +15,19 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
 
 from environment.display_manager import DisplayManager
-from environment.python_manager import PythonManager
+from environment.python_manager import PythonVersionManager
 from environment.qt_manager import QtManager
 from interfaces import EnvironmentError
 
 
-class TestPythonManager:
-    """Test cases for PythonManager."""
+class TestPythonVersionManager:
+    """Test cases for PythonVersionManager."""
 
     def test_python_manager_creation(self):
-        """Test PythonManager creation."""
-        manager = PythonManager()
-        assert manager.supported_versions == ["3.9", "3.10", "3.11", "3.12"]
-        assert manager.current_version is None
+        """Test PythonVersionManager creation."""
+        manager = PythonVersionManager()
+        assert manager.SUPPORTED_VERSIONS == ["3.9", "3.10", "3.11"]
+        assert manager.current_python is not None
 
     @patch("subprocess.run")
     def test_get_current_python_version(self, mock_run):

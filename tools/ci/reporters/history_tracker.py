@@ -15,13 +15,26 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..models import (
-    CheckResult,
-    CheckStatus,
-    RegressionIssue,
-    SeverityLevel,
-    SimulationResult,
-)
+try:
+    from ..models import (
+        CheckResult,
+        CheckStatus,
+        RegressionIssue,
+        SeverityLevel,
+        SimulationResult,
+    )
+except ImportError:
+    # Fallback for direct execution
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+    from models import (
+        CheckResult,
+        CheckStatus,
+        RegressionIssue,
+        SeverityLevel,
+        SimulationResult,
+    )
 
 
 @dataclass

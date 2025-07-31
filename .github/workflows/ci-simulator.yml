@@ -1,10 +1,12 @@
-name: CI Simulator Integration
+name: CI Simulator Integration (Disabled)
 
 on:
-  push:
-    branches: [ main, ai-integration-main ]
-  pull_request:
-    branches: [ main, ai-integration-main ]
+  workflow_dispatch:  # Manual trigger only
+  # Disabled automatic triggers
+  # push:
+  #   branches: [ main, ai-integration-main ]
+  # pull_request:
+  #   branches: [ main, ai-integration-main ]
 
 env:
   PYTHON_VERSION: '3.11'

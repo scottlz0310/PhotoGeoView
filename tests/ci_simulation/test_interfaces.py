@@ -16,7 +16,7 @@ from interfaces import (
     EnvironmentManagerInterface,
     OrchestratorInterface,
     ReporterInterface,
-    pendencyError,
+    DependencyError,
 )
 from models import CheckResult, CheckStatus, CheckTask, SimulationResult
 
