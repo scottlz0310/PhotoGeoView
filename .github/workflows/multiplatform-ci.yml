@@ -224,10 +224,7 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
       run: |
-        pytest tests/ -v --cov=src --cov-report=xml \
-          --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
-          --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
-          -x || echo "Some tests failed on Windows"
+        pytest tests/ -v --cov=src --cov-report=xml --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ --ignore=tests/ci_simulation/ --ignore=tests/debug/ -x || echo "Some tests failed on Windows"
 
     - name: テスト実行 (macOS)
       if: runner.os == 'macOS'
