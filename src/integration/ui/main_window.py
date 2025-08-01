@@ -688,6 +688,9 @@ class IntegratedMainWindow(QMainWindow):
                         image_path, latitude, longitude, image_path.name
                     )
 
+                    # 個別の画像の位置にフォーカス
+                    self.map_panel.set_coordinates(latitude, longitude, focus_on_location=True, image_path=str(image_path))
+
                 # ログ出力
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
