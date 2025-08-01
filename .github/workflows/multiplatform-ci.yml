@@ -103,6 +103,9 @@ jobs:
     - name: Python依存関係をインストール
       run: |
         python -m pip install --upgrade pip
+        # PyQt6を先にインストール
+        pip install PyQt6==6.6.1 PyQt6-Qt6==6.6.1 PyQt6-sip==13.6.0
+        # その他の依存関係をインストール
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-xdist pytest-qt flake8 mypy black isort
 
@@ -143,8 +146,13 @@ jobs:
 
         try:
             import PyQt6
-            print(f'PyQt6 version: {PyQt6.QtCore.PYQT_VERSION_STR}')
-            print(f'Qt version: {PyQt6.QtCore.QT_VERSION_STR}')
+            print('PyQt6 imported successfully')
+            try:
+                from PyQt6.QtCore import PYQT_VERSION_STR, QT_VERSION_STR
+                print(f'PyQt6 version: {PYQT_VERSION_STR}')
+                print(f'Qt version: {QT_VERSION_STR}')
+            except ImportError as e:
+                print(f'PyQt6.QtCore import error: {e}')
         except ImportError as e:
             print(f'PyQt6 import error: {e}')
 
