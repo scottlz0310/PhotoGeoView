@@ -1,9 +1,9 @@
 {
-  "current_folder": "/home/hiro/SampleImage",
-  "selected_image": "/home/hiro/SampleImage/irland-dingle.jpg",
+  "current_folder": "/home/hiro/Samples",
+  "selected_image": "/home/hiro/Samples/taiwan-jiufen.jpg",
   "loaded_images": [],
   "current_theme": "default",
-  "thumbnail_size": 200,
+  "thumbnail_size": 108,
   "folder_history": [],
   "ui_layout": {},
   "window_geometry": null,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-08-01 13:34:04.465949",
+  "last_activity": "2025-08-01 18:27:36.051087",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-08-01T13:34:04.467475",
-    "state_changes": 41,
-    "state_accesses": 56
+    "saved_at": "2025-08-01T18:27:36.051870",
+    "state_changes": 13,
+    "state_accesses": 29
   }
 }

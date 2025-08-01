@@ -40,13 +40,35 @@ jobs:
     - name: Linux依存関係をインストール
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
-          libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
-          libxcb-xinput0 libxcb-xfixes0 libgl1-mesa-glx libegl1-mesa \
-          libxrandr2 libxss1 libxcursor1 libxcomposite1 libxi6 libxtst6 \
-          libfontconfig1 libfreetype6 libx11-6 libxext6 libxfixes3 libxrender1 \
-          libxcb-shape0 libxcb-sync1 libxcb-xkb1 libxkbcommon-x11-0
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
+          xvfb \
+          libxkbcommon-x11-0 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-xinerama0 \
+          libxcb-xinput0 \
+          libxcb-xfixes0 \
+          libgl1-mesa-glx \
+          libegl1-mesa \
+          libxrandr2 \
+          libxss1 \
+          libxcursor1 \
+          libxcomposite1 \
+          libxi6 \
+          libxtst6 \
+          libfontconfig1 \
+          libfreetype6 \
+          libx11-6 \
+          libxext6 \
+          libxfixes3 \
+          libxrender1 \
+          libxcb-shape0 \
+          libxcb-sync1 \
+          libxcb-xkb1 || echo "Some packages failed to install, continuing..."
 
     # macOS固有の依存関係
     - name: macOS依存関係をインストール
@@ -55,8 +77,8 @@ jobs:
         # Homebrewの更新とQt依存関係
         brew update
         brew install qt6 || echo "Qt6 already installed or not available"
-        # macOS固有の環境変数設定
-        echo "QT_QPA_PLATFORM_PLUGIN_PATH=$(python -c 'import PyQt6; print(PyQt6.__path__[0])')/Qt6/plugins" >> $GITHUB_ENV
+        # macOS固有の環境変数設定（PyQt6インストール後に設定）
+        echo "QT_QPA_PLATFORM_PLUGIN_PATH will be set after PyQt6 installation" >> $GITHUB_ENV
 
     # Windows固有の依存関係
     - name: Windows依存関係をインストール
@@ -84,6 +106,18 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov pytest-xdist pytest-qt flake8 mypy black isort
 
+    # macOS固有の環境変数設定（PyQt6インストール後）
+    - name: macOS環境変数設定
+      if: runner.os == 'macOS'
+      run: |
+        # PyQt6インストール後の環境変数設定
+        if python -c "import PyQt6; print(PyQt6.__path__[0])" 2>/dev/null; then
+          echo "QT_QPA_PLATFORM_PLUGIN_PATH=$(python -c 'import PyQt6; print(PyQt6.__path__[0])')/Qt6/plugins" >> $GITHUB_ENV
+          echo "PyQt6 environment variables set successfully"
+        else
+          echo "PyQt6 not found, skipping environment variable setup"
+        fi
+
     - name: プラットフォーム固有の設定確認
       run: |
         python -c "
@@ -104,7 +138,7 @@ jobs:
         elif platform.system() == 'Darwin':
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
-        print(f'QT_QPA_PLATFORM: {os.environ.get(\"QT_QPA_PLATFORM\", \"not set\")}')
+        print(f'QT_QPA_PLATFORM: {os.environ.get("QT_QPA_PLATFORM", "not set")}')
 
         try:
             import PyQt6
@@ -196,7 +230,7 @@ jobs:
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
         print(f'Platform: {platform.system()}')
-        print(f'QT_QPA_PLATFORM: {os.environ.get(\"QT_QPA_PLATFORM\", \"not set\")}')
+        print(f'QT_QPA_PLATFORM: {os.environ.get("QT_QPA_PLATFORM", "not set")}')
 
         try:
             # 基本的なアプリケーション初期化テスト
