@@ -216,7 +216,7 @@ jobs:
         xvfb-run -a pytest tests/ -v --cov=src --cov-report=xml \
           --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
           --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
-          -x || echo "Some tests failed on Linux"
+          || echo "Some tests failed on Linux"
 
     - name: テスト実行 (Windows)
       if: runner.os == 'Windows'
@@ -224,7 +224,7 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
       run: |
-        pytest tests/ -v --cov=src --cov-report=xml --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ --ignore=tests/ci_simulation/ --ignore=tests/debug/ -x || echo "Some tests failed on Windows"
+        pytest tests/ -v --cov=src --cov-report=xml --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ --ignore=tests/ci_simulation/ --ignore=tests/debug/ || echo "Some tests failed on Windows"
 
     - name: テスト実行 (macOS)
       if: runner.os == 'macOS'
@@ -235,7 +235,7 @@ jobs:
         pytest tests/ -v --cov=src --cov-report=xml \
           --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
           --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
-          -x || echo "Some tests failed on macOS"
+          || echo "Some tests failed on macOS"
 
     - name: アプリケーション起動テスト
       timeout-minutes: 5
@@ -291,6 +291,7 @@ jobs:
         name: codecov-${{ runner.os }}
         fail_ci_if_error: false
         verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: テスト結果をアップロード
       uses: actions/upload-artifact@v4

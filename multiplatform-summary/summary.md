@@ -9,4 +9,4 @@
 - ✅ Windows
 - ✅ macOS
 
-生成日時: Fri Aug  1 15:03:28 UTC 2025
+生成日時: Fri Aug  1 17:34:40 UTC 2025
