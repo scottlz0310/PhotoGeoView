@@ -78,7 +78,7 @@ jobs:
         brew update
         brew install qt6 || echo "Qt6 already installed or not available"
         # macOS固有の環境変数設定（PyQt6インストール後に設定）
-        echo "QT_QPA_PLATFORM_PLUGIN_PATH will be set after PyQt6 installation" >> $GITHUB_ENV
+        echo "QT_QPA_PLATFORM_PLUGIN_PATH=placeholder" >> $GITHUB_ENV
 
     # Windows固有の依存関係
     - name: Windows依存関係をインストール
@@ -138,7 +138,8 @@ jobs:
         elif platform.system() == 'Darwin':
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
-        print(f'QT_QPA_PLATFORM: {os.environ.get("QT_QPA_PLATFORM", "not set")}')
+        qt_platform = os.environ.get('QT_QPA_PLATFORM', 'not set')
+        print(f'QT_QPA_PLATFORM: {qt_platform}')
 
         try:
             import PyQt6
@@ -230,7 +231,8 @@ jobs:
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
         print(f'Platform: {platform.system()}')
-        print(f'QT_QPA_PLATFORM: {os.environ.get("QT_QPA_PLATFORM", "not set")}')
+        qt_platform = os.environ.get('QT_QPA_PLATFORM', 'not set')
+        print(f'QT_QPA_PLATFORM: {qt_platform}')
 
         try:
             # 基本的なアプリケーション初期化テスト
