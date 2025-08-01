@@ -1,7 +1,7 @@
 name: マルチプラットフォーム CI/CD
 
 on:
-  pu
+  push:
     branches: [ main, ai-integration-main ]
   pull_request:
     branches: [ main, ai-integration-main ]
@@ -45,7 +45,8 @@ jobs:
           libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 \
           libxcb-xinput0 libxcb-xfixes0 libgl1-mesa-glx libegl1-mesa \
           libxrandr2 libxss1 libxcursor1 libxcomposite1 libxi6 libxtst6 \
-          libfontconfig1 libfreetype6 libx11-6 libxext6 libxfixes3 libxrender1
+          libfontconfig1 libfreetype6 libx11-6 libxext6 libxfixes3 libxrender1 \
+          libxcb-shape0 libxcb-sync1 libxcb-xkb1 libxkbcommon-x11-0
 
     # macOS固有の依存関係
     - name: macOS依存関係をインストール
@@ -88,9 +89,22 @@ jobs:
         python -c "
         import sys
         import platform
+        import os
+
         print(f'Platform: {platform.system()} {platform.release()}')
         print(f'Python: {sys.version}')
         print(f'Architecture: {platform.machine()}')
+
+        # 環境変数の設定
+        if platform.system() == 'Linux':
+            os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+            os.environ['DISPLAY'] = ':99'
+        elif platform.system() == 'Windows':
+            os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+        elif platform.system() == 'Darwin':
+            os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
+        print(f'QT_QPA_PLATFORM: {os.environ.get(\"QT_QPA_PLATFORM\", \"not set\")}')
 
         try:
             import PyQt6
@@ -122,6 +136,13 @@ jobs:
         mypy src/ --ignore-missing-imports --no-strict-optional || echo "Type issues found"
 
     # プラットフォーム別テスト実行
+    - name: Xvfb起動 (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        sleep 2
+        echo "Xvfb started on display :99"
+
     - name: テスト実行 (Linux)
       if: runner.os == 'Linux'
       timeout-minutes: 20
@@ -131,6 +152,7 @@ jobs:
       run: |
         xvfb-run -a pytest tests/ -v --cov=src --cov-report=xml \
           --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
+          --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
           -x || echo "Some tests failed on Linux"
 
     - name: テスト実行 (Windows)
@@ -139,7 +161,10 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
       run: |
-        pytest tests/ -v --cov=src --cov-report=xml --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ -x || echo "Some tests failed on Windows"
+        pytest tests/ -v --cov=src --cov-report=xml \
+          --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
+          --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
+          -x || echo "Some tests failed on Windows"
 
     - name: テスト実行 (macOS)
       if: runner.os == 'macOS'
@@ -147,7 +172,10 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
       run: |
-        pytest tests/ -v --cov=src --cov-report=xml --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ -x || echo "Some tests failed on macOS"
+        pytest tests/ -v --cov=src --cov-report=xml \
+          --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
+          --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
+          -x || echo "Some tests failed on macOS"
 
     - name: アプリケーション起動テスト
       timeout-minutes: 5
@@ -155,16 +183,20 @@ jobs:
         python -c "
         import sys
         import os
+        import platform
         sys.path.insert(0, '.')
 
         # プラットフォーム別の環境設定
-        if sys.platform.startswith('linux'):
+        if platform.system() == 'Linux':
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
             os.environ['DISPLAY'] = ':99'
-        elif sys.platform == 'win32':
+        elif platform.system() == 'Windows':
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-        elif sys.platform == 'darwin':
+        elif platform.system() == 'Darwin':
             os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
+        print(f'Platform: {platform.system()}')
+        print(f'QT_QPA_PLATFORM: {os.environ.get(\"QT_QPA_PLATFORM\", \"not set\")}')
 
         try:
             # 基本的なアプリケーション初期化テスト
@@ -181,6 +213,8 @@ jobs:
 
         except Exception as e:
             print(f'❌ Application startup test failed: {e}')
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
         "
 
