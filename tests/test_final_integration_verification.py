@@ -60,7 +60,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
         import platform
         if platform.system() == "Windows":
             self.skipTest("Windows環境では最終統合検証テストをスキップ")
-            
+
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
         self.test_images_dir = self.test_dir / "test_images"

@@ -57,7 +57,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
         import platform
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではファイルリスト表示エラーハンドリングテストをスキップ")
-            
+
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
 

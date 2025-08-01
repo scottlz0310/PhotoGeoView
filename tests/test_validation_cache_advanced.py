@@ -28,7 +28,7 @@ class TestValidationCacheAdvanced(unittest.TestCase):
         import platform
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではバリデーションキャッシュテストをスキップ")
-            
+
         self.logger_system = LoggerSystem()
         self.cache = FileDiscoveryCache(
             max_file_entries=50,

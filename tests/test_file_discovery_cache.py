@@ -41,7 +41,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
         import platform
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではファイルディスカバリーキャッシュテストをスキップ")
-            
+
         self.logger_system = LoggerSystem()
         self.cache = FileDiscoveryCache(
             max_file_entries=10,

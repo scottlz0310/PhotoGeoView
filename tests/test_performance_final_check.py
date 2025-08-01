@@ -50,7 +50,7 @@ class PerformanceFinalCheckTest(unittest.TestCase):
         import platform
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではパフォーマンス最終チェックテストをスキップ")
-            
+
         self.test_dir = Path(tempfile.mkdtemp())
         self.logger_system = LoggerSystem()
 

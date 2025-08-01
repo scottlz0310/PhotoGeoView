@@ -124,7 +124,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         import platform
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではファイルリスト表示パフォーマンステストをスキップ")
-            
+
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
 
