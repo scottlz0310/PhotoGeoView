@@ -97,12 +97,9 @@ class EXIFPanel(QWidget):
             """)
             layout.addWidget(title_label)
 
-            # 統合情報エリア（スクロール可能・高さ調整可能）
+            # 統合情報エリア（スクロール可能・300px固定）
             self._create_integrated_info_area()
             layout.addWidget(self.integrated_scroll_area)
-
-            # サイズ調整コントロールパネル
-            layout.addWidget(self.size_control_panel)
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -113,11 +110,11 @@ class EXIFPanel(QWidget):
             )
 
     def _create_integrated_info_area(self):
-        """統合情報エリアを作成（EXIF + GPS情報）- 高さ調整可能版"""
-        # 統合情報スクロールエリア（シンプル版）
+        """統合情報エリアを作成（EXIF + GPS情報）- 300px固定版"""
+        # 統合情報スクロールエリア（300px固定）
         self.integrated_scroll_area = QScrollArea()
         self.integrated_scroll_area.setWidgetResizable(True)
-        self.integrated_scroll_area.setMinimumHeight(400)  # 最小高さを400pxに設定（従来の倍）
+        self.integrated_scroll_area.setFixedHeight(300)  # 300pxに固定
         self.integrated_scroll_area.setStyleSheet("""
             QScrollArea {
                 border: 1px solid #bdc3c7;
