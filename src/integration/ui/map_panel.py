@@ -13,21 +13,26 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from PyQt6.QtCore import Qt, pyqtSignal, QUrl
+from PyQt6.QtCore import Qt, pyqtSignal, QUrl, QTimer
 from PyQt6.QtWidgets import (
     QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget,
-    QFrame, QSizePolicy
+    QFrame, QSizePolicy, QTextEdit, QScrollArea
 )
 
-# PyQtWebEngineのインポート
+# WebEngineの安全な初期化
+WEBENGINE_AVAILABLE = False
+QWebEngineView = None
+QWebEngineSettings = None
+
 try:
-    from PyQt6.QtWebEngineWidgets import QWebEngineView
-    from PyQt6.QtWebEngineCore import QWebEngineSettings
-    WEBENGINE_AVAILABLE = True
+    from ..utils.webengine_checker import get_webengine_status, create_webengine_view
+    webengine_status = get_webengine_status()
+    if webengine_status["available"]:
+        from PyQt6.QtWebEngineWidgets import QWebEngineView
+        from PyQt6.QtWebEngineCore import QWebEngineSettings
+        WEBENGINE_AVAILABLE = True
 except ImportError:
-    WEBENGINE_AVAILABLE = False
-    QWebEngineView = None
-    QWebEngineSettings = None
+    pass
 
 # foliumのインポート
 try:
@@ -130,27 +135,8 @@ class MapPanel(QWidget):
 
             layout.addLayout(title_layout)
 
-            # WebEngineビュー（地図表示用）
-            if WEBENGINE_AVAILABLE and QWebEngineView is not None:
-                self.web_view = QWebEngineView()
-                if self.web_view:
-                    self.web_view.setSizePolicy(
-                        QSizePolicy.Policy.Expanding,
-                        QSizePolicy.Policy.Expanding
-                    )
-
-                    # WebEngine設定
-                    settings = self.web_view.settings()
-                    if settings and QWebEngineSettings is not None:
-                        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
-                        settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
-
-                    layout.addWidget(self.web_view, 1)
-            else:
-                # WebEngineが利用できない場合のフォールバック
-                self._create_fallback_display()
-                if self.map_widget:
-                    layout.addWidget(self.map_widget, 1)
+            # 地図表示エリアの作成
+            self._create_map_display_area(layout)
 
             # ステータスバー
             status_frame = QFrame()
@@ -186,20 +172,150 @@ class MapPanel(QWidget):
                 e, ErrorCategory.UI_ERROR, {"operation": "map_panel_setup"}, AIComponent.KIRO
             )
 
+    def _create_map_display_area(self, layout):
+        """地図表示エリアを作成"""
+        try:
+            # WebEngineが利用可能な場合
+            if WEBENGINE_AVAILABLE and folium_available:
+                # WebEngineViewを安全に作成
+                self.web_view, message = create_webengine_view()
+
+                if self.web_view:
+                    self.web_view.setSizePolicy(
+                        QSizePolicy.Policy.Expanding,
+                        QSizePolicy.Policy.Expanding
+                    )
+
+                    # WebEngine設定
+                    try:
+                        settings = self.web_view.settings()
+                        if settings and QWebEngineSettings is not None:
+                            settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+                            settings.setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessFileUrls, True)
+                    except Exception as e:
+                        self.logger_system.log_ai_operation(
+                            AIComponent.KIRO,
+                            "webengine_settings_warning",
+                            f"WebEngine設定の適用に失敗: {e}",
+                            level="WARNING"
+                        )
+
+                    layout.addWidget(self.web_view, 1)
+
+                    if self.status_label:
+                        self.status_label.setText("WebEngine地図表示モード")
+                else:
+                    # WebEngineViewの作成に失敗した場合
+                    self._create_fallback_display()
+                    if self.map_widget:
+                        layout.addWidget(self.map_widget, 1)
+            else:
+                # WebEngineまたはfoliumが利用できない場合
+                self._create_fallback_display()
+                if self.map_widget:
+                    layout.addWidget(self.map_widget, 1)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "create_map_display_area"}, AIComponent.KIRO
+            )
+            # エラーが発生した場合もフォールバック表示を作成
+            self._create_fallback_display()
+            if self.map_widget:
+                layout.addWidget(self.map_widget, 1)
+
     def _create_fallback_display(self):
         """WebEngineが利用できない場合のフォールバック表示"""
-        self.map_widget = QLabel("PyQtWebEngineが利用できません。地図機能は利用できませんが、他の機能は正常に動作します。")
-        self.map_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.map_widget.setStyleSheet("""
-            QLabel {
-                border: 1px solid #bdc3c7;
-                border-radius: 3px;
-                background-color: #f8f9fa;
-                color: #e74c3c;
-                padding: 20px;
-                font-size: 12px;
-            }
-        """)
+        try:
+            # スクロール可能なテキスト表示エリアを作成
+            scroll_area = QScrollArea()
+            scroll_area.setWidgetResizable(True)
+
+            # 地図情報表示用のテキストエリア
+            self.map_widget = QTextEdit()
+            self.map_widget.setReadOnly(True)
+            self.map_widget.setStyleSheet("""
+                QTextEdit {
+                    border: 1px solid #bdc3c7;
+                    border-radius: 3px;
+                    background-color: #f8f9fa;
+                    color: #2c3e50;
+                    padding: 10px;
+                    font-size: 12px;
+                    font-family: monospace;
+                }
+            """)
+
+            # 初期メッセージ
+            if not WEBENGINE_AVAILABLE:
+                message = """🗺️ 地図表示 - テキストモード
+
+⚠️  PyQtWebEngineが利用できないため、テキストベースの地図情報を表示します。
+
+📍 現在の位置情報:
+   まだ位置情報が設定されていません。
+
+🔧 WebEngine地図表示を有効にするには:
+   1. PyQtWebEngineをインストール: pip install PyQtWebEngine
+   2. アプリケーションを再起動してください
+
+📋 機能:
+   • GPS座標の表示
+   • 複数画像の位置情報一覧
+   • 地図リンクの生成
+"""
+            elif not folium_available:
+                message = """🗺️ 地図表示 - テキストモード
+
+⚠️  Foliumが利用できないため、テキストベースの地図情報を表示します。
+
+📍 現在の位置情報:
+   まだ位置情報が設定されていません。
+
+🔧 Folium地図表示を有効にするには:
+   1. Foliumをインストール: pip install folium
+   2. アプリケーションを再起動してください
+
+📋 機能:
+   • GPS座標の表示
+   • 複数画像の位置情報一覧
+   • 地図リンクの生成
+"""
+            else:
+                message = """🗺️ 地図表示 - テキストモード
+
+ℹ️  地図表示の初期化中です...
+
+📍 現在の位置情報:
+   まだ位置情報が設定されていません。
+
+📋 機能:
+   • GPS座標の表示
+   • 複数画像の位置情報一覧
+   • 地図リンクの生成
+"""
+
+            self.map_widget.setPlainText(message)
+            scroll_area.setWidget(self.map_widget)
+            self.map_widget = scroll_area
+
+            if self.status_label:
+                self.status_label.setText("テキストベース地図表示モード")
+
+        except Exception as e:
+            # 最後の手段として、シンプルなラベルを作成
+            self.map_widget = QLabel("地図表示の初期化に失敗しました。")
+            self.map_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.map_widget.setStyleSheet("""
+                QLabel {
+                    border: 1px solid #e74c3c;
+                    border-radius: 3px;
+                    background-color: #fdf2f2;
+                    color: #e74c3c;
+                    padding: 20px;
+                    font-size: 12px;
+                }
+            """)
 
     def _setup_connections(self):
         """シグナル接続の設定"""
@@ -215,19 +331,26 @@ class MapPanel(QWidget):
     def _initialize_map(self):
         """デフォルト位置で地図を初期化"""
         try:
-            if not folium_available:
-                self._show_error_message("Foliumが利用できません。foliumをインストールしてください。")
-                return
-
-            self._create_map(self.default_location, self.default_zoom)
-            if self.status_label:
-                self.status_label.setText("地図を初期化しました")
+            if self.web_view and folium_available:
+                # WebEngine地図の初期化
+                self._create_map(self.default_location, self.default_zoom)
+                if self.status_label:
+                    self.status_label.setText("地図を初期化しました")
+            else:
+                # テキストベース表示の初期化
+                self._update_fallback_display()
+                if self.status_label:
+                    self.status_label.setText("テキストベース地図表示を初期化しました")
 
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR, {"operation": "initialize_map"}, AIComponent.KIRO
             )
-            self._show_error_message(f"地図の初期化に失敗しました: {e}")
+            if self.web_view:
+                self._show_error_message(f"地図の初期化に失敗しました: {e}")
+            else:
+                # テキストベース表示でもエラーを表示
+                self._update_fallback_display()
 
     def _create_map(self, center: Tuple[float, float], zoom: int = 10, markers: Optional[Dict[str, Tuple[float, float]]] = None):
         """新しいFolium地図を作成"""
@@ -328,7 +451,12 @@ class MapPanel(QWidget):
                 self.status_label.setText(f"座標: {latitude:.6f}, {longitude:.6f}")
 
             # 地図を更新
-            self._update_map()
+            if self.web_view:
+                # WebEngine地図の更新
+                self._update_map()
+            else:
+                # テキストベース表示の更新
+                self._update_fallback_display()
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -349,11 +477,17 @@ class MapPanel(QWidget):
             }
 
             self.image_locations.append(location)
-            
+
             # photo_locationsにも追加
             self.photo_locations[str(image_path)] = (latitude, longitude)
-            
-            self._update_map()
+
+            # 地図を更新
+            if self.web_view:
+                # WebEngine地図の更新
+                self._update_map()
+            else:
+                # テキストベース表示の更新
+                self._update_fallback_display()
 
             # ログ出力
             self.logger_system.log_ai_operation(
@@ -397,7 +531,7 @@ class MapPanel(QWidget):
                     zoom = 5
 
                 self._create_map((center_lat, center_lon), zoom, self.photo_locations)
-                
+
                 if self.status_label:
                     self.status_label.setText(f"{len(self.photo_locations)}個の写真位置を表示中")
 
@@ -408,10 +542,10 @@ class MapPanel(QWidget):
             elif self.current_latitude is not None and self.current_longitude is not None:
                 # 単一の座標
                 self._create_map((self.current_latitude, self.current_longitude), 15)
-                
+
                 if self.status_label:
                     self.status_label.setText(f"座標: {self.current_latitude:.6f}, {self.current_longitude:.6f}")
-                
+
                 # シグナルを発信
                 self.map_loaded.emit(self.current_latitude, self.current_longitude)
             else:
@@ -492,7 +626,7 @@ class MapPanel(QWidget):
 
             if self.web_view:
                 self.web_view.load(QUrl.fromLocalFile(error_file))
-            
+
             if self.status_label:
                 self.status_label.setText("地図の読み込みに失敗しました")
 
@@ -574,6 +708,72 @@ class MapPanel(QWidget):
     def get_image_locations(self) -> List[Dict[str, Any]]:
         """画像位置情報のリストを取得"""
         return self.image_locations.copy()
+
+    def _update_fallback_display(self):
+        """テキストベース表示を更新"""
+        try:
+            if not hasattr(self.map_widget, 'widget') or not hasattr(self.map_widget.widget(), 'setPlainText'):
+                return
+
+            text_widget = self.map_widget.widget()
+
+            # 現在の位置情報を構築
+            content = "🗺️ 地図表示 - テキストモード\n\n"
+
+            if not WEBENGINE_AVAILABLE:
+                content += "⚠️  PyQtWebEngineが利用できないため、テキストベースの地図情報を表示します。\n\n"
+            elif not folium_available:
+                content += "⚠️  Foliumが利用できないため、テキストベースの地図情報を表示します。\n\n"
+
+            # 現在の座標情報
+            content += "📍 現在の位置情報:\n"
+            if self.current_latitude is not None and self.current_longitude is not None:
+                content += f"   緯度: {self.current_latitude:.6f}\n"
+                content += f"   経度: {self.current_longitude:.6f}\n"
+
+                # Google Mapsリンク
+                maps_url = f"https://www.google.com/maps?q={self.current_latitude},{self.current_longitude}"
+                content += f"   🔗 Google Maps: {maps_url}\n"
+
+                # OpenStreetMapリンク
+                osm_url = f"https://www.openstreetmap.org/?mlat={self.current_latitude}&mlon={self.current_longitude}&zoom=15"
+                content += f"   🔗 OpenStreetMap: {osm_url}\n"
+            else:
+                content += "   まだ位置情報が設定されていません。\n"
+
+            content += "\n"
+
+            # 複数画像の位置情報
+            if self.image_locations:
+                content += f"📸 画像位置情報 ({len(self.image_locations)}件):\n"
+                for i, location in enumerate(self.image_locations, 1):
+                    content += f"   {i}. {location['name']}\n"
+                    content += f"      緯度: {location['lat']:.6f}, 経度: {location['lon']:.6f}\n"
+                    maps_url = f"https://www.google.com/maps?q={location['lat']},{location['lon']}"
+                    content += f"      🔗 {maps_url}\n"
+                content += "\n"
+
+            # 機能説明
+            content += "📋 利用可能な機能:\n"
+            content += "   • GPS座標の表示\n"
+            content += "   • 複数画像の位置情報一覧\n"
+            content += "   • 外部地図サービスへのリンク生成\n"
+
+            if not WEBENGINE_AVAILABLE:
+                content += "\n🔧 WebEngine地図表示を有効にするには:\n"
+                content += "   1. PyQtWebEngineをインストール: pip install PyQtWebEngine\n"
+                content += "   2. アプリケーションを再起動してください\n"
+            elif not folium_available:
+                content += "\n🔧 Folium地図表示を有効にするには:\n"
+                content += "   1. Foliumをインストール: pip install folium\n"
+                content += "   2. アプリケーションを再起動してください\n"
+
+            text_widget.setPlainText(content)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "update_fallback_display"}, AIComponent.KIRO
+            )
 
     def closeEvent(self, event) -> None:
         """ウィンドウクローズ時のクリーンアップ"""
