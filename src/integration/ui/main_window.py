@@ -253,32 +253,92 @@ class IntegratedMainWindow(QMainWindow):
         self.main_splitter.setStretchFactor(1, 1)
 
     def _create_left_panel(self):
-        """Create the left panel (CursorBLD design with Kiro optimization)"""
+        """Create the left panel with splitters (3-area adjustable design)"""
 
-        self.left_panel = QWidget()
-        left_layout = QVBoxLayout(self.left_panel)
-        left_layout.setContentsMargins(0, 0, 0, 0)
+        # 左パネル用の垂直スプリッターを作成
+        self.left_panel_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.left_panel_splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #bdc3c7;
+                height: 4px;
+                border-radius: 2px;
+                margin: 1px 0px;
+            }
+            QSplitter::handle:hover {
+                background-color: #3498db;
+            }
+            QSplitter::handle:pressed {
+                background-color: #2980b9;
+            }
+        """)
 
-        # Folder navigator (CursorBLD component with Kiro enhancements)
+        # 1. Folder navigator (上段)
         self.folder_navigator = EnhancedFolderNavigator(
             self.config_manager, self.state_manager, self.logger_system
         )
-        left_layout.addWidget(self.folder_navigator, 0)
+        self.folder_navigator.setMinimumHeight(150)  # 最小高さ設定
+        self.left_panel_splitter.addWidget(self.folder_navigator)
 
-        # Thumbnail grid (CursorBLD component with Kiro optimization)
+        # 2. Thumbnail grid (中段)
         self.thumbnail_grid = SimpleThumbnailGrid(
             self.config_manager, self.state_manager, self.logger_system
         )
-        left_layout.addWidget(self.thumbnail_grid, 1)
+        self.thumbnail_grid.setMinimumHeight(200)  # 最小高さ設定
+        self.left_panel_splitter.addWidget(self.thumbnail_grid)
 
-        # EXIF information panel (Kiro component)
+        # 3. EXIF information panel (下段)
         from .exif_panel import EXIFPanel
         self.exif_panel = EXIFPanel(
             self.config_manager, self.state_manager, self.logger_system
         )
-        left_layout.addWidget(self.exif_panel, 0)  # 下段に配置
+        self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
+        self.left_panel_splitter.addWidget(self.exif_panel)
 
-        self.main_splitter.addWidget(self.left_panel)
+        # スプリッターの初期サイズ設定 (フォルダ:サムネイル:EXIF = 2:4:4)
+        self.left_panel_splitter.setSizes([150, 300, 400])
+
+        # 各エリアの伸縮設定
+        self.left_panel_splitter.setStretchFactor(0, 0)  # フォルダナビゲーター: 固定的
+        self.left_panel_splitter.setStretchFactor(1, 1)  # サムネイルグリッド: 伸縮可能
+        self.left_panel_splitter.setStretchFactor(2, 1)  # EXIFパネル: 伸縮可能
+
+        # 左パネルスプリッターをメインスプリッターに追加
+        self.main_splitter.addWidget(self.left_panel_splitter)
+
+        # 左パネルスプリッターの設定を復元
+        self._restore_left_panel_splitter_state()
+
+    def _restore_left_panel_splitter_state(self):
+        """左パネルスプリッターの状態を復元"""
+        try:
+            # 保存されたスプリッター状態を取得
+            splitter_states = self.config_manager.get_setting("ui.splitter_states", {})
+
+            if "left_panel_splitter" in splitter_states:
+                self.left_panel_splitter.restoreState(splitter_states["left_panel_splitter"])
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "left_panel_splitter_restored",
+                    "Left panel splitter state restored",
+                )
+            else:
+                # デフォルト設定を適用
+                self.left_panel_splitter.setSizes([150, 300, 400])
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "left_panel_splitter_default",
+                    "Left panel splitter set to default sizes",
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "restore_left_panel_splitter_state"},
+                AIComponent.KIRO,
+            )
 
     def _create_right_panel(self):
         """Create the right panel (image preview and map)"""
@@ -636,6 +696,10 @@ class IntegratedMainWindow(QMainWindow):
                     context={"image_path": str(image_path), "latitude": latitude, "longitude": longitude},
                 )
             else:
+                # GPS座標がない場合の処理
+                if self.map_panel:
+                    self.map_panel.show_no_gps_message(image_path.name)
+
                 # GPS座標がない場合のログ
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -1042,7 +1106,14 @@ class IntegratedMainWindow(QMainWindow):
             self.config_manager.set_setting("ui.window_geometry", self.saveGeometry())
 
             # Save splitter states
-            splitter_states = {"main_splitter": self.main_splitter.saveState()}
+            splitter_states = {
+                "main_splitter": self.main_splitter.saveState()
+            }
+
+            # 左パネルスプリッターの状態も保存
+            if hasattr(self, "left_panel_splitter"):
+                splitter_states["left_panel_splitter"] = self.left_panel_splitter.saveState()
+
             self.config_manager.set_setting("ui.splitter_states", splitter_states)
 
             # Save configuration

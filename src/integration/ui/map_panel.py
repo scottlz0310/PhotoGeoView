@@ -359,10 +359,10 @@ class MapPanel(QWidget):
         """デフォルト位置で地図を初期化"""
         try:
             if self.web_view and folium_available:
-                # WebEngine地図の初期化
-                self._create_map(self.default_location, self.default_zoom)
+                # WebEngine地図の初期化 - ウェルカム画面を表示
+                self._create_welcome_html()
                 if self.status_label:
-                    self.status_label.setText("地図を初期化しました")
+                    self.status_label.setText("GPS情報付き画像を選択してください")
             else:
                 # テキストベース表示の初期化
                 self._update_fallback_display()
@@ -593,6 +593,213 @@ class MapPanel(QWidget):
             )
             self._show_error_message("地図の更新に失敗しました")
 
+    def _create_welcome_html(self):
+        """初期状態用のウェルカムHTML表示を作成"""
+        try:
+            welcome_html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>PhotoGeoView - 地図表示</title>
+                <meta charset="utf-8">
+                <style>
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                    }
+                    .welcome-container {
+                        text-align: center;
+                        padding: 40px;
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 16px;
+                        backdrop-filter: blur(10px);
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        max-width: 500px;
+                    }
+                    .welcome-icon {
+                        font-size: 64px;
+                        margin-bottom: 20px;
+                        animation: pulse 2s infinite;
+                    }
+                    .welcome-title {
+                        font-size: 28px;
+                        font-weight: 600;
+                        margin-bottom: 16px;
+                        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    }
+                    .welcome-message {
+                        font-size: 16px;
+                        line-height: 1.6;
+                        margin-bottom: 24px;
+                        opacity: 0.9;
+                    }
+                    .instruction {
+                        font-size: 14px;
+                        padding: 16px;
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 8px;
+                        border-left: 4px solid #4CAF50;
+                        margin-top: 20px;
+                    }
+                    @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                        100% { transform: scale(1); }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="welcome-container">
+                    <div class="welcome-icon">🗺️</div>
+                    <div class="welcome-title">PhotoGeoView 地図表示</div>
+                    <div class="welcome-message">
+                        GPS位置情報付きの写真を選択すると、<br>
+                        撮影場所がこの地図に表示されます。
+                    </div>
+                    <div class="instruction">
+                        💡 左側のフォルダーから画像フォルダーを選択し、<br>
+                        GPS情報を含む写真をクリックしてください
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+
+            # ウェルカムHTMLを一時ファイルに保存
+            temp_dir = tempfile.gettempdir()
+            welcome_file = os.path.join(temp_dir, "photogeoview_welcome.html")
+
+            with open(welcome_file, 'w', encoding='utf-8') as f:
+                f.write(welcome_html)
+
+            if self.web_view:
+                self.web_view.load(QUrl.fromLocalFile(welcome_file))
+
+            if self.status_label:
+                self.status_label.setText("GPS情報付き画像を選択してください")
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "create_welcome_html"}, AIComponent.KIRO
+            )
+
+    def _create_no_gps_html(self, image_name: str = ""):
+        """GPS情報なし画像用のHTML表示を作成"""
+        try:
+            no_gps_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>PhotoGeoView - GPS情報なし</title>
+                <meta charset="utf-8">
+                <style>
+                    body {{
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                        background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+                        color: #2d3436;
+                    }}
+                    .no-gps-container {{
+                        text-align: center;
+                        padding: 40px;
+                        background: rgba(255, 255, 255, 0.9);
+                        border-radius: 16px;
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                        border: 1px solid rgba(255, 255, 255, 0.3);
+                        max-width: 500px;
+                    }}
+                    .no-gps-icon {{
+                        font-size: 64px;
+                        margin-bottom: 20px;
+                        opacity: 0.7;
+                    }}
+                    .no-gps-title {{
+                        font-size: 24px;
+                        font-weight: 600;
+                        margin-bottom: 16px;
+                        color: #e17055;
+                    }}
+                    .image-name {{
+                        font-size: 16px;
+                        font-weight: 500;
+                        margin-bottom: 20px;
+                        padding: 12px;
+                        background: rgba(116, 185, 255, 0.1);
+                        border-radius: 8px;
+                        color: #0984e3;
+                    }}
+                    .no-gps-message {{
+                        font-size: 16px;
+                        line-height: 1.6;
+                        margin-bottom: 24px;
+                        color: #636e72;
+                    }}
+                    .suggestion {{
+                        font-size: 14px;
+                        padding: 16px;
+                        background: rgba(116, 185, 255, 0.1);
+                        border-radius: 8px;
+                        border-left: 4px solid #0984e3;
+                        margin-top: 20px;
+                        text-align: left;
+                    }}
+                    .suggestion-title {{
+                        font-weight: 600;
+                        margin-bottom: 8px;
+                        color: #0984e3;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="no-gps-container">
+                    <div class="no-gps-icon">📍</div>
+                    <div class="no-gps-title">GPS情報が見つかりません</div>
+                    {f'<div class="image-name">📸 {image_name}</div>' if image_name else ''}
+                    <div class="no-gps-message">
+                        この画像にはGPS位置情報が含まれていないため、<br>
+                        地図上に撮影場所を表示できません。
+                    </div>
+                    <div class="suggestion">
+                        <div class="suggestion-title">💡 GPS情報付き画像を撮影するには：</div>
+                        • カメラやスマートフォンの位置情報設定をオンにする<br>
+                        • 屋外で十分なGPS信号を受信できる場所で撮影する<br>
+                        • 撮影時にGPS機能が有効になっていることを確認する
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+
+            # GPS情報なしHTMLを一時ファイルに保存
+            temp_dir = tempfile.gettempdir()
+            no_gps_file = os.path.join(temp_dir, "photogeoview_no_gps.html")
+
+            with open(no_gps_file, 'w', encoding='utf-8') as f:
+                f.write(no_gps_html)
+
+            if self.web_view:
+                self.web_view.load(QUrl.fromLocalFile(no_gps_file))
+
+            if self.status_label:
+                status_msg = f"GPS情報なし: {image_name}" if image_name else "GPS情報が含まれていません"
+                self.status_label.setText(status_msg)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "create_no_gps_html"}, AIComponent.KIRO
+            )
+
     def _show_error_message(self, message: str):
         """エラーメッセージを表示"""
         try:
@@ -732,6 +939,32 @@ class MapPanel(QWidget):
             return (self.current_latitude, self.current_longitude)
         return None
 
+    def show_no_gps_message(self, image_name: str = ""):
+        """GPS情報がない画像用の表示"""
+        try:
+            if self.web_view:
+                # WebEngine地図でGPS情報なし表示
+                self._create_no_gps_html(image_name)
+            else:
+                # テキストベース表示でGPS情報なし表示
+                self._update_fallback_display_no_gps(image_name)
+
+            # ログ出力
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "show_no_gps_message",
+                f"GPS情報なし表示: {image_name}",
+                context={"image_name": image_name},
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_no_gps_message", "image_name": image_name},
+                AIComponent.KIRO,
+            )
+
     def get_image_locations(self) -> List[Dict[str, Any]]:
         """画像位置情報のリストを取得"""
         return self.image_locations.copy()
@@ -800,6 +1033,69 @@ class MapPanel(QWidget):
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR, {"operation": "update_fallback_display"}, AIComponent.KIRO
+            )
+
+    def _update_fallback_display_no_gps(self, image_name: str = ""):
+        """GPS情報なし画像用のテキストベース表示を更新"""
+        try:
+            if not hasattr(self.map_widget, 'widget') or not hasattr(self.map_widget.widget(), 'setPlainText'):
+                return
+
+            text_widget = self.map_widget.widget()
+
+            # GPS情報なし用のコンテンツを構築
+            content = "🗺️ 地図表示 - テキストモード\n\n"
+
+            if not WEBENGINE_AVAILABLE:
+                content += "⚠️  PyQtWebEngineが利用できないため、テキストベースの地図情報を表示します。\n\n"
+            elif not folium_available:
+                content += "⚠️  Foliumが利用できないため、テキストベースの地図情報を表示します。\n\n"
+
+            # GPS情報なしメッセージ
+            content += "📍 GPS情報が見つかりません\n\n"
+
+            if image_name:
+                content += f"📸 選択された画像: {image_name}\n\n"
+
+            content += "この画像にはGPS位置情報が含まれていないため、\n"
+            content += "地図上に撮影場所を表示できません。\n\n"
+
+            # GPS情報付き画像を撮影するためのヒント
+            content += "💡 GPS情報付き画像を撮影するには:\n"
+            content += "   • カメラやスマートフォンの位置情報設定をオンにする\n"
+            content += "   • 屋外で十分なGPS信号を受信できる場所で撮影する\n"
+            content += "   • 撮影時にGPS機能が有効になっていることを確認する\n\n"
+
+            # 既存の画像位置情報があれば表示
+            if self.image_locations:
+                content += f"📸 他の画像の位置情報 ({len(self.image_locations)}件):\n"
+                for i, location in enumerate(self.image_locations, 1):
+                    content += f"   {i}. {location['name']}\n"
+                    content += f"      緯度: {location['lat']:.6f}, 経度: {location['lon']:.6f}\n"
+                    maps_url = f"https://www.google.com/maps?q={location['lat']},{location['lon']}"
+                    content += f"      🔗 {maps_url}\n"
+                content += "\n"
+
+            # 機能説明
+            content += "📋 利用可能な機能:\n"
+            content += "   • GPS座標の表示\n"
+            content += "   • 複数画像の位置情報一覧\n"
+            content += "   • 外部地図サービスへのリンク生成\n"
+
+            if not WEBENGINE_AVAILABLE:
+                content += "\n🔧 WebEngine地図表示を有効にするには:\n"
+                content += "   1. PyQtWebEngineをインストール: pip install PyQtWebEngine\n"
+                content += "   2. アプリケーションを再起動してください\n"
+            elif not folium_available:
+                content += "\n🔧 Folium地図表示を有効にするには:\n"
+                content += "   1. Foliumをインストール: pip install folium\n"
+                content += "   2. アプリケーションを再起動してください\n"
+
+            text_widget.setPlainText(content)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "update_fallback_display_no_gps"}, AIComponent.KIRO
             )
 
     def closeEvent(self, event) -> None:
