@@ -169,13 +169,21 @@ jobs:
             print(f'[ERROR] QApplication creation failed: {e}')
         "
 
-    - name: コード品質チェック
+    - name: コード品質チェック (Linux/macOS)
+      if: runner.os != 'Windows'
       timeout-minutes: 10
       run: |
         # プラットフォーム共通のコード品質チェック
         black --check --diff src/ tests/ examples/ || echo "Black formatting needed - continuing"
         isort --check-only --diff src/ tests/ examples/ || echo "Import sorting needed - continuing"
         flake8 src/ tests/ examples/ --max-line-length=88 --extend-ignore=E203,W503,F401,E402 || echo "Style issues found - continuing"
+
+    - name: コード品質チェック (Windows)
+      if: runner.os == 'Windows'
+      timeout-minutes: 10
+      run: |
+        # Windowsではコード品質チェックをスキップ
+        echo "Skipping code quality checks on Windows for compatibility"
 
     - name: 型チェック
       timeout-minutes: 15
