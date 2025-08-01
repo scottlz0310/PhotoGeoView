@@ -173,8 +173,8 @@ jobs:
       timeout-minutes: 10
       run: |
         # プラットフォーム共通のコード品質チェック
-        black --check --diff src/ tests/ examples/ || echo "Black formatting needed - continuing"
-        isort --check-only --diff src/ tests/ examples/ || echo "Import sorting needed - continuing"
+        black --check --diff src/ tests/ examples/ || (echo "Black formatting needed - auto-fixing" && black src/ tests/ examples/)
+        isort --check-only --diff src/ tests/ examples/ || (echo "Import sorting needed - auto-fixing" && isort src/ tests/ examples/)
         flake8 src/ tests/ examples/ --max-line-length=88 --extend-ignore=E203,W503,F401,E402 || echo "Style issues found - continuing"
 
     - name: 型チェック
