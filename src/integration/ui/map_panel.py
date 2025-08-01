@@ -24,15 +24,35 @@ WEBENGINE_AVAILABLE = False
 QWebEngineView = None
 QWebEngineSettings = None
 
+# 直接インポートを試行（OpenGL設定が適用されている場合）
 try:
-    from ..utils.webengine_checker import get_webengine_status, create_webengine_view
-    webengine_status = get_webengine_status()
-    if webengine_status["available"]:
-        from PyQt6.QtWebEngineWidgets import QWebEngineView
-        from PyQt6.QtWebEngineCore import QWebEngineSettings
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtWebEngineCore import QWebEngineSettings, QWebEngineProfile
+
+    # 簡単な初期化テスト
+    try:
+        profile = QWebEngineProfile.defaultProfile()
         WEBENGINE_AVAILABLE = True
-except ImportError:
-    pass
+        print("✅ WebEngine直接初期化成功")
+    except Exception as e:
+        print(f"⚠️  WebEngine初期化テスト失敗: {e}")
+        QWebEngineView = None
+        QWebEngineSettings = None
+
+except ImportError as e:
+    print(f"⚠️  WebEngine直接インポート失敗: {e}")
+
+    # フォールバック: webengine_checkerを使用
+    try:
+        from ..utils.webengine_checker import get_webengine_status, create_webengine_view
+        webengine_status = get_webengine_status()
+        if webengine_status["available"]:
+            from PyQt6.QtWebEngineWidgets import QWebEngineView
+            from PyQt6.QtWebEngineCore import QWebEngineSettings
+            WEBENGINE_AVAILABLE = True
+            print("✅ WebEngineチェッカー経由で初期化成功")
+    except ImportError:
+        pass
 
 # foliumのインポート
 try:
@@ -177,8 +197,15 @@ class MapPanel(QWidget):
         try:
             # WebEngineが利用可能な場合
             if WEBENGINE_AVAILABLE and folium_available:
-                # WebEngineViewを安全に作成
-                self.web_view, message = create_webengine_view()
+                # WebEngineViewを直接作成
+                try:
+                    self.web_view = QWebEngineView()
+                    message = "WebEngineView created successfully"
+                    print(f"✅ {message}")
+                except Exception as e:
+                    self.web_view = None
+                    message = f"WebEngineView creation failed: {e}"
+                    print(f"❌ {message}")
 
                 if self.web_view:
                     self.web_view.setSizePolicy(

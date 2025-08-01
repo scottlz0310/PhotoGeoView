@@ -110,6 +110,14 @@ def main():
         logger.info(qt_msg)
         print(qt_msg)
 
+        # WebEngine用の設定（QApplication作成前に必要）
+        try:
+            from PyQt6.QtCore import Qt
+            QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+            print("✅ WebEngine用OpenGL設定完了")
+        except Exception as e:
+            print(f"⚠️  WebEngine用設定エラー: {e}")
+
         app = QApplication(sys.argv)
         app.setApplicationName("PhotoGeoView AI Integration")
         app.setApplicationVersion("1.0.0")
