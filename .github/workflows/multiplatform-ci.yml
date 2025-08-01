@@ -213,10 +213,20 @@ jobs:
         QT_QPA_PLATFORM: offscreen
         DISPLAY: ':99'
       run: |
+        echo "Starting Linux test execution..."
+        
+        # テスト環境の確認
+        python -c "import sys; print(f'Python: {sys.version}')"
+        python -c "import platform; print(f'Platform: {platform.system()} {platform.release()}')"
+        
+        # 主要なテストを実行
         xvfb-run -a pytest tests/ -v --cov=src --cov-report=xml \
           --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
           --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
+          --tb=short --maxfail=10 \
           || echo "Some tests failed on Linux"
+        
+        echo "Linux test execution completed"
 
     - name: テスト実行 (Windows)
       if: runner.os == 'Windows'
@@ -225,11 +235,28 @@ jobs:
         QT_QPA_PLATFORM: offscreen
       run: |
         echo "Starting Windows test execution..."
+        
+        # テスト環境の確認
+        python -c "import sys; print(f'Python: {sys.version}')"
+        python -c "import platform; print(f'Platform: {platform.system()} {platform.release()}')"
+        
         # 基本的なテストから実行
+        echo "Running basic tests..."
         pytest tests/basic_tests.py -v --tb=short || echo "Basic tests failed"
+        
+        echo "Running import tests..."
         pytest tests/test_imports.py -v --tb=short || echo "Import tests failed"
-        # 主要なテストを実行
-        pytest tests/ -v --cov=src --cov-report=xml --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ --ignore=tests/ci_simulation/ --ignore=tests/debug/ --tb=short --maxfail=10 || echo "Some tests failed on Windows"
+        
+        # 主要なテストを実行（エラーをキャッチ）
+        echo "Running main test suite..."
+        pytest tests/ -v --cov=src --cov-report=xml \
+          --ignore=tests/performance_tests/ \
+          --ignore=tests/ai_compatibility/ \
+          --ignore=tests/ci_simulation/ \
+          --ignore=tests/debug/ \
+          --tb=short --maxfail=10 \
+          || echo "Some tests failed on Windows"
+        
         echo "Windows test execution completed"
 
     - name: テスト実行 (macOS)
@@ -238,10 +265,20 @@ jobs:
       env:
         QT_QPA_PLATFORM: offscreen
       run: |
+        echo "Starting macOS test execution..."
+        
+        # テスト環境の確認
+        python -c "import sys; print(f'Python: {sys.version}')"
+        python -c "import platform; print(f'Platform: {platform.system()} {platform.release()}')"
+        
+        # 主要なテストを実行
         pytest tests/ -v --cov=src --cov-report=xml \
           --ignore=tests/performance_tests/ --ignore=tests/ai_compatibility/ \
           --ignore=tests/ci_simulation/ --ignore=tests/debug/ \
+          --tb=short --maxfail=10 \
           || echo "Some tests failed on macOS"
+        
+        echo "macOS test execution completed"
 
     - name: アプリケーション起動テスト
       timeout-minutes: 5
@@ -424,6 +461,12 @@ jobs:
         echo "" >> summary.md
         echo "## テスト結果" >> summary.md
         echo "- マルチプラットフォームテスト: ${{ needs.multiplatform-tests.result }}" >> summary.md
+        echo "- パッケージ作成: ${{ needs.build-packages.result }}" >> summary.md
+        echo "" >> summary.md
+        echo "## 改善点" >> summary.md
+        echo "- Windows環境での段階的テスト実行を実装" >> summary.md
+        echo "- カバレッジファイルの存在確認を追加" >> summary.md
+        echo "- 基本的なインポートテストファイルを追加" >> summary.md
         echo "- パッケージ作成: ${{ needs.build-packages.result }}" >> summary.md
         echo "" >> summary.md
         echo "## 対応プラットフォーム" >> summary.md
