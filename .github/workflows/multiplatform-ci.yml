@@ -185,10 +185,18 @@ jobs:
         # Windowsではコード品質チェックをスキップ
         echo "Skipping code quality checks on Windows for compatibility"
 
-    - name: 型チェック
+    - name: 型チェック (Linux/macOS)
+      if: runner.os != 'Windows'
       timeout-minutes: 15
       run: |
         mypy src/ --ignore-missing-imports --no-strict-optional || echo "Type issues found"
+
+    - name: 型チェック (Windows)
+      if: runner.os == 'Windows'
+      timeout-minutes: 15
+      run: |
+        # Windowsでは型チェックをスキップ
+        echo "Skipping type checking on Windows for compatibility"
 
     # プラットフォーム別テスト実行
     - name: Xvfb起動 (Linux)
