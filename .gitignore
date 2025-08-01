@@ -89,3 +89,9 @@ ci_report_*.json
 build/ci-reports/
 deployment_manifest.json
 performance_baseline.json
+
+# GitHub Actions and CI logs
+github_actions_log*.txt
+*.actions.log
+ci_logs/
+.github/logs/
