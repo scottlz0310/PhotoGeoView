@@ -18,13 +18,10 @@
     "show_toolbar": true,
     "show_statusbar": true,
     "animation_enabled": true,
-    "current_folder": "/home/hiro/SampleImage",
+    "current_folder": "/home/hiro",
     "high_contrast_mode": false,
     "large_fonts_mode": false,
-    "transparency_enabled": true,
-    "folder_history": [
-      "/home/hiro"
-    ]
+    "transparency_enabled": true
   },
   "core": {
     "image_formats": [

@@ -3,7 +3,7 @@
   "selected_image": "/home/hiro/SampleImage/england-london-bridge.jpg",
   "loaded_images": [],
   "current_theme": "default",
-  "thumbnail_size": 93,
+  "thumbnail_size": 108,
   "folder_history": [],
   "ui_layout": {},
   "window_geometry": null,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-08-01 13:02:39.551199",
+  "last_activity": "2025-08-01 15:12:55.546479",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-08-01T13:02:39.552083",
-    "state_changes": 14,
-    "state_accesses": 21
+    "saved_at": "2025-08-01T15:12:55.551037",
+    "state_changes": 9,
+    "state_accesses": 16
   }
 }
