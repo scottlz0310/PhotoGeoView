@@ -284,12 +284,13 @@ jobs:
 
     - name: カバレッジレポートをアップロード
       uses: codecov/codecov-action@v4
-      if: matrix.python-version == '3.11'
+      if: matrix.python-version == '3.11' && always()
       with:
         file: ./coverage.xml
         flags: ${{ runner.os }}
         name: codecov-${{ runner.os }}
         fail_ci_if_error: false
+        verbose: true
 
     - name: テスト結果をアップロード
       uses: actions/upload-artifact@v4

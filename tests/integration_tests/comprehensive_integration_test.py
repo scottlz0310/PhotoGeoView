@@ -203,10 +203,10 @@ class TestComprehensiveAIIntegration:
     def test_logging_system_integration(self):
         """ログシステム統合テスト"""
         try:
-            from src.integration.logging_system import LoggingSystem
+            from src.integration.logging_system import LoggerSystem
 
             # ログシステムの初期化
-            logging_system = LoggingSystem()
+            logging_system = LoggerSystem()
 
             # AI操作ログテスト
             if hasattr(logging_system, "log_ai_operation"):
@@ -481,8 +481,9 @@ class TestRequirementValidation:
         assert (
             tools_dir / "ai_quality_checker.py"
         ).exists(), "要件5.1: AI品質チェッカーが存在しません"
+        # 実際のワークフローファイル名に修正
         assert (
-            project_root / ".github" / "workflows" / "ai-integration-ci.yml"
+            project_root / ".github" / "workflows" / "multiplatform-ci.yml"
         ).exists(), "要件5.1: CI/CDパイプラインが存在しません"
 
 
