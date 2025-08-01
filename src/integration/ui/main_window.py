@@ -387,27 +387,40 @@ class IntegratedMainWindow(QMainWindow):
         # Connect folder navigator signals
         if self.folder_navigator:
             self.folder_navigator.folder_changed.connect(self._on_folder_changed)
+            self.folder_navigator.status_message.connect(self._on_status_message)
 
         # Connect thumbnail grid signals
         if self.thumbnail_grid:
             self.thumbnail_grid.image_selected.connect(self._on_image_selected)
             # Connect folder changes to thumbnail grid
             self.folder_changed.connect(self._update_thumbnail_grid)
+            # Connect status messages if available
+            if hasattr(self.thumbnail_grid, 'status_message'):
+                self.thumbnail_grid.status_message.connect(self._on_status_message)
 
         # Connect EXIF panel signals
         if self.exif_panel:
             self.exif_panel.gps_coordinates_updated.connect(self._on_gps_coordinates_updated)
             # 画像選択時にEXIFパネルに画像を設定
             self.thumbnail_grid.image_selected.connect(self.exif_panel.set_image)
+            # Connect status messages if available
+            if hasattr(self.exif_panel, 'status_message'):
+                self.exif_panel.status_message.connect(self._on_status_message)
 
         # Connect image preview panel signals
         if self.image_preview_panel:
             self.image_preview_panel.image_loaded.connect(self._on_image_preview_loaded)
+            # Connect status messages if available
+            if hasattr(self.image_preview_panel, 'status_message'):
+                self.image_preview_panel.status_message.connect(self._on_status_message)
 
         # Connect map panel signals
         if self.map_panel:
             self.map_panel.map_loaded.connect(self._on_map_loaded)
             self.map_panel.map_error.connect(self._on_map_error)
+            # Connect status messages if available
+            if hasattr(self.map_panel, 'status_message'):
+                self.map_panel.status_message.connect(self._on_status_message)
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
@@ -536,6 +549,28 @@ class IntegratedMainWindow(QMainWindow):
                 ErrorCategory.UI_ERROR,
                 {"operation": "folder_change_handling", "folder": str(folder_path)},
                 AIComponent.CURSOR,
+            )
+
+    def _on_status_message(self, message: str, timeout_ms: int = 3000):
+        """Handle status message from components"""
+
+        try:
+            if hasattr(self, "status_bar") and self.status_bar:
+                self.status_bar.showMessage(message, timeout_ms)
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "status_message_displayed",
+                    f"ステータスメッセージ表示: {message}",
+                    level="DEBUG",
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "status_message", "message": message},
+                AIComponent.KIRO,
             )
 
     def _on_image_selected(self, image_path: Path):

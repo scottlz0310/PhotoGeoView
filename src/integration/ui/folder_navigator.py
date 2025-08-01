@@ -73,6 +73,7 @@ class EnhancedFolderNavigator(QWidget):
     folder_selected = pyqtSignal(Path)
     folder_changed = pyqtSignal(Path)
     navigation_error = pyqtSignal(str, str)  # error_type, message
+    status_message = pyqtSignal(str, int)  # message, timeout_ms
 
     def __init__(
         self,
@@ -360,7 +361,7 @@ class EnhancedFolderNavigator(QWidget):
                     f"画像ファイルが見つかりませんでした: {folder_path}",
                     level="INFO",
                 )
-                self._show_no_images_message()
+                self._show_no_images_status(folder_path)
             else:
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
@@ -524,69 +525,32 @@ class EnhancedFolderNavigator(QWidget):
                 AIComponent.CURSOR,
             )
 
-    def _show_no_images_message(self):
+    def _show_no_images_status(self, folder_path: Path):
         """
-        画像ファイルが見つからない場合のメッセージを表示する
+        画像ファイルが見つからない場合のステータス表示（ダイアログではなくステータスバー）
         """
         try:
-            folder_name = (
-                self.current_folder.name
-                if self.current_folder
-                else "選択されたフォルダ"
-            )
+            folder_name = folder_path.name if folder_path else "選択されたフォルダ"
 
-            # 日本語でのわかりやすいメッセージ
-            message = (
-                f"フォルダ '{folder_name}' には画像ファイルが見つかりませんでした。\n\n"
-                f"対応している画像形式:\n"
-                f"• JPEG (.jpg, .jpeg)\n"
-                f"• PNG (.png)\n"
-                f"• GIF (.gif)\n"
-                f"• BMP (.bmp)\n"
-                f"• TIFF (.tiff)\n"
-                f"• WebP (.webp)\n\n"
-                f"別のフォルダを選択してください。"
-            )
+            # ステータスメッセージを作成
+            status_message = f"📁 '{folder_name}' - 画像ファイルが見つかりません (対応形式: JPEG, PNG, GIF, BMP, TIFF, WebP)"
 
             # ログに記録
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
-                "no_images_message",
-                f"画像なしメッセージ表示: {self.current_folder}",
+                "no_images_status",
+                f"画像なしステータス表示: {folder_path}",
                 level="INFO",
             )
 
-            # ユーザーに情報メッセージを表示（アクセシビリティ対応）
-            msg_box = QMessageBox(self)
-            msg_box.setIcon(QMessageBox.Icon.Information)
-            msg_box.setWindowTitle("画像ファイルが見つかりません")
-            msg_box.setText(message)
-
-            # アクセシビリティ対応
-            msg_box.setAccessibleName("情報ダイアログ: 画像ファイルなし")
-            msg_box.setAccessibleDescription(
-                f"フォルダ '{folder_name}' に画像ファイルが見つからない旨の通知"
-            )
-
-            # 適切なボタンテキストと追加アクション
-            msg_box.setStandardButtons(
-                QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Help
-            )
-            msg_box.button(QMessageBox.StandardButton.Ok).setText("了解")
-            msg_box.button(QMessageBox.StandardButton.Help).setText(
-                "別のフォルダを選択"
-            )
-
-            # ヘルプボタンが押された場合の処理
-            result = msg_box.exec()
-            if result == QMessageBox.StandardButton.Help:
-                self.open_folder_dialog()
+            # ステータス表示シグナルを発行（メインウィンドウのステータスバーに表示）
+            self.status_message.emit(status_message, 5000)  # 5秒間表示
 
             # 統計情報を更新
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "empty_folder_statistics",
-                f"空フォルダ統計更新: {self.current_folder}",
+                f"空フォルダ統計更新: {folder_path}",
                 level="DEBUG",
             )
 
@@ -595,11 +559,9 @@ class EnhancedFolderNavigator(QWidget):
                 e,
                 ErrorCategory.UI_ERROR,
                 {
-                    "operation": "show_no_images_message",
-                    "current_folder": (
-                        str(self.current_folder) if self.current_folder else "None"
-                    ),
-                    "user_action": "画像なしメッセージ表示",
+                    "operation": "show_no_images_status",
+                    "current_folder": str(folder_path) if folder_path else "None",
+                    "user_action": "画像なしステータス表示",
                 },
                 AIComponent.CURSOR,
             )
