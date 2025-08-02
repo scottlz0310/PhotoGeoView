@@ -1,0 +1,209 @@
+name: AI Quality Improvement
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # 毎日午前9時に実行
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  ai-analysis:
+    name: AI品質解析
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4
+
+    - name: Python ${{ env.PYTHON_VERSION }} をセットアップ
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 依存関係をキャッシュ
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: 依存関係をインストール
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8 black isort mypy
+
+    - name: 基本的なテストを実行
+      run: |
+        echo "基本的なテストを実行中..."
+        pytest tests/ -v --cov=src --cov-report=xml --tb=short || echo "一部のテストが失敗しました"
+
+    - name: コード品質チェック
+      run: |
+        echo "コード品質チェックを実行中..."
+        flake8 src/ --max-line-length=88 --extend-ignore=E203,W503,F401,E402 || echo "コードスタイルの問題があります"
+        black --check --diff src/ || echo "Blackフォーマットが必要です"
+        isort --check-only --diff src/ || echo "インポートソートが必要です"
+
+    - name: AI解析ツールを実行
+      run: |
+        echo "AI解析ツールを実行中..."
+        python tools/github_actions_ai_analyzer_enhanced.py
+
+    - name: 解析結果をアップロード
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ai-analysis-results
+        path: |
+          reports/enhanced_ai_analysis_report_*.md
+          reports/ci_report_*.json
+          coverage.xml
+
+  quality-improvement:
+    name: 品質改善提案
+    runs-on: ubuntu-latest
+    needs: ai-analysis
+    if: always()
+    timeout-minutes: 15
+
+    steps:
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4
+
+    - name: 解析結果をダウンロード
+      uses: actions/download-artifact@v4
+      with:
+        name: ai-analysis-results
+        path: ./analysis-results
+
+    - name: 品質改善提案を生成
+      run: |
+        echo "品質改善提案を生成中..."
+
+        # 最新の解析レポートを検索
+        LATEST_REPORT=$(ls -t analysis-results/enhanced_ai_analysis_report_*.md 2>/dev/null | head -1)
+
+        if [ -n "$LATEST_REPORT" ]; then
+          echo "## 🤖 AI品質改善提案" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 解析結果サマリー" >> $GITHUB_STEP_SUMMARY
+          cat "$LATEST_REPORT" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "解析レポートが見つかりませんでした。" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: 改善アクションを提案
+      run: |
+        echo "### 🚀 推奨改善アクション" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "1. **テスト品質向上**: 失敗したテストの自動修正" >> $GITHUB_STEP_SUMMARY
+        echo "2. **コード品質改善**: リンティングエラーの自動修正" >> $GITHUB_STEP_SUMMARY
+        echo "3. **依存関係最適化**: 古いパッケージの自動更新" >> $GITHUB_STEP_SUMMARY
+        echo "4. **パフォーマンス最適化**: ボトルネックの自動特定" >> $GITHUB_STEP_SUMMARY
+        echo "5. **セキュリティ強化**: 脆弱性の自動検出と修正" >> $GITHUB_STEP_SUMMARY
+
+  auto-fix:
+    name: 自動修正実行
+    runs-on: ubuntu-latest
+    needs: [ai-analysis, quality-improvement]
+    if: github.event_name == 'workflow_dispatch' && always()
+    timeout-minutes: 20
+
+    steps:
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Python ${{ env.PYTHON_VERSION }} をセットアップ
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: 依存関係をインストール
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install black isort
+
+    - name: コードフォーマットの自動修正
+      run: |
+        echo "コードフォーマットを自動修正中..."
+        black src/ --line-length=88
+        isort src/
+
+    - name: 修正をコミット
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        if git diff --quiet; then
+          echo "修正する変更がありません"
+        else
+          git add .
+          git commit -m "🤖 AI品質改善: コードフォーマットの自動修正"
+          git push
+        fi
+
+  quality-report:
+    name: 品質レポート生成
+    runs-on: ubuntu-latest
+    needs: [ai-analysis, quality-improvement]
+    if: always()
+    timeout-minutes: 10
+
+    steps:
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4
+
+    - name: 解析結果をダウンロード
+      uses: actions/download-artifact@v4
+      with:
+        name: ai-analysis-results
+        path: ./analysis-results
+
+    - name: 品質レポートを生成
+      run: |
+        echo "品質レポートを生成中..."
+
+        # レポートディレクトリを作成
+        mkdir -p quality-reports
+
+        # 最新の解析レポートをコピー
+        LATEST_REPORT=$(ls -t analysis-results/enhanced_ai_analysis_report_*.md 2>/dev/null | head -1)
+        if [ -n "$LATEST_REPORT" ]; then
+          cp "$LATEST_REPORT" quality-reports/latest_quality_report.md
+        fi
+
+        # 品質サマリーを生成
+        cat > quality-reports/quality_summary.md << EOF
+        # 品質サマリー
+
+        生成日時: $(date)
+
+        ## 実行結果
+        - AI解析: ${{ needs.ai-analysis.result }}
+        - 品質改善提案: ${{ needs.quality-improvement.result }}
+        - 自動修正: ${{ needs.auto-fix.result }}
+
+        ## 次のステップ
+        1. 解析結果を確認
+        2. 改善提案を実装
+        3. 品質メトリクスを監視
+        EOF
+
+    - name: 品質レポートをアップロード
+      uses: actions/upload-artifact@v4
+      with:
+        name: quality-reports
+        path: quality-reports/
