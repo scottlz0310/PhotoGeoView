@@ -1201,6 +1201,11 @@ class MapPanel(QWidget):
                 if hasattr(self, "fullscreen_button"):
                     self.fullscreen_button.setText("⛶ 地図全画面")
 
+                # 元のフォーカスポリシーを復元
+                if hasattr(self, "_original_focus_policy"):
+                    self.setFocusPolicy(self._original_focus_policy)
+                    delattr(self, "_original_focus_policy")
+
                 # ログ出力
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -1351,6 +1356,13 @@ class MapPanel(QWidget):
                 # ボタンテキストを「戻る」に変更
                 if hasattr(self, "fullscreen_button"):
                     self.fullscreen_button.setText("⛶ 戻る")
+
+                # フォーカスを確実に設定（ESCキーを受信するため）
+                self.setFocus(Qt.FocusReason.OtherFocusReason)
+                
+                # フォーカスポリシーを一時的に強化
+                self._original_focus_policy = self.focusPolicy()
+                self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
                 # ログ出力
                 self.logger_system.log_ai_operation(
@@ -1693,6 +1705,11 @@ class MapPanel(QWidget):
         try:
             # ESCキーで地図全画面表示を終了
             if event.key() == Qt.Key.Key_Escape and self.is_fullscreen_mode:
+                self._toggle_fullscreen()
+                event.accept()
+                return
+            # F11キーで全画面表示切り替え
+            elif event.key() == Qt.Key.Key_F11:
                 self._toggle_fullscreen()
                 event.accept()
                 return
