@@ -40,6 +40,59 @@ from ..state_manager import StateManager
 from .folder_navigator import EnhancedFolderNavigator
 from .simple_thumbnail_grid import SimpleThumbnailGrid
 from .theme_manager import IntegratedThemeManager
+# Import theme manager and breadcrumb components
+try:
+    from ...ui.theme_manager import ThemeManagerWidget
+    from ...ui.breadcrumb_bar import BreadcrumbAddressBar
+except ImportError:
+    # Fallback import paths
+    try:
+        import sys
+        from pathlib import Path
+        sys.path.append(str(Path(__file__).parent.parent.parent))
+        from ui.theme_manager import ThemeManagerWidget
+        from ui.breadcrumb_bar import BreadcrumbAddressBar
+    except ImportError:
+        # Create mock classes if imports fail
+        from PySide6.QtCore import QObject, Signal
+
+        class ThemeManagerWidget(QObject):
+            theme_changed = Signal(str, str)
+            theme_applied = Signal(str)
+            theme_error = Signal(str, str)
+
+            def __init__(self, *args, **kwargs):
+                super().__init__()
+
+            def setup_shortcuts_with_parent(self, parent):
+                pass
+
+            def get_keyboard_shortcuts_info(self):
+                return {
+                    "Ctrl+T": "Open theme selection dialog",
+                    "Ctrl+Shift+T": "Cycle through available themes"
+                }
+
+            def apply_theme(self, theme_name):
+                return False
+
+            def register_component(self, component):
+                return False
+
+        class BreadcrumbAddressBar(QObject):
+            path_changed = Signal(object)
+            segment_clicked = Signal(int, object)
+            navigation_requested = Signal(object)
+            breadcrumb_error = Signal(str, str)
+
+            def __init__(self, *args, **kwargs):
+                super().__init__()
+
+            def get_widget(self):
+                return None
+
+            def set_current_path(self, path):
+                return False
 
 
 class IntegratedMainWindow(QMainWindow):
@@ -83,6 +136,8 @@ class IntegratedMainWindow(QMainWindow):
 
         # UI components
         self.theme_manager: Optional[IntegratedThemeManager] = None
+        self.theme_manager_widget: Optional[ThemeManagerWidget] = None
+        self.breadcrumb_bar: Optional[BreadcrumbAddressBar] = None
         self.thumbnail_grid: Optional[SimpleThumbnailGrid] = None
         self.folder_navigator: Optional[EnhancedFolderNavigator] = None
 
@@ -138,6 +193,9 @@ class IntegratedMainWindow(QMainWindow):
 
             # Initialize theme manager
             self._initialize_theme_manager()
+
+            # Initialize breadcrumb bar
+            self._initialize_breadcrumb_bar()
 
             # Apply initial theme
             self._apply_initial_theme()
@@ -253,7 +311,7 @@ class IntegratedMainWindow(QMainWindow):
         self.main_splitter.setStretchFactor(1, 1)
 
     def _create_left_panel(self):
-        """Create the left panel with splitters (3-area adjustable design)"""
+        """Create the left panel with splitters (4-area adjustable design with breadcrumb)"""
 
         # 左パネル用の垂直スプリッターを作成
         self.left_panel_splitter = QSplitter(Qt.Orientation.Vertical)
@@ -272,21 +330,28 @@ class IntegratedMainWindow(QMainWindow):
             }
         """)
 
-        # 1. Folder navigator (上段)
+        # 1. Breadcrumb address bar (最上段)
+        if self.breadcrumb_bar and self.breadcrumb_bar.get_widget():
+            breadcrumb_widget = self.breadcrumb_bar.get_widget()
+            breadcrumb_widget.setMinimumHeight(40)  # 最小高さ設定
+            breadcrumb_widget.setMaximumHeight(60)  # 最大高さ設定
+            self.left_panel_splitter.addWidget(breadcrumb_widget)
+
+        # 2. Folder navigator (上段)
         self.folder_navigator = EnhancedFolderNavigator(
             self.config_manager, self.state_manager, self.logger_system
         )
         self.folder_navigator.setMinimumHeight(150)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.folder_navigator)
 
-        # 2. Thumbnail grid (中段)
+        # 3. Thumbnail grid (中段)
         self.thumbnail_grid = SimpleThumbnailGrid(
             self.config_manager, self.state_manager, self.logger_system
         )
         self.thumbnail_grid.setMinimumHeight(200)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.thumbnail_grid)
 
-        # 3. EXIF information panel (下段)
+        # 4. EXIF information panel (下段)
         from .exif_panel import EXIFPanel
         self.exif_panel = EXIFPanel(
             self.config_manager, self.state_manager, self.logger_system
@@ -294,13 +359,18 @@ class IntegratedMainWindow(QMainWindow):
         self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.exif_panel)
 
-        # スプリッターの初期サイズ設定 (フォルダ:サムネイル:EXIF = 2:4:4)
-        self.left_panel_splitter.setSizes([150, 300, 400])
+        # スプリッターの初期サイズ設定 (ブレッドクラム:フォルダ:サムネイル:EXIF = 1:2:4:4)
+        breadcrumb_height = 50 if self.breadcrumb_bar else 0
+        self.left_panel_splitter.setSizes([breadcrumb_height, 150, 300, 400])
 
         # 各エリアの伸縮設定
-        self.left_panel_splitter.setStretchFactor(0, 0)  # フォルダナビゲーター: 固定的
-        self.left_panel_splitter.setStretchFactor(1, 1)  # サムネイルグリッド: 伸縮可能
-        self.left_panel_splitter.setStretchFactor(2, 1)  # EXIFパネル: 伸縮可能
+        widget_index = 0
+        if self.breadcrumb_bar:
+            self.left_panel_splitter.setStretchFactor(widget_index, 0)  # ブレッドクラム: 固定
+            widget_index += 1
+        self.left_panel_splitter.setStretchFactor(widget_index, 0)  # フォルダナビゲーター: 固定的
+        self.left_panel_splitter.setStretchFactor(widget_index + 1, 1)  # サムネイルグリッド: 伸縮可能
+        self.left_panel_splitter.setStretchFactor(widget_index + 2, 1)  # EXIFパネル: 伸縮可能
 
         # 左パネルスプリッターをメインスプリッターに追加
         self.main_splitter.addWidget(self.left_panel_splitter)
@@ -323,13 +393,17 @@ class IntegratedMainWindow(QMainWindow):
                     "Left panel splitter state restored",
                 )
             else:
-                # デフォルト設定を適用
-                self.left_panel_splitter.setSizes([150, 300, 400])
+                # デフォルト設定を適用 (ブレッドクラムを含む4エリア構成)
+                breadcrumb_height = 50 if self.breadcrumb_bar else 0
+                if breadcrumb_height > 0:
+                    self.left_panel_splitter.setSizes([breadcrumb_height, 150, 300, 400])
+                else:
+                    self.left_panel_splitter.setSizes([150, 300, 400])
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "left_panel_splitter_default",
-                    "Left panel splitter set to default sizes",
+                    "Left panel splitter set to default sizes with breadcrumb support",
                 )
 
         except Exception as e:
@@ -397,12 +471,24 @@ class IntegratedMainWindow(QMainWindow):
         """Initialize the integrated theme manager"""
 
         try:
+            # Initialize the integrated theme manager (existing)
             self.theme_manager = IntegratedThemeManager(
                 self.config_manager, self.state_manager, self.logger_system
             )
 
-            # Connect theme change signal
+            # Initialize the new theme manager widget
+            self.theme_manager_widget = ThemeManagerWidget(
+                self.config_manager, self.logger_system
+            )
+
+            # Connect theme change signals
             self.theme_manager.theme_changed.connect(self._on_theme_changed)
+            self.theme_manager_widget.theme_changed.connect(self._on_theme_manager_widget_changed)
+            self.theme_manager_widget.theme_applied.connect(self._on_theme_applied)
+            self.theme_manager_widget.theme_error.connect(self._on_theme_error)
+
+            # Setup keyboard shortcuts with main window as parent
+            self.theme_manager_widget.setup_shortcuts_with_parent(self)
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -410,6 +496,40 @@ class IntegratedMainWindow(QMainWindow):
                 ErrorCategory.UI_ERROR,
                 {"operation": "theme_manager_init"},
                 AIComponent.CURSOR,
+            )
+
+    def _initialize_breadcrumb_bar(self):
+        """Initialize the breadcrumb address bar"""
+
+        try:
+            # Initialize file system watcher if not already available
+            if not hasattr(self, 'file_system_watcher'):
+                from ..services.file_system_watcher import FileSystemWatcher
+                self.file_system_watcher = FileSystemWatcher(
+                    logger_system=self.logger_system, enable_monitoring=True
+                )
+
+            # Initialize breadcrumb bar
+            self.breadcrumb_bar = BreadcrumbAddressBar(
+                self.file_system_watcher, self.logger_system, self.config_manager, self
+            )
+
+            # Connect breadcrumb signals
+            self.breadcrumb_bar.path_changed.connect(self._on_breadcrumb_path_changed)
+            self.breadcrumb_bar.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
+            self.breadcrumb_bar.navigation_requested.connect(self._on_breadcrumb_navigation_requested)
+            self.breadcrumb_bar.breadcrumb_error.connect(self._on_breadcrumb_error)
+
+            # Set initial path from state
+            current_folder = self.state_manager.get_state_value("current_folder", Path.home())
+            self.breadcrumb_bar.set_current_path(current_folder)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_bar_init"},
+                AIComponent.KIRO,
             )
 
     def _apply_initial_theme(self):
@@ -448,6 +568,9 @@ class IntegratedMainWindow(QMainWindow):
         if self.folder_navigator:
             self.folder_navigator.folder_changed.connect(self._on_folder_changed)
             self.folder_navigator.status_message.connect(self._on_status_message)
+            # Connect breadcrumb bar with folder navigator
+            if self.breadcrumb_bar:
+                self.folder_navigator.folder_changed.connect(self.breadcrumb_bar.set_current_path)
 
         # Connect thumbnail grid signals
         if self.thumbnail_grid:
@@ -484,6 +607,10 @@ class IntegratedMainWindow(QMainWindow):
 
         # Connect performance alerts
         self.performance_alert.connect(self._on_performance_alert)
+
+        # Register UI components with theme manager
+        if self.theme_manager_widget:
+            self._register_theme_aware_components()
 
     def _restore_state(self):
         """Restore window state from configuration"""
@@ -542,7 +669,19 @@ class IntegratedMainWindow(QMainWindow):
         """Toggle between light and dark themes (CursorBLD feature)"""
 
         try:
-            if self.theme_manager:
+            # Use the new theme manager widget if available
+            if self.theme_manager_widget:
+                current_theme = self.state_manager.get_state_value(
+                    "current_theme", "default"
+                )
+
+                # Simple toggle logic - can be enhanced
+                new_theme = "dark" if current_theme == "default" else "default"
+
+                self.theme_manager_widget.apply_theme(new_theme)
+
+            # Fallback to integrated theme manager
+            elif self.theme_manager:
                 current_theme = self.state_manager.get_state_value(
                     "current_theme", "default"
                 )
@@ -596,6 +735,10 @@ class IntegratedMainWindow(QMainWindow):
         try:
             # Update state
             self.state_manager.update_state(current_folder=folder_path)
+
+            # Update breadcrumb bar
+            if self.breadcrumb_bar:
+                self.breadcrumb_bar.set_current_path(folder_path)
 
             # Update status
             self.status_bar.showMessage(f"Folder: {folder_path}")
@@ -843,6 +986,257 @@ class IntegratedMainWindow(QMainWindow):
                 ErrorCategory.UI_ERROR,
                 {"operation": "theme_change_handling", "theme": theme_name},
                 AIComponent.CURSOR,
+            )
+
+    def _on_theme_manager_widget_changed(self, old_theme: str, new_theme: str):
+        """Handle theme change from theme manager widget"""
+
+        try:
+            # Update integrated theme manager to stay in sync
+            if self.theme_manager and hasattr(self.theme_manager, 'apply_theme'):
+                self.theme_manager.apply_theme(new_theme)
+
+            # Update status
+            self.status_bar.showMessage(f"Theme changed from {old_theme} to {new_theme}", 2000)
+
+            # Log the change
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "theme_changed_via_widget",
+                f"Theme changed from {old_theme} to {new_theme}",
+                context={"old_theme": old_theme, "new_theme": new_theme}
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "theme_manager_widget_change", "old_theme": old_theme, "new_theme": new_theme},
+                AIComponent.KIRO,
+            )
+
+    def _on_theme_applied(self, theme_name: str):
+        """Handle theme applied event"""
+
+        try:
+            # Update status
+            self.status_bar.showMessage(f"Theme applied: {theme_name}", 1500)
+
+            # Log the application
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "theme_applied",
+                f"Theme applied successfully: {theme_name}",
+                context={"theme_name": theme_name}
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "theme_applied", "theme": theme_name},
+                AIComponent.KIRO,
+            )
+
+    def _on_theme_error(self, theme_name: str, error_message: str):
+        """Handle theme error event"""
+
+        try:
+            # Update status with error
+            self.status_bar.showMessage(f"Theme error: {error_message}", 5000)
+
+            # Log the error
+            self.logger_system.log_error(
+                Exception(error_message),
+                "theme_error",
+                {"theme_name": theme_name, "error_message": error_message},
+                AIComponent.KIRO,
+            )
+
+            # Show user notification for critical errors
+            if "not found" in error_message.lower() or "failed to load" in error_message.lower():
+                QMessageBox.warning(
+                    self,
+                    "Theme Error",
+                    f"Failed to apply theme '{theme_name}':\n{error_message}\n\nReverting to default theme."
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "theme_error_handling", "theme": theme_name, "error": error_message},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_path_changed(self, new_path: Path):
+        """Handle breadcrumb path change event"""
+
+        try:
+            # Update folder navigator to match breadcrumb
+            if self.folder_navigator and hasattr(self.folder_navigator, 'set_current_folder'):
+                self.folder_navigator.set_current_folder(new_path)
+
+            # Update state
+            self.state_manager.update_state(current_folder=new_path)
+
+            # Update status
+            self.status_bar.showMessage(f"Navigated to: {new_path}", 2000)
+
+            # Emit folder changed signal
+            self.folder_changed.emit(new_path)
+
+            # Log the navigation
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_navigation",
+                f"Navigated via breadcrumb to: {new_path}",
+                context={"path": str(new_path)}
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_path_change", "path": str(new_path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_segment_clicked(self, segment_index: int, path: Path):
+        """Handle breadcrumb segment click event"""
+
+        try:
+            # Update status
+            self.status_bar.showMessage(f"Navigated to segment {segment_index}: {path.name}", 2000)
+
+            # Log the segment click
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_segment_click",
+                f"Clicked breadcrumb segment {segment_index}: {path}",
+                context={"segment_index": segment_index, "path": str(path)}
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_segment_click", "segment": segment_index, "path": str(path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_navigation_requested(self, target_path: Path):
+        """Handle breadcrumb navigation request"""
+
+        try:
+            # Validate path before navigation
+            if not target_path.exists() or not target_path.is_dir():
+                self.status_bar.showMessage(f"Cannot navigate to: {target_path} (path not accessible)", 3000)
+                return
+
+            # Perform navigation
+            self._on_folder_changed(target_path)
+
+            # Log the navigation request
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_navigation_request",
+                f"Navigation requested to: {target_path}",
+                context={"target_path": str(target_path)}
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_navigation_request", "path": str(target_path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_error(self, error_type: str, error_message: str):
+        """Handle breadcrumb error event"""
+
+        try:
+            # Update status with error
+            self.status_bar.showMessage(f"Breadcrumb error: {error_message}", 4000)
+
+            # Log the error
+            self.logger_system.log_error(
+                Exception(error_message),
+                "breadcrumb_error",
+                {"error_type": error_type, "error_message": error_message},
+                AIComponent.KIRO,
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_error_handling", "error_type": error_type, "error": error_message},
+                AIComponent.KIRO,
+            )
+
+    def _register_theme_aware_components(self):
+        """Register UI components with theme manager for theme updates"""
+
+        try:
+            if not self.theme_manager_widget:
+                return
+
+            # Register main UI components that support theming
+            components_to_register = []
+
+            # Add folder navigator if it supports theming
+            if self.folder_navigator and hasattr(self.folder_navigator, 'apply_theme'):
+                components_to_register.append(self.folder_navigator)
+
+            # Add thumbnail grid if it supports theming
+            if self.thumbnail_grid and hasattr(self.thumbnail_grid, 'apply_theme'):
+                components_to_register.append(self.thumbnail_grid)
+
+            # Add EXIF panel if it supports theming
+            if hasattr(self, 'exif_panel') and hasattr(self.exif_panel, 'apply_theme'):
+                components_to_register.append(self.exif_panel)
+
+            # Add image preview panel if it supports theming
+            if hasattr(self, 'image_preview_panel') and hasattr(self.image_preview_panel, 'apply_theme'):
+                components_to_register.append(self.image_preview_panel)
+
+            # Add map panel if it supports theming
+            if hasattr(self, 'map_panel') and hasattr(self.map_panel, 'apply_theme'):
+                components_to_register.append(self.map_panel)
+
+            # Add breadcrumb bar widget if it supports theming
+            if self.breadcrumb_bar and self.breadcrumb_bar.get_widget():
+                breadcrumb_widget = self.breadcrumb_bar.get_widget()
+                if hasattr(breadcrumb_widget, 'apply_theme'):
+                    components_to_register.append(breadcrumb_widget)
+
+            # Register all theme-aware components
+            for component in components_to_register:
+                if hasattr(self.theme_manager_widget, 'register_component'):
+                    success = self.theme_manager_widget.register_component(component)
+                    if success:
+                        self.logger_system.log_ai_operation(
+                            AIComponent.KIRO,
+                            "component_registered_for_theming",
+                            f"Component registered for theme updates: {type(component).__name__}",
+                            context={"component_type": type(component).__name__}
+                        )
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "theme_aware_components_registered",
+                f"Registered {len(components_to_register)} components for theme updates",
+                context={"component_count": len(components_to_register)}
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "register_theme_aware_components"},
+                AIComponent.KIRO,
             )
 
     def _update_thumbnail_grid(self, folder_path: Path):
