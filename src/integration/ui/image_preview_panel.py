@@ -10,9 +10,9 @@ Author: Kiro AI Integration System
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QPoint, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPixmap, QWheelEvent
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QPoint, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPixmap, QWheelEvent
+from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -38,7 +38,7 @@ class ImageViewerWidget(QWidget):
     - 全画面表示対応
     """
 
-    zoom_changed = pyqtSignal(float)
+    zoom_changed = Signal(float)
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -236,9 +236,9 @@ class ImagePreviewPanel(QWidget):
     """
 
     # シグナル
-    image_loaded = pyqtSignal(Path)
-    zoom_changed = pyqtSignal(float)
-    status_message = pyqtSignal(str)
+    image_loaded = Signal(Path)
+    zoom_changed = Signal(float)
+    status_message = Signal(str)
 
     def __init__(
         self,
@@ -906,7 +906,7 @@ class ImagePreviewPanel(QWidget):
                 self._hidden_widgets = []
 
             # メインスプリッターを探す
-            from PyQt6.QtWidgets import QSplitter
+            from PySide6.QtWidgets import QSplitter
 
             main_splitter = None
             for child in parent_window.findChildren(QSplitter):

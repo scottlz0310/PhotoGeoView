@@ -32,11 +32,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from PyQt6.QtCore import QModelIndex, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QFileSystemModel, QIcon, QStandardItem, QStandardItemModel
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QModelIndex, Qt, QTimer, Signal
+from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel
+from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
+    QFileSystemModel,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -70,10 +71,10 @@ class EnhancedFolderNavigator(QWidget):
     """
 
     # Signals
-    folder_selected = pyqtSignal(Path)
-    folder_changed = pyqtSignal(Path)
-    navigation_error = pyqtSignal(str, str)  # error_type, message
-    status_message = pyqtSignal(str, int)  # message, timeout_ms
+    folder_selected = Signal(Path)
+    folder_changed = Signal(Path)
+    navigation_error = Signal(str, str)  # error_type, message
+    status_message = Signal(str, int)  # message, timeout_ms
 
     def __init__(
         self,
@@ -249,7 +250,7 @@ class EnhancedFolderNavigator(QWidget):
             self.file_system_model = QFileSystemModel()
             self.file_system_model.setRootPath("")
             # Fix: Use QDir.Filter instead of model.Filter
-            from PyQt6.QtCore import QDir
+            from PySide6.QtCore import QDir
             self.file_system_model.setFilter(
                 QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot
             )

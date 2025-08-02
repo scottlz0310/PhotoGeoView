@@ -10,8 +10,8 @@ Author: Kiro AI Integration System
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QGroupBox,
@@ -46,8 +46,8 @@ class EXIFPanel(QWidget):
     """
 
     # シグナル
-    gps_coordinates_updated = pyqtSignal(float, float)  # latitude, longitude
-    exif_data_updated = pyqtSignal(dict)  # exif_data
+    gps_coordinates_updated = Signal(float, float)  # latitude, longitude
+    exif_data_updated = Signal(dict)  # exif_data
 
     def __init__(
         self,
@@ -152,7 +152,7 @@ class EXIFPanel(QWidget):
 
     def _create_size_control_panel(self):
         """サイズ調整コントロールパネルを作成"""
-        from PyQt6.QtWidgets import QSlider
+        from PySide6.QtWidgets import QSlider
 
         self.size_control_panel = QWidget()
         self.size_control_panel.setFixedHeight(60)  # 固定高さに変更
@@ -1032,7 +1032,7 @@ class EXIFPanel(QWidget):
     def _copy_coordinates(self):
         """GPS座標をクリップボードにコピー"""
         try:
-            from PyQt6.QtWidgets import QApplication
+            from PySide6.QtWidgets import QApplication
 
             # 現在の座標を取得
             coords = self.get_current_gps_coordinates()

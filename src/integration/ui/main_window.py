@@ -12,9 +12,9 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from PyQt6.QtCore import QSize, Qt, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon, QKeySequence
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QSize, Qt, QThread, QTimer, Signal
+from PySide6.QtGui import QAction, QCloseEvent, QIcon, QKeySequence
+from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QLabel,
@@ -54,10 +54,10 @@ class IntegratedMainWindow(QMainWindow):
     """
 
     # Signals
-    folder_changed = pyqtSignal(Path)
-    image_selected = pyqtSignal(Path)
-    theme_changed = pyqtSignal(str)
-    performance_alert = pyqtSignal(str, str)  # level, message
+    folder_changed = Signal(Path)
+    image_selected = Signal(Path)
+    theme_changed = Signal(str)
+    performance_alert = Signal(str, str)  # level, message
 
     def __init__(
         self,
@@ -514,7 +514,7 @@ class IntegratedMainWindow(QMainWindow):
         """Open folder dialog and load images"""
 
         try:
-            from PyQt6.QtWidgets import QFileDialog
+            from PySide6.QtWidgets import QFileDialog
 
             folder = QFileDialog.getExistingDirectory(
                 self,

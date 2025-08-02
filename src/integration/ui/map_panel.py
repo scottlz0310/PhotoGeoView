@@ -13,8 +13,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from PyQt6.QtCore import Qt, QTimer, QUrl, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, QTimer, QUrl, Signal
+from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -33,8 +33,8 @@ QWebEngineSettings = None
 
 # 直接インポートを試行（OpenGL設定が適用されている場合）
 try:
-    from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEngineSettings
-    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineSettings
+    from PySide6.QtWebEngineWidgets import QWebEngineView
 
     # 簡単な初期化テスト
     try:
@@ -55,9 +55,8 @@ except ImportError as e:
 
         webengine_status = get_webengine_status()
         if webengine_status["available"]:
-            from PyQt6.QtWebEngineCore import QWebEngineSettings
-            from PyQt6.QtWebEngineWidgets import QWebEngineView
-
+            from PySide6.QtWebEngineCore import QWebEngineSettings
+            from PySide6.QtWebEngineWidgets import QWebEngineView
             WEBENGINE_AVAILABLE = True
             print("✅ WebEngineチェッカー経由で初期化成功")
     except ImportError:
@@ -94,9 +93,9 @@ class MapPanel(QWidget):
     """
 
     # シグナル
-    map_loaded = pyqtSignal(float, float)  # latitude, longitude
-    map_error = pyqtSignal(str)  # error message
-    location_selected = pyqtSignal(float, float)  # lat, lon
+    map_loaded = Signal(float, float)  # latitude, longitude
+    map_error = Signal(str)  # error message
+    location_selected = Signal(float, float)  # lat, lon
 
     def __init__(
         self,
@@ -1390,7 +1389,7 @@ class MapPanel(QWidget):
                 self._hidden_widgets = []
 
             # メインスプリッターを探す
-            from PyQt6.QtWidgets import QSplitter
+            from PySide6.QtWidgets import QSplitter
 
             main_splitter = None
             for child in parent_window.findChildren(QSplitter):

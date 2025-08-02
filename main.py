@@ -63,9 +63,9 @@ def check_environment():
     try:
         import folium  # noqa: F401
         import PIL  # noqa: F401
-        import PyQt6  # noqa: F401
+        import PySide6  # noqa: F401
 
-        # PyQtWebEngine初期化はQApplication初期化後に行う
+        # PySide6 WebEngine初期化はQApplication初期化後に行う
 
         message = "✅ 必要な依存関係が確認されました"
         logger.info(message)
@@ -96,7 +96,7 @@ def main():
             sys.exit(1)
 
         # アプリケーションコントローラーをインポート・起動
-        from PyQt6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication
 
         from src.integration.config_manager import ConfigManager
         from src.integration.controllers import AppController
@@ -112,7 +112,7 @@ def main():
 
         # WebEngine用の設定（QApplication作成前に必要）
         try:
-            from PyQt6.QtCore import Qt
+            from PySide6.QtCore import Qt
             QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
             print("✅ WebEngine用OpenGL設定完了")
         except Exception as e:
@@ -123,7 +123,7 @@ def main():
         app.setApplicationVersion("1.0.0")
         app.setOrganizationName("AI Development Team")
 
-        # PyQtWebEngine早期初期化（QApplication初期化後）
+        # PySide6 WebEngine早期初期化（QApplication初期化後）
         try:
             from src.integration.utils.webengine_checker import (
                 get_webengine_status,

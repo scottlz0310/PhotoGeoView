@@ -42,14 +42,14 @@ class TestBasicImports(unittest.TestCase):
 
     def test_third_party_imports(self):
         """サードパーティライブラリのインポート確認"""
-        # PyQt6のインポート確認
+        # PySide6のインポート確認
         try:
-            import PyQt6
-            from PyQt6.QtCore import QObject
-            from PyQt6.QtWidgets import QApplication
-            self.assertTrue(True, "PyQt6のインポート成功")
+            import PySide6
+            from PySide6.QtCore import QObject
+            from PySide6.QtWidgets import QApplication
+            self.assertTrue(True, "PySide6のインポート成功")
         except ImportError as e:
-            self.skipTest(f"PyQt6のインポートスキップ: {e}")
+            self.skipTest(f"PySide6のインポートスキップ: {e}")
 
         # Pillowのインポート確認
         try:

@@ -19,8 +19,8 @@ from unittest.mock import Mock, MagicMock
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 try:
-    from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtCore import QTimer
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QTimer
 
     from src.integration.ui.folder_navigator import EnhancedFolderNavigator
     from src.integration.ui.thumbnail_grid import OptimizedThumbnailGrid

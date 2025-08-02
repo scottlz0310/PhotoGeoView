@@ -12,8 +12,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QApplication
 
 from ..config_manager import ConfigManager
 from ..error_handling import ErrorCategory, IntegratedErrorHandler
@@ -34,11 +34,11 @@ class IntegratedThemeManager(QObject):
     """
 
     # Signals
-    theme_changed = pyqtSignal(str)
-    theme_change_requested = pyqtSignal(str, str)  # old_theme, new_theme
-    theme_applied = pyqtSignal(str)  # theme_name
-    theme_error = pyqtSignal(str, str)  # theme_name, error_message
-    theme_transition_progress = pyqtSignal(int)  # progress percentage
+    theme_changed = Signal(str)
+    theme_change_requested = Signal(str, str)  # old_theme, new_theme
+    theme_applied = Signal(str)  # theme_name
+    theme_error = Signal(str, str)  # theme_name, error_message
+    theme_transition_progress = Signal(int)  # progress percentage
 
     def __init__(
         self,

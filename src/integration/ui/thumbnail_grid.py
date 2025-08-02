@@ -32,9 +32,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from PyQt6.QtCore import QMutex, QObject, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QPainter, QPixmap
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QMutex, QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QFont, QPainter, QPixmap
+from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -57,9 +57,9 @@ class ThumbnailItem(QLabel):
     Individual thumbnail item with Kiro optimization
     """
 
-    clicked = pyqtSignal(Path)
-    context_menu_requested = pyqtSignal(Path, object)  # image_path, position
-    exif_info_requested = pyqtSignal(Path)
+    clicked = Signal(Path)
+    context_menu_requested = Signal(Path, object)  # image_path, position
+    exif_info_requested = Signal(Path)
 
     def __init__(self, image_path: Path, thumbnail_size: int = 150):
         super().__init__()
@@ -177,8 +177,8 @@ class ThumbnailLoader(QObject):
     Asynchronous thumbnail loader with Kiro optimization
     """
 
-    thumbnail_loaded = pyqtSignal(Path, QPixmap)
-    loading_progress = pyqtSignal(int, int)  # current, total
+    thumbnail_loaded = Signal(Path, QPixmap)
+    loading_progress = Signal(int, int)  # current, total
 
     def __init__(self, logger_system: LoggerSystem):
         super().__init__()
@@ -273,10 +273,10 @@ class OptimizedThumbnailGrid(QWidget):
     """
 
     # Signals
-    image_selected = pyqtSignal(Path)
-    thumbnail_requested = pyqtSignal(Path)
-    exif_display_requested = pyqtSignal(Path)
-    performance_warning = pyqtSignal(str)
+    image_selected = Signal(Path)
+    thumbnail_requested = Signal(Path)
+    exif_display_requested = Signal(Path)
+    performance_warning = Signal(str)
 
     def __init__(
         self,

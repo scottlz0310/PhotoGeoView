@@ -13,8 +13,8 @@ import pytest
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))

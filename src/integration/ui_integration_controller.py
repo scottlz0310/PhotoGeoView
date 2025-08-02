@@ -12,9 +12,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from PyQt6.QtCore import QMutex, QObject, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QMutex, QObject, QThread, QTimer, Signal
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -56,14 +56,14 @@ class UIIntegrationController(QObject):
     """
 
     # Signals for UI coordination
-    folder_loaded = pyqtSignal(Path, list)  # folder, image_list
-    image_selected = pyqtSignal(Path, ImageMetadata)  # image_path, metadata
-    thumbnail_ready = pyqtSignal(Path, QPixmap)  # image_path, thumbnail
-    exif_data_ready = pyqtSignal(Path, dict)  # image_path, exif_data
-    map_location_ready = pyqtSignal(float, float, dict)  # lat, lon, map_data
-    theme_transition_started = pyqtSignal(str, str)  # old_theme, new_theme
-    theme_transition_completed = pyqtSignal(str)  # new_theme
-    ui_performance_alert = pyqtSignal(str, str)  # level, message
+    folder_loaded = Signal(Path, list)  # folder, image_list
+    image_selected = Signal(Path, ImageMetadata)  # image_path, metadata
+    thumbnail_ready = Signal(Path, QPixmap)  # image_path, thumbnail
+    exif_data_ready = Signal(Path, dict)  # image_path, exif_data
+    map_location_ready = Signal(float, float, dict)  # lat, lon, map_data
+    theme_transition_started = Signal(str, str)  # old_theme, new_theme
+    theme_transition_completed = Signal(str)  # new_theme
+    ui_performance_alert = Signal(str, str)  # level, message
 
     def __init__(
         self,

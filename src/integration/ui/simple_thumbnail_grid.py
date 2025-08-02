@@ -10,9 +10,9 @@ Author: Kiro AI Integration System
 from pathlib import Path
 from typing import Dict, List
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -33,7 +33,7 @@ from ..state_manager import StateManager
 class SimpleThumbnailItem(QLabel):
     """シンプルなサムネイルアイテム"""
 
-    clicked = pyqtSignal(Path)
+    clicked = Signal(Path)
 
     def __init__(self, image_path: Path, thumbnail_size: int = 150):
         super().__init__()
@@ -80,7 +80,7 @@ class SimpleThumbnailItem(QLabel):
                 self._load_timer.stop()
 
             # 遅延読み込みタイマーを設定（UI応答性向上のため）
-            from PyQt6.QtCore import QTimer
+            from PySide6.QtCore import QTimer
             self._load_timer = QTimer()
             self._load_timer.setSingleShot(True)
             self._load_timer.timeout.connect(self._do_load_image)
@@ -136,7 +136,7 @@ class SimpleThumbnailGrid(QWidget):
     """
 
     # シグナル
-    image_selected = pyqtSignal(Path)
+    image_selected = Signal(Path)
 
     def __init__(
         self,
@@ -272,7 +272,7 @@ class SimpleThumbnailGrid(QWidget):
                 self._size_change_timer.stop()
 
             # 新しい遅延タイマーを開始（500ms後に実行）
-            from PyQt6.QtCore import QTimer
+            from PySide6.QtCore import QTimer
             self._size_change_timer = QTimer()
             self._size_change_timer.setSingleShot(True)
             self._size_change_timer.timeout.connect(lambda: self._apply_size_change(size))
@@ -523,7 +523,7 @@ class SimpleThumbnailGrid(QWidget):
         if hasattr(self, '_resize_timer'):
             self._resize_timer.stop()
 
-        from PyQt6.QtCore import QTimer
+        from PySide6.QtCore import QTimer
         self._resize_timer = QTimer()
         self._resize_timer.setSingleShot(True)
         self._resize_timer.timeout.connect(self._on_resize_finished)
