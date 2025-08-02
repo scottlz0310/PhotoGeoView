@@ -82,9 +82,10 @@ jobs:
         python -c "import PyQt6; print('PyQt6 imported successfully')" || echo "PyQt6 import failed"
 
     - name: テストディレクトリ準備
+      shell: bash
       run: |
-        mkdir -p tests
-        touch tests/__init__.py
+        mkdir -p tests || echo "tests directory already exists"
+        touch tests/__init__.py || echo "__init__.py already exists"
         echo 'import pytest' > tests/test_basic.py
         echo 'def test_dummy(): assert True' >> tests/test_basic.py
 
