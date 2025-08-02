@@ -1359,7 +1359,7 @@ class MapPanel(QWidget):
 
                 # フォーカスを確実に設定（ESCキーを受信するため）
                 self.setFocus(Qt.FocusReason.OtherFocusReason)
-                
+
                 # フォーカスポリシーを一時的に強化
                 self._original_focus_policy = self.focusPolicy()
                 self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

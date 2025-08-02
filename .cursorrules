@@ -97,10 +97,17 @@ PhotoGeoView/
 4. コードレビュー
 5. マージ
 
+## CI/CDパイプライン管理
+- **GitHub Actions分析**: `tools/github_actions_ai_analyzer_enhanced.py`を使用
+- **効率的な修正**: Github-Actions-AI-Analyzerライブラリを活用
+- **ログ分析**: `gh run view --log`で詳細なエラー情報を取得
+- **品質向上**: 失敗したワークフローの自動分析と修正提案
+
 ## トラブルシューティング
 - PyQt6の依存関係問題: `pip install PyQt6-tools`
 - 地図表示問題: 座標系の確認
 - メモリ不足: 画像キャッシュの最適化
+- CI/CD失敗: AI分析ツールで自動診断と修正
 
 ## 参考資料
 - PyQt6公式ドキュメント

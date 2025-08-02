@@ -6,8 +6,8 @@
 Windows環境でのテスト実行を改善するために作成されました。
 """
 
-import unittest
 import sys
+import unittest
 from pathlib import Path
 
 
@@ -23,19 +23,19 @@ class TestBasicImports(unittest.TestCase):
     def test_standard_library_imports(self):
         """標準ライブラリのインポート確認"""
         try:
-            import os
-            import sys
-            import pathlib
-            import unittest
             import logging
-            
+            import os
+            import pathlib
+            import sys
+            import unittest
+
             # インポートされたモジュールを使用してテスト
             self.assertIsNotNone(os.getcwd(), "os.getcwd()が動作する")
             self.assertIsNotNone(sys.version, "sys.versionが動作する")
             self.assertIsNotNone(pathlib.Path, "pathlib.Pathが動作する")
             self.assertIsNotNone(unittest.TestCase, "unittest.TestCaseが動作する")
             self.assertIsNotNone(logging.getLogger, "logging.getLoggerが動作する")
-            
+
             self.assertTrue(True, "標準ライブラリのインポート成功")
         except ImportError as e:
             self.fail(f"標準ライブラリのインポート失敗: {e}")
@@ -69,7 +69,7 @@ class TestBasicImports(unittest.TestCase):
     def test_project_structure(self):
         """プロジェクト構造の確認"""
         project_root = Path(__file__).parent.parent
-        
+
         # 主要なディレクトリの存在確認
         required_dirs = ["src", "tests", "docs"]
         for dir_name in required_dirs:
@@ -112,11 +112,11 @@ class TestBasicImports(unittest.TestCase):
     def test_environment_variables(self):
         """環境変数の確認"""
         import os
-        
+
         # CI環境での環境変数確認
         if os.environ.get('CI'):
             self.assertTrue(True, "CI環境で実行中")
-        
+
         # Qt環境変数の確認
         qt_platform = os.environ.get('QT_QPA_PLATFORM')
         if qt_platform:
@@ -124,4 +124,4 @@ class TestBasicImports(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2) 
+    unittest.main(verbosity=2)
