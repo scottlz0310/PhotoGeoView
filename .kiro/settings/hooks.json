@@ -68,6 +68,56 @@
                 "日本語コメントの確認",
                 "ロガー使用の確認"
             ]
+        },
+        "auto_recovery_on_abort": {
+            "name": "Kiro自動復帰システム",
+            "description": "Kiroがエラーで'aborted'と発言した時に自動的に復帰処理を実行するhook",
+            "trigger": "on_message_pattern",
+            "pattern": "(?i).*aborted.*",
+            "active": true,
+            "recovery_actions": [
+                {
+                    "action": "clear_context",
+                    "description": "現在のコンテキストをクリアして新しい状態で開始"
+                },
+                {
+                    "action": "reset_workspace",
+                    "description": "ワークスペースの状態をリセット"
+                },
+                {
+                    "action": "reload_configuration",
+                    "description": "設定ファイルを再読み込み"
+                },
+                {
+                    "action": "restart_session",
+                    "description": "セッションを再開始"
+                }
+            ],
+            "retry_strategy": {
+                "max_attempts": 3,
+                "backoff_seconds": [
+                    5,
+                    10,
+                    30
+                ],
+                "escalation_message": "自動復帰に失敗しました。手動での介入が必要です。"
+            },
+            "notification": {
+                "show_recovery_status": true,
+                "log_recovery_attempts": true,
+                "success_message": "Kiroが正常に復帰しました。作業を継続できます。",
+                "failure_message": "自動復帰に失敗しました。システム管理者に連絡してください。"
+            },
+            "conditions": {
+                "ignore_patterns": [
+                    "test.*aborted",
+                    "simulation.*aborted"
+                ],
+                "required_context": [
+                    "error_occurred",
+                    "execution_failed"
+                ]
+            }
         }
     },
     "global_settings": {

@@ -160,7 +160,7 @@ class StateManager:
             ApplicationState: Current application state
         """
         try:
-            return self.current_state
+            return self.app_state
         except Exception as e:
             self.error_handler.handle_error(
                 e,

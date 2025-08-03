@@ -191,11 +191,11 @@ class IntegratedMainWindow(QMainWindow):
             # Create status bar
             self._create_status_bar()
 
+            # Initialize breadcrumb bar first (needed for left panel creation)
+            self._initialize_breadcrumb_bar()
+
             # Initialize theme manager
             self._initialize_theme_manager()
-
-            # Initialize breadcrumb bar
-            self._initialize_breadcrumb_bar()
 
             # Apply initial theme
             self._apply_initial_theme()
@@ -331,11 +331,52 @@ class IntegratedMainWindow(QMainWindow):
         """)
 
         # 1. Breadcrumb address bar (最上段)
-        if self.breadcrumb_bar and self.breadcrumb_bar.get_widget():
+        breadcrumb_added = False
+        if self.breadcrumb_bar:
             breadcrumb_widget = self.breadcrumb_bar.get_widget()
-            breadcrumb_widget.setMinimumHeight(40)  # 最小高さ設定
-            breadcrumb_widget.setMaximumHeight(60)  # 最大高さ設定
-            self.left_panel_splitter.addWidget(breadcrumb_widget)
+            if breadcrumb_widget:
+                breadcrumb_widget.setMinimumHeight(40)  # 最小高さ設定
+                breadcrumb_widget.setMaximumHeight(60)  # 最大高さ設定
+                self.left_panel_splitter.addWidget(breadcrumb_widget)
+                breadcrumb_added = True
+
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "breadcrumb_widget_added",
+                    "Breadcrumb widget added to left panel"
+                )
+            else:
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "breadcrumb_widget_missing",
+                    "Breadcrumb widget not available for left panel",
+                    level="WARNING"
+                )
+
+        if not breadcrumb_added:
+            # ブレッドクラムが利用できない場合は、プレースホルダーを追加
+            from PySide6.QtWidgets import QLabel
+            placeholder = QLabel("ブレッドクラムナビゲーション利用不可")
+            placeholder.setMinimumHeight(40)
+            placeholder.setMaximumHeight(60)
+            placeholder.setStyleSheet("""
+                QLabel {
+                    background-color: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                    padding: 10px;
+                    color: #6c757d;
+                    font-style: italic;
+                    text-align: center;
+                }
+            """)
+            self.left_panel_splitter.addWidget(placeholder)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_placeholder_added",
+                "Breadcrumb placeholder added to left panel"
+            )
 
         # 2. Folder navigator (上段)
         self.folder_navigator = EnhancedFolderNavigator(
@@ -359,18 +400,14 @@ class IntegratedMainWindow(QMainWindow):
         self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.exif_panel)
 
-        # スプリッターの初期サイズ設定 (ブレッドクラム:フォルダ:サムネイル:EXIF = 1:2:4:4)
-        breadcrumb_height = 50 if self.breadcrumb_bar else 0
-        self.left_panel_splitter.setSizes([breadcrumb_height, 150, 300, 400])
+        # スプリッターの初期サイズ設定 (ブレッドクラム/プレースホルダー:フォルダ:サムネイル:EXIF = 1:2:4:4)
+        self.left_panel_splitter.setSizes([50, 150, 300, 400])
 
-        # 各エリアの伸縮設定
-        widget_index = 0
-        if self.breadcrumb_bar:
-            self.left_panel_splitter.setStretchFactor(widget_index, 0)  # ブレッドクラム: 固定
-            widget_index += 1
-        self.left_panel_splitter.setStretchFactor(widget_index, 0)  # フォルダナビゲーター: 固定的
-        self.left_panel_splitter.setStretchFactor(widget_index + 1, 1)  # サムネイルグリッド: 伸縮可能
-        self.left_panel_splitter.setStretchFactor(widget_index + 2, 1)  # EXIFパネル: 伸縮可能
+        # 各エリアの伸縮設定（常に4つのウィジェットがある）
+        self.left_panel_splitter.setStretchFactor(0, 0)  # ブレッドクラム/プレースホルダー: 固定
+        self.left_panel_splitter.setStretchFactor(1, 0)  # フォルダナビゲーター: 固定的
+        self.left_panel_splitter.setStretchFactor(2, 1)  # サムネイルグリッド: 伸縮可能
+        self.left_panel_splitter.setStretchFactor(3, 1)  # EXIFパネル: 伸縮可能
 
         # 左パネルスプリッターをメインスプリッターに追加
         self.main_splitter.addWidget(self.left_panel_splitter)
@@ -514,23 +551,53 @@ class IntegratedMainWindow(QMainWindow):
                 self.file_system_watcher, self.logger_system, self.config_manager, self
             )
 
-            # Connect breadcrumb signals
-            self.breadcrumb_bar.path_changed.connect(self._on_breadcrumb_path_changed)
-            self.breadcrumb_bar.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
-            self.breadcrumb_bar.navigation_requested.connect(self._on_breadcrumb_navigation_requested)
-            self.breadcrumb_bar.breadcrumb_error.connect(self._on_breadcrumb_error)
+            # Verify breadcrumb widget is available
+            breadcrumb_widget = self.breadcrumb_bar.get_widget()
+            if breadcrumb_widget is None:
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "breadcrumb_widget_unavailable",
+                    "Breadcrumb widget not available, creating fallback",
+                    level="WARNING"
+                )
+                # Set breadcrumb_bar to None instead of creating fallback
+                self.breadcrumb_bar = None
+            else:
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "breadcrumb_widget_available",
+                    "Breadcrumb widget successfully initialized"
+                )
 
-            # Set initial path from state
-            current_folder = self.state_manager.get_state_value("current_folder", Path.home())
-            self.breadcrumb_bar.set_current_path(current_folder)
+            # Connect breadcrumb signals
+            if self.breadcrumb_bar:
+                self.breadcrumb_bar.path_changed.connect(self._on_breadcrumb_path_changed)
+                self.breadcrumb_bar.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
+                self.breadcrumb_bar.navigation_requested.connect(self._on_breadcrumb_navigation_requested)
+                self.breadcrumb_bar.breadcrumb_error.connect(self._on_breadcrumb_error)
+
+                # Set initial path from state
+                current_folder = self.state_manager.get_state_value("current_folder", Path.home())
+                self.breadcrumb_bar.set_current_path(current_folder)
 
         except Exception as e:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_init_error",
+                f"Failed to initialize breadcrumb bar: {e}",
+                level="ERROR"
+            )
+            # Set breadcrumb_bar to None instead of creating fallback
+            self.breadcrumb_bar = None
+
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
                 {"operation": "breadcrumb_bar_init"},
                 AIComponent.KIRO,
             )
+
+
 
     def _apply_initial_theme(self):
         """Apply the initial theme from configuration"""
@@ -895,6 +962,132 @@ class IntegratedMainWindow(QMainWindow):
                 e,
                 ErrorCategory.UI_ERROR,
                 {"operation": "gps_coordinates_update", "lat": latitude, "lon": longitude},
+                AIComponent.KIRO,
+            )
+
+    # Breadcrumb event handlers
+
+    def _on_breadcrumb_path_changed(self, path: Path):
+        """Handle breadcrumb path change event"""
+        try:
+            # Update folder navigator to match breadcrumb
+            if self.folder_navigator:
+                self.folder_navigator.set_current_folder(path)
+
+            # Update state
+            self.state_manager.update_state(current_folder=path)
+
+            # Update status
+            self.status_bar.showMessage(f"Navigated to: {path}")
+
+            # Emit folder changed signal
+            self.folder_changed.emit(path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_path_changed",
+                f"Path changed via breadcrumb: {path}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_path_changed", "path": str(path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_segment_clicked(self, segment_index: int, path: Path):
+        """Handle breadcrumb segment click event"""
+        try:
+            # Navigate to the clicked segment path
+            if self.folder_navigator:
+                self.folder_navigator.set_current_folder(path)
+
+            # Update state
+            self.state_manager.update_state(current_folder=path)
+
+            # Update status
+            self.status_bar.showMessage(f"Navigated to segment: {path}")
+
+            # Emit folder changed signal
+            self.folder_changed.emit(path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_segment_clicked",
+                f"Segment {segment_index} clicked: {path}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_segment_clicked", "segment": segment_index, "path": str(path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_navigation_requested(self, path: Path):
+        """Handle breadcrumb navigation request"""
+        try:
+            # Validate path before navigation
+            if not path.exists() or not path.is_dir():
+                self.status_bar.showMessage(f"Invalid path: {path}", 5000)
+                return
+
+            # Navigate to requested path
+            if self.folder_navigator:
+                self.folder_navigator.set_current_folder(path)
+
+            # Update state
+            self.state_manager.update_state(current_folder=path)
+
+            # Update status
+            self.status_bar.showMessage(f"Navigation requested: {path}")
+
+            # Emit folder changed signal
+            self.folder_changed.emit(path)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_navigation_requested",
+                f"Navigation requested: {path}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_navigation_requested", "path": str(path)},
+                AIComponent.KIRO,
+            )
+
+    def _on_breadcrumb_error(self, error_type: str, error_message: str):
+        """Handle breadcrumb error event"""
+        try:
+            # Show error in status bar
+            self.status_bar.showMessage(f"Breadcrumb error: {error_message}", 5000)
+
+            # Log error
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "breadcrumb_error",
+                f"Breadcrumb error ({error_type}): {error_message}",
+                level="ERROR"
+            )
+
+            # Show user notification if available
+            if hasattr(self, 'notification_system') and self.notification_system:
+                self.notification_system.show_error(
+                    "Breadcrumb Navigation Error",
+                    error_message
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "breadcrumb_error_handling", "error_type": error_type, "error_message": error_message},
                 AIComponent.KIRO,
             )
 

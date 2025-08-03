@@ -28,8 +28,10 @@ from ..integration.navigation_models import (
     PathInfo,
     SegmentState,
 )
+from ..integration.performance_optimizer import PerformanceOptimizer
 from ..integration.services.file_system_watcher import FileSystemWatcher
 from ..integration.user_notification_system import UserNotificationSystem, NotificationAction
+from ..integration.models import AIComponent
 
 
 class BreadcrumbAddressBar(QObject):
@@ -71,9 +73,25 @@ class BreadcrumbAddressBar(QObject):
         super().__init__(parent)
 
         self.file_watcher = file_system_watcher
+        self.logger_system = logger_system  # Add this line
         self.logger = logger_system.get_logger(__name__)
         self.config_manager = config_manager
         self.notification_system = notification_system
+
+        # Performance optimization (optional)
+        try:
+            self.performance_optimizer = PerformanceOptimizer(logger_system)
+            # Only start optimization if we have an event loop
+            try:
+                import asyncio
+                asyncio.get_running_loop()
+                self.performance_optimizer.start_optimization()
+            except RuntimeError:
+                # No event loop running, skip optimization
+                self.logger.debug("No event loop running, skipping performance optimization")
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize performance optimizer: {e}")
+            self.performance_optimizer = None
 
         # Breadcrumb-addressbar integration
         self.breadcrumb_widget = None
@@ -107,25 +125,38 @@ class BreadcrumbAddressBar(QObject):
     def _initialize_breadcrumb_widget(self) -> None:
         """Initialize breadcrumb-addressbar library integration"""
         try:
-            from breadcrumb_addressbar import BreadcrumbWidget
-
-            self.breadcrumb_widget = BreadcrumbWidget()
+            # Import and initialize breadcrumb_addressbar library
+            from breadcrumb_addressbar import BreadcrumbAddressBar
+            self.breadcrumb_widget = BreadcrumbAddressBar()
 
             # Connect breadcrumb widget signals
-            if hasattr(self.breadcrumb_widget, 'segment_clicked'):
-                self.breadcrumb_widget.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
+            if hasattr(self.breadcrumb_widget, 'pathChanged'):
+                self.breadcrumb_widget.pathChanged.connect(self._on_breadcrumb_path_changed)
 
-            if hasattr(self.breadcrumb_widget, 'path_changed'):
-                self.breadcrumb_widget.path_changed.connect(self._on_breadcrumb_path_changed)
+            if hasattr(self.breadcrumb_widget, 'folderSelected'):
+                self.breadcrumb_widget.folderSelected.connect(self._on_breadcrumb_segment_clicked)
 
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO, "breadcrumb_init", "Using breadcrumb_addressbar library"
+            )
             self.logger.info("Breadcrumb-addressbar library initialized successfully")
 
         except ImportError as e:
-            self.logger.warning(f"Breadcrumb-addressbar library not available: {e}")
+            self.logger.error(f"Breadcrumb-addressbar library not available: {e}")
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO, "breadcrumb_error",
+                f"Failed to import breadcrumb_addressbar: {e}"
+            )
             self.breadcrumb_widget = None
+            raise  # Re-raise to let caller handle the error
         except Exception as e:
             self.logger.error(f"Failed to initialize breadcrumb-addressbar: {e}")
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO, "breadcrumb_error",
+                f"Failed to initialize breadcrumb_addressbar: {e}"
+            )
             self.breadcrumb_widget = None
+            raise  # Re-raise to let caller handle the error
 
     def _setup_file_watcher(self) -> None:
         """Setup file system watcher integration"""
@@ -444,6 +475,62 @@ class BreadcrumbAddressBar(QObject):
         except Exception as e:
             self.logger.error(f"Failed to load configuration: {e}")
 
+    def _apply_optimized_path_truncation(self) -> None:
+        """Apply optimized path truncation for long paths"""
+        try:
+            if not self.current_state or not self.current_state.breadcrumb_segments:
+                return
+
+            segments = self.current_state.breadcrumb_segments
+
+            # Use performance optimizer for breadcrumb rendering
+            if hasattr(self, 'performance_optimizer') and self.performance_optimizer:
+                try:
+                    # Check if optimize_breadcrumb_rendering is async
+                    if hasattr(self.performance_optimizer, 'optimize_breadcrumb_rendering'):
+                        import inspect
+                        if inspect.iscoroutinefunction(self.performance_optimizer.optimize_breadcrumb_rendering):
+                            # Skip async optimization in sync context, use fallback
+                            self.logger.debug("Skipping async breadcrumb optimization in sync context")
+                            optimized_segments = segments
+                        else:
+                            optimized_segments = self.performance_optimizer.optimize_breadcrumb_rendering(
+                                self.current_state.current_path, segments
+                            )
+                    else:
+                        optimized_segments = segments
+                except Exception as e:
+                    self.logger.warning(f"Performance optimizer failed: {e}")
+                    optimized_segments = segments
+            else:
+                optimized_segments = segments
+
+            # Update segments if optimization was applied
+            if optimized_segments != segments:
+                self.current_state.breadcrumb_segments = optimized_segments
+                self.logger.debug(f"Applied breadcrumb optimization: {len(segments)} -> {len(optimized_segments)} segments")
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply optimized path truncation: {e}")
+
+    def _apply_path_truncation(self) -> None:
+        """Legacy path truncation method (fallback)"""
+        try:
+            if not self.current_state or not self.current_state.breadcrumb_segments:
+                return
+
+            segments = self.current_state.breadcrumb_segments
+
+            # Apply simple truncation if too many segments
+            if len(segments) > self.max_visible_segments:
+                # Keep first 2, last 3, and add ellipsis
+                truncated = segments[:2] + ["..."] + segments[-3:]
+                self.current_state.breadcrumb_segments = truncated
+                self.logger.debug(f"Applied simple truncation: {len(segments)} -> {len(truncated)} segments")
+
+        except Exception as e:
+            self.logger.error(f"Failed to apply path truncation: {e}")
+
     # Core breadcrumb functionality
 
     def get_widget(self) -> Optional[QWidget]:
@@ -465,6 +552,9 @@ class BreadcrumbAddressBar(QObject):
         Returns:
             True if path set successfully, False otherwise
         """
+        # Start performance monitoring
+        operation_id = self.performance_optimizer.start_navigation_operation(f"set_path_{path.name}")
+
         try:
             # Validate path with comprehensive checks
             path_validation_result = self._validate_path_comprehensive(path)
@@ -529,20 +619,20 @@ class BreadcrumbAddressBar(QObject):
             widget_update_success = False
             if self.breadcrumb_widget:
                 try:
-                    if hasattr(self.breadcrumb_widget, 'set_path'):
-                        self.breadcrumb_widget.set_path(str(path))
+                    if hasattr(self.breadcrumb_widget, 'setPath'):
+                        self.breadcrumb_widget.setPath(str(path))
                         widget_update_success = True
                     else:
-                        self.logger.warning("Breadcrumb widget has no set_path method")
+                        self.logger.warning("Breadcrumb widget has no setPath method")
                         widget_update_success = True  # Continue without widget update
                 except Exception as e:
                     self.logger.error(f"Failed to update breadcrumb widget: {e}")
                     # Continue anyway - navigation state is updated
                     widget_update_success = True
 
-            # Apply truncation with error handling
+            # Apply truncation with error handling and optimization
             try:
-                self._apply_path_truncation()
+                self._apply_optimized_path_truncation()
             except Exception as e:
                 self.logger.warning(f"Failed to apply path truncation: {e}")
                 # Continue anyway
@@ -580,18 +670,24 @@ class BreadcrumbAddressBar(QObject):
             except Exception as e:
                 self.logger.warning(f"Failed to update performance tracking: {e}")
 
-            self.logger.debug(f"Path updated successfully: {path}")
+            # End performance monitoring
+            duration = self.performance_optimizer.end_navigation_operation(operation_id)
+            self.logger.debug(f"Path updated successfully: {path} (took {duration:.3f}s)")
             return True
 
         except Exception as e:
             error_msg = f"Critical error setting current path {path}: {e}"
             self.logger.error(error_msg)
             self.breadcrumb_error.emit("critical_path_error", error_msg)
+
+            # End performance monitoring on error
+            self.performance_optimizer.end_navigation_operation(operation_id)
+
             return self._navigate_to_fallback_path(path, "critical_path_error")
 
     def _validate_path_comprehensive(self, path: Path) -> Dict[str, Any]:
         """
-        Comprehensive path validation with detailed error information
+        Comprehensive path validation with detailed error information and caching
 
         Args:
             path: Path to validate
@@ -600,6 +696,10 @@ class BreadcrumbAddressBar(QObject):
             Dictionary with validation result and error details
         """
         try:
+            # Check cache first
+            cached_result = self.performance_optimizer.get_cached_path_info(path)
+            if cached_result and "validation_result" in cached_result:
+                return cached_result["validation_result"]
             # Check if path is None or empty
             if not path:
                 return {
@@ -641,24 +741,38 @@ class BreadcrumbAddressBar(QObject):
                         "error_message": f"Network path is not accessible: {path}"
                     }
 
-            return {
+            result = {
                 "valid": True,
                 "error_type": None,
                 "error_message": None
             }
 
+            # Cache the validation result
+            path_info = {"validation_result": result, "timestamp": datetime.now().isoformat()}
+            self.performance_optimizer.cache_path_info(path, path_info)
+
+            return result
+
         except (OSError, PermissionError) as e:
-            return {
+            result = {
                 "valid": False,
                 "error_type": "system_error",
                 "error_message": f"System error validating path: {e}"
             }
+            # Cache error result with shorter TTL
+            path_info = {"validation_result": result, "timestamp": datetime.now().isoformat()}
+            self.performance_optimizer.cache_path_info(path, path_info)
+            return result
         except Exception as e:
-            return {
+            result = {
                 "valid": False,
                 "error_type": "validation_error",
                 "error_message": f"Unexpected error validating path: {e}"
             }
+            # Cache error result with shorter TTL
+            path_info = {"validation_result": result, "timestamp": datetime.now().isoformat()}
+            self.performance_optimizer.cache_path_info(path, path_info)
+            return result
 
     def _is_network_path(self, path: Path) -> bool:
         """
@@ -786,9 +900,9 @@ class BreadcrumbAddressBar(QObject):
                             # Update navigation state directly (avoid recursion)
                             if self.current_state.navigate_to_path(fallback_path):
                                 # Update widget
-                                if self.breadcrumb_widget and hasattr(self.breadcrumb_widget, 'set_path'):
+                                if self.breadcrumb_widget and hasattr(self.breadcrumb_widget, 'setPath'):
                                     try:
-                                        self.breadcrumb_widget.set_path(str(fallback_path))
+                                        self.breadcrumb_widget.setPath(str(fallback_path))
                                     except Exception as e:
                                         self.logger.warning(f"Failed to update widget with fallback path: {e}")
 
@@ -993,51 +1107,44 @@ class BreadcrumbAddressBar(QObject):
             # Update widget if it supports segment-based updates
             if hasattr(self.breadcrumb_widget, 'set_segments'):
                 self.breadcrumb_widget.set_segments([s.to_dict() for s in truncated_segments])
-            elif hasattr(self.breadcrumb_widget, 'set_path'):
+            elif hasattr(self.breadcrumb_widget, 'setPath'):
                 # Fallback to path-based update
                 display_path = " > ".join([s.display_name for s in truncated_segments])
-                self.breadcrumb_widget.set_path(display_path)
+                self.breadcrumb_widget.setPath(display_path)
 
         except Exception as e:
             self.logger.error(f"Failed to update widget with truncation: {e}")
 
     # Event handlers
 
-    def _on_breadcrumb_segment_clicked(self, segment_index: int) -> None:
+    def _on_breadcrumb_segment_clicked(self, path_str: str) -> None:
         """Handle breadcrumb segment click"""
         try:
-            if 0 <= segment_index < len(self.current_state.breadcrumb_segments):
-                segment = self.current_state.breadcrumb_segments[segment_index]
+            target_path = Path(path_str)
 
-                if segment.is_clickable and segment.is_accessible:
-                    # Update access information
-                    segment.update_access_info()
+            # Navigate to the clicked segment
+            if self.set_current_path(target_path):
+                # Emit signals
+                self.segment_clicked.emit(0, target_path)  # Use 0 as placeholder index
+                self.navigation_requested.emit(target_path)
 
-                    # Navigate to segment path
-                    if self.set_current_path(segment.path):
-                        # Emit signals
-                        self.segment_clicked.emit(segment_index, segment.path)
-                        self.navigation_requested.emit(segment.path)
+                # Create navigation event
+                event = NavigationEvent(
+                    event_type="segment_click",
+                    source_path=self.current_state.current_path,
+                    target_path=target_path,
+                    timestamp=datetime.now(),
+                    success=True,
+                    metadata={"path": path_str}
+                )
+                self._notify_navigation_listeners(event)
 
-                        # Create navigation event
-                        event = NavigationEvent(
-                            event_type="segment_click",
-                            source_path=self.current_state.current_path,
-                            target_path=segment.path,
-                            segment_index=segment_index,
-                            timestamp=datetime.now(),
-                            success=True
-                        )
-                        self._notify_navigation_listeners(event)
-
-                        self.logger.debug(f"Navigated to segment {segment_index}: {segment.path}")
-                    else:
-                        self.breadcrumb_error.emit("navigation_failed", f"Failed to navigate to {segment.path}")
-                else:
-                    self.breadcrumb_error.emit("segment_not_accessible", f"Segment not accessible: {segment.path}")
+                self.logger.debug(f"Navigated to path: {path_str}")
+            else:
+                self.breadcrumb_error.emit("navigation_failed", f"Failed to navigate to {path_str}")
 
         except Exception as e:
-            self.logger.error(f"Failed to handle segment click {segment_index}: {e}")
+            self.logger.error(f"Failed to handle segment click {path_str}: {e}")
             self.breadcrumb_error.emit("segment_click_error", str(e))
 
     def _on_breadcrumb_path_changed(self, new_path: str) -> None:
@@ -1344,3 +1451,283 @@ class BreadcrumbAddressBar(QObject):
 
         except Exception as e:
             self.logger.error(f"Failed to cleanup BreadcrumbAddressBar: {e}")
+
+    def _handle_network_disconnection(self, path: Path) -> bool:
+        """
+        Handle network drive disconnection with fallback navigation
+
+        Args:
+            path: The network path that became inaccessible
+
+        Returns:
+            True if fallback navigation successful, False otherwise
+        """
+        try:
+            self.logger.warning(f"Handling network disconnection for path: {path}")
+
+            # Show user notification about network disconnection
+            if self.notification_system:
+                self.notification_system.show_warning(
+                    "Network Drive Disconnected",
+                    f"Theve at '{path}' is no longer accessible.",
+                    details="Attempting to navigate to a local directory."
+                )
+
+            # Try fallback paths in order of preference
+            fallback_candidates = [
+                Path.home(),  # User home directory
+                Path.home() / "Documents",  # Documents folder
+                Path("/"),  # Root directory (Unix/Linux)
+                Path("C:\\") if os.name == 'nt' else Path("/")  # System root
+            ]
+
+            for fallback_path in fallback_candidates:
+                try:
+                    if fallback_path.exists() and fallback_path.is_dir() and os.access(fallback_path, os.R_OK):
+                        self.logger.info(f"Navigating to fallback path: {fallback_path}")
+
+                        # Update current path
+                        if self.set_current_path(fallback_path):
+                            # Show success notification
+                            if self.notification_system:
+                                self.notification_system.show_info(
+                                    "Navigation Recovered",
+                                    f"Navigated to '{fallback_path}' after network disconnection."
+                                )
+                            return True
+
+                except (OSError, PermissionError) as e:
+                    self.logger.debug(f"Fallback path {fallback_path} not accessible: {e}")
+                    continue
+
+            # If all fallbacks fail, show error
+            error_msg = "Unable to find accessible fallback directory after network disconnection"
+            self.logger.error(error_msg)
+            self.breadcrumb_error.emit("fallback_failed", error_msg)
+
+            if self.notification_system:
+                self.notification_system.show_error(
+                    "Navigation Failed",
+                    "Unable to navigate to any accessible directory after network disconnection."
+                )
+
+            return False
+
+        except Exception as e:
+            self.logger.error(f"Failed to handle network disconnection: {e}")
+            return False
+
+    def handle_path_access_error(self, path: Path, error_type: str, error_message: str) -> bool:
+        """
+        Handle path access errors with appropriate fallback strategies
+
+        Args:
+            path: The path that caused the error
+            error_type: Type of error (permission_denied, path_not_found, etc.)
+            error_message: Detailed error message
+
+        Returns:
+            True if error was handled successfully, False otherwise
+        """
+        try:
+            self.logger.error(f"Path access error for '{path}': {error_type} - {error_message}")
+            self.breadcrumb_error.emit(error_type, error_message)
+
+            # Show appropriate user notification based on error type
+            if self.notification_system:
+                if error_type == "permission_denied":
+                    self.notification_system.show_breadcrumb_error(
+                        str(path), error_type, "You don't have permission to access this directory."
+                    )
+                elif error_type == "path_not_found":
+                    self.notification_system.show_breadcrumb_error(
+                        str(path), error_type, "The specified directory could not be found."
+                    )
+                elif error_type == "network_inaccessible":
+                    return self._handle_network_disconnection(path)
+                else:
+                    self.notification_system.show_breadcrumb_error(
+                        str(path), error_type, error_message
+                    )
+
+            # Try to navigate to parent directory first
+            if path.parent != path and path.parent.exists():
+                try:
+                    if self.set_current_path(path.parent):
+                        self.logger.info(f"Navigated to parent directory: {path.parent}")
+                        if self.notification_system:
+                            self.notification_system.show_info(
+                                "Navigation Recovered",
+                                f"Navigated to parent directory: {path.parent}"
+                            )
+                        return True
+                except Exception as e:
+                    self.logger.debug(f"Failed to navigate to parent directory: {e}")
+
+            # If parent navigation fails, try standard fallback paths
+            return self._navigate_to_fallback_path(path, error_type)
+
+        except Exception as e:
+            self.logger.error(f"Failed to handle path access error: {e}")
+            return False
+
+    def validate_path_accessibility(self, path: Path) -> Dict[str, Any]:
+        """
+        Validate path accessibility with detailed error information
+
+        Args:
+            path: Path to validate
+
+        Returns:
+            Dictionary with validation result and error details
+        """
+        try:
+            # Use the existing comprehensive validation method
+            return self._validate_path_comprehensive(path)
+
+        except Exception as e:
+            return {
+                "valid": False,
+                "error_type": "validation_error",
+                "error_message": f"Failed to validate path: {e}"
+            }
+
+    def get_error_recovery_options(self, error_type: str) -> List[Dict[str, Any]]:
+        """
+        Get available error recovery options based on error type
+
+        Args:
+            error_type: Type of error that occurred
+
+        Returns:
+            List of recovery options with descriptions and actions
+        """
+        try:
+            recovery_options = []
+
+            if error_type == "permission_denied":
+                recovery_options.extend([
+                    {
+                        "name": "Navigate to Parent",
+                        "description": "Navigate to the parent directory",
+                        "action": "navigate_parent"
+                    },
+                    {
+                        "name": "Go to Home",
+                        "description": "Navigate to your home directory",
+                        "action": "navigate_home"
+                    }
+                ])
+
+            elif error_type == "path_not_found":
+                recovery_options.extend([
+                    {
+                        "name": "Navigate to Parent",
+                        "description": "Navigate to the parent directory if it exists",
+                        "action": "navigate_parent"
+                    },
+                    {
+                        "name": "Go to Home",
+                        "description": "Navigate to your home directory",
+                        "action": "navigate_home"
+                    },
+                    {
+                        "name": "Browse Recent",
+                        "description": "Choose from recently visited directories",
+                        "action": "show_recent"
+                    }
+                ])
+
+            elif error_type == "network_disconnected":
+                recovery_options.extend([
+                    {
+                        "name": "Retry Connection",
+                        "description": "Attempt to reconnect to the network drive",
+                        "action": "retry_network"
+                    },
+                    {
+                        "name": "Go to Local Drive",
+                        "description": "Navigate to a local directory",
+                        "action": "navigate_local"
+                    },
+                    {
+                        "name": "Go to Home",
+                        "description": "Navigate to your home directory",
+                        "action": "navigate_home"
+                    }
+                ])
+
+            else:
+                # Generic recovery options
+                recovery_options.extend([
+                    {
+                        "name": "Go to Home",
+                        "description": "Navigate to your home directory",
+                        "action": "navigate_home"
+                    },
+                    {
+                        "name": "Refresh",
+                        "description": "Refresh the current directory",
+                        "action": "refresh"
+                    }
+                ])
+
+            return recovery_options
+
+        except Exception as e:
+            self.logger.error(f"Failed to get error recovery options: {e}")
+            return []
+
+    def execute_recovery_action(self, action: str, context: Optional[Dict[str, Any]] = None) -> bool:
+        """
+        Execute a recovery action
+
+        Args:
+            action: Recovery action to execute
+            context: Optional context information
+
+        Returns:
+            True if action executed successfully, False otherwise
+        """
+        try:
+            if action == "navigate_parent":
+                current_path = self.current_state.current_path
+                if current_path.parent != current_path:
+                    return self.set_current_path(current_path.parent)
+
+            elif action == "navigate_home":
+                return self.set_current_path(Path.home())
+
+            elif action == "navigate_local":
+                # Navigate to a local directory (Documents, Desktop, etc.)
+                local_paths = [
+                    Path.home() / "Documents",
+                    Path.home() / "Desktop",
+                    Path.home()
+                ]
+                for local_path in local_paths:
+                    if local_path.exists() and local_path.is_dir():
+                        return self.set_current_path(local_path)
+
+            elif action == "retry_network":
+                # Retry accessing the current path if it's a network path
+                current_path = self.current_state.current_path
+                if self._is_network_path(current_path):
+                    return self.set_current_path(current_path)
+
+            elif action == "refresh":
+                # Refresh current directory
+                current_path = self.current_state.current_path
+                return self.set_current_path(current_path)
+
+            elif action == "show_recent":
+                # This would typically show a dialog with recent paths
+                # For now, just log the action
+                self.logger.info("Show recent directories action requested")
+                return True
+
+            return False
+
+        except Exception as e:
+            self.logger.error(f"Failed to execute recovery action '{action}': {e}")
+            return False

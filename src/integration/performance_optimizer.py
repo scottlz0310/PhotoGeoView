@@ -1,870 +1,488 @@
 """
-Performance Optimizer for AI Integration
+Performance Optimizer for Theme and Navigation Components
 
-Implements comprehensive performance optimization across all integrated components:
-- Memory usage optimization and garbage collection management
-- Intelligent caching strategies for shared resources
-- Asynchronous processing coordination for heavy operations
-- Resource pooling and connection management
+Implements performance optimizations including lazy loading, caching,
+and monitoring for theme and navigation operations.
 
 Author: Kiro AI Integration System
+Requirements: 5.2, 5.3
 """
 
 import asyncio
-import gc
 import threading
 import time
-import weakref
-from collections import defaultdict, deque
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
+from weakref import WeakSet
 
-import psutil
-
-from .config_manager import ConfigManager
-from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
-from .models import AIComponent, PerformanceMetrics
-from .performance_monitor import KiroPerformanceMonitor
-from .unified_cache import UnifiedCacheSystem
 
 
-@dataclass
-class OptimizationStrategy:
-    """Performance optimization strategy configuration"""
+class ResourceCache:
+    """Generic resource cache with TTL and size limits"""
 
-    name: str
-    enabled: bool = True
-    print = 1  # 1=highest, 5=lowest
-    target_components: List[AIComponent] = field(default_factory=list)
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    last_applied: Optional[datetime] = None
-    effectiveness_score: float = 0.0
+    def __init__(self, max_size: int = 1000, ttl_seconds: int = 300):
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self._cache: Dict[str, Tuple[Any, float]] = {}
+        self._access_times: Dict[str, float] = {}
+        self._lock = threading.RLock()
+
+    def get(self, key: str) -> Optional[Any]:
+        """Get cached value if not expired"""
+        with self._lock:
+            if key not in self._cache:
+                return None
+
+            value, timestamp = self._cache[key]
+            current_time = time.time()
+
+            # Check if expired
+            if current_time - timestamp > self.ttl_seconds:
+                del self._cache[key]
+                if key in self._access_times:
+                    del self._access_times[key]
+                return None
+
+            # Update access time
+            self._access_times[key] = current_time
+            return value
+
+    def set(self, key: str, value: Any) -> None:
+        """Set cached value with current timestamp"""
+        with self._lock:
+            current_time = time.time()
+
+            # Evict old entries if cache is full
+            if len(self._cache) >= self.max_size:
+                self._evict_lru()
+
+            self._cache[key] = (value, current_time)
+            self._access_times[key] = current_time
+
+    def _evict_lru(self) -> None:
+        """Evict least recently used entries"""
+        if not self._access_times:
+            return
+
+        # Remove 20% of entries (LRU)
+        entries_to_remove = max(1, len(self._access_times) // 5)
+        sorted_entries = sorted(self._access_times.items(), key=lambda x: x[1])
+
+        for key, _ in sorted_entries[:entries_to_remove]:
+            if key in self._cache:
+                del self._cache[key]
+            del self._access_times[key]
+
+    def clear(self) -> None:
+        """Clear all cached entries"""
+        with self._lock:
+            self._cache.clear()
+            self._access_times.clear()
+
+    def size(self) -> int:
+        """Get current cache size"""
+        return len(self._cache)
 
 
-@dataclass
-class ResourcePool:
-    """Resource pool for managing shared resources"""
+class LazyResourceLoader:
+    """Lazy loading manager for theme resources"""
 
-    name: str
-    resource_type: str
-    max_size: int
-    current_size: int = 0
-    available_resources: deque = field(default_factory=deque)
-    in_use_resources: Set = field(default_factory=set)
-    creation_count: int = 0
-    destruction_count: int = 0
-    hit_count: int = 0
-    miss_count: int = 0
+    def __init__(self, logger_system: LoggerSystem):
+        self.logger = logger_system.get_logger(__name__)
+        self._loaded_resources: Set[str] = set()
+        self._loading_tasks: Dict[str, asyncio.Task] = {}
+        self._resource_callbacks: Dict[str, List[callable]] = {}
+        self._lock = threading.RLock()
+
+    def is_loaded(self, resource_id: str) -> bool:
+        """Check if resource is already loaded"""
+        return resource_id in self._loaded_resources
+
+    async def load_resource(self, resource_id: str, loader_func: callable, *args, **kwargs) -> Any:
+        """Load resource lazily with deduplication"""
+        with self._lock:
+            # Return immediately if already loaded
+            if resource_id in self._loaded_resources:
+                return True
+
+            # If already loading, wait for existing task
+            if resource_id in self._loading_tasks:
+                try:
+                    return await self._loading_tasks[resource_id]
+                except Exception as e:
+                    self.logger.error(f"Failed to wait for loading task {resource_id}: {e}")
+                    return False
+
+            # Start new loading task
+            task = asyncio.create_task(self._load_resource_impl(resource_id, loader_func, *args, **kwargs))
+            self._loading_tasks[resource_id] = task
+
+            try:
+                result = await task
+                return result
+            finally:
+                # Clean up task
+                if resource_id in self._loading_tasks:
+                    del self._loading_tasks[resource_id]
+
+    async def _load_resource_impl(self, resource_id: str, loader_func: callable, *args, **kwargs) -> Any:
+        """Internal resource loading implementation"""
+        try:
+            start_time = time.time()
+
+            # Call the loader function
+            if asyncio.iscoroutinefunction(loader_func):
+                result = await loader_func(*args, **kwargs)
+            else:
+                result = await asyncio.to_thread(loader_func, *args, **kwargs)
+
+            # Mark as loaded
+            self._loaded_resources.add(resource_id)
+
+            # Execute callbacks
+            if resource_id in self._resource_callbacks:
+                for callback in self._resource_callbacks[resource_id]:
+                    try:
+                        if asyncio.iscoroutinefunction(callback):
+                            await callback(resource_id, result)
+                        else:
+                            callback(resource_id, result)
+                    except Exception as e:
+                        self.logger.error(f"Resource callback failed for {resource_id}: {e}")
+
+                # Clean up callbacks
+                del self._resource_callbacks[resource_id]
+
+            load_time = time.time() - start_time
+            self.logger.debug(f"Resource loaded: {resource_id} (took {load_time:.3f}s)")
+
+            return result
+
+        except Exception as e:
+            self.logger.error(f"Failed to load resource {resource_id}: {e}")
+            return False
+
+    def add_load_callback(self, resource_id: str, callback: callable) -> None:
+        """Add callback to be executed when resource is loaded"""
+        with self._lock:
+            if resource_id not in self._resource_callbacks:
+                self._resource_callbacks[resource_id] = []
+            self._resource_callbacks[resource_id].append(callback)
+
+    def unload_resource(self, resource_id: str) -> None:
+        """Mark resource as unloaded"""
+        with self._lock:
+            self._loaded_resources.discard(resource_id)
+            if resource_id in self._loading_tasks:
+                self._loading_tasks[resource_id].cancel()
+                del self._loading_tasks[resource_id]
+
+
+class PerformanceMonitor:
+    """Performance monitoring for theme and navigation operations"""
+
+    def __init__(self, logger_system: LoggerSystem):
+        self.logger = logger_system.get_logger(__name__)
+        self._metrics: Dict[str, List[float]] = {}
+        self._counters: Dict[str, int] = {}
+        self._start_times: Dict[str, float] = {}
+        self._lock = threading.RLock()
+        self.max_metric_history = 1000
+
+    def start_operation(self, operation_id: str) -> None:
+        """Start timing an operation"""
+        with self._lock:
+            self._start_times[operation_id] = time.time()
+
+    def end_operation(self, operation_id: str, operation_type: str = "general") -> float:
+        """End timing an operation and record the duration"""
+        with self._lock:
+            if operation_id not in self._start_times:
+                self.logger.warning(f"No start time found for operation: {operation_id}")
+                return 0.0
+
+            duration = time.time() - self._start_times[operation_id]
+            del self._start_times[operation_id]
+
+            # Record metric
+            if operation_type not in self._metrics:
+                self._metrics[operation_type] = []
+
+            self._metrics[operation_type].append(duration)
+
+            # Limit history size
+            if len(self._metrics[operation_type]) > self.max_metric_history:
+                self._metrics[operation_type] = self._metrics[operation_type][-self.max_metric_history:]
+
+            # Update counter
+            self._counters[operation_type] = self._counters.get(operation_type, 0) + 1
+
+            return duration
+
+    def record_metric(self, metric_name: str, value: float) -> None:
+        """Record a custom metric value"""
+        with self._lock:
+            if metric_name not in self._metrics:
+                self._metrics[metric_name] = []
+
+            self._metrics[metric_name].append(value)
+
+            # Limit history size
+            if len(self._metrics[metric_name]) > self.max_metric_history:
+                self._metrics[metric_name] = self._metrics[metric_name][-self.max_metric_history:]
+
+    def increment_counter(self, counter_name: str, amount: int = 1) -> None:
+        """Increment a counter"""
+        with self._lock:
+            self._counters[counter_name] = self._counters.get(counter_name, 0) + amount
+
+    def get_metrics_summary(self, metric_name: str) -> Dict[str, float]:
+        """Get summary statistics for a metric"""
+        with self._lock:
+            if metric_name not in self._metrics or not self._metrics[metric_name]:
+                return {}
+
+            values = self._metrics[metric_name]
+            return {
+                "count": len(values),
+                "min": min(values),
+                "max": max(values),
+                "avg": sum(values) / len(values),
+                "recent_avg": sum(values[-10:]) / min(len(values), 10)
+            }
+
+    def get_all_metrics(self) -> Dict[str, Dict[str, float]]:
+        """Get summary for all metrics"""
+        with self._lock:
+            result = {}
+            for metric_name in self._metrics:
+                result[metric_name] = self.get_metrics_summary(metric_name)
+            return result
+
+    def get_counters(self) -> Dict[str, int]:
+        """Get all counter values"""
+        with self._lock:
+            return self._counters.copy()
+
+    def reset_metrics(self) -> None:
+        """Reset all metrics and counters"""
+        with self._lock:
+            self._metrics.clear()
+            self._counters.clear()
+            self._start_times.clear()
 
 
 class PerformanceOptimizer:
-    """
-    Comprehensive performance optimizer for AI integration
+    """Main performance optimizer coordinating all optimization strategies"""
 
-    Responsibilities:
-    - Memory usage optimization across all components
-    - Intelligent caching strategy implementation
-    - Asynchronous processing coordination
-    - Resource pooling and lifecycle management
-    - Performance bottleneck identification and resolution
-    """
+    def __init__(self, logger_system: LoggerSystem):
+        self.logger = logger_system.get_logger(__name__)
 
-    def __init__(
-        self,
-        config_manager: ConfigManager,
-        cache_system: UnifiedCacheSystem,
-        performance_monitor: KiroPerformanceMonitor,
-        logger_system: LoggerSystem = None,
-    ):
-        """
-        Initialize performance optimizer
+        # Initialize optimization components
+        self.theme_cache = ResourceCache(max_size=100, ttl_seconds=600)  # 10 minutes
+        self.stylesheet_cache = ResourceCache(max_size=50, ttl_seconds=300)  # 5 minutes
+        self.path_cache = ResourceCache(max_size=500, ttl_seconds=120)  # 2 minutes
 
-        Args:
-            config_manager: Configuration manager
-            cache_system: Unified cache system
-            performance_monitor: Performance monitor
-            logger_system: Logging system
-        """
-        self.config_manager = config_manager
-        self.cache_system = cache_system
-        self.performance_monitor = performance_monitor
-        self.logger_system = logger_system or LoggerSystem()
-        self.error_handler = IntegratedErrorHandler(self.logger_system)
+        self.lazy_loader = LazyResourceLoader(logger_system)
+        self.monitor = PerformanceMonitor(logger_system)
 
-        # Optimization state
-        self.is_optimizing = False
-        self.optimization_thread: Optional[threading.Thread] = None
-        self.optimization_lock = threading.RLock()
+        # Optimization settings
+        self.enable_lazy_loading = True
+        self.enable_caching = True
+        self.enable_monitoring = True
 
-        # Optimization strategies
-        self.strategies: Dict[str, OptimizationStrategy] = {}
-        self.active_optimizations: Set[str] = set()
+        # Background optimization task
+        self._optimization_task: Optional[asyncio.Task] = None
+        self._running = False
 
-        # Resource pools
-        self.resource_pools: Dict[str, ResourcePool] = {}
+    def start_optimization(self) -> None:
+        """Start background optimization processes"""
+        if self._running:
+            return
 
-        # Thread pools for different types of operations
-        self.io_thread_pool = ThreadPoolExecutor(
-            max_workers=4, thread_name_prefix="optimizer_io"
-        )
-        self.cpu_thread_pool = ThreadPoolExecutor(
-            max_workers=2, thread_name_prefix="optimizer_cpu"
-        )
-        self.process_pool = ProcessPoolExecutor(max_workers=2)
+        self._running = True
+        self._optimization_task = asyncio.create_task(self._optimization_loop())
+        self.logger.info("Performance optimization started")
 
-        # Performance tracking
-        self.optimization_history: deque = deque(maxlen=500)
-        self.bottleneck_detection: Dict[str, deque] = defaultdict(
-            lambda: deque(maxlen=100)
-        )
+    def stop_optimization(self) -> None:
+        """Stop background optimization processes"""
+        self._running = False
+        if self._optimization_task:
+            self._optimization_task.cancel()
+            self._optimization_task = None
+        self.logger.info("Performance optimization stopped")
 
-        # Memory management
-        self.memory_pressure_threshold = 0.8  # 80% memory usage
-        self.gc_frequency = 30  # seconds
-        self.last_gc_time = time.time()
-
-        # Async processing coordination
-        self.async_tasks: Dict[str, asyncio.Task] = {}
-        self.task_priorities: Dict[str, int] = {}
-
-        # Initialize optimization strategies
-        self._initialize_strategies()
-
-        # Start optimization monitoring
-        self.start_optimization()
-
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO,
-            "performance_optimizer_init",
-            "Performance optimizer initialized",
-        )
-
-    def _initialize_strategies(self):
-        """Initialize optimization strategies"""
+    async def _optimization_loop(self) -> None:
+        """Background optimization loop"""
         try:
-            # Memory optimization strategies
-            self.strategies["memory_cleanup"] = OptimizationStrategy(
-                name="memory_cleanup",
-                priority=1,
-                target_components=[AIComponent.KIRO],
-                parameters={
-                    "gc_threshold": 0.8,
-                    "cleanup_interval": 30,
-                    "aggressive_mode": False,
-                },
-            )
+            while self._running:
+                await asyncio.sleep(30)  # Run every 30 seconds
 
-            self.strategies["cache_optimization"] = OptimizationStrategy(
-                name="cache_optimization",
-                priority=2,
-                target_components=[AIComponent.KIRO],
-                parameters={
-                    "max_cache_size": 200 * 1024 * 1024,  # 200MB
-                    "eviction_policy": "lru",
-                    "compression_enabled": True,
-                },
-            )
+                try:
+                    await self._cleanup_caches()
+                    await self._log_performance_summary()
+                except Exception as e:
+                    self.logger.error(f"Error in optimization loop: {e}")
 
-            # UI optimization strategies
-            self.strategies["ui_responsiveness"] = OptimizationStrategy(
-                name="ui_responsiveness",
-                priority=1,
-                target_components=[AIComponent.CURSOR],
-                parameters={
-                    "max_ui_thread_time": 16,  # 16ms for 60fps
-                    "background_processing": True,
-                    "lazy_loading": True,
-                },
-            )
+        except asyncio.CancelledError:
+            self.logger.debug("Optimization loop cancelled")
+        except Exception as e:
+            self.logger.error(f"Optimization loop error: {e}")
 
-            self.strategies["thumbnail_optimization"] = OptimizationStrategy(
-                name="thumbnail_optimization",
-                priority=2,
-                target_components=[AIComponent.CURSOR],
-                parameters={
-                    "batch_size": 10,
-                    "preload_distance": 20,
-                    "quality_scaling": True,
-                },
-            )
-
-            # Core processing optimization strategies
-            self.strategies["image_processing"] = OptimizationStrategy(
-                name="image_processing",
-                priority=2,
-                target_components=[AIComponent.COPILOT],
-                parameters={
-                    "parallel_processing": True,
-                    "chunk_size": 1024 * 1024,  # 1MB chunks
-                    "use_gpu": False,
-                },
-            )
-
-            self.strategies["exif_processing"] = OptimizationStrategy(
-                name="exif_processing",
-                priority=3,
-                target_components=[AIComponent.COPILOT],
-                parameters={
-                    "batch_processing": True,
-                    "cache_parsed_data": True,
-                    "skip_thumbnails": False,
-                },
-            )
-
-            # Resource pooling strategies
-            self.strategies["connection_pooling"] = OptimizationStrategy(
-                name="connection_pooling",
-                priority=3,
-                target_components=[AIComponent.KIRO],
-                parameters={
-                    "max_connections": 10,
-                    "idle_timeout": 300,
-                    "validation_interval": 60,
-                },
-            )
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "strategies_initialized",
-                f"Initialized {len(self.strategies)} optimization strategies",
-            )
+    async def _cleanup_caches(self) -> None:
+        """Clean up expired cache entries"""
+        try:
+            # Force cleanup of expired entries
+            for cache in [self.theme_cache, self.stylesheet_cache, self.path_cache]:
+                # Trigger cleanup by accessing a non-existent key
+                cache.get("__cleanup_trigger__")
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "initialize_strategies"},
-                AIComponent.KIRO,
-            )
+            self.logger.error(f"Cache cleanup error: {e}")
 
-    def start_optimization(self):
-        """Start performance optimization monitoring"""
+    async def _log_performance_summary(self) -> None:
+        """Log performance summary"""
         try:
-            with self.optimization_lock:
-                if self.is_optimizing:
-                    return
+            metrics = self.monitor.get_all_metrics()
+            counters = self.monitor.get_counters()
 
-                self.is_optimizing = True
-                self.optimization_thread = threading.Thread(
-                    target=self._optimization_loop,
-                    name="performance_optimizer",
-                    daemon=True,
-                )
-                self.optimization_thread.start()
+            if metrics or counters:
+                summary = []
 
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "optimization_started",
-                "Performance optimization monitoring started",
-            )
+                # Add key metrics
+                for metric_name in ["theme_switch", "breadcrumb_render", "path_validation"]:
+                    if metric_name in metrics:
+                        stats = metrics[metric_name]
+                        summary.append(f"{metric_name}: {stats['avg']:.3f}s avg ({stats['count']} ops)")
+
+                # Add cache stats
+                summary.append(f"Caches: theme={self.theme_cache.size()}, "
+                             f"stylesheet={self.stylesheet_cache.size()}, "
+                             f"path={self.path_cache.size()}")
+
+                if summary:
+                    self.logger.debug(f"Performance summary: {', '.join(summary)}")
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "start_optimization"},
-                AIComponent.KIRO,
-            )
-
-    def stop_optimization(self):
-        """Stop performance optimization monitoring"""
-        try:
-            with self.optimization_lock:
-                self.is_optimizing = False
-
-            if self.optimization_thread and self.optimization_thread.is_alive():
-                self.optimization_thread.join(timeout=5.0)
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "optimization_stopped",
-                "Performance optimization monitoring stopped",
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "stop_optimization"},
-                AIComponent.KIRO,
-            )
-
-    def _optimization_loop(self):
-        """Main optimization monitoring loop"""
-        while self.is_optimizing:
-            try:
-                # Check system performance
-                current_metrics = self._collect_performance_metrics()
-
-                # Detect bottlenecks
-                bottlenecks = self._detect_bottlenecks(current_metrics)
-
-                # Apply optimizations based on bottlenecks
-                if bottlenecks:
-                    self._apply_optimizations(bottlenecks)
-
-                # Perform routine maintenance
-                self._perform_maintenance()
-
-                # Sleep before next iteration
-                time.sleep(5.0)  # Check every 5 seconds
-
-            except Exception as e:
-                self.error_handler.handle_error(
-                    e,
-                    ErrorCategory.INTEGRATION_ERROR,
-                    {"operation": "optimization_loop"},
-                    AIComponent.KIRO,
-                )
-                time.sleep(10.0)  # Longer sleep on error
-
-    def _collect_performance_metrics(self) -> Dict[str, Any]:
-        """Collect current performance metrics"""
-        try:
-            process = psutil.Process()
-
-            metrics = {
-                "timestamp": datetime.now(),
-                "memory": {
-                    "rss": process.memory_info().rss,
-                    "vms": process.memory_info().vms,
-                    "percent": process.memory_percent(),
-                    "available": psutil.virtual_memory().available,
-                },
-                "cpu": {
-                    "percent": process.cpu_percent(),
-                    "system_percent": psutil.cpu_percent(),
-                    "threads": process.num_threads(),
-                },
-                "io": {
-                    "read_bytes": process.io_counters().read_bytes,
-                    "write_bytes": process.io_counters().write_bytes,
-                },
-                "cache": {
-                    "size": self.cache_system.get_cache_size(),
-                    "hit_rate": self.cache_system.get_hit_rate(),
-                    "entries": self.cache_system.get_entry_count(),
-                },
-            }
-
-            return metrics
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "collect_performance_metrics"},
-                AIComponent.KIRO,
-            )
-            return {}
-
-    def _detect_bottlenecks(self, metrics: Dict[str, Any]) -> List[str]:
-        """Detect performance bottlenecks"""
-        bottlenecks = []
-
-        try:
-            if not metrics:
-                return bottlenecks
-
-            # Memory bottlenecks
-            memory_percent = metrics.get("memory", {}).get("percent", 0)
-            if memory_percent > 80:
-                bottlenecks.append("high_memory_usage")
-                self.bottleneck_detection["memory"].append(memory_percent)
-
-            # CPU bottlenecks
-            cpu_percent = metrics.get("cpu", {}).get("percent", 0)
-            if cpu_percent > 70:
-                bottlenecks.append("high_cpu_usage")
-                self.bottleneck_detection["cpu"].append(cpu_percent)
-
-            # Cache bottlenecks
-            cache_hit_rate = metrics.get("cache", {}).get("hit_rate", 1.0)
-            if cache_hit_rate < 0.7:  # Less than 70% hit rate
-                bottlenecks.append("low_cache_hit_rate")
-                self.bottleneck_detection["cache"].append(cache_hit_rate)
-
-            # I/O bottlenecks (simplified detection)
-            io_metrics = metrics.get("io", {})
-            if io_metrics:
-                # Store for trend analysis
-                self.bottleneck_detection["io"].append(
-                    io_metrics.get("read_bytes", 0) + io_metrics.get("write_bytes", 0)
-                )
-
-            return bottlenecks
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "detect_bottlenecks"},
-                AIComponent.KIRO,
-            )
-            return []
-
-    def _apply_optimizations(self, bottlenecks: List[str]):
-        """Apply optimizations based on detected bottlenecks"""
-        try:
-            for bottleneck in bottlenecks:
-                if bottleneck == "high_memory_usage":
-                    self._optimize_memory_usage()
-                elif bottleneck == "high_cpu_usage":
-                    self._optimize_cpu_usage()
-                elif bottleneck == "low_cache_hit_rate":
-                    self._optimize_cache_performance()
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "apply_optimizations", "bottlenecks": bottlenecks},
-                AIComponent.KIRO,
-            )
-
-    def _optimize_memory_usage(self):
-        """Optimize memory usage"""
-        try:
-            strategy = self.strategies.get("memory_cleanup")
-            if not strategy or not strategy.enabled:
-                return
-
-            # Force garbage collection
-            collected = gc.collect()
-
-            # Clear cache if memory pressure is high
-            memory_percent = psutil.Process().memory_percent()
-            if memory_percent > 85:
-                self.cache_system.clear_expired()
-
-                # More aggressive cleanup if still high
-                if psutil.Process().memory_percent() > 90:
-                    self.cache_system.clear_lru(0.3)  # Clear 30% of LRU items
-
-            # Update strategy effectiveness
-            strategy.last_applied = datetime.now()
-            strategy.effectiveness_score = max(0, 100 - memory_percent) / 100
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "memory_optimized",
-                f"Memory optimization applied, collected {collected} objects",
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "optimize_memory_usage"},
-                AIComponent.KIRO,
-            )
-
-    def _optimize_cpu_usage(self):
-        """Optimize CPU usage"""
-        try:
-            strategy = self.strategies.get("ui_responsiveness")
-            if not strategy or not strategy.enabled:
-                return
-
-            # Reduce thread pool sizes temporarily
-            if hasattr(self.io_thread_pool, "_max_workers"):
-                original_workers = self.io_thread_pool._max_workers
-                if original_workers > 2:
-                    # Temporarily reduce workers
-                    self.io_thread_pool._max_workers = max(2, original_workers - 1)
-
-            # Increase sleep intervals in background tasks
-            self._adjust_background_task_intervals(1.5)  # 50% slower
-
-            strategy.last_applied = datetime.now()
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO, "cpu_optimized", "CPU usage optimization applied"
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "optimize_cpu_usage"},
-                AIComponent.KIRO,
-            )
-
-    def _optimize_cache_performance(self):
-        """Optimize cache performance"""
-        try:
-            strategy = self.strategies.get("cache_optimization")
-            if not strategy or not strategy.enabled:
-                return
-
-            # Analyze cache usage patterns
-            cache_stats = self.cache_system.get_statistics()
-
-            # Adjust cache size if needed
-            current_size = cache_stats.get("size", 0)
-            max_size = strategy.parameters.get("max_cache_size", 200 * 1024 * 1024)
-
-            if current_size > max_size * 0.9:  # 90% full
-                # Increase cache size if memory allows
-                memory_percent = psutil.Process().memory_percent()
-                if memory_percent < 70:
-                    new_max_size = min(max_size * 1.2, 500 * 1024 * 1024)  # Max 500MB
-                    self.cache_system.set_max_size(new_max_size)
-                    strategy.parameters["max_cache_size"] = new_max_size
-
-            # Optimize eviction policy
-            hit_rate = cache_stats.get("hit_rate", 0)
-            if hit_rate < 0.6:  # Less than 60%
-                # Switch to more aggressive caching
-                self.cache_system.set_eviction_policy("lfu")  # Least Frequently Used
-
-            strategy.last_applied = datetime.now()
-            strategy.effectiveness_score = hit_rate
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "cache_optimized",
-                f"Cache optimization applied, hit rate: {hit_rate:.2f}",
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "optimize_cache_performance"},
-                AIComponent.KIRO,
-            )
-
-    def _adjust_background_task_intervals(self, multiplier: float):
-        """Adjust background task intervals"""
-        try:
-            # This would adjust intervals of background tasks
-            # Implementation depends on specific task management system
-            pass
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "adjust_background_task_intervals"},
-                AIComponent.KIRO,
-            )
-
-    def _perform_maintenance(self):
-        """Perform routine maintenance tasks"""
-        try:
-            current_time = time.time()
-
-            # Garbage collection
-            if current_time - self.last_gc_time > self.gc_frequency:
-                gc.collect()
-                self.last_gc_time = current_time
-
-            # Clean up completed async tasks
-            completed_tasks = [
-                task_id for task_id, task in self.async_tasks.items() if task.done()
-            ]
-
-            for task_id in completed_tasks:
-                del self.async_tasks[task_id]
-                if task_id in self.task_priorities:
-                    del self.task_priorities[task_id]
-
-            # Update resource pools
-            self._maintain_resource_pools()
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "perform_maintenance"},
-                AIComponent.KIRO,
-            )
-
-    def _maintain_resource_pools(self):
-        """Maintain resource pools"""
-        try:
-            for pool_name, pool in self.resource_pools.items():
-                # Remove expired resources
-                current_time = time.time()
-                expired_resources = []
-
-                for resource in list(pool.available_resources):
-                    if hasattr(resource, "last_used"):
-                        if current_time - resource.last_used > 300:  # 5 minutes
-                            expired_resources.append(resource)
-
-                for resource in expired_resources:
-                    pool.available_resources.remove(resource)
-                    pool.current_size -= 1
-                    pool.destruction_count += 1
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "maintain_resource_pools"},
-                AIComponent.KIRO,
-            )
-
-    # Public API methods
-
-    def create_resource_pool(
-        self, name: str, resource_type: str, max_size: int
-    ) -> bool:
-        """Create a new resource pool"""
-        try:
-            if name in self.resource_pools:
-                return False
-
-            self.resource_pools[name] = ResourcePool(
-                name=name, resource_type=resource_type, max_size=max_size
-            )
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "resource_pool_created",
-                f"Resource pool created: {name} ({resource_type}, max_size={max_size})",
-            )
-
-            return True
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "create_resource_pool", "name": name},
-                AIComponent.KIRO,
-            )
-            return False
-
-    def get_resource(self, pool_name: str, factory_func: Callable = None):
-        """Get resource from pool"""
-        try:
-            if pool_name not in self.resource_pools:
-                return None
-
-            pool = self.resource_pools[pool_name]
-
-            # Try to get from available resources
-            if pool.available_resources:
-                resource = pool.available_resources.popleft()
-                pool.in_use_resources.add(resource)
-                pool.hit_count += 1
-                return resource
-
-            # Create new resource if under limit
-            if pool.current_size < pool.max_size and factory_func:
-                resource = factory_func()
-                pool.in_use_resources.add(resource)
-                pool.current_size += 1
-                pool.creation_count += 1
-                pool.miss_count += 1
-                return resource
-
-            # Pool is full and no available resources
-            pool.miss_count += 1
+            self.logger.error(f"Performance summary error: {e}")
+
+    # Theme optimization methods
+
+    async def optimize_theme_loading(self, theme_name: str, loader_func: callable) -> Any:
+        """Optimize theme loading with caching and lazy loading"""
+        if not self.enable_lazy_loading:
+            return await asyncio.to_thread(loader_func)
+
+        resource_id = f"theme_{theme_name}"
+        return await self.lazy_loader.load_resource(resource_id, loader_func)
+
+    def cache_stylesheet(self, theme_name: str, stylesheet: str) -> None:
+        """Cache compiled stylesheet"""
+        if self.enable_caching:
+            cache_key = f"stylesheet_{theme_name}"
+            self.stylesheet_cache.set(cache_key, stylesheet)
+
+    def get_cached_stylesheet(self, theme_name: str) -> Optional[str]:
+        """Get cached stylesheet"""
+        if not self.enable_caching:
             return None
 
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "get_resource", "pool": pool_name},
-                AIComponent.KIRO,
-            )
+        cache_key = f"stylesheet_{theme_name}"
+        return self.stylesheet_cache.get(cache_key)
+
+    # Breadcrumb optimization methods
+
+    def cache_path_info(self, path: Path, path_info: Dict[str, Any]) -> None:
+        """Cache path information for breadcrumb rendering"""
+        if self.enable_caching:
+            cache_key = f"path_{str(path)}"
+            self.path_cache.set(cache_key, path_info)
+
+    def get_cached_path_info(self, path: Path) -> Optional[Dict[str, Any]]:
+        """Get cached path information"""
+        if not self.enable_caching:
             return None
 
-    def return_resource(self, pool_name: str, resource):
-        """Return resource to pool"""
-        try:
-            if pool_name not in self.resource_pools:
-                return False
+        cache_key = f"path_{str(path)}"
+        return self.path_cache.get(cache_key)
 
-            pool = self.resource_pools[pool_name]
+    async def optimize_breadcrumb_rendering(self, path: Path, segments: List[Any]) -> List[Any]:
+        """Optimize breadcrumb rendering for long paths"""
+        if len(segments) <= 5:  # Short paths don't need optimization
+            return segments
 
-            if resource in pool.in_use_resources:
-                pool.in_use_resources.remove(resource)
+        # Use cached truncation if available
+        cache_key = f"truncated_{str(path)}_{len(segments)}"
+        cached_result = self.path_cache.get(cache_key)
+        if cached_result:
+            return cached_result
 
-                # Mark last used time
-                if hasattr(resource, "last_used"):
-                    resource.last_used = time.time()
-                else:
-                    setattr(resource, "last_used", time.time())
+        # Apply smart truncation
+        optimized_segments = await self._apply_smart_truncation(segments)
 
-                pool.available_resources.append(resource)
-                return True
+        # Cache result
+        self.path_cache.set(cache_key, optimized_segments)
 
-            return False
+        return optimized_segments
 
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "return_resource", "pool": pool_name},
-                AIComponent.KIRO,
-            )
-            return False
+    async def _apply_smart_truncation(self, segments: List[Any]) -> List[Any]:
+        """Apply smart truncation to breadcrumb segments"""
+        if len(segments) <= 7:
+            return segments
 
-    def submit_async_task(self, task_id: str, coro, priority: int = 3) -> bool:
-        """Submit asynchronous task with priority"""
-        try:
-            if task_id in self.async_tasks:
-                return False  # Task already exists
+        # Keep first 2, last 3, and add ellipsis in between
+        truncated = segments[:2] + ["..."] + segments[-3:]
+        return truncated
 
-            # Create task
-            task = asyncio.create_task(coro)
-            self.async_tasks[task_id] = task
-            self.task_priorities[task_id] = priority
+    # Monitoring methods
 
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "async_task_submitted",
-                f"Async task submitted: {task_id} (priority={priority})",
-            )
+    def start_theme_operation(self, operation_name: str) -> str:
+        """Start monitoring a theme operation"""
+        if not self.enable_monitoring:
+            return ""
 
-            return True
+        operation_id = f"theme_{operation_name}_{time.time()}"
+        self.monitor.start_operation(operation_id)
+        return operation_id
 
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "submit_async_task", "task_id": task_id},
-                AIComponent.KIRO,
-            )
-            return False
+    def end_theme_operation(self, operation_id: str) -> float:
+        """End monitoring a theme operation"""
+        if not self.enable_monitoring or not operation_id:
+            return 0.0
 
-    def cancel_async_task(self, task_id: str) -> bool:
-        """Cancel asynchronous task"""
-        try:
-            if task_id not in self.async_tasks:
-                return False
+        return self.monitor.end_operation(operation_id, "theme_switch")
 
-            task = self.async_tasks[task_id]
-            task.cancel()
+    def start_navigation_operation(self, operation_name: str) -> str:
+        """Start monitoring a navigation operation"""
+        if not self.enable_monitoring:
+            return ""
 
-            del self.async_tasks[task_id]
-            if task_id in self.task_priorities:
-                del self.task_priorities[task_id]
+        operation_id = f"nav_{operation_name}_{time.time()}"
+        self.monitor.start_operation(operation_id)
+        return operation_id
 
-            return True
+    def end_navigation_operation(self, operation_id: str) -> float:
+        """End monitoring a navigation operation"""
+        if not self.enable_monitoring or not operation_id:
+            return 0.0
 
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "cancel_async_task", "task_id": task_id},
-                AIComponent.KIRO,
-            )
-            return False
+        return self.monitor.end_operation(operation_id, "breadcrumb_render")
 
-    def get_optimization_status(self) -> Dict[str, Any]:
-        """Get current optimization status"""
-        try:
-            return {
-                "is_optimizing": self.is_optimizing,
-                "active_strategies": len(
-                    [s for s in self.strategies.values() if s.enabled]
-                ),
-                "resource_pools": {
-                    name: {
-                        "size": pool.current_size,
-                        "max_size": pool.max_size,
-                        "hit_rate": (
-                            pool.hit_count / (pool.hit_count + pool.miss_count)
-                            if (pool.hit_count + pool.miss_count) > 0
-                            else 0
-                        ),
-                        "utilization": (
-                            pool.current_size / pool.max_size
-                            if pool.max_size > 0
-                            else 0
-                        ),
-                    }
-                    for name, pool in self.resource_pools.items()
-                },
-                "async_tasks": len(self.async_tasks),
-                "recent_bottlenecks": {
-                    name: list(deque_data)[-5:] if deque_data else []
-                    for name, deque_data in self.bottleneck_detection.items()
-                },
+    def get_performance_report(self) -> Dict[str, Any]:
+        """Get comprehensive performance report"""
+        return {
+            "metrics": self.monitor.get_all_metrics(),
+            "counters": self.monitor.get_counters(),
+            "cache_stats": {
+                "theme_cache_size": self.theme_cache.size(),
+                "stylesheet_cache_size": self.stylesheet_cache.size(),
+                "path_cache_size": self.path_cache.size()
+            },
+            "optimization_settings": {
+                "lazy_loading_enabled": self.enable_lazy_loading,
+                "caching_enabled": self.enable_caching,
+                "monitoring_enabled": self.enable_monitoring
             }
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "get_optimization_status"},
-                AIComponent.KIRO,
-            )
-            return {}
-
-    def enable_strategy(self, strategy_name: str) -> bool:
-        """Enable optimization strategy"""
-        try:
-            if strategy_name in self.strategies:
-                self.strategies[strategy_name].enabled = True
-                return True
-            return False
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "enable_strategy", "strategy": strategy_name},
-                AIComponent.KIRO,
-            )
-            return False
-
-    def disable_strategy(self, strategy_name: str) -> bool:
-        """Disable optimization strategy"""
-        try:
-            if strategy_name in self.strategies:
-                self.strategies[strategy_name].enabled = False
-                return True
-            return False
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "disable_strategy", "strategy": strategy_name},
-                AIComponent.KIRO,
-            )
-            return False
-
-    def cleanup(self):
-        """Cleanup optimizer resources"""
-        try:
-            # Stop optimization
-            self.stop_optimization()
-
-            # Shutdown thread pools
-            self.io_thread_pool.shutdown(wait=False)
-            self.cpu_thread_pool.shutdown(wait=False)
-            self.process_pool.shutdown(wait=False)
-
-            # Cancel async tasks
-            for task_id in list(self.async_tasks.keys()):
-                self.cancel_async_task(task_id)
-
-            # Clear resource pools
-            self.resource_pools.clear()
-
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "performance_optimizer_cleanup",
-                "Performance optimizer cleaned up",
-            )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e,
-                ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "cleanup"},
-                AIComponent.KIRO,
-            )
+        }

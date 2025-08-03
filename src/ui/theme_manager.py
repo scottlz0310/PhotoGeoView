@@ -19,6 +19,7 @@ from PySide6.QtWidgets import QWidget
 
 from ..integration.config_manager import ConfigManager
 from ..integration.logging_system import LoggerSystem
+from ..integration.performance_optimizer import PerformanceOptimizer
 from ..integration.theme_interfaces import IThemeAware, IThemeManager
 from ..integration.theme_models import ThemeConfiguration, ThemeInfo, ThemeType, FontConfig, ColorScheme
 from ..integration.user_notification_system import UserNotificationSystem, NotificationAction
@@ -56,6 +57,21 @@ class ThemeManagerWidget(QObject):
         self.logger = logger_system.get_logger(__name__)
         self.notification_system = notification_system
 
+        # Performance optimization (optional)
+        try:
+            self.performance_optimizer = PerformanceOptimizer(logger_system)
+            # Only start optimization if we have an event loop
+            try:
+                import asyncio
+                asyncio.get_running_loop()
+                self.performance_optimizer.start_optimization()
+            except RuntimeError:
+                # No event loop running, skip optimization
+                self.logger.debug("No event loop running, skipping performance optimization")
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize performance optimizer: {e}")
+            self.performance_optimizer = None
+
         # Qt-theme-manager integration
         self.qt_theme_manager = None
         self.theme_controller = None
@@ -87,10 +103,14 @@ class ThemeManagerWidget(QObject):
     def _initialize_qt_theme_manager(self) -> None:
         """Initialize qt-theme-manager library integration"""
         try:
-            import theme_manager
+            # Try to import qt_theme_manager library
+            import qt_theme_manager as theme_manager
 
             # Initialize the theme manager from qt-theme-manager library
-            self.qt_theme_manager = theme_manager.ThemeManager()
+            if hasattr(theme_manager, 'ThemeManager'):
+                self.qt_theme_manager = theme_manager.ThemeManager()
+            else:
+                raise AttributeError("ThemeManager not found in qt_theme_manager")
 
             # Initialize additional components if available
             if hasattr(theme_manager, 'ThemeController'):
@@ -110,12 +130,24 @@ class ThemeManagerWidget(QObject):
 
             self.logger.info("Qt-theme-manager library initialized successfully")
 
-        except ImportError as e:
+        except (ImportError, AttributeError) as e:
             self.logger.warning(f"Qt-theme-manager library not available: {e}")
-            self.qt_theme_manager = None
-            self.theme_controller = None
-            self.theme_loader = None
-            self.stylesheet_generator = None
+
+            # Try to use fallback implementation
+            try:
+                from .theme_manager_fallback import ThemeManagerFallback
+                self.qt_theme_manager = ThemeManagerFallback()
+                self.theme_controller = None
+                self.theme_loader = None
+                self.stylesheet_generator = None
+                self.logger.info("Using ThemeManager fallback implementation")
+            except ImportError:
+                self.logger.error("ThemeManager fallback implementation not found")
+                self.qt_theme_manager = None
+                self.theme_controller = None
+                self.theme_loader = None
+                self.stylesheet_generator = None
+
         except Exception as e:
             self.logger.error(f"Failed to initialize qt-theme-manager: {e}")
             self.qt_theme_manager = None
@@ -172,14 +204,16 @@ class ThemeManagerWidget(QObject):
                 QKeySequence("Ctrl+T"), parent_widget
             )
             self.keyboard_shortcuts['theme_dialog'].activated.connect(self._open_theme_selection_dialog)
-            self.keyboard_shortcuts['theme_dialog'].setContext(parent_widget.windowFlags())
+            # Use proper shortcut context instead of window flags
+            from PySide6.QtCore import Qt
+            self.keyboard_shortcuts['theme_dialog'].setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
 
             # Ctrl+Shift+T: Cycle through available themes
             self.keyboard_shortcuts['cycle_theme'] = QShortcut(
                 QKeySequence("Ctrl+Shift+T"), parent_widget
             )
             self.keyboard_shortcuts['cycle_theme'].activated.connect(self._cycle_to_next_theme)
-            self.keyboard_shortcuts['cycle_theme'].setContext(parent_widget.windowFlags())
+            self.keyboard_shortcuts['cycle_theme'].setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
 
             # Set accessibility properties for shortcuts
             if self.accessibility_enabled:
@@ -491,23 +525,37 @@ class ThemeManagerWidget(QObject):
             }
 
     def _load_theme_configuration(self, theme_name: str) -> bool:
-        """Load full theme configuration"""
+        """Load full theme configuration with lazy loading optimization"""
         try:
+            # Check if theme is already cached
+            cached_theme = self.performance_optimizer.theme_cache.get(f"config_{theme_name}")
+            if cached_theme:
+                self.current_theme = cached_theme
+                return True
+
             # Try to load from custom themes first
             theme_file = self.custom_theme_dir / f"{theme_name}.json"
             if theme_file.exists():
                 self.current_theme = ThemeConfiguration.load_from_file(theme_file)
-                return self.current_theme is not None
+                if self.current_theme:
+                    # Cache the loaded theme
+                    self.performance_optimizer.theme_cache.set(f"config_{theme_name}", self.current_theme)
+                    return True
 
             # Try to load from built-in themes
             theme_file = self.theme_dir / f"{theme_name}.json"
             if theme_file.exists():
                 self.current_theme = ThemeConfiguration.load_from_file(theme_file)
-                return self.current_theme is not None
+                if self.current_theme:
+                    # Cache the loaded theme
+                    self.performance_optimizer.theme_cache.set(f"config_{theme_name}", self.current_theme)
+                    return True
 
             # Create default configuration for qt-theme-manager themes
             if theme_name in self.available_themes:
                 self.current_theme = self._create_default_theme_config(theme_name)
+                # Cache the created theme
+                self.performance_optimizer.theme_cache.set(f"config_{theme_name}", self.current_theme)
                 return True
 
             return False
@@ -545,6 +593,9 @@ class ThemeManagerWidget(QObject):
         Returns:
             True if theme applied successfully, False otherwise
         """
+        # Start performance monitoring
+        operation_id = self.performance_optimizer.start_theme_operation(f"apply_{theme_name}")
+
         try:
             # Validate theme exists
             if theme_name not in self.available_themes:
@@ -655,12 +706,19 @@ class ThemeManagerWidget(QObject):
             else:
                 self.logger.info(f"Theme applied successfully: {theme_name}")
 
+            # End performance monitoring
+            duration = self.performance_optimizer.end_theme_operation(operation_id)
+            self.logger.debug(f"Theme application took {duration:.3f}s")
+
             return True
 
         except Exception as e:
             error_msg = f"Critical error applying theme {theme_name}: {e}"
             self.logger.error(error_msg)
             self.theme_error.emit(theme_name, error_msg)
+
+            # End performance monitoring on error
+            self.performance_optimizer.end_theme_operation(operation_id)
 
             # Try fallback to default theme if not already trying default
             if theme_name != "default":
@@ -1600,4 +1658,133 @@ class ThemeManagerWidget(QObject):
 
         except Exception as e:
             self.logger.error(f"Failed to restore themes from backup: {e}")
+            return False
+
+    def _create_emergency_default_theme(self) -> None:
+        """Create an emergency default theme when no themes are available"""
+        try:
+            # Create minimal default theme configuration
+            default_theme = ThemeConfiguration(
+                name="default",
+                display_name="Emergency Default",
+                description="Emergency fallback theme",
+                author="PhotoGeoView",
+                version="1.0.0",
+                theme_type=ThemeType.BUILT_IN
+            )
+
+            # Add to available themes
+            theme_info = ThemeInfo(
+                name="default",
+                display_name="Emergency Default",
+                description="Emergency fallback theme",
+                author="PhotoGeoView",
+                version="1.0.0",
+                theme_type=ThemeType.BUILT_IN,
+                is_dark=False,
+                preview_colors={
+                    "primary": "#007acc",
+                    "background": "#ffffff",
+                    "text": "#000000"
+                },
+                is_available=True
+            )
+
+            self.available_themes["default"] = theme_info
+            self.logger.info("Created emergency default theme")
+
+        except Exception as e:
+            self.logger.error(f"Failed to create emergency default theme: {e}")
+
+    def handle_theme_loading_error(self, theme_name: str, error: Exception) -> bool:
+        """
+        Handle theme loading errors with comprehensive fallback strategy
+
+        Args:
+            theme_name: Name of the theme that failed to load
+            error: The error that occurred
+
+        Returns:
+            True if error was handled successfully, False otherwise
+        """
+        try:
+            error_msg = f"Theme loading error for '{theme_name}': {str(error)}"
+            self.logger.error(error_msg)
+            self.theme_error.emit(theme_name, error_msg)
+
+            # Show user notification
+            if self.notification_system:
+                self.notification_system.show_theme_error(
+                    theme_name,
+                    str(error),
+                    fallback_applied=False
+                )
+
+            # Try fallback strategies in order
+            fallback_strategies = [
+                ("default", "Applying default theme"),
+                ("light", "Applying light theme"),
+                ("dark", "Applying dark theme")
+            ]
+
+            for fallback_theme, strategy_msg in fallback_strategies:
+                if fallback_theme != theme_name and fallback_theme in self.available_themes:
+                    self.logger.info(f"{strategy_msg} as fallback for '{theme_name}'")
+                    if self.apply_theme(fallback_theme):
+                        # Update notification to show fallback was applied
+                        if self.notification_system:
+                            self.notification_system.show_info(
+                                "Theme Fallback Applied",
+                                f"Applied '{fallback_theme}' theme due to error with '{theme_name}'"
+                            )
+                        return True
+
+            # If no fallback themes work, create emergency theme
+            self._create_emergency_default_theme()
+            if "default" in self.available_themes:
+                return self.apply_theme("default")
+
+            return False
+
+        except Exception as e:
+            self.logger.error(f"Failed to handle theme loading error: {e}")
+            return False
+
+    def validate_theme_integrity(self, theme_name: str) -> bool:
+        """
+        Validate theme integrity before application
+
+        Args:
+            theme_name: Name of theme to validate
+
+        Returns:
+            True if theme is valid, False otherwise
+        """
+        try:
+            if theme_name not in self.available_themes:
+                return False
+
+            theme_info = self.available_themes[theme_name]
+
+            # Check if theme file exists for custom themes
+            if theme_info.theme_type == ThemeType.CUSTOM:
+                theme_file = self.custom_theme_dir / f"{theme_name}.json"
+                if not theme_file.exists():
+                    self.logger.warning(f"Custom theme file missing: {theme_file}")
+                    return False
+
+                # Try to load and validate theme configuration
+                try:
+                    theme_config = ThemeConfiguration.load_from_file(theme_file)
+                    if not theme_config or not theme_config.is_valid:
+                        self.logger.warning(f"Invalid theme configuration: {theme_name}")
+                        return False
+                except Exception as e:
+                    self.logger.warning(f"Failed to load theme configuration for validation: {e}")
+                    return False
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to validate theme integrity: {e}")
             return False
