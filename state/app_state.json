@@ -1,9 +1,9 @@
 {
-  "current_folder": "/home/hiro/Samples/images",
-  "selected_image": "/home/hiro/Samples/images/Create a modern and minimalistic icon for a software project named 'PhotoGeoView'. The icon should f.jpeg",
+  "current_folder": "/home/hiro",
+  "selected_image": "/home/hiro/Samples/taiwan-jiufen.jpg",
   "loaded_images": [],
-  "current_theme": "default",
-  "thumbnail_size": 108,
+  "current_theme": "dark",
+  "thumbnail_size": 162,
   "folder_history": [],
   "ui_layout": {},
   "window_geometry": null,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-08-03 18:49:25.517559",
+  "last_activity": "2025-08-04 21:39:21.035348",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-08-03T18:49:25.518221",
-    "state_changes": 54,
-    "state_accesses": 77
+    "saved_at": "2025-08-04T21:39:21.035978",
+    "state_changes": 3,
+    "state_accesses": 5
   }
 }

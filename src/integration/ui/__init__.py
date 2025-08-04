@@ -8,14 +8,15 @@ Combines CursorBLD's excellent UI/UX design with Kiro's optimization:
 Author: Kiro AI Integration System
 """
 
+from src.ui.theme_manager_simple import SimpleThemeManager
+
 from .folder_navigator import EnhancedFolderNavigator
 from .main_window import IntegratedMainWindow
-from .theme_manager import IntegratedThemeManager
 from .thumbnail_grid import OptimizedThumbnailGrid
 
 __all__ = [
     "IntegratedMainWindow",
-    "IntegratedThemeManager",
+    "SimpleThemeManager",
     "OptimizedThumbnailGrid",
     "EnhancedFolderNavigator",
 ]

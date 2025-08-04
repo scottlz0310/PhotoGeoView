@@ -12,20 +12,41 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QPalette
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QLineEdit, QTextEdit, QPushButton, QComboBox,
-    QColorDialog, QFontDialog, QSpinBox, QGroupBox,
-    QScrollArea, QTabWidget, QMessageBox, QFileDialog,
-    QProgressBar, QCheckBox, QSlider, QFrame
+    QCheckBox,
+    QColorDialog,
+    QComboBox,
+    QFileDialog,
+    QFontDialog,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QScrollArea,
+    QSlider,
+    QSpinBox,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
 
 from ..integration.config_manager import ConfigManager
 from ..integration.logging_system import LoggerSystem
-from ..integration.theme_models import ThemeConfiguration, ColorScheme, FontConfig, ThemeType
-from .theme_manager import ThemeManagerWidget
+from ..integration.theme_models import (
+    ColorScheme,
+    FontConfig,
+    ThemeConfiguration,
+    ThemeType,
+)
+from .theme_manager_simple import SimpleThemeManager
 
 
 class ColorPickerWidget(QWidget):
@@ -332,7 +353,7 @@ class ThemeEditorDialog(QWidget):
     theme_saved = Signal(str)  # theme_name
     theme_cancelled = Signal()
 
-    def __init__(self, theme_manager: ThemeManagerWidget, config_manager: ConfigManager,
+    def __init__(self, theme_manager: SimpleThemeManager, config_manager: ConfigManager,
                  logger_system: LoggerSystem, theme_config: ThemeConfiguration = None, parent=None):
         super().__init__(parent)
 
@@ -846,7 +867,7 @@ class ThemeImportDialog(QWidget):
     theme_imported = Signal(str)  # theme_name
     import_cancelled = Signal()
 
-    def __init__(self, theme_manager: ThemeManagerWidget, logger_system: LoggerSystem, parent=None):
+    def __init__(self, theme_manager: SimpleThemeManager, logger_system: LoggerSystem, parent=None):
         super().__init__(parent)
 
         self.theme_manager = theme_manager

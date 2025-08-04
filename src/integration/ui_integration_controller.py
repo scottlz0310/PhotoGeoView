@@ -16,6 +16,7 @@ from PySide6.QtCore import QMutex, QObject, QThread, QTimer, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 
+from ..ui.theme_manager_simple import SimpleThemeManager
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .image_processor import CS4CodingImageProcessor
@@ -24,7 +25,6 @@ from .models import AIComponent, ApplicationState, ImageMetadata, ProcessingStat
 from .performance_monitor import KiroPerformanceMonitor
 from .state_manager import StateManager
 from .ui.folder_navigator import EnhancedFolderNavigator
-from .ui.theme_manager import IntegratedThemeManager
 from .ui.thumbnail_grid import OptimizedThumbnailGrid
 from .unified_cache import UnifiedCacheSystem
 
@@ -70,7 +70,7 @@ class UIIntegrationController(QObject):
         config_manager: ConfigManager,
         state_manager: StateManager,
         image_processor: CS4CodingImageProcessor,
-        theme_manager: IntegratedThemeManager,
+        theme_manager: SimpleThemeManager,
         thumbnail_grid: OptimizedThumbnailGrid,
         folder_navigator: EnhancedFolderNavigator,
         cache_system: UnifiedCacheSystem,

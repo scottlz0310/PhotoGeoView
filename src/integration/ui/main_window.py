@@ -37,26 +37,27 @@ from ..models import AIComponent, ApplicationState, PerformanceMetrics
 from ..services.file_discovery_service import FileDiscoveryService
 from ..services.file_system_watcher import FileSystemWatcher
 from ..state_manager import StateManager
-from .folder_navigator import EnhancedFolderNavigator
+
+# from .folder_navigator import EnhancedFolderNavigator  # Removed: Using breadcrumb navigation instead
 from .simple_thumbnail_grid import SimpleThumbnailGrid
-from .theme_manager import IntegratedThemeManager
+
 # Import theme manager and breadcrumb components
 try:
-    from ...ui.theme_manager import ThemeManagerWidget
     from ...ui.breadcrumb_bar import BreadcrumbAddressBar
+    from ...ui.theme_manager_simple import SimpleThemeManager
 except ImportError:
     # Fallback import paths
     try:
         import sys
         from pathlib import Path
         sys.path.append(str(Path(__file__).parent.parent.parent))
-        from ui.theme_manager import ThemeManagerWidget
         from ui.breadcrumb_bar import BreadcrumbAddressBar
+        from ui.theme_manager_simple import SimpleThemeManager
     except ImportError:
         # Create mock classes if imports fail
         from PySide6.QtCore import QObject, Signal
 
-        class ThemeManagerWidget(QObject):
+        class SimpleThemeManager(QObject):
             theme_changed = Signal(str, str)
             theme_applied = Signal(str)
             theme_error = Signal(str, str)
@@ -64,20 +65,14 @@ except ImportError:
             def __init__(self, *args, **kwargs):
                 super().__init__()
 
-            def setup_shortcuts_with_parent(self, parent):
-                pass
-
-            def get_keyboard_shortcuts_info(self):
-                return {
-                    "Ctrl+T": "Open theme selection dialog",
-                    "Ctrl+Shift+T": "Cycle through available themes"
-                }
-
             def apply_theme(self, theme_name):
                 return False
 
-            def register_component(self, component):
-                return False
+            def get_available_themes(self):
+                return ["light", "dark"]
+
+            def get_current_theme(self):
+                return "light"
 
         class BreadcrumbAddressBar(QObject):
             path_changed = Signal(object)
@@ -136,10 +131,10 @@ class IntegratedMainWindow(QMainWindow):
 
         # UI components
         self.theme_manager: Optional[IntegratedThemeManager] = None
-        self.theme_manager_widget: Optional[ThemeManagerWidget] = None
+        self.theme_manager_widget: Optional[SimpleThemeManager] = None
         self.breadcrumb_bar: Optional[BreadcrumbAddressBar] = None
         self.thumbnail_grid: Optional[SimpleThumbnailGrid] = None
-        self.folder_navigator: Optional[EnhancedFolderNavigator] = None
+        # self.folder_navigator: Optional[EnhancedFolderNavigator] = None  # Removed: Using breadcrumb navigation instead
 
         # Services
         self.file_discovery_service = FileDiscoveryService(
@@ -162,6 +157,10 @@ class IntegratedMainWindow(QMainWindow):
         self.last_performance_check = None
         self.performance_history = []
 
+        # Theme management
+        self.selected_themes = []
+        self.current_theme_index = 0
+
         # Initialize UI
         self._initialize_ui()
         self._setup_monitoring()
@@ -182,8 +181,8 @@ class IntegratedMainWindow(QMainWindow):
             # Create menu bar
             self._create_menu_bar()
 
-            # Create toolbar
-            self._create_toolbar()
+            # Initialize breadcrumb bar first (needed for left panel creation)
+            self._initialize_breadcrumb_bar()
 
             # Create central widget and layout
             self._create_central_widget()
@@ -191,11 +190,11 @@ class IntegratedMainWindow(QMainWindow):
             # Create status bar
             self._create_status_bar()
 
-            # Initialize breadcrumb bar first (needed for left panel creation)
-            self._initialize_breadcrumb_bar()
-
             # Initialize theme manager
             self._initialize_theme_manager()
+
+            # Create toolbar (after theme manager is initialized)
+            self._create_toolbar()
 
             # Apply initial theme
             self._apply_initial_theme()
@@ -219,7 +218,7 @@ class IntegratedMainWindow(QMainWindow):
         # File menu
         file_menu = menubar.addMenu("&File")
 
-        open_folder_action = QAction("&Open Folder...", self)
+        open_folder_action = QAction("📁 &Open Folder...", self)
         open_folder_action.setShortcut(QKeySequence.StandardKey.Open)
         open_folder_action.setStatusTip("Open a folder containing images")
         open_folder_action.triggered.connect(self._open_folder)
@@ -235,11 +234,6 @@ class IntegratedMainWindow(QMainWindow):
 
         # View menu
         view_menu = menubar.addMenu("&View")
-
-        theme_menu = view_menu.addMenu("&Theme")
-        # Theme actions will be populated by theme manager
-
-        view_menu.addSeparator()
 
         performance_action = QAction("&Performance Monitor", self)
         performance_action.setCheckable(True)
@@ -261,18 +255,24 @@ class IntegratedMainWindow(QMainWindow):
         toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
 
         # Open folder action
-        open_action = QAction("Open Folder", self)
+        open_action = QAction("📁 Open Folder", self)
         open_action.setStatusTip("Open a folder containing images")
         open_action.triggered.connect(self._open_folder)
         toolbar.addAction(open_action)
 
         toolbar.addSeparator()
 
-        # Theme toggle (CursorBLD feature)
-        theme_action = QAction("Toggle Theme", self)
-        theme_action.setStatusTip("Switch between light and dark themes")
-        theme_action.triggered.connect(self._toggle_theme)
-        toolbar.addAction(theme_action)
+        # Advanced theme selector
+        self.advanced_theme_action = QAction("🎨 テーマ設定", self)
+        self.advanced_theme_action.setStatusTip("Open advanced theme selector with preview")
+        self.advanced_theme_action.triggered.connect(self._show_advanced_theme_selector)
+        toolbar.addAction(self.advanced_theme_action)
+
+        # Theme toggle button for selected themes
+        from ...ui.theme_selector import ThemeToggleButton
+        self.theme_toggle_button = ThemeToggleButton(self.theme_manager_widget, self)
+        self.theme_toggle_button.theme_changed.connect(self._on_toggle_theme_changed)
+        toolbar.addWidget(self.theme_toggle_button)
 
         toolbar.addSeparator()
 
@@ -378,21 +378,14 @@ class IntegratedMainWindow(QMainWindow):
                 "Breadcrumb placeholder added to left panel"
             )
 
-        # 2. Folder navigator (上段)
-        self.folder_navigator = EnhancedFolderNavigator(
-            self.config_manager, self.state_manager, self.logger_system
-        )
-        self.folder_navigator.setMinimumHeight(150)  # 最小高さ設定
-        self.left_panel_splitter.addWidget(self.folder_navigator)
-
-        # 3. Thumbnail grid (中段)
+        # 2. Thumbnail grid (上段)
         self.thumbnail_grid = SimpleThumbnailGrid(
             self.config_manager, self.state_manager, self.logger_system
         )
         self.thumbnail_grid.setMinimumHeight(200)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.thumbnail_grid)
 
-        # 4. EXIF information panel (下段)
+        # 3. EXIF information panel (下段)
         from .exif_panel import EXIFPanel
         self.exif_panel = EXIFPanel(
             self.config_manager, self.state_manager, self.logger_system
@@ -400,14 +393,13 @@ class IntegratedMainWindow(QMainWindow):
         self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.exif_panel)
 
-        # スプリッターの初期サイズ設定 (ブレッドクラム/プレースホルダー:フォルダ:サムネイル:EXIF = 1:2:4:4)
-        self.left_panel_splitter.setSizes([50, 150, 300, 400])
+        # スプリッターの初期サイズ設定 (ブレッドクラム:サムネイル:EXIF = 1:5:4)
+        self.left_panel_splitter.setSizes([50, 500, 400])
 
-        # 各エリアの伸縮設定（常に4つのウィジェットがある）
-        self.left_panel_splitter.setStretchFactor(0, 0)  # ブレッドクラム/プレースホルダー: 固定
-        self.left_panel_splitter.setStretchFactor(1, 0)  # フォルダナビゲーター: 固定的
-        self.left_panel_splitter.setStretchFactor(2, 1)  # サムネイルグリッド: 伸縮可能
-        self.left_panel_splitter.setStretchFactor(3, 1)  # EXIFパネル: 伸縮可能
+        # 各エリアの伸縮設定（3つのウィジェット）
+        self.left_panel_splitter.setStretchFactor(0, 0)  # ブレッドクラム: 固定
+        self.left_panel_splitter.setStretchFactor(1, 1)  # サムネイルグリッド: 伸縮可能（メイン）
+        self.left_panel_splitter.setStretchFactor(2, 1)  # EXIFパネル: 伸縮可能
 
         # 左パネルスプリッターをメインスプリッターに追加
         self.main_splitter.addWidget(self.left_panel_splitter)
@@ -430,17 +422,13 @@ class IntegratedMainWindow(QMainWindow):
                     "Left panel splitter state restored",
                 )
             else:
-                # デフォルト設定を適用 (ブレッドクラムを含む4エリア構成)
-                breadcrumb_height = 50 if self.breadcrumb_bar else 0
-                if breadcrumb_height > 0:
-                    self.left_panel_splitter.setSizes([breadcrumb_height, 150, 300, 400])
-                else:
-                    self.left_panel_splitter.setSizes([150, 300, 400])
+                # デフォルト設定を適用 (ブレッドクラム:サムネイル:EXIF の3エリア構成)
+                self.left_panel_splitter.setSizes([50, 500, 400])
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "left_panel_splitter_default",
-                    "Left panel splitter set to default sizes with breadcrumb support",
+                    "Left panel splitter set to default sizes (3-panel layout)",
                 )
 
         except Exception as e:
@@ -505,27 +493,22 @@ class IntegratedMainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.status_memory)
 
     def _initialize_theme_manager(self):
-        """Initialize the integrated theme manager"""
+        """Initialize the simple theme manager"""
 
         try:
-            # Initialize the integrated theme manager (existing)
-            self.theme_manager = IntegratedThemeManager(
-                self.config_manager, self.state_manager, self.logger_system
-            )
-
-            # Initialize the new theme manager widget
-            self.theme_manager_widget = ThemeManagerWidget(
+            # Initialize the simple theme manager
+            self.theme_manager_widget = SimpleThemeManager(
                 self.config_manager, self.logger_system
             )
 
             # Connect theme change signals
-            self.theme_manager.theme_changed.connect(self._on_theme_changed)
-            self.theme_manager_widget.theme_changed.connect(self._on_theme_manager_widget_changed)
+            self.theme_manager_widget.theme_changed.connect(self._on_simple_theme_changed)
             self.theme_manager_widget.theme_applied.connect(self._on_theme_applied)
             self.theme_manager_widget.theme_error.connect(self._on_theme_error)
 
-            # Setup keyboard shortcuts with main window as parent
-            self.theme_manager_widget.setup_shortcuts_with_parent(self)
+            # Populate theme menu after theme manager is initialized
+            if hasattr(self, 'theme_menu'):
+                self._populate_theme_menu()
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -575,6 +558,7 @@ class IntegratedMainWindow(QMainWindow):
                 self.breadcrumb_bar.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
                 self.breadcrumb_bar.navigation_requested.connect(self._on_breadcrumb_navigation_requested)
                 self.breadcrumb_bar.breadcrumb_error.connect(self._on_breadcrumb_error)
+                # Breadcrumb path changes are handled by _on_breadcrumb_path_changed
 
                 # Set initial path from state
                 current_folder = self.state_manager.get_state_value("current_folder", Path.home())
@@ -631,13 +615,7 @@ class IntegratedMainWindow(QMainWindow):
     def _connect_signals(self):
         """Connect internal signals"""
 
-        # Connect folder navigator signals
-        if self.folder_navigator:
-            self.folder_navigator.folder_changed.connect(self._on_folder_changed)
-            self.folder_navigator.status_message.connect(self._on_status_message)
-            # Connect breadcrumb bar with folder navigator
-            if self.breadcrumb_bar:
-                self.folder_navigator.folder_changed.connect(self.breadcrumb_bar.set_current_path)
+        # Folder navigator removed - using breadcrumb navigation instead
 
         # Connect thumbnail grid signals
         if self.thumbnail_grid:
@@ -732,37 +710,228 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.CURSOR,
             )
 
-    def _toggle_theme(self):
-        """Toggle between light and dark themes (CursorBLD feature)"""
 
+
+    def _populate_theme_menu(self):
+        """Populate theme menu with available themes"""
         try:
-            # Use the new theme manager widget if available
-            if self.theme_manager_widget:
-                current_theme = self.state_manager.get_state_value(
-                    "current_theme", "default"
-                )
+            if not hasattr(self, 'theme_menu') or not self.theme_manager_widget:
+                return
 
-                # Simple toggle logic - can be enhanced
-                new_theme = "dark" if current_theme == "default" else "default"
+            # Clear existing actions
+            self.theme_menu.clear()
 
-                self.theme_manager_widget.apply_theme(new_theme)
+            # Get available themes
+            available_themes = self.theme_manager_widget.get_available_themes()
+            current_theme = self.theme_manager_widget.get_current_theme()
 
-            # Fallback to integrated theme manager
-            elif self.theme_manager:
-                current_theme = self.state_manager.get_state_value(
-                    "current_theme", "default"
-                )
+            # Create action group for exclusive selection
+            from PySide6.QtGui import QActionGroup
+            self.theme_action_group = QActionGroup(self)
 
-                # Simple toggle logic - can be enhanced
-                new_theme = "dark" if current_theme == "default" else "default"
+            # Add theme actions
+            for theme_name in sorted(available_themes):
+                # Get theme display name
+                theme_info = self.theme_manager_widget.get_theme_info(theme_name)
+                display_name = theme_info.get('display_name', theme_name.replace('_', ' ').title()) if theme_info else theme_name.replace('_', ' ').title()
 
-                self.theme_manager.apply_theme(new_theme)
+                # Create action
+                action = QAction(display_name, self)
+                action.setCheckable(True)
+                action.setChecked(theme_name == current_theme)
+                action.setData(theme_name)  # Store theme name in action data
+
+                # Connect to theme change handler
+                action.triggered.connect(lambda checked, name=theme_name: self._apply_theme(name))
+
+                # Add to action group and menu
+                self.theme_action_group.addAction(action)
+                self.theme_menu.addAction(action)
+
+            # Add separator and refresh action
+            self.theme_menu.addSeparator()
+            refresh_action = QAction("🔄 Refresh Themes", self)
+            refresh_action.triggered.connect(self._refresh_themes)
+            self.theme_menu.addAction(refresh_action)
+
+            # Add advanced theme selector
+            self.theme_menu.addSeparator()
+            advanced_theme_action = QAction("テーマ設定", self)
+            advanced_theme_action.triggered.connect(self._show_advanced_theme_selector)
+            self.theme_menu.addAction(advanced_theme_action)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO, "theme_menu_populated", f"Added {len(available_themes)} themes to menu"
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "theme_toggle"},
+                {"operation": "populate_theme_menu"},
+                AIComponent.KIRO,
+            )
+
+    def _apply_theme(self, theme_name: str):
+        """Apply selected theme"""
+        try:
+            if self.theme_manager_widget:
+                success = self.theme_manager_widget.apply_theme(theme_name)
+                if success:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.CURSOR, "theme_applied", f"Theme applied: {theme_name}"
+                    )
+                else:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.CURSOR, "theme_apply_failed", f"Failed to apply theme: {theme_name}"
+                    )
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "apply_theme", "theme": theme_name},
+                AIComponent.CURSOR,
+            )
+
+    def _refresh_themes(self):
+        """Refresh theme list"""
+        try:
+            if self.theme_manager_widget:
+                self.theme_manager_widget.reload_themes()
+                self._populate_theme_menu()
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO, "themes_refreshed", "Theme list refreshed"
+                )
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "refresh_themes"},
+                AIComponent.KIRO,
+            )
+
+    def _show_advanced_theme_selector(self):
+        """Show advanced theme selector dialog"""
+        try:
+            from ...ui.theme_selector import ThemeSelectionDialog
+
+            dialog = ThemeSelectionDialog(self.theme_manager_widget, self)
+            dialog.theme_applied.connect(self._on_advanced_theme_applied)
+            dialog.exec()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR, "advanced_theme_selector_opened", "Advanced theme selector opened"
+            )
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_advanced_theme_selector"},
+                AIComponent.CURSOR,
+            )
+
+    def _on_advanced_theme_applied(self, theme_list: list):
+        """Handle themes applied from advanced selector"""
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR, "advanced_theme_applied", f"Themes applied from advanced selector: {theme_list}"
+            )
+
+            # 選択されたテーマを管理
+            self.selected_themes = theme_list
+            self.current_theme_index = 0
+
+            # 最初のテーマを適用
+            if self.selected_themes:
+                first_theme = self.selected_themes[0]
+                self.theme_manager_widget.apply_theme(first_theme)
+                self._update_toggle_button_text()
+
+            # 選択されたテーマリストをトグルボタンに設定
+            if hasattr(self, 'theme_toggle_button'):
+                self.theme_toggle_button.set_selected_themes(theme_list)
+
+            # Update menu selection
+            self._populate_theme_menu()
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "on_advanced_theme_applied", "themes": theme_list},
+                AIComponent.CURSOR,
+            )
+
+    def _on_toggle_theme_changed(self, theme_name: str):
+        """Handle theme change from toggle button"""
+        try:
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR, "toggle_theme_changed", f"Theme toggled: {theme_name}"
+            )
+
+            # 選択されたテーマを循環切り替え
+            if self.selected_themes and len(self.selected_themes) > 1:
+                self.current_theme_index = (self.current_theme_index + 1) % len(self.selected_themes)
+                next_theme = self.selected_themes[self.current_theme_index]
+
+                # テーママネージャーに直接適用
+                if self.theme_manager_widget:
+                    self.theme_manager_widget.apply_theme(next_theme)
+
+                self._update_toggle_button_text()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "on_toggle_theme_changed", "theme": theme_name},
+                AIComponent.CURSOR,
+            )
+
+    def _update_toggle_button_text(self):
+        """Update toggle button text to show current theme"""
+        try:
+            if hasattr(self, 'theme_toggle_button'):
+                if self.selected_themes:
+                    current_theme = self.selected_themes[self.current_theme_index]
+                    self.theme_toggle_button.setText(f"テーマ切替: {current_theme}")
+                else:
+                    self.theme_toggle_button.setText("テーマ切替")
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "update_toggle_button_text"},
+                AIComponent.CURSOR,
+            )
+
+    def _on_simple_theme_changed(self, old_theme: str, new_theme: str):
+        """Handle theme change from SimpleThemeManager"""
+        try:
+            # Update menu selection
+            if hasattr(self, 'theme_action_group'):
+                for action in self.theme_action_group.actions():
+                    theme_name = action.data()
+                    action.setChecked(theme_name == new_theme)
+
+            # Update toolbar theme button text
+            if hasattr(self, 'theme_action'):
+                theme_config = self.theme_manager_widget.get_theme_config(new_theme)
+                display_name = theme_config.get('display_name', new_theme.replace('_', ' ').title()) if theme_config else new_theme.replace('_', ' ').title()
+                self.theme_action.setText(f"🎨 {display_name}")
+                self.theme_action.setStatusTip(f"Current theme: {display_name}. Click to toggle between light and dark.")
+
+            # Emit theme changed signal
+            self.theme_changed.emit(new_theme)
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR, "theme_changed", f"Theme changed: {old_theme} -> {new_theme}"
+            )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "theme_change_handler"},
                 AIComponent.CURSOR,
             )
 
@@ -803,12 +972,11 @@ class IntegratedMainWindow(QMainWindow):
             # Update state
             self.state_manager.update_state(current_folder=folder_path)
 
-            # Update breadcrumb bar
-            if self.breadcrumb_bar:
-                self.breadcrumb_bar.set_current_path(folder_path)
+            # Breadcrumb bar updates are handled by breadcrumb itself
 
             # Update status
-            self.status_bar.showMessage(f"Folder: {folder_path}")
+            if hasattr(self, "status_bar") and self.status_bar:
+                self.status_bar.showMessage(f"Navigated to: {folder_path}")
 
             # Emit signal for other components
             self.folder_changed.emit(folder_path)
@@ -970,18 +1138,10 @@ class IntegratedMainWindow(QMainWindow):
     def _on_breadcrumb_path_changed(self, path: Path):
         """Handle breadcrumb path change event"""
         try:
-            # Update folder navigator to match breadcrumb
-            if self.folder_navigator:
-                self.folder_navigator.set_current_folder(path)
+            # Folder navigator removed - breadcrumb handles navigation
 
-            # Update state
-            self.state_manager.update_state(current_folder=path)
-
-            # Update status
-            self.status_bar.showMessage(f"Navigated to: {path}")
-
-            # Emit folder changed signal
-            self.folder_changed.emit(path)
+            # Call the main folder change handler to avoid duplication
+            self._on_folder_changed(path)
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
@@ -1000,9 +1160,7 @@ class IntegratedMainWindow(QMainWindow):
     def _on_breadcrumb_segment_clicked(self, segment_index: int, path: Path):
         """Handle breadcrumb segment click event"""
         try:
-            # Navigate to the clicked segment path
-            if self.folder_navigator:
-                self.folder_navigator.set_current_folder(path)
+            # Folder navigator removed - breadcrumb handles navigation
 
             # Update state
             self.state_manager.update_state(current_folder=path)
@@ -1035,9 +1193,7 @@ class IntegratedMainWindow(QMainWindow):
                 self.status_bar.showMessage(f"Invalid path: {path}", 5000)
                 return
 
-            # Navigate to requested path
-            if self.folder_navigator:
-                self.folder_navigator.set_current_folder(path)
+            # Folder navigator removed - breadcrumb handles navigation
 
             # Update state
             self.state_manager.update_state(current_folder=path)
@@ -1266,9 +1422,7 @@ class IntegratedMainWindow(QMainWindow):
         """Handle breadcrumb path change event"""
 
         try:
-            # Update folder navigator to match breadcrumb
-            if self.folder_navigator and hasattr(self.folder_navigator, 'set_current_folder'):
-                self.folder_navigator.set_current_folder(new_path)
+            # Folder navigator removed - breadcrumb handles navigation
 
             # Update state
             self.state_manager.update_state(current_folder=new_path)
@@ -1379,9 +1533,7 @@ class IntegratedMainWindow(QMainWindow):
             # Register main UI components that support theming
             components_to_register = []
 
-            # Add folder navigator if it supports theming
-            if self.folder_navigator and hasattr(self.folder_navigator, 'apply_theme'):
-                components_to_register.append(self.folder_navigator)
+            # Folder navigator removed - no theming needed
 
             # Add thumbnail grid if it supports theming
             if self.thumbnail_grid and hasattr(self.thumbnail_grid, 'apply_theme'):
@@ -1709,9 +1861,7 @@ class IntegratedMainWindow(QMainWindow):
             # Save configuration
             self.config_manager.save_config()
 
-            # Stop file system monitoring
-            if hasattr(self, "folder_navigator") and self.folder_navigator:
-                self.folder_navigator.stop_monitoring()
+            # Folder navigator removed - no monitoring to stop
 
             # Stop performance monitoring
             if hasattr(self, "performance_timer") and self.performance_timer:

@@ -12,7 +12,7 @@ import os
 import platform
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
@@ -20,18 +20,16 @@ from PySide6.QtWidgets import QWidget
 
 from ..integration.config_manager import ConfigManager
 from ..integration.logging_system import LoggerSystem
-from ..integration.navigation_interfaces import INavigationAware
+from ..integration.models import AIComponent
 from ..integration.navigation_models import (
     BreadcrumbSegment,
     NavigationEvent,
     NavigationState,
-    PathInfo,
     SegmentState,
 )
 from ..integration.performance_optimizer import PerformanceOptimizer
-from ..integration.services.file_system_watcher import FileSystemWatcher
-from ..integration.user_notification_system import UserNotificationSystem, NotificationAction
-from ..integration.models import AIComponent
+from ..integration.services.file_system_watcher import FileChangeType, FileSystemWatcher
+from ..integration.user_notification_system import UserNotificationSystem
 
 
 class BreadcrumbAddressBar(QObject):
@@ -129,6 +127,10 @@ class BreadcrumbAddressBar(QObject):
             from breadcrumb_addressbar import BreadcrumbAddressBar
             self.breadcrumb_widget = BreadcrumbAddressBar()
 
+            # 新しい設定オプションを適用
+            self.breadcrumb_widget.setShowPopupForAllButtons(True)  # どのボタンでもポップアップを表示
+            self.breadcrumb_widget.setPopupPositionOffset((0, 2))  # ポップアップの位置オフセット
+
             # Connect breadcrumb widget signals
             if hasattr(self.breadcrumb_widget, 'pathChanged'):
                 self.breadcrumb_widget.pathChanged.connect(self._on_breadcrumb_path_changed)
@@ -137,9 +139,9 @@ class BreadcrumbAddressBar(QObject):
                 self.breadcrumb_widget.folderSelected.connect(self._on_breadcrumb_segment_clicked)
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO, "breadcrumb_init", "Using breadcrumb_addressbar library"
+                AIComponent.KIRO, "breadcrumb_init", "Using breadcrumb_addressbar library with enhanced popup support"
             )
-            self.logger.info("Breadcrumb-addressbar library initialized successfully")
+            self.logger.info("Breadcrumb-addressbar library initialized successfully with enhanced popup support")
 
         except ImportError as e:
             self.logger.error(f"Breadcrumb-addressbar library not available: {e}")
@@ -279,15 +281,14 @@ class BreadcrumbAddressBar(QObject):
         except Exception as e:
             self.logger.error(f"Failed to update accessibility info: {e}")
 
-    def eventFilter(self, obj, event) -> bool:
+    def eventFilter(self, obj: Any, event: Any) -> bool:
         """Event filter for custom keyboard handling"""
         try:
-            from PySide6.QtCore import QEvent
+            from PySide6.QtCore import QEvent, Qt
             from PySide6.QtGui import QKeyEvent
-            from PySide6.QtCore import Qt
 
             if obj == self.breadcrumb_widget and event.type() == QEvent.Type.KeyPress:
-                key_event = event
+                key_event: QKeyEvent = event
                 key = key_event.key()
                 modifiers = key_event.modifiers()
 
@@ -1134,8 +1135,7 @@ class BreadcrumbAddressBar(QObject):
                     source_path=self.current_state.current_path,
                     target_path=target_path,
                     timestamp=datetime.now(),
-                    success=True,
-                    metadata={"path": path_str}
+                    success=True
                 )
                 self._notify_navigation_listeners(event)
 
@@ -1156,7 +1156,7 @@ class BreadcrumbAddressBar(QObject):
         except Exception as e:
             self.logger.error(f"Failed to handle path change {new_path}: {e}")
 
-    def _on_file_system_change(self, file_path: Path, change_type: str, old_path: Optional[Path] = None) -> None:
+    def _on_file_system_change(self, file_path: Path, change_type: FileChangeType, old_path: Optional[Path] = None) -> None:
         """Handle file system change events"""
         try:
             current_path = self.current_state.current_path
