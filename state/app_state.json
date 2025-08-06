@@ -1,6 +1,6 @@
 {
-  "current_folder": "/home/hiro",
-  "selected_image": "/home/hiro/Samples/taiwan-jiufen.jpg",
+  "current_folder": "/mnt/c/Documents and Settings/jojob/My Documents",
+  "selected_image": "/home/hiro/SampleImage/england-london-bridge.jpg",
   "loaded_images": [],
   "current_theme": "dark",
   "thumbnail_size": 162,
@@ -27,7 +27,7 @@
     "kiro": "active"
   },
   "session_start": "2025-07-30 23:02:50.312213",
-  "last_activity": "2025-08-04 21:39:21.035348",
+  "last_activity": "2025-08-05 12:07:48.563796",
   "images_processed": 0,
   "operations_performed": [],
   "recent_errors": [],
@@ -36,8 +36,8 @@
   "operation_times": {},
   "_metadata": {
     "version": "1.0",
-    "saved_at": "2025-08-04T21:39:21.035978",
-    "state_changes": 3,
-    "state_accesses": 5
+    "saved_at": "2025-08-05T12:07:48.564144",
+    "state_changes": 68,
+    "state_accesses": 108
   }
 }
