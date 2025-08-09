@@ -37,19 +37,19 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install .
 
     - name: Validate Python imports
       run: |
         python -c "import sys; print('Python version:', sys.version)"
-        python -c "import PyQt6; print('PyQt6 imported successfully')"
+        python -c "import PySide6; print('PySide6 imported successfully')"
         python -c "import PIL; print('Pillow imported successfully')"
         python -c "import folium; print('Folium imported successfully')"
 
@@ -94,7 +94,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install .
         pip install build
 
     - name: Test main application

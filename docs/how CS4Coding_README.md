@@ -1,6 +1,6 @@
 # PhotoGeoView
 
-写真のEXIF情報から撮影場所を抽出し、地図上に表示するPyQt6ベースの写真管理アプリケーションです。
+写真のEXIF情報から撮影場所を抽出し、地図上に表示するPySide6ベースの写真管理アプリケーションです。
 
 ## 🎯 主要機能
 
@@ -30,7 +30,7 @@
 
 ### 必要条件
 - Python 3.8以上
-- PyQt6
+- PySide6
 - その他の依存関係（pyproject.toml参照）
 
 ### インストール
@@ -62,8 +62,8 @@ python main.py
 ## 📦 依存関係
 
 ```
-PyQt6>=6.4.0
-PyQt6-WebEngine>=6.4.0
+PySide6>=6.9.1
+PySide6-WebEngine>=6.9.1
 exifread>=3.0.0
 folium>=0.14.0
 qt-theme-manager>=0.1.0
@@ -165,7 +165,7 @@ python -m pytest tests/
 
 ## 🙏 謝辞
 
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) - GUIフレームワーク
+- [PySide6](https://doc.qt.io/qtforpython/) - GUIフレームワーク
 - [Folium](https://python-visualization.github.io/folium/) - 地図表示ライブラリ
 - [exifread](https://github.com/ianare/exif-py) - EXIF情報読み込みライブラリ
 

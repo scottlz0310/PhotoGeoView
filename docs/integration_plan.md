@@ -129,8 +129,8 @@ PhotoGeoView/
 ### 依存関係の統合管理
 ```python
 # AI統合後の主要依存関係
-PyQt6>=6.5.0           # UI基盤（Cursor版ベース）
-PyQt6-WebEngine>=6.4.0 # Web表示エンジン（地図表示用）
+PySide6>=6.9.1           # UI基盤（Cursor版ベース）
+PySide6-WebEngine>=6.9.1 # Web表示エンジン（地図表示用）
 Pillow>=10.0.0          # 画像処理（Copilot版最適化）
 piexif>=1.1.3           # EXIF読み書き統合（Copilot版 + Kiro強化）
 folium>=0.14.0          # 地図表示（Copilot版 + Kiro拡張）

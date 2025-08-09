@@ -226,7 +226,7 @@ print('Platform:', sys.platform)
 
 ## 📚 参考資料
 
-- [PyQt6 Documentation](https://doc.qt.io/qtforpython/)
+- [PySide6 Documentation](https://doc.qt.io/qtforpython/)
 - [PyInstaller Manual](https://pyinstaller.readthedocs.io/)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [Qt Cross-platform Development](https://doc.qt.io/qt-6/supported-platforms.html)

@@ -60,12 +60,12 @@ datas = [
 ]
 
 # 隠れたインポートの設定
-hiddenimports = [
-    'PyQt6.QtCore',
-    'PyQt6.QtGui',
-    'PyQt6.QtWidgets',
-    'PyQt6.QtWebEngineWidgets',
-    'PyQt6.QtWebEngineCore',
+    hiddenimports = [
+        'PySide6.QtCore',
+        'PySide6.QtGui',
+        'PySide6.QtWidgets',
+        'PySide6.QtWebEngineWidgets',
+        'PySide6.QtWebEngineCore',
     'PIL',
     'PIL.Image',
     'PIL.ExifTags',
