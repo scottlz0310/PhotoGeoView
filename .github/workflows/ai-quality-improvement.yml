@@ -32,15 +32,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
     - name: 依存関係をインストール
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov flake8 black isort mypy
+        pip install .[ci]
 
     - name: 基本的なテストを実行
       run: |
@@ -133,8 +132,7 @@ jobs:
     - name: 依存関係をインストール
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install black isort
+        pip install .[ci]
 
     - name: コードフォーマットの自動修正
       run: |
