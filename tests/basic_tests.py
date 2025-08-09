@@ -25,10 +25,10 @@ class TestBasicImports(unittest.TestCase):
     def test_required_packages(self):
         """必要なパッケージのインポート確認"""
         try:
-            import PyQt6
-            self.assertTrue(True, "PyQt6 imported successfully")
+            import PySide6
+            self.assertTrue(True, "PySide6 imported successfully")
         except ImportError as e:
-            self.fail(f"PyQt6 import failed: {e}")
+            self.fail(f"PySide6 import failed: {e}")
 
         try:
             import PIL
@@ -48,7 +48,7 @@ class TestBasicImports(unittest.TestCase):
 
         # 重要なファイルの存在確認
         self.assertTrue((project_root / "main.py").exists(), "main.py should exist")
-        self.assertTrue((project_root / "pyproject.toml").exists(), "pyproject.toml should exist")
+        # pyproject.toml は既に上で確認済み
         self.assertTrue((project_root / "pyproject.toml").exists(), "pyproject.toml should exist")
 
         # 重要なディレクトリの存在確認

@@ -40,7 +40,7 @@ _restore_height_settings()       # 高さ設定復元
 self._restore_left_panel_splitter_state()
 
 # After: 遅延復元（UIが完全に初期化された後）
-from PyQt6.QtCore import QTimer
+from PySide6.QtCore import QTimer
 QTimer.singleShot(100, self._restore_left_panel_splitter_state)
 ```
 

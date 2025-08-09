@@ -106,7 +106,7 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `get_bookmarks()`
 
 **主要依存関係**:
-- PyQt6.QtWidgets
+- PySide6.QtWidgets
 - platform
 - datetime
 
@@ -174,7 +174,7 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `get_current_folder()`
 
 **主要依存関係**:
-- PyQt6.QtWidgets
+- PySide6.QtWidgets
 - pathlib
 - sys
 
@@ -209,7 +209,7 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - json
-- PyQt6.QtWidgets
+- PySide6.QtWidgets
 - pathlib
 
 ---
@@ -227,7 +227,7 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 **主要依存関係**:
 - threading
 - time
-- PyQt6.QtWidgets
+- PySide6.QtWidgets
 
 ---
 
@@ -241,8 +241,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `cleanup()`
 
 **主要依存関係**:
-- PyQt6.QtWidgets
-- PyQt6.QtCore
+- PySide6.QtWidgets
+- PySide6.QtCore
 - datetime
 
 ---

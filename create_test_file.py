@@ -26,11 +26,11 @@ def test_imports():
 def test_qt_import():
     """Qtインポートテスト"""
     try:
-        import PyQt6
-        print("PyQt6 imported successfully")
+        import PySide6
+        print("PySide6 imported successfully")
         assert True
     except ImportError as e:
-        print(f"PyQt6 import failed: {e}")
+        print(f"PySide6 import failed: {e}")
         assert True
 
 def test_dummy():

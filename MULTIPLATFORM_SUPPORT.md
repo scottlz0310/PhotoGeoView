@@ -163,7 +163,7 @@ path = Path("folder") / "file.txt"
 **問題**: Qt plugin pathが見つからない
 ```bash
 # 解決策: 環境変数の設定
-export QT_QPA_PLATFORM_PLUGIN_PATH=$(python -c "import PyQt6; print(PyQt6.__path__[0])")/Qt6/plugins
+export QT_QPA_PLATFORM_PLUGIN_PATH=$(python -c "import PySide6, pathlib; print(str(pathlib.Path(PySide6.__file__).parent / 'Qt6' / 'plugins'))")
 ```
 
 **問題**: Apple Siliconでの互換性
@@ -197,7 +197,7 @@ python main.py --debug --verbose
 # Qt環境の確認
 python -c "
 import sys
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 app = QApplication([])
 print('Qt version:', app.applicationVersion())
 print('Platform:', sys.platform)

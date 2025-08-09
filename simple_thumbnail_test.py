@@ -7,12 +7,12 @@
 
 import sys
 from pathlib import Path
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
     QGridLayout, QLabel, QScrollArea
 )
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 
 def create_simple_thumbnail_grid():
     """シンプルなサムネイルグリッドを作成"""

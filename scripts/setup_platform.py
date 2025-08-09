@@ -53,15 +53,15 @@ def setup_macos():
     """macOS固有のセットアップ"""
     print("🍎 macOS環境のセットアップ中...")
 
-    # Qt6のパスを設定
+    # Qt6のパスを設定（PySide6）
     try:
-        import PyQt6
-        qt_plugin_path = Path(PyQt6.__file__).parent / "Qt6" / "plugins"
+        import PySide6
+        qt_plugin_path = Path(PySide6.__file__).parent / "Qt6" / "plugins"
         if qt_plugin_path.exists():
             os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = str(qt_plugin_path)
             print(f"Qt plugin path: {qt_plugin_path}")
     except ImportError:
-        print("⚠️ PyQt6がインストールされていません")
+        print("⚠️ PySide6がインストールされていません")
 
     # macOS固有の環境変数
     os.environ['QT_MAC_WANTS_LAYER'] = '1'
@@ -99,16 +99,15 @@ def setup_windows():
 
 
 def verify_qt_installation():
-    """Qt/PyQt6インストールの確認"""
-    print("🔍 Qt/PyQt6インストール確認中...")
+    """Qt/PySide6インストールの確認"""
+    print("🔍 Qt/PySide6インストール確認中...")
 
     try:
-        import PyQt6
-        from PyQt6.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
-        from PyQt6.QtWidgets import QApplication
+        import PySide6
+        from PySide6.QtCore import __version__ as PYSIDE_VERSION, __version_info__ as _
+        from PySide6.QtWidgets import QApplication
 
-        print(f"✅ PyQt6 version: {PYQT_VERSION_STR}")
-        print(f"✅ Qt version: {QT_VERSION_STR}")
+        print(f"✅ PySide6 version: {PYSIDE_VERSION}")
 
         # QApplicationの作成テスト
         app = QApplication([])
@@ -118,7 +117,7 @@ def verify_qt_installation():
         return True
 
     except ImportError as e:
-        print(f"❌ PyQt6インポートエラー: {e}")
+        print(f"❌ PySide6インポートエラー: {e}")
         return False
     except Exception as e:
         print(f"❌ Qt初期化エラー: {e}")
@@ -173,7 +172,7 @@ def main():
 
         print()
 
-        # Qt/PyQt6の確認
+        # Qt/PySide6の確認
         qt_ok = verify_qt_installation()
 
         print()
@@ -187,9 +186,9 @@ def main():
             print("✅ プラットフォームセットアップ完了！")
             print("🎉 PhotoGeoViewを起動する準備ができました")
         else:
-            print("⚠️ プラットフォームセットアップ完了（Qt/PyQt6に問題あり）")
-            print("📝 PyQt6の再インストールを検討してください:")
-            print("   pip install --upgrade PyQt6")
+            print("⚠️ プラットフォームセットアップ完了（Qt/PySide6に問題あり）")
+            print("📝 PySide6の再インストールを検討してください:")
+            print("   pip install --upgrade PySide6")
 
         return 0 if qt_ok else 1
 
