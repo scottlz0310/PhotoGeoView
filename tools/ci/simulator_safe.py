@@ -126,15 +126,15 @@ class SecurityChecker(SafeChecker):
     def check(self) -> Dict:
         start_time = time.time()
 
-        # Basic security check
-        has_requirements = Path("requirements.txt").exists()
+        # Basic security check: prefer pyproject.toml
+        has_requirements = Path("pyproject.toml").exists()
 
         duration = time.time() - start_time
 
         return {
             "name": self.name,
             "status": "success" if has_requirements else "warning",
-            "message": "Requirements.txt found" if has_requirements else "No requirements.txt found",
+            "message": "pyproject.toml found" if has_requirements else "No pyproject.toml found",
             "duration": duration
         }
 

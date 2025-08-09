@@ -148,7 +148,7 @@ The test suite aims for high code coverage:
 
 ## Dependencies
 
-Test dependencies are defined in the main `requirements.txt`:
+Test dependencies are defined in `pyproject.toml`:
 
 - `pytest`: Test framework
 - `pytest-cov`: Coverage reporting
@@ -220,7 +220,7 @@ def test_full_simulation_workflow(self, project_files_setup):
 ### Common Issues
 
 1. **Import Errors**: Ensure the project root is in Python path
-2. **Missing Dependencies**: Install test dependencies with `pip install -r requirements.txt`
+2. **Missing Dependencies**: Install test dependencies with `pip install .`
 3. **Permission Errors**: Ensure write permissions for temporary directories
 4. **Timeout Errors**: Increase timeout for slow integration tests
 

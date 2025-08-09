@@ -72,9 +72,9 @@ PhotoGeoView/
 ## 🚀 セットアップ
 
 ### 必要要件
-- Python 3.8以上
-- PyQt6
-- その他の依存関係は `requirements.txt` を参照
+- Python 3.9以上
+- PySide6
+- 依存関係は `pyproject.toml` の `[project.dependencies]` を参照
 
 ### インストール
 ```bash
@@ -86,8 +86,8 @@ cd PhotoGeoView
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 依存関係をインストール
-pip install -r requirements.txt
+# 依存関係をインストール（pyproject.tomlを使用）
+pip install .
 
 # アプリケーションを実行
 python main.py

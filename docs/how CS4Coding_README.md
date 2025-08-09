@@ -31,7 +31,7 @@
 ### 必要条件
 - Python 3.8以上
 - PyQt6
-- その他の依存関係（requirements.txt参照）
+- その他の依存関係（pyproject.toml参照）
 
 ### インストール
 
@@ -51,7 +51,7 @@ venv\Scripts\activate     # Windows
 
 3. 依存関係をインストール
 ```bash
-pip install -r requirements.txt
+pip install .
 ```
 
 4. アプリケーションを実行
@@ -75,7 +75,7 @@ qt-theme-manager>=0.1.0
 📦 PhotoGeoView/
 ├── 🚀 main.py                         # アプリケーションエントリーポイント
 ├── 📚 README.md                       # プロジェクト概要・セットアップ
-├── 📋 requirements.txt                # Python依存関係定義
+├── 📋 pyproject.toml                  # Python依存関係定義
 ├── 🔒 .gitignore                      # Git除外設定
 ├── 📂 src/                            # ソースコードメイン
 │   ├── 🎨 ui/                         # ユーザーインターフェース

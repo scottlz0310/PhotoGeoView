@@ -122,10 +122,10 @@ class SimpleCI:
         """依存関係チェック"""
         print("📋 依存関係チェック中...")
 
-        if not Path("requirements.txt").exists():
-            return {"status": "warn", "message": "requirements.txtが見つかりません"}
+        if not Path("pyproject.toml").exists():
+            return {"status": "warn", "message": "pyproject.tomlが見つかりません"}
 
-        # pip check で依存関係の整合性をチェック
+        # pip check で依存関係の整合性をチェック（pyproject管理）
         success, stdout, stderr = self.run_command([
             sys.executable, "-m", "pip", "check"
         ], timeout=30)

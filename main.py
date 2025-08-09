@@ -73,8 +73,8 @@ def check_environment():
         return True
     except ImportError as e:
         error_msg = f"❌ 依存関係が不足しています: {e}"
-        install_msg = "以下のコマンドで依存関係をインストールしてください:"
-        cmd_msg = "pip install -r requirements.txt"
+        install_msg = "以下のコマンドで依存関係をインストールしてください (pyproject.toml を使用):"
+        cmd_msg = "pip install ."
 
         logger.error(error_msg)
         logger.info(install_msg)

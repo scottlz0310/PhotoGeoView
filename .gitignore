@@ -28,10 +28,22 @@ config/config.json
 config/qt_theme_settings.json
 config/qt_theme_user_settings.json
 config/app_config.json
+config/application_state.json
+config/migration_report.json
+config/migration_backups/
+config/custom_themes/
+config/themes/
+config/logging_config.json
+config/performance_config.json
+config/error_monitoring_config.json
+config/copilot_config.json
+config/cursor_config.json
+config/kiro_config.json
 
 # アプリケーション状態ファイル（ユーザー固有の設定・履歴含む）
 state/app_state.json
 state/app_state.backup
+state/
 
 # ログファイル（個人的な使用履歴含む）
 logs/

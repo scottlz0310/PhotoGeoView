@@ -77,7 +77,7 @@ class TestBasicImports(unittest.TestCase):
             self.assertTrue(dir_path.exists(), f"{dir_name}ディレクトリが存在する必要があります")
 
         # 主要なファイルの存在確認
-        required_files = ["main.py", "requirements.txt", "README.md"]
+        required_files = ["main.py", "pyproject.toml", "README.md"]
         for file_name in required_files:
             file_path = project_root / file_name
             self.assertTrue(file_path.exists(), f"{file_name}ファイルが存在する必要があります")

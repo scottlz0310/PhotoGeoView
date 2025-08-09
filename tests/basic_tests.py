@@ -48,7 +48,7 @@ class TestBasicImports(unittest.TestCase):
 
         # 重要なファイルの存在確認
         self.assertTrue((project_root / "main.py").exists(), "main.py should exist")
-        self.assertTrue((project_root / "requirements.txt").exists(), "requirements.txt should exist")
+        self.assertTrue((project_root / "pyproject.toml").exists(), "pyproject.toml should exist")
         self.assertTrue((project_root / "pyproject.toml").exists(), "pyproject.toml should exist")
 
         # 重要なディレクトリの存在確認

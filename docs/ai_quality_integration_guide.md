@@ -30,7 +30,7 @@ docs/ai_quality_integration_guide.md
 
 ### 2. 依存関係の更新
 
-`requirements.txt`に以下の依存関係を追加：
+`pyproject.toml` の `[project.dependencies]` に以下の依存関係を追加：
 
 ```txt
 # AI解析用の追加依存関係

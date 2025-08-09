@@ -38,7 +38,7 @@ venv\Scripts\activate
 
 4. **依存関係のインストール**
 ```bash
-pip install -r requirements.txt
+pip install .
 ```
 
 5. **プラットフォーム固有セットアップ**

@@ -24,12 +24,15 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
-    "PyQt6>=6.4.0",
-    "PyQt6-WebEngine>=6.4.0",
+    "PySide6>=6.9.1",
+    "PySide6-Addons>=6.9.1",
+    "PySide6-Essentials>=6.9.1",
     "Pillow>=9.0.0",
-    "piexif>=1.1.3",
+    "ExifRead>=3.3.2",
     "folium>=0.14.0",
     "psutil>=5.9.0",
+    "qt-theme-manager>=0.2.4",
+    "breadcrumb-addressbar>=0.2.1",
 ]
 
 [project.optional-dependencies]
@@ -99,7 +102,7 @@ profile = "black"
 multi_line_output = 3
 line_length = 88
 known_first_party = ["src"]
-known_third_party = ["PyQt6", "PIL", "folium", "pytest"]
+known_third_party = ["PySide6", "PIL", "folium", "pytest"]
 
 # mypy設定
 [tool.mypy]
