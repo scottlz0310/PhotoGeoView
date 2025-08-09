@@ -7,8 +7,17 @@ Tests the theme selection UI functionality.
 
 import sys
 from pathlib import Path
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLabel, QComboBox
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QLabel,
+    QMainWindow,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -103,7 +112,7 @@ class ThemeTestWindow(QMainWindow):
                 self.theme_combo.setCurrentIndex(self.theme_combo.count() - 1)
 
     def connect_signals(self):
-        ""heme manager signals"""
+        """Theme manager signals"""
         self.theme_manager.theme_changed.connect(self.on_theme_changed)
         self.theme_manager.theme_applied.connect(self.on_theme_applied)
         self.theme_manager.theme_error.connect(self.on_theme_error)
