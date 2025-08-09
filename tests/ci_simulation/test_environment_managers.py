@@ -203,7 +203,7 @@ class TestPythonVersionManager:
         mock_run.return_value.stderr = ""
 
         # Create requirements file
-        requirements_file = os.path.join(temp_dir, "requirements.txt")
+        requirements_file = os.path.join(temp_dir, "pyproject.toml")
         with open(requirements_file, "w") as f:
             f.write("pytest>=7.0.0\nblack>=22.0.0\n")
 
