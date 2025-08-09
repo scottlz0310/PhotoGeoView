@@ -8,6 +8,7 @@ Enhanced with JSON-based theme configuration support.
 import json
 from pathlib import Path
 from typing import Dict, List, Optional
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
@@ -449,6 +450,59 @@ class SimpleThemeManager(QObject):
     def get_theme_info(self, theme_name: str) -> Optional[Dict]:
         """Get theme information"""
         return self.available_themes.get(theme_name)
+
+    # ---- Color helpers (normalized access) ---------------------------------
+    def _normalize_colors(self, theme_cfg: Dict) -> Dict[str, str]:
+        """Normalize color keys from various theme sources to a common schema.
+
+        Returns a dict with keys like: background, foreground, primary,
+        secondary, accent, success, warning, error, info, border, hover,
+        selected, disabled.
+        """
+        if not theme_cfg:
+            return {}
+
+        colors = {}
+
+        # theme_manager may provide top-level keys or nested under 'colors'
+        source_colors = theme_cfg.get('colors') if isinstance(theme_cfg.get('colors'), dict) else theme_cfg
+
+        # Common mappings
+        mappings = {
+            'background': ['background', 'backgroundColor', 'bgColor'],
+            'foreground': ['foreground', 'textColor', 'fgColor'],
+            'primary': ['primary', 'primaryColor'],
+            'secondary': ['secondary', 'secondaryColor'],
+            'accent': ['accent', 'accentColor'],
+            'success': ['success', 'successColor'],
+            'warning': ['warning', 'warningColor'],
+            'error': ['error', 'dangerColor', 'errorColor'],
+            'info': ['info', 'infoColor'],
+            'border': ['border', 'borderColor'],
+            'hover': ['hover', 'hoverColor'],
+            'selected': ['selected', 'selectedColor'],
+            'disabled': ['disabled', 'disabledColor'],
+        }
+
+        for target_key, candidate_keys in mappings.items():
+            for key in candidate_keys:
+                val = source_colors.get(key)
+                if isinstance(val, str) and val:
+                    colors[target_key] = val
+                    break
+
+        return colors
+
+    def get_current_colors(self) -> Dict[str, str]:
+        """Return normalized color dict for the current theme."""
+        theme_name = self.get_current_theme()
+        cfg = self.get_theme_info(theme_name) or {}
+        return self._normalize_colors(cfg)
+
+    def get_color(self, role: str, fallback: str = "") -> str:
+        """Get a single color by normalized role name with fallback."""
+        colors = self.get_current_colors()
+        return colors.get(role, fallback)
 
     def cycle_theme(self):
         """Cycle to next available theme"""

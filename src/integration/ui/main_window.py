@@ -274,17 +274,6 @@ class IntegratedMainWindow(QMainWindow):
         self.theme_toggle_button.theme_changed.connect(self._on_toggle_theme_changed)
         toolbar.addWidget(self.theme_toggle_button)
 
-        toolbar.addSeparator()
-
-        # Performance indicator (Kiro enhancement)
-        self.performance_label = QLabel("Performance: Good")
-        self.performance_label.setStyleSheet("color: green; font-weight: bold;")
-        toolbar.addWidget(self.performance_label)
-
-        # Memory usage indicator (Kiro enhancement)
-        self.memory_label = QLabel("Memory: 0 MB")
-        toolbar.addWidget(self.memory_label)
-
     def _create_central_widget(self):
         """Create the central widget layout (CursorBLD design)"""
 
@@ -315,19 +304,39 @@ class IntegratedMainWindow(QMainWindow):
 
         # 左パネル用の垂直スプリッターを作成
         self.left_panel_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.left_panel_splitter.setStyleSheet("""
-            QSplitter::handle {
-                background-color: #bdc3c7;
+        # スプリッターハンドルの色をテーマから取得
+        try:
+            border_col = (
+                self.theme_manager_widget.get_color("border", "#bdc3c7")
+                if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                else "#bdc3c7"
+            )
+            hover_col = (
+                self.theme_manager_widget.get_color("primary", "#3498db")
+                if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                else "#3498db"
+            )
+            pressed_col = (
+                self.theme_manager_widget.get_color("accent", "#2980b9")
+                if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                else "#2980b9"
+            )
+        except Exception:
+            border_col, hover_col, pressed_col = "#bdc3c7", "#3498db", "#2980b9"
+
+        self.left_panel_splitter.setStyleSheet(f"""
+            QSplitter::handle {{
+                background-color: {border_col};
                 height: 4px;
                 border-radius: 2px;
                 margin: 1px 0px;
-            }
-            QSplitter::handle:hover {
-                background-color: #3498db;
-            }
-            QSplitter::handle:pressed {
-                background-color: #2980b9;
-            }
+            }}
+            QSplitter::handle:hover {{
+                background-color: {hover_col};
+            }}
+            QSplitter::handle:pressed {{
+                background-color: {pressed_col};
+            }}
         """)
 
         # 1. Breadcrumb address bar (最上段)
@@ -359,16 +368,35 @@ class IntegratedMainWindow(QMainWindow):
             placeholder = QLabel("ブレッドクラムナビゲーション利用不可")
             placeholder.setMinimumHeight(40)
             placeholder.setMaximumHeight(60)
-            placeholder.setStyleSheet("""
-                QLabel {
-                    background-color: #f8f9fa;
-                    border: 1px solid #dee2e6;
+            try:
+                ph_bg = (
+                    self.theme_manager_widget.get_color("hover", "#f8f9fa")
+                    if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                    else "#f8f9fa"
+                )
+                ph_border = (
+                    self.theme_manager_widget.get_color("border", "#dee2e6")
+                    if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                    else "#dee2e6"
+                )
+                ph_fg = (
+                    self.theme_manager_widget.get_color("foreground", "#6c757d")
+                    if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                    else "#6c757d"
+                )
+            except Exception:
+                ph_bg, ph_border, ph_fg = "#f8f9fa", "#dee2e6", "#6c757d"
+
+            placeholder.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {ph_bg};
+                    border: 1px solid {ph_border};
                     border-radius: 4px;
                     padding: 10px;
-                    color: #6c757d;
+                    color: {ph_fg};
                     font-style: italic;
                     text-align: center;
-                }
+                }}
             """)
             self.left_panel_splitter.addWidget(placeholder)
 
@@ -388,7 +416,7 @@ class IntegratedMainWindow(QMainWindow):
         # 3. EXIF information panel (下段)
         from .exif_panel import EXIFPanel
         self.exif_panel = EXIFPanel(
-            self.config_manager, self.state_manager, self.logger_system
+            self.config_manager, self.state_manager, self.logger_system, self.theme_manager_widget
         )
         self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.exif_panel)
@@ -923,6 +951,11 @@ class IntegratedMainWindow(QMainWindow):
             # Emit theme changed signal
             self.theme_changed.emit(new_theme)
 
+            # EXIFパネルへテーマ再適用
+            if hasattr(self, 'exif_panel') and self.exif_panel:
+                if hasattr(self.exif_panel, 'apply_theme'):
+                    self.exif_panel.apply_theme()
+
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR, "theme_changed", f"Theme changed: {old_theme} -> {new_theme}"
             )
@@ -945,8 +978,6 @@ class IntegratedMainWindow(QMainWindow):
             self.performance_timer.stop()
             self.memory_monitor.stop()
 
-        self.performance_label.setVisible(enabled)
-        self.memory_label.setVisible(enabled)
         self.status_performance.setVisible(enabled)
         self.status_memory.setVisible(enabled)
 
@@ -1734,34 +1765,18 @@ class IntegratedMainWindow(QMainWindow):
     def _on_performance_alert(self, level: str, message: str):
         """Handle performance alerts (Kiro enhancement)"""
 
-        # UI要素の存在確認
-        if not hasattr(self, "performance_label") or self.performance_label is None:
+        if not hasattr(self, "status_performance") or self.status_performance is None:
             return
 
         if level == "warning":
-            self.performance_label.setStyleSheet("color: orange; font-weight: bold;")
-            if (
-                hasattr(self, "status_performance")
-                and self.status_performance is not None
-            ):
-                self.status_performance.setStyleSheet("color: orange;")
-                self.status_performance.setText(f"Performance: {message}")
+            self.status_performance.setStyleSheet("color: orange;")
+            self.status_performance.setText(f"Performance: {message}")
         elif level == "critical":
-            self.performance_label.setStyleSheet("color: red; font-weight: bold;")
-            if (
-                hasattr(self, "status_performance")
-                and self.status_performance is not None
-            ):
-                self.status_performance.setStyleSheet("color: red;")
-                self.status_performance.setText(f"Performance: {message}")
+            self.status_performance.setStyleSheet("color: red;")
+            self.status_performance.setText(f"Performance: {message}")
         else:
-            self.performance_label.setStyleSheet("color: green; font-weight: bold;")
-            if (
-                hasattr(self, "status_performance")
-                and self.status_performance is not None
-            ):
-                self.status_performance.setStyleSheet("color: green;")
-                self.status_performance.setText("Performance: Good")
+            self.status_performance.setStyleSheet("color: green;")
+            self.status_performance.setText("Performance: Good")
 
     # Monitoring methods (Kiro enhancements)
 
@@ -1770,7 +1785,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # UI要素が初期化されているかチェック
-            if not hasattr(self, "performance_label") or self.performance_label is None:
+            if not hasattr(self, "status_performance") or self.status_performance is None:
                 return
 
             # Get performance summary from state manager
@@ -1780,16 +1795,16 @@ class IntegratedMainWindow(QMainWindow):
                 avg_memory = perf_summary.get("average_memory_mb", 0)
                 avg_cpu = perf_summary.get("average_cpu_percent", 0)
 
-                # Update performance label
+                # Update style by threshold and show CPU text consistently
                 if avg_cpu > 80:
-                    self.performance_alert.emit("critical", "High CPU")
+                    self.status_performance.setStyleSheet("color: red;")
                 elif avg_cpu > 60:
-                    self.performance_alert.emit("warning", "Moderate CPU")
+                    self.status_performance.setStyleSheet("color: orange;")
                 else:
-                    self.performance_alert.emit("good", "Good")
+                    self.status_performance.setStyleSheet("color: green;")
 
-                # Update performance display
-                self.performance_label.setText(f"CPU: {avg_cpu:.1f}%")
+                # Update performance display (CPU only)
+                self.status_performance.setText(f"CPU: {avg_cpu:.1f}%")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1804,7 +1819,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # UI要素が初期化されているかチェック
-            if not hasattr(self, "memory_label") or self.memory_label is None:
+            if not hasattr(self, "status_memory") or self.status_memory is None:
                 return
 
             import os
@@ -1815,20 +1830,17 @@ class IntegratedMainWindow(QMainWindow):
             process = psutil.Process(os.getpid())
             memory_mb = process.memory_info().rss / 1024 / 1024
 
-            # Update memory labels
-            self.memory_label.setText(f"Memory: {memory_mb:.1f} MB")
-            if hasattr(self, "status_memory") and self.status_memory is not None:
-                self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
+            # Update memory label on status bar only
+            self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
 
-            # Check for memory alerts
-            max_memory = self.config_manager.get_setting(
-                "performance.max_memory_mb", 512
-            )
-
-            if memory_mb > max_memory * 0.9:
-                self.performance_alert.emit("critical", "High Memory")
-            elif memory_mb > max_memory * 0.7:
-                self.performance_alert.emit("warning", "Moderate Memory")
+            # Check for memory thresholds (no text overwrite; could update tooltip or color later if needed)
+            _max_memory = self.config_manager.get_setting("performance.max_memory_mb", 512)
+            if memory_mb > _max_memory * 0.9:
+                self.status_memory.setStyleSheet("color: red;")
+            elif memory_mb > _max_memory * 0.7:
+                self.status_memory.setStyleSheet("color: orange;")
+            else:
+                self.status_memory.setStyleSheet("")
 
         except Exception as e:
             self.error_handler.handle_error(
