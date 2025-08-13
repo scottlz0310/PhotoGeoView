@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.ui.theme_manager_simple import SimpleThemeManager
+from src.integration.ui.theme_manager import IntegratedThemeManager
 
 
 def create_sample_themes():
@@ -125,7 +125,9 @@ def demo_theme_management():
     # Initialize components
     logger_system = LoggerSystem()
     config_manager = ConfigManager(config_dir=Path("config"), logger_system=logger_system)
-    theme_manager = SimpleThemeManager(config_manager, logger_system)
+    from src.integration.state_manager import StateManager
+    state_manager = StateManager(config_manager, logger_system)
+    theme_manager = IntegratedThemeManager(config_manager, state_manager, logger_system)
 
     print(f"✅ テーママネージャー初期化完了")
     print(f"📋 現在利用可能なテーマ数: {len(theme_manager.get_available_themes())}")

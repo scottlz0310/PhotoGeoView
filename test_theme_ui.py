@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.ui.theme_manager_simple import SimpleThemeManager
+from src.integration.ui.theme_manager import IntegratedThemeManager
 
 
 class ThemeTestWindow(QMainWindow):
@@ -38,7 +38,9 @@ class ThemeTestWindow(QMainWindow):
         # Initialize theme manager
         self.logger_system = LoggerSystem()
         self.config_manager = ConfigManager(config_dir=Path("config"), logger_system=self.logger_system)
-        self.theme_manager = SimpleThemeManager(self.config_manager, self.logger_system)
+        from src.integration.state_manager import StateManager
+        state_manager = StateManager(self.config_manager, self.logger_system)
+        self.theme_manager = IntegratedThemeManager(self.config_manager, state_manager, self.logger_system)
 
         self.setup_ui()
         self.connect_signals()

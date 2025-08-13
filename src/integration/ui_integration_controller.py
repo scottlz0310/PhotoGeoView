@@ -16,7 +16,7 @@ from PySide6.QtCore import QMutex, QObject, QThread, QTimer, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 
-from ..ui.theme_manager_simple import SimpleThemeManager
+from .ui.theme_manager import IntegratedThemeManager
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .image_processor import CS4CodingImageProcessor
@@ -41,7 +41,7 @@ class UIIntegrationState:
     exif_loading_active: bool = False
     map_rendering_active: bool = False
     ui_responsive: bool = True
-    last_inteOptional[datetime] = None
+    last_integration_update: Optional[datetime] = None
 
 
 class UIIntegrationController(QObject):
@@ -70,7 +70,7 @@ class UIIntegrationController(QObject):
         config_manager: ConfigManager,
         state_manager: StateManager,
         image_processor: CS4CodingImageProcessor,
-        theme_manager: SimpleThemeManager,
+        theme_manager: IntegratedThemeManager,
         thumbnail_grid: OptimizedThumbnailGrid,
         folder_navigator: EnhancedFolderNavigator,
         cache_system: UnifiedCacheSystem,

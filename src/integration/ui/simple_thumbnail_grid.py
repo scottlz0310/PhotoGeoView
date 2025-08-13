@@ -11,8 +11,9 @@ from pathlib import Path
 from typing import Dict, List
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPalette, QPixmap
 from PySide6.QtWidgets import (
+    QApplication,
     QGridLayout,
     QHBoxLayout,
     QLabel,
@@ -44,17 +45,9 @@ class SimpleThumbnailItem(QLabel):
         # UI設定
         self.setFixedSize(thumbnail_size + 20, thumbnail_size + 40)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet("""
-            QLabel {
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                padding: 4px;
-                background-color: white;
-            }
-            QLabel:hover {
-                border-color: #007acc;
-            }
-        """)
+
+        # テーマに追随するスタイルシート
+        self._update_theme_styles()
 
         # ツールチップにファイル名を設定
         self.setToolTip(image_path.name)
@@ -64,6 +57,81 @@ class SimpleThumbnailItem(QLabel):
 
         # 実際の画像を読み込み（初期読み込みは即座に実行）
         self._load_image_immediate()
+
+    def _update_theme_styles(self):
+        """テーマに追随するスタイルシートを更新"""
+        try:
+            # アプリケーションのパレットから色を取得
+            app = QApplication.instance()
+            if app:
+                palette = app.palette()
+
+                # ダークテーマかどうかを判定
+                is_dark_theme = self._is_dark_theme(palette)
+
+                if is_dark_theme:
+                    # ダークテーマ用の色
+                    border_color = "#4a4a4a"  # 暗いグレー
+                    background_color = "#2d2d2d"  # 暗い背景
+                    hover_border_color = "#5a9bd4"  # 青系のホバー色
+                    text_color = "#e0e0e0"  # 明るいテキスト
+                else:
+                    # ライトテーマ用の色
+                    border_color = "#ddd"  # 明るいグレー
+                    background_color = "#ffffff"  # 白い背景
+                    hover_border_color = "#007acc"  # 青系のホバー色
+                    text_color = "#333333"  # 暗いテキスト
+
+                self.setStyleSheet(f"""
+                    QLabel {{
+                        border: 2px solid {border_color};
+                        border-radius: 4px;
+                        padding: 4px;
+                        background-color: {background_color};
+                        color: {text_color};
+                    }}
+                    QLabel:hover {{
+                        border-color: {hover_border_color};
+                    }}
+                """)
+            else:
+                # フォールバック用のデフォルトスタイル
+                self.setStyleSheet("""
+                    QLabel {
+                        border: 2px solid #ddd;
+                        border-radius: 4px;
+                        padding: 4px;
+                        background-color: white;
+                    }
+                    QLabel:hover {
+                        border-color: #007acc;
+                    }
+                """)
+        except Exception:
+            # エラー時はデフォルトスタイルを使用
+            self.setStyleSheet("""
+                QLabel {
+                    border: 2px solid #ddd;
+                    border-radius: 4px;
+                    padding: 4px;
+                    background-color: white;
+                }
+                QLabel:hover {
+                    border-color: #007acc;
+                }
+            """)
+
+    def _is_dark_theme(self, palette: QPalette) -> bool:
+        """パレットからダークテーマかどうかを判定"""
+        try:
+            # ウィンドウテキストの色の明度を計算
+            window_text_color = palette.color(QPalette.ColorRole.WindowText)
+            lightness = (window_text_color.red() + window_text_color.green() + window_text_color.blue()) / 3.0 / 255.0
+
+            # 明度が0.5より高い場合はダークテーマと判定
+            return lightness > 0.5
+        except Exception:
+            return False
 
     def _show_placeholder(self):
         """プレースホルダーを表示"""

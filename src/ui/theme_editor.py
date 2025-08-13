@@ -46,7 +46,7 @@ from ..integration.theme_models import (
     ThemeConfiguration,
     ThemeType,
 )
-from .theme_manager_simple import SimpleThemeManager
+from ..integration.ui.theme_manager import IntegratedThemeManager
 
 
 class ColorPickerWidget(QWidget):
@@ -353,7 +353,7 @@ class ThemeEditorDialog(QWidget):
     theme_saved = Signal(str)  # theme_name
     theme_cancelled = Signal()
 
-    def __init__(self, theme_manager: SimpleThemeManager, config_manager: ConfigManager,
+    def __init__(self, theme_manager: IntegratedThemeManager, config_manager: ConfigManager,
                  logger_system: LoggerSystem, theme_config: ThemeConfiguration = None, parent=None):
         super().__init__(parent)
 
@@ -867,7 +867,7 @@ class ThemeImportDialog(QWidget):
     theme_imported = Signal(str)  # theme_name
     import_cancelled = Signal()
 
-    def __init__(self, theme_manager: SimpleThemeManager, logger_system: LoggerSystem, parent=None):
+    def __init__(self, theme_manager: IntegratedThemeManager, logger_system: LoggerSystem, parent=None):
         super().__init__(parent)
 
         self.theme_manager = theme_manager

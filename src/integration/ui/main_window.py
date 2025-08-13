@@ -44,7 +44,7 @@ from .simple_thumbnail_grid import SimpleThumbnailGrid
 # Import theme manager and breadcrumb components
 try:
     from ...ui.breadcrumb_bar import BreadcrumbAddressBar
-    from ...ui.theme_manager_simple import SimpleThemeManager
+    from .theme_manager import IntegratedThemeManager
 except ImportError:
     # Fallback import paths
     try:
@@ -52,13 +52,13 @@ except ImportError:
         from pathlib import Path
         sys.path.append(str(Path(__file__).parent.parent.parent))
         from ui.breadcrumb_bar import BreadcrumbAddressBar
-        from ui.theme_manager_simple import SimpleThemeManager
+        from .theme_manager import IntegratedThemeManager
     except ImportError:
         # Create mock classes if imports fail
         from PySide6.QtCore import QObject, Signal
 
-        class SimpleThemeManager(QObject):
-            theme_changed = Signal(str, str)
+        class IntegratedThemeManager(QObject):
+            theme_changed = Signal(str)
             theme_applied = Signal(str)
             theme_error = Signal(str, str)
 
@@ -73,6 +73,8 @@ except ImportError:
 
             def get_current_theme(self):
                 return "light"
+
+
 
         class BreadcrumbAddressBar(QObject):
             path_changed = Signal(object)
@@ -131,7 +133,7 @@ class IntegratedMainWindow(QMainWindow):
 
         # UI components
         self.theme_manager: Optional[IntegratedThemeManager] = None
-        self.theme_manager_widget: Optional[SimpleThemeManager] = None
+        self.theme_manager_widget: Optional[IntegratedThemeManager] = None
         self.breadcrumb_bar: Optional[BreadcrumbAddressBar] = None
         self.thumbnail_grid: Optional[SimpleThumbnailGrid] = None
         # self.folder_navigator: Optional[EnhancedFolderNavigator] = None  # Removed: Using breadcrumb navigation instead
@@ -521,16 +523,23 @@ class IntegratedMainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(self.status_memory)
 
     def _initialize_theme_manager(self):
-        """Initialize the simple theme manager"""
+        """Initialize the integrated theme manager"""
 
         try:
-            # Initialize the simple theme manager
-            self.theme_manager_widget = SimpleThemeManager(
-                self.config_manager, self.logger_system
+            # Initialize the integrated theme manager (CursorBLD + Kiro)
+            self.theme_manager = IntegratedThemeManager(
+                self.config_manager, self.state_manager, self.logger_system, self
             )
 
+            # Use the same theme manager for the widget
+            self.theme_manager_widget = self.theme_manager
+
+            # Debug: テーマの状況を確認
+            if hasattr(self.theme_manager_widget, 'debug_theme_status'):
+                self.theme_manager_widget.debug_theme_status()
+
             # Connect theme change signals
-            self.theme_manager_widget.theme_changed.connect(self._on_simple_theme_changed)
+            self.theme_manager_widget.theme_changed_compat.connect(self._on_simple_theme_changed)
             self.theme_manager_widget.theme_applied.connect(self._on_theme_applied)
             self.theme_manager_widget.theme_error.connect(self._on_theme_error)
 
@@ -550,38 +559,57 @@ class IntegratedMainWindow(QMainWindow):
         """Initialize the breadcrumb address bar"""
 
         try:
+            self.logger_system.info("Initializing breadcrumb address bar...")
+            
             # Initialize file system watcher if not already available
             if not hasattr(self, 'file_system_watcher'):
+                self.logger_system.info("Creating file system watcher...")
                 from ..services.file_system_watcher import FileSystemWatcher
                 self.file_system_watcher = FileSystemWatcher(
                     logger_system=self.logger_system, enable_monitoring=True
                 )
+                self.logger_system.info("File system watcher created successfully")
 
             # Initialize breadcrumb bar
-            self.breadcrumb_bar = BreadcrumbAddressBar(
-                self.file_system_watcher, self.logger_system, self.config_manager, self
-            )
+            try:
+                self.logger_system.info("Creating BreadcrumbAddressBar instance...")
+                self.breadcrumb_bar = BreadcrumbAddressBar(
+                    self.file_system_watcher, self.logger_system, self.config_manager, self
+                )
+                self.logger_system.info("BreadcrumbAddressBar instance created successfully")
 
-            # Verify breadcrumb widget is available
-            breadcrumb_widget = self.breadcrumb_bar.get_widget()
-            if breadcrumb_widget is None:
+                # Verify breadcrumb widget is available
+                self.logger_system.info("Checking breadcrumb widget availability...")
+                breadcrumb_widget = self.breadcrumb_bar.get_widget()
+                if breadcrumb_widget is None:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "breadcrumb_widget_unavailable",
+                        "Breadcrumb widget not available, creating fallback",
+                        level="WARNING"
+                    )
+                    # Set breadcrumb_bar to None instead of creating fallback
+                    self.breadcrumb_bar = None
+                else:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "breadcrumb_widget_available",
+                        "Breadcrumb widget successfully initialized"
+                    )
+                    self.logger_system.info(f"Breadcrumb widget type: {type(breadcrumb_widget)}")
+            except Exception as e:
+                self.logger_system.error(f"Failed to initialize breadcrumb bar: {e}")
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
-                    "breadcrumb_widget_unavailable",
-                    "Breadcrumb widget not available, creating fallback",
+                    "breadcrumb_init_error",
+                    f"Failed to initialize breadcrumb bar: {e}",
                     level="WARNING"
                 )
-                # Set breadcrumb_bar to None instead of creating fallback
                 self.breadcrumb_bar = None
-            else:
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "breadcrumb_widget_available",
-                    "Breadcrumb widget successfully initialized"
-                )
 
             # Connect breadcrumb signals
             if self.breadcrumb_bar:
+                self.logger_system.info("Connecting breadcrumb signals...")
                 self.breadcrumb_bar.path_changed.connect(self._on_breadcrumb_path_changed)
                 self.breadcrumb_bar.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
                 self.breadcrumb_bar.navigation_requested.connect(self._on_breadcrumb_navigation_requested)
@@ -590,9 +618,14 @@ class IntegratedMainWindow(QMainWindow):
 
                 # Set initial path from state
                 current_folder = self.state_manager.get_state_value("current_folder", Path.home())
+                self.logger_system.info(f"Setting initial breadcrumb path: {current_folder}")
                 self.breadcrumb_bar.set_current_path(current_folder)
+                self.logger_system.info("Breadcrumb signals connected and initial path set")
+            else:
+                self.logger_system.warning("Breadcrumb bar is None, skipping signal connections")
 
         except Exception as e:
+            self.logger_system.error(f"Failed to initialize breadcrumb bar: {e}")
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "breadcrumb_init_error",
@@ -616,7 +649,9 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             current_theme = self.config_manager.get_setting("ui.theme", "default")
-            if self.theme_manager:
+            if self.theme_manager_widget:
+                self.theme_manager_widget.apply_theme(current_theme)
+            elif self.theme_manager:
                 self.theme_manager.apply_theme(current_theme)
 
         except Exception as e:
