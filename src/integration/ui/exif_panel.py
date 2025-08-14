@@ -54,7 +54,8 @@ class EXIFPanel(QWidget):
         config_manager: ConfigManager,
         state_manager: StateManager,
         logger_system: LoggerSystem,
-        theme_manager: Optional[object] = None,    ):
+        theme_manager: Optional[object] = None,
+    ):
         super().__init__()
 
         self.config_manager = config_manager
@@ -63,6 +64,13 @@ class EXIFPanel(QWidget):
         self.error_handler = IntegratedErrorHandler(logger_system)
         self.theme_manager = theme_manager
         self._last_exif_data: Optional[Dict[str, Any]] = None
+
+        # テーマ変更シグナルの接続
+        if self.theme_manager:
+            if hasattr(self.theme_manager, 'theme_changed'):
+                self.theme_manager.theme_changed.connect(self._on_theme_changed)
+            elif hasattr(self.theme_manager, 'theme_changed_compat'):
+                self.theme_manager.theme_changed_compat.connect(self._on_theme_changed)
 
         # EXIF処理エンジン
         self.image_processor = CS4CodingImageProcessor(
@@ -77,18 +85,81 @@ class EXIFPanel(QWidget):
 
         # 高さ設定の復元は不要（固定高さのため）
 
+    def _get_color(self, color_key: str, default: str = "#000000") -> str:
+        """テーママネージャーから色を取得"""
+        try:
+            if self.theme_manager and hasattr(self.theme_manager, 'get_color'):
+                return self.theme_manager.get_color(color_key, default)
+        except Exception:
+            pass
+        return default
+
+    def _get_color_safe(self, color_key: str, default: str = "#000000") -> str:
+        """安全な色取得（エラー時はデフォルト値を返す）"""
+        return self._get_color(color_key, default)
+
+    def _is_dark_theme(self) -> bool:
+        """現在のテーマがダークテーマかどうかを判定"""
+        try:
+            if self.theme_manager and hasattr(self.theme_manager, 'get_current_theme'):
+                current_theme = self.theme_manager.get_current_theme()
+                return 'dark' in current_theme.lower()
+        except Exception:
+            pass
+        return False
+
+
+    def _apply_panel_theme(self):
+        """パネル自体にテーマを適用"""
+        try:
+            bg_color = self._get_color("background", "#ffffff")
+            border_color = self._get_color("border", "#e0e0e0")
+
+            self.setStyleSheet(f"""
+                EXIFPanel {{
+                    background-color: {bg_color};
+                    border: 1px solid {border_color};
+                    border-radius: 5px;
+                }}
+            """)
+        except Exception as e:
+            # エラー時はデフォルトスタイルを適用
+            self.setStyleSheet("""
+                EXIFPanel {
+                    background-color: #ffffff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 5px;
+                }
+            """)
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
+        try:
+            # パネル自体のテーマを更新
+            self._apply_panel_theme()
+
+            # 現在のEXIFデータがある場合は再表示
+            if hasattr(self, '_last_exif_data') and self._last_exif_data:
+                self._create_integrated_sections(self._last_exif_data)
+        except Exception as e:
+            self.error_handler.handle_error(
+                e, ErrorCategory.UI_ERROR, {"operation": "theme_change"}, AIComponent.KIRO
+            )
+
     def _setup_ui(self):
         """UIの初期化（統合版）"""
         try:
+            # パネル自体の背景テーマを適用
+            self._apply_panel_theme()
+
             layout = QVBoxLayout(self)
             layout.setContentsMargins(5, 5, 5, 5)
             layout.setSpacing(5)
 
             # タイトル
-            title_label = QLabel("📷 画像情報・位置情報")
+            self.title_label = QLabel("📷 画像情報・位置情報")
             title_fg = self._get_color("foreground", "#2c3e50")
             title_bg = self._get_color("hover", self._get_color("background", "#ecf0f1"))
-            title_label.setStyleSheet(f"""
+            self.title_label.setStyleSheet(f"""
                 QLabel {{
                     font-weight: bold;
                     font-size: 14px;
@@ -98,7 +169,7 @@ class EXIFPanel(QWidget):
                     border-radius: 3px;
                 }}
             """)
-            layout.addWidget(title_label)
+            layout.addWidget(self.title_label)
 
             # 統合情報エリア（スクロール可能・300px固定）
             self._create_integrated_info_area()
@@ -1160,260 +1231,95 @@ class EXIFPanel(QWidget):
         except Exception:
             pass
 
-    def _get_color_safe(self, color_name: str, fallback: str = "#000000") -> str:
-        """安全な色取得メソッド（フォールバック付き）"""
+
+
+    def _apply_panel_theme(self):
+        """パネル自体にテーマを適用"""
         try:
-            if self.theme_manager and hasattr(self.theme_manager, 'get_color'):
-                color = self.theme_manager.get_color(color_name, fallback)
-                if color and color != "None":
-                    return color
-            return fallback
-        except Exception:
-            return fallback
+            bg_color = self._get_color("background", "#ffffff")
+            border_color = self._get_color("border", "#e0e0e0")
 
-
-    def _safe_clear_layout(self):
-        """安全なレイアウトクリア（Segmentation fault対策）"""
-        try:
-            if hasattr(self, 'integrated_layout') and self.integrated_layout:
-                # 子ウィジェットを安全に削除
-                while self.integrated_layout.count():
-                    item = self.integrated_layout.takeAt(0)
-                    if item:
-                        widget = item.widget()
-                        if widget:
-                            widget.setParent(None)
-                            widget.deleteLater()
-
-                        layout = item.layout()
-                        if layout:
-                            self._clear_nested_layout(layout)
-
-                # レイアウトを無効化
-                self.integrated_layout.invalidate()
-
+            self.setStyleSheet(f"""
+                EXIFPanel {{
+                    background-color: {bg_color};
+                    border: 1px solid {border_color};
+                    border-radius: 5px;
+                }}
+            """)
         except Exception as e:
-            if hasattr(self, 'logger_system'):
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "safe_clear_layout_error",
-                    f"安全なレイアウトクリア中にエラー: {str(e)}",
-                )
-
-    def _clear_nested_layout(self, layout):
-        """ネストしたレイアウトを安全にクリア"""
-        try:
-            while layout.count():
-                item = layout.takeAt(0)
-                if item:
-                    widget = item.widget()
-                    if widget:
-                        widget.setParent(None)
-                        widget.deleteLater()
-
-                    nested_layout = item.layout()
-                    if nested_layout:
-                        self._clear_nested_layout(nested_layout)
-        except Exception:
-            pass
-
-    def _get_color_safe(self, color_name: str, fallback: str = "#000000") -> str:
-        """安全な色取得メソッド（フォールバック付き）"""
-        try:
-            if self.theme_manager and hasattr(self.theme_manager, 'get_color'):
-                color = self.theme_manager.get_color(color_name, fallback)
-                if color and color != "None":
-                    return color
-            return fallback
-        except Exception:
-            return fallback
-
-    def _get_color(self, role: str, fallback: str) -> str:
-        try:
-            if self.theme_manager is not None:
-                if hasattr(self.theme_manager, "get_color"):
-                    return str(self.theme_manager.get_color(role, fallback))
-                if hasattr(self.theme_manager, "get_current_colors"):
-                    colors = self.theme_manager.get_current_colors() or {}
-                    if role in colors and isinstance(colors[role], str):
-                        return colors[role]
-            # Qtパレットからのフォールバック（テーマ適用済みのOS/Qt配色に追随）
-            app = QApplication.instance()
-            if app is not None:
-                pal: QPalette = app.palette()
-                if role in ("foreground", "text", "fg"):
-                    return pal.windowText().color().name()
-                if role in ("background", "bg"):
-                    return pal.window().color().name()
-                if role in ("primary", "accent", "selected"):
-                    return pal.highlight().color().name()
-                if role in ("border",):
-                    # 中間色（枠線向け）
-                    return pal.mid().color().name()
-                if role in ("disabled",):
-                    return pal.brush(QPalette.Disabled, QPalette.WindowText).color().name()
-            return fallback
-        except Exception:
-            return fallback
-
-
-
-    def _show_error_message(self, message: str):
-        """エラーメッセージを表示（統合版）"""
-        try:
-            # 既存のウィジェットをクリア
-            for i in reversed(range(self.integrated_layout.count())):
-                child = self.integrated_layout.itemAt(i).widget()
-                if child:
-                    child.deleteLater()
-
-            error_label = QLabel(f"❌ {message}")
-            error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            error_label.setStyleSheet("""
-                QLabel {
-                    color: #e74c3c;
-                    font-style: italic;
-                    font-size: 16px;
-                    padding: 20px;
+            # エラー時はデフォルトスタイルを適用
+            self.setStyleSheet("""
+                EXIFPanel {
+                    background-color: #ffffff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 5px;
                 }
             """)
-            self.integrated_layout.addWidget(error_label)
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "show_error_message"}, AIComponent.KIRO
-            )
-
-    def _refresh_exif_data(self):
-        """EXIF情報を再読み込み"""
-        if self.current_image_path:
-            self._load_exif_data()
-
-    def _show_on_map(self):
-        """地図上に表示"""
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
         try:
-            if self.current_image_path:
-                # 地図表示機能への連携
-                # この部分は後でMAP表示機能と連携する
-                self.logger_system.log_info(
-                    "Map integration request",
-                    {"image_path": str(self.current_image_path)},
-                    AIComponent.KIRO,
-                )
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "show_on_map"}, AIComponent.KIRO
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "exif_panel_theme_change",
+                f"EXIFパネルのテーマ変更: {theme_name}",
             )
+            self._update_theme_styles()
+        except Exception as e:
+            self.logger_system.error(f"EXIFパネルのテーマ変更処理でエラー: {e}")
 
-    def _toggle_debug_info(self):
-        """デバッグ情報の表示/非表示を切り替え"""
+    def _update_theme_styles(self):
+        """テーマに基づいてスタイルを更新"""
         try:
-            is_visible = self.debug_frame.isVisible()
-            self.debug_frame.setVisible(not is_visible)
+            # タイトルラベルのスタイル更新
+            if hasattr(self, 'title_label'):
+                title_fg = self._get_color_safe("foreground", "#2c3e50")
+                title_bg = self._get_color_safe("hover", self._get_color_safe("background", "#ecf0f1"))
+                self.title_label.setStyleSheet(f"""
+                    QLabel {{
+                        font-weight: bold;
+                        font-size: 14px;
+                        color: {title_fg};
+                        padding: 5px;
+                        background-color: {title_bg};
+                        border-radius: 3px;
+                    }}
+                """)
 
-            if not is_visible:
-                self.debug_toggle_button.setText("🔧 デバッグ情報を非表示")
-            else:
-                self.debug_toggle_button.setText("🔧 デバッグ情報を表示")
+            # スクロールエリアのスタイル更新
+            if hasattr(self, 'integrated_scroll_area'):
+                scroll_border = self._get_color_safe("border", "#bdc3c7")
+                scroll_bg = self._get_color_safe("background", "#ffffff")
+                scroll_focus = self._get_color_safe("primary", "#3498db")
+                self.integrated_scroll_area.setStyleSheet(f"""
+                    QScrollArea {{
+                        border: 1px solid {scroll_border};
+                        border-radius: 3px;
+                        background-color: {scroll_bg};
+                    }}
+                    QScrollArea:focus {{
+                        border: 2px solid {scroll_focus};
+                    }}
+                """)
 
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "toggle_debug_info"}, AIComponent.KIRO
-            )
-
-    def _update_debug_info(self, raw_gps_info: list, conversion_info: list):
-        """デバッグ情報を更新"""
-        try:
-            # 生のGPS情報を表示
-            if raw_gps_info:
-                raw_text = "\n".join(raw_gps_info)
-            else:
-                raw_text = "GPS情報なし"
-
-            self.raw_gps_text.setPlainText(raw_text)
-
-            # 座標変換情報を表示
-            if conversion_info:
-                conversion_text = "\n".join(conversion_info)
-            else:
-                conversion_text = "変換情報なし"
-
-            self.conversion_info_label.setText(conversion_text)
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "update_debug_info"}, AIComponent.KIRO
-            )
-
-    def _copy_coordinates(self):
-        """GPS座標をクリップボードにコピー"""
-        try:
-            from PySide6.QtWidgets import QApplication
-
-            # 現在の座標を取得
-            coords = self.get_current_gps_coordinates()
-            if coords:
-                latitude, longitude = coords
-                coord_text = f"{latitude:.6f}, {longitude:.6f}"
-
-                # クリップボードにコピー
-                clipboard = QApplication.clipboard()
-                clipboard.setText(coord_text)
-
-                # ログ出力
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "coordinates_copied",
-                    f"GPS座標をクリップボードにコピー: {coord_text}",
-                    context={"coordinates": coord_text},
-                )
+            # 初期メッセージラベルのスタイル更新
+            if hasattr(self, 'initial_message_label'):
+                msg_color = self._get_color_safe("foreground", "#7f8c8d")
+                msg_bg = self._get_color_safe("background", "#ffffff")
+                self.initial_message_label.setStyleSheet(f"""
+                    QLabel {{
+                        color: {msg_color};
+                        background-color: {msg_bg};
+                        font-style: italic;
+                        font-size: 16px;
+                        padding: 20px;
+                        border: 1px solid {self._get_color_safe("border", "#e0e0e0")};
+                        border-radius: 5px;
+                        margin: 10px;
+                    }}
+                """)
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "copy_coordinates"}, AIComponent.KIRO
-            )
-
-    def get_current_gps_coordinates(self) -> Optional[tuple]:
-        """現在のGPS座標を取得"""
-        try:
-            if self.current_image_path:
-                exif_data = self.image_processor.extract_exif(self.current_image_path)
-                latitude_str = exif_data.get("GPS Latitude")
-                longitude_str = exif_data.get("GPS Longitude")
-
-                # 文字列から数値に変換
-                latitude = None
-                longitude = None
-
-                if latitude_str:
-                    try:
-                        if isinstance(latitude_str, str) and "°" in latitude_str:
-                            latitude = float(latitude_str.replace("°", ""))
-                        elif isinstance(latitude_str, (int, float)):
-                            latitude = float(latitude_str)
-                    except (ValueError, TypeError):
-                        latitude = None
-
-                if longitude_str:
-                    try:
-                        if isinstance(longitude_str, str) and "°" in longitude_str:
-                            longitude = float(longitude_str.replace("°", ""))
-                        elif isinstance(longitude_str, (int, float)):
-                            longitude = float(longitude_str)
-                    except (ValueError, TypeError):
-                        longitude = None
-
-                if latitude is not None and longitude is not None:
-                    return (latitude, longitude)
-
-            return None
-
-        except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.CORE_ERROR, {"operation": "get_gps_coordinates"}, AIComponent.KIRO
-            )
-            return None
+            self.logger_system.error(f"EXIFパネルのテーマスタイル更新でエラー: {e}")
 
     def _is_dark_theme(self) -> bool:
         """現在のテーマがダークテーマかどうかを判定"""

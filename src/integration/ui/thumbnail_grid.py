@@ -72,23 +72,71 @@ class ThumbnailItem(QLabel):
         # Setup UI
         self.setFixedSize(thumbnail_size + 20, thumbnail_size + 40)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet(
-            """
-            QLabel {
-                border: 2px solid transparent;
-                border-radius: 4px;
-                background-color: #f8f9fa;
-                padding: 4px;
-            }
-            QLabel:hover {
-                border-color: #007acc;
-                background-color: #e3f2fd;
-            }
-        """
-        )
+        # テーマ対応のスタイルシートは後で設定
+        self.theme_manager = None  # 後で設定される
+        self._update_thumbnail_style()
 
         # Show placeholder
         self._show_placeholder()
+
+
+    def set_theme_manager(self, theme_manager):
+        """テーママネージャーを設定"""
+        self.theme_manager = theme_manager
+        if theme_manager:
+            if hasattr(theme_manager, 'theme_changed'):
+                theme_manager.theme_changed.connect(self._on_theme_changed)
+            elif hasattr(theme_manager, 'theme_changed_compat'):
+                theme_manager.theme_changed_compat.connect(self._on_theme_changed)
+        self._update_thumbnail_style()
+
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
+        self._update_thumbnail_style()
+
+    def _update_thumbnail_style(self):
+        """テーマに基づいてスタイルを更新"""
+        try:
+            # デフォルト色
+            bg_color = "#f8f9fa"
+            hover_bg = "#e3f2fd"
+            border_color = "#007acc"
+
+            # テーママネージャーから色を取得
+            if self.theme_manager:
+                try:
+                    bg_color = self.theme_manager.get_color("background", "#f8f9fa")
+                    hover_bg = self.theme_manager.get_color("hover", "#e3f2fd")
+                    border_color = self.theme_manager.get_color("primary", "#007acc")
+                except Exception:
+                    pass  # デフォルト色を使用
+
+            self.setStyleSheet(f"""
+                QLabel {{
+                    border: 2px solid transparent;
+                    border-radius: 4px;
+                    background-color: {bg_color};
+                    padding: 4px;
+                }}
+                QLabel:hover {{
+                    border-color: {border_color};
+                    background-color: {hover_bg};
+                }}
+            """)
+        except Exception as e:
+            # エラー時はデフォルトスタイルを適用
+            self.setStyleSheet("""
+                QLabel {
+                    border: 2px solid transparent;
+                    border-radius: 4px;
+                    background-color: #f8f9fa;
+                    padding: 4px;
+                }
+                QLabel:hover {
+                    border-color: #007acc;
+                    background-color: #e3f2fd;
+                }
+            """)
 
     def _show_placeholder(self):
         """Show placeholder while loading"""
@@ -283,6 +331,7 @@ class OptimizedThumbnailGrid(QWidget):
         config_manager: ConfigManager,
         state_manager: StateManager,
         logger_system: LoggerSystem = None,
+        theme_manager: Optional[object] = None,
     ):
         """
         Initialize optimized thumbnail grid
@@ -291,6 +340,7 @@ class OptimizedThumbnailGrid(QWidget):
             config_manager: Configuration manager
             state_manager: State manager
             logger_system: Logging system
+            theme_manager: Theme manager for styling
         """
         super().__init__()
 
@@ -299,6 +349,14 @@ class OptimizedThumbnailGrid(QWidget):
         self.state_manager = state_manager
         self.logger_system = logger_system or LoggerSystem()
         self.error_handler = IntegratedErrorHandler(self.logger_system)
+        self.theme_manager = theme_manager
+
+        # テーマ変更シグナルの接続
+        if self.theme_manager:
+            if hasattr(self.theme_manager, 'theme_changed'):
+                self.theme_manager.theme_changed.connect(self._on_theme_changed)
+            elif hasattr(self.theme_manager, 'theme_changed_compat'):
+                self.theme_manager.theme_changed_compat.connect(self._on_theme_changed)
 
         # Grid settings
         try:
@@ -362,6 +420,27 @@ class OptimizedThumbnailGrid(QWidget):
             "thumbnail_grid_init",
             "Optimized thumbnail grid initialized",
         )
+
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
+        try:
+            # 既存のサムネイルアイテムのスタイルを更新
+            for thumbnail_item in self.thumbnail_items.values():
+                if hasattr(thumbnail_item, '_update_thumbnail_style'):
+                    thumbnail_item._update_thumbnail_style()
+
+            self.logger_system.log_ai_operation(
+                AIComponent.CURSOR,
+                "thumbnail_grid_theme_changed",
+                f"Thumbnail grid theme updated: {theme_name}",
+            )
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "thumbnail_grid_theme_change", "theme": theme_name},
+                AIComponent.CURSOR,
+            )
 
     def _setup_ui(self):
         """Setup the user interface"""
@@ -531,6 +610,7 @@ class OptimizedThumbnailGrid(QWidget):
 
                 # Create thumbnail item
                 thumbnail_item = ThumbnailItem(image_path, self.thumbnail_size)
+                thumbnail_item.set_theme_manager(self.theme_manager)  # テーママネージャーを設定
                 thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
 
                 # Add to layout
@@ -690,6 +770,100 @@ class OptimizedThumbnailGrid(QWidget):
             # Don't log performance monitoring errors to avoid spam
             pass
 
+    def show_loading_state(self, message: str = "読み込み中..."):
+        """Show loading state"""
+        try:
+            # Clear existing thumbnails but preserve grid layout
+            self.clear_thumbnails_safely()
+
+            # Create loading state widget and add to grid
+            loading_widget = QWidget()
+            loading_layout = QVBoxLayout(loading_widget)
+            loading_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            # Loading icon
+            loading_icon = QLabel("⏳")
+            loading_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            loading_icon.setStyleSheet(
+                """
+                QLabel {
+                    font-size: 64px;
+                    color: #007acc;
+                    margin: 30px;
+                }
+            """
+            )
+            loading_layout.addWidget(loading_icon)
+
+            # Loading message
+            loading_title = QLabel(message)
+            loading_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            loading_title.setStyleSheet(
+                """
+                QLabel {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #007acc;
+                    margin: 10px;
+                }
+            """
+            )
+            loading_layout.addWidget(loading_title)
+
+            # Add loading widget to grid layout instead of replacing scroll area content
+            if self.grid_layout:
+                self.grid_layout.addWidget(loading_widget, 0, 0, 1, -1)  # Span all columns
+
+        except Exception as e:
+            self.logger_system.error(f"Loading state display error: {e}")
+
+    def show_error_state(self, message: str = "エラーが発生しました"):
+        """Show error state"""
+        try:
+            # Clear existing thumbnails but preserve grid layout
+            self.clear_thumbnails_safely()
+
+            # Create error state widget
+            error_widget = QWidget()
+            error_layout = QVBoxLayout(error_widget)
+            error_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            # Error icon
+            error_icon = QLabel("❌")
+            error_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            error_icon.setStyleSheet(
+                """
+                QLabel {
+                    font-size: 64px;
+                    color: #dc3545;
+                    margin: 30px;
+                }
+            """
+            )
+            error_layout.addWidget(error_icon)
+
+            # Error message
+            error_title = QLabel(message)
+            error_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            error_title.setStyleSheet(
+                """
+                QLabel {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #dc3545;
+                    margin: 10px;
+                }
+            """
+            )
+            error_layout.addWidget(error_title)
+
+            # Add error widget to grid layout instead of replacing scroll area content
+            if self.grid_layout:
+                self.grid_layout.addWidget(error_widget, 0, 0, 1, -1)  # Span all columns
+
+        except Exception as e:
+            self.logger_system.error(f"Error state display error: {e}")
+
     def show_empty_state(self):
         """Show empty state when no images are found"""
         try:
@@ -768,6 +942,138 @@ class OptimizedThumbnailGrid(QWidget):
                 {"operation": "show_empty_state"},
                 AIComponent.CURSOR,
             )
+
+
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
+        try:
+            self.logger_system.info(f"サムネイルグリッド: テーマ変更を検出 - {theme_name}")
+
+            # 全てのサムネイルアイテムにテーママネージャーを設定
+            for thumbnail_item in self.thumbnail_items:
+                thumbnail_item.set_theme_manager(self.theme_manager)
+
+            # 空状態表示のスタイルも更新
+            self._update_empty_state_style()
+
+        except Exception as e:
+            self.logger_system.error(f"サムネイルグリッドのテーマ変更処理でエラー: {e}")
+
+    def _update_empty_state_style(self):
+        """空状態表示のスタイルを更新"""
+        try:
+            if hasattr(self, 'empty_state_label'):
+                # テーママネージャーから色を取得
+                text_color = "#7f8c8d"
+                bg_color = "#ffffff"
+
+                if self.theme_manager:
+                    try:
+                        text_color = self.theme_manager.get_color("secondary", "#7f8c8d")
+                        bg_color = self.theme_manager.get_color("background", "#ffffff")
+                    except Exception:
+                        pass  # デフォルト色を使用
+
+                self.empty_state_label.setStyleSheet(f"""
+                    QLabel {{
+                        color: {text_color};
+                        background-color: {bg_color};
+                        font-size: 16px;
+                        font-style: italic;
+                        padding: 40px;
+                        border-radius: 8px;
+                    }}
+                """)
+        except Exception as e:
+            self.logger_system.error(f"空状態スタイル更新でエラー: {e}")
+
+
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
+        try:
+            self.logger_system.info(f"サムネイルグリッド: テーマ変更を検出 - {theme_name}")
+
+            # 全てのサムネイルアイテムにテーママネージャーを設定
+            for thumbnail_item in self.thumbnail_items:
+                thumbnail_item.set_theme_manager(self.theme_manager)
+
+            # 空状態表示のスタイルも更新
+            self._update_empty_state_style()
+
+        except Exception as e:
+            self.logger_system.error(f"サムネイルグリッドのテーマ変更処理でエラー: {e}")
+
+    def _update_empty_state_style(self):
+        """空状態表示のスタイルを更新"""
+        try:
+            if hasattr(self, 'empty_state_label'):
+                # テーママネージャーから色を取得
+                text_color = "#7f8c8d"
+                bg_color = "#ffffff"
+
+                if self.theme_manager:
+                    try:
+                        text_color = self.theme_manager.get_color("secondary", "#7f8c8d")
+                        bg_color = self.theme_manager.get_color("background", "#ffffff")
+                    except Exception:
+                        pass  # デフォルト色を使用
+
+                self.empty_state_label.setStyleSheet(f"""
+                    QLabel {{
+                        color: {text_color};
+                        background-color: {bg_color};
+                        font-size: 16px;
+                        font-style: italic;
+                        padding: 40px;
+                        border-radius: 8px;
+                    }}
+                """)
+        except Exception as e:
+            self.logger_system.error(f"空状態スタイル更新でエラー: {e}")
+
+
+    def _on_theme_changed(self, theme_name: str):
+        """テーマ変更時の処理"""
+        try:
+            self.logger_system.info(f"サムネイルグリッド: テーマ変更を検出 - {theme_name}")
+
+            # 全てのサムネイルアイテムにテーママネージャーを設定
+            for thumbnail_item in self.thumbnail_items:
+                thumbnail_item.set_theme_manager(self.theme_manager)
+
+            # 空状態表示のスタイルも更新
+            self._update_empty_state_style()
+
+        except Exception as e:
+            self.logger_system.error(f"サムネイルグリッドのテーマ変更処理でエラー: {e}")
+
+    def _update_empty_state_style(self):
+        """空状態表示のスタイルを更新"""
+        try:
+            if hasattr(self, 'empty_state_label'):
+                # テーママネージャーから色を取得
+                text_color = "#7f8c8d"
+                bg_color = "#ffffff"
+
+                if self.theme_manager:
+                    try:
+                        text_color = self.theme_manager.get_color("secondary", "#7f8c8d")
+                        bg_color = self.theme_manager.get_color("background", "#ffffff")
+                    except Exception:
+                        pass  # デフォルト色を使用
+
+                self.empty_state_label.setStyleSheet(f"""
+                    QLabel {{
+                        color: {text_color};
+                        background-color: {bg_color};
+                        font-size: 16px;
+                        font-style: italic;
+                        padding: 40px;
+                        border-radius: 8px;
+                    }}
+                """)
+        except Exception as e:
+            self.logger_system.error(f"空状態スタイル更新でエラー: {e}")
 
     def cleanup(self):
         """Cleanup resources"""

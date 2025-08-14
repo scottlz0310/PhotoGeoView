@@ -39,7 +39,7 @@ from ..services.file_system_watcher import FileSystemWatcher
 from ..state_manager import StateManager
 
 # from .folder_navigator import EnhancedFolderNavigator  # Removed: Using breadcrumb navigation instead
-from .simple_thumbnail_grid import SimpleThumbnailGrid
+from .thumbnail_grid import OptimizedThumbnailGrid
 
 # Import theme manager and breadcrumb components
 try:
@@ -409,8 +409,8 @@ class IntegratedMainWindow(QMainWindow):
             )
 
         # 2. Thumbnail grid (上段)
-        self.thumbnail_grid = SimpleThumbnailGrid(
-            self.config_manager, self.state_manager, self.logger_system
+        self.thumbnail_grid = OptimizedThumbnailGrid(
+            self.config_manager, self.state_manager, self.logger_system, self.theme_manager_widget
         )
         self.thumbnail_grid.setMinimumHeight(200)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.thumbnail_grid)
@@ -560,7 +560,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             self.logger_system.info("Initializing breadcrumb address bar...")
-            
+
             # Initialize file system watcher if not already available
             if not hasattr(self, 'file_system_watcher'):
                 self.logger_system.info("Creating file system watcher...")
@@ -1041,8 +1041,7 @@ class IntegratedMainWindow(QMainWindow):
             # Breadcrumb bar updates are handled by breadcrumb itself
 
             # Update status
-            if hasattr(self, "status_bar") and self.status_bar:
-                self.status_bar.showMessage(f"Navigated to: {folder_path}")
+            self._safe_status_message(f"Navigated to: {folder_path}")
 
             # Emit signal for other components
             self.folder_changed.emit(folder_path)
@@ -1055,19 +1054,27 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.CURSOR,
             )
 
+    def _safe_status_message(self, message: str, timeout_ms: int = 2000):
+        """安全なステータスメッセージ表示"""
+        try:
+            if hasattr(self, "status_bar") and self.status_bar:
+                self.status_bar.showMessage(message, timeout_ms)
+        except Exception:
+            # ステータスバーが利用できない場合は無視
+            pass
+
     def _on_status_message(self, message: str, timeout_ms: int = 3000):
         """Handle status message from components"""
 
         try:
-            if hasattr(self, "status_bar") and self.status_bar:
-                self.status_bar.showMessage(message, timeout_ms)
+            self._safe_status_message(message, timeout_ms)
 
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO,
-                    "status_message_displayed",
-                    f"ステータスメッセージ表示: {message}",
-                    level="DEBUG",
-                )
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "status_message_displayed",
+                f"ステータスメッセージ表示: {message}",
+                level="DEBUG",
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1085,7 +1092,7 @@ class IntegratedMainWindow(QMainWindow):
             self.state_manager.update_state(selected_image=image_path)
 
             # Update status
-            self.status_bar.showMessage(f"Selected: {image_path.name}")
+            self._safe_status_message(f"Selected: {image_path.name}")
 
             # Update EXIF panel
             if self.exif_panel:
@@ -1696,7 +1703,7 @@ class IntegratedMainWindow(QMainWindow):
                 if self.thumbnail_grid:
                     if image_files:
                         # Update with discovered images
-                        self.thumbnail_grid.update_image_list(image_files)
+                        self.thumbnail_grid.set_image_list(image_files)
 
                         # Update status bar
                         if hasattr(self, "status_bar") and self.status_bar:
