@@ -10,7 +10,7 @@ Author: Kiro AI Integration System
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QEvent
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QApplication,
@@ -57,6 +57,8 @@ class EXIFPanel(QWidget):
         theme_manager: Optional[object] = None,
     ):
         super().__init__()
+        # QSSで特定できるようにオブジェクト名を設定
+        self.setObjectName("exifPanel")
 
         self.config_manager = config_manager
         self.state_manager = state_manager
@@ -82,8 +84,28 @@ class EXIFPanel(QWidget):
 
         # UI初期化
         self._setup_ui()
+        # 背景の自動塗りつぶしを有効化
+        try:
+            self.setAutoFillBackground(True)
+        except Exception:
+            pass
 
         # 高さ設定の復元は不要（固定高さのため）
+
+    def changeEvent(self, event):  # type: ignore[override]
+        """Qtのスタイル/パレット変更時に再適用"""
+        try:
+            if event and event.type() in (
+                QEvent.Type.PaletteChange,
+                QEvent.Type.ApplicationPaletteChange,
+                QEvent.Type.ThemeChange,
+            ):
+                self._apply_panel_theme()
+                self._update_theme_styles()
+        except Exception:
+            pass
+        finally:
+            super().changeEvent(event)
 
     def _get_color(self, color_key: str, default: str = "#000000") -> str:
         """テーママネージャーから色を取得"""
@@ -116,16 +138,20 @@ class EXIFPanel(QWidget):
             border_color = self._get_color("border", "#e0e0e0")
 
             self.setStyleSheet(f"""
-                EXIFPanel {{
+                QWidget#exifPanel {{
                     background-color: {bg_color};
                     border: 1px solid {border_color};
                     border-radius: 5px;
                 }}
             """)
+            # パレットも同期
+            pal = self.palette()
+            pal.setColor(self.backgroundRole(), pal.window().color())
+            self.setPalette(pal)
         except Exception as e:
             # エラー時はデフォルトスタイルを適用
             self.setStyleSheet("""
-                EXIFPanel {
+                QWidget#exifPanel {
                     background-color: #ffffff;
                     border: 1px solid #e0e0e0;
                     border-radius: 5px;
@@ -1240,7 +1266,7 @@ class EXIFPanel(QWidget):
             border_color = self._get_color("border", "#e0e0e0")
 
             self.setStyleSheet(f"""
-                EXIFPanel {{
+                QWidget#exifPanel {{
                     background-color: {bg_color};
                     border: 1px solid {border_color};
                     border-radius: 5px;
@@ -1249,7 +1275,7 @@ class EXIFPanel(QWidget):
         except Exception as e:
             # エラー時はデフォルトスタイルを適用
             self.setStyleSheet("""
-                EXIFPanel {
+                QWidget#exifPanel {
                     background-color: #ffffff;
                     border: 1px solid #e0e0e0;
                     border-radius: 5px;

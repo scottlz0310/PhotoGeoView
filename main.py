@@ -14,6 +14,7 @@ Author: AI Integration Team (Copilot + Cursor + Kiro)
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -110,10 +111,24 @@ def main():
         logger.info(qt_msg)
         print(qt_msg)
 
-        # WebEngine用の設定（QApplication作成前に必要）
+        # WebEngine/WSL対策（QApplication作成前に必要）
         try:
             from PySide6.QtCore import Qt
-            QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+            # GPUが使えない環境（WSL/リモート等）での安定化
+            os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+            os.environ.setdefault(
+                "QTWEBENGINE_CHROMIUM_FLAGS",
+                "--no-sandbox --disable-gpu --disable-gpu-compositing "
+                "--disable-software-rasterizer --in-process-gpu",
+            )
+            os.environ.setdefault("QT_OPENGL", "software")
+
+            QApplication.setAttribute(
+                Qt.ApplicationAttribute.AA_ShareOpenGLContexts
+            )
+            QApplication.setAttribute(
+                Qt.ApplicationAttribute.AA_UseSoftwareOpenGL
+            )
             print("✅ WebEngine用OpenGL設定完了")
         except Exception as e:
             print(f"⚠️  WebEngine用設定エラー: {e}")

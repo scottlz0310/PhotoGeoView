@@ -32,8 +32,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import QMutex, QObject, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPixmap
+from PySide6.QtCore import QMutex, QObject, Qt, QTimer, Signal, QEvent
+from PySide6.QtGui import QColor, QFont, QPainter, QPixmap, QImageReader, QImage
 from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
@@ -94,6 +94,24 @@ class ThumbnailItem(QLabel):
         """テーマ変更時の処理"""
         self._update_thumbnail_style()
 
+    def changeEvent(self, event):  # type: ignore[override]
+        """スタイル/パレット変更で再適用"""
+        try:
+            if event and event.type() in (
+                QEvent.Type.PaletteChange,
+                QEvent.Type.StyleChange,
+                QEvent.Type.ThemeChange,
+                QEvent.Type.ApplicationPaletteChange,
+                QEvent.Type.Polish,
+                QEvent.Type.PolishRequest,
+                QEvent.Type.UpdateRequest,
+            ):
+                self._update_thumbnail_style()
+        except Exception:
+            pass
+        finally:
+            super().changeEvent(event)
+
     def _update_thumbnail_style(self):
         """テーマに基づいてスタイルを更新"""
         try:
@@ -101,13 +119,34 @@ class ThumbnailItem(QLabel):
             bg_color = "#f8f9fa"
             hover_bg = "#e3f2fd"
             border_color = "#007acc"
+            fg_color = "#2c3e50"
 
             # テーママネージャーから色を取得
             if self.theme_manager:
                 try:
                     bg_color = self.theme_manager.get_color("background", "#f8f9fa")
-                    hover_bg = self.theme_manager.get_color("hover", "#e3f2fd")
+            # ダークテーマではホバーを暗めに（明るくし過ぎない）
+            hover_bg = self.theme_manager.get_color("hover", "#e3f2fd")
+            try:
+                current = self.theme_manager.get_current_theme()
+                if isinstance(current, str) and "dark" in current.lower():
+                    # hoverを背景より少しだけ暗いグレーへ補正
+                    base_bg = self.theme_manager.get_color("background", "#2b2b2b")
+                    def _darken(hexcol: str, factor: float = 0.12) -> str:
+                        if hexcol.startswith('#') and len(hexcol) == 7:
+                            r = int(hexcol[1:3], 16)
+                            g = int(hexcol[3:5], 16)
+                            b = int(hexcol[5:7], 16)
+                            r = max(0, int(r*(1-factor)))
+                            g = max(0, int(g*(1-factor)))
+                            b = max(0, int(b*(1-factor)))
+                            return f"#{r:02x}{g:02x}{b:02x}"
+                        return hexcol
+                    hover_bg = _darken(base_bg)
+            except Exception:
+                pass
                     border_color = self.theme_manager.get_color("primary", "#007acc")
+                    fg_color = self.theme_manager.get_color("foreground", "#2c3e50")
                 except Exception:
                     pass  # デフォルト色を使用
 
@@ -116,6 +155,7 @@ class ThumbnailItem(QLabel):
                     border: 2px solid transparent;
                     border-radius: 4px;
                     background-color: {bg_color};
+                    color: {fg_color};
                     padding: 4px;
                 }}
                 QLabel:hover {{
@@ -141,12 +181,32 @@ class ThumbnailItem(QLabel):
     def _show_placeholder(self):
         """Show placeholder while loading"""
 
+        # テーマに追随したプレースホルダー
+        bg = "#e9ecef"
+        text_col = "#6c757d"
+        try:
+            if self.theme_manager:
+                is_dark_bg = False
+                bg_candidate = self.theme_manager.get_color("hover", None) or self.theme_manager.get_color("background", None)
+                if bg_candidate:
+                    bg = bg_candidate
+                text_col = self.theme_manager.get_color("secondary", text_col)
+                # 明度でダークかを概算
+                if bg.startswith("#") and len(bg) == 7:
+                    r, g, b = int(bg[1:3], 16), int(bg[3:5], 16), int(bg[5:7], 16)
+                    lightness = (0.2126*r + 0.7152*g + 0.0722*b) / 255.0
+                    is_dark_bg = lightness < 0.5
+                if is_dark_bg:
+                    text_col = self.theme_manager.get_color("foreground", "#d0d3d4")
+        except Exception:
+            pass
+
         placeholder = QPixmap(self.thumbnail_size, self.thumbnail_size)
-        placeholder.fill(QColor("#e9ecef"))
+        placeholder.fill(QColor(bg))
 
         # Draw placeholder text
         painter = QPainter(placeholder)
-        painter.setPen(QColor("#6c757d"))
+        painter.setPen(QColor(text_col))
         painter.setFont(QFont("Arial", 10))
         painter.drawText(placeholder.rect(), Qt.AlignmentFlag.AlignCenter, "Loading...")
         painter.end()
@@ -174,11 +234,30 @@ class ThumbnailItem(QLabel):
 
     def _show_error(self):
         """Show error placeholder"""
+        # テーマに追随したエラープレースホルダー
+        err_bg = "#f8d7da"
+        err_fg = "#721c24"
+        try:
+            if self.theme_manager:
+                primary_err = self.theme_manager.get_color("error", err_fg)
+                err_fg = primary_err
+                # 背景はエラー色をやや薄く
+                if primary_err.startswith('#') and len(primary_err) == 7:
+                    r = int(primary_err[1:3], 16)
+                    g = int(primary_err[3:5], 16)
+                    b = int(primary_err[5:7], 16)
+                    r = min(255, int(r + (255 - r) * 0.8))
+                    g = min(255, int(g + (255 - g) * 0.8))
+                    b = min(255, int(b + (255 - b) * 0.8))
+                    err_bg = f"#{r:02x}{g:02x}{b:02x}"
+        except Exception:
+            pass
+
         error_pixmap = QPixmap(self.thumbnail_size, self.thumbnail_size)
-        error_pixmap.fill(QColor("#f8d7da"))
+        error_pixmap.fill(QColor(err_bg))
 
         painter = QPainter(error_pixmap)
-        painter.setPen(QColor("#721c24"))
+        painter.setPen(QColor(err_fg))
         painter.setFont(QFont("Arial", 10))
         painter.drawText(error_pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "Error")
         painter.end()
@@ -225,7 +304,7 @@ class ThumbnailLoader(QObject):
     Asynchronous thumbnail loader with Kiro optimization
     """
 
-    thumbnail_loaded = Signal(Path, QPixmap)
+    thumbnail_loaded = Signal(Path, QImage)
     loading_progress = Signal(int, int)  # current, total
 
     def __init__(self, logger_system: LoggerSystem):
@@ -237,7 +316,12 @@ class ThumbnailLoader(QObject):
         self.recent_load_times = []
 
     def load_thumbnails(self, image_paths: List[Path], thumbnail_size: int):
-        """Load thumbnails for the given image paths"""
+        """Load thumbnails for the given image paths (I/O thread)
+
+        - Uses QImageReader with setAutoTransform(True)
+        - Reads scaled images directly to avoid loading full-size bitmaps
+        - Emits QImage (thread-safe) instead of QPixmap
+        """
         try:
             total = len(image_paths)
             loaded = 0
@@ -252,27 +336,45 @@ class ThumbnailLoader(QObject):
                     self.thumbnail_loaded.emit(image_path, self.cache[cache_key])
                 else:
                     self.cache_misses += 1
-                    # Load thumbnail
-                    pixmap = QPixmap(str(image_path))
-                    if not pixmap.isNull():
-                        # Scale to thumbnail size
-                        scaled_pixmap = pixmap.scaled(
+                    # Load thumbnail as QImage (thread-safe)
+                    reader = QImageReader(str(image_path))
+                    reader.setAutoTransform(True)
+                    try:
+                        size = reader.size()
+                        if size.width() > 0 and size.height() > 0:
+                            # 等比で最大サイドをthumbnail_sizeに合わせる
+                            w, h = size.width(), size.height()
+                            if w >= h:
+                                scaled_w = thumbnail_size
+                                scaled_h = max(1, int(h * (thumbnail_size / max(1, w))))
+                            else:
+                                scaled_h = thumbnail_size
+                                scaled_w = max(1, int(w * (thumbnail_size / max(1, h))))
+                            reader.setScaledSize(Qt.QSize(scaled_w, scaled_h))
+                    except Exception:
+                        pass
+
+                    image = reader.read()
+                    if not image.isNull():
+                        # さらに最終スケールを保証
+                        scaled_img = image.scaled(
                             thumbnail_size,
                             thumbnail_size,
                             Qt.AspectRatioMode.KeepAspectRatio,
                             Qt.TransformationMode.SmoothTransformation,
                         )
-                        # Cache the result
-                        self.cache[cache_key] = scaled_pixmap
-                        self.thumbnail_loaded.emit(image_path, scaled_pixmap)
+                        self.cache[cache_key] = scaled_img
+                        self.thumbnail_loaded.emit(image_path, scaled_img)
                     else:
-                        # Create error placeholder
-                        error_pixmap = QPixmap(thumbnail_size, thumbnail_size)
-                        error_pixmap.fill(QColor("#f8d7da"))
-                        self.thumbnail_loaded.emit(image_path, error_pixmap)
+                        # Create error placeholder image
+                        err = QImage(thumbnail_size, thumbnail_size, QImage.Format.Format_RGB32)
+                        err.fill(QColor("#f8d7da"))
+                        self.thumbnail_loaded.emit(image_path, err)
 
                 loaded += 1
-                self.loading_progress.emit(loaded, total)
+                # 進捗イベントのスロットル（UIスレッド負荷軽減）
+                if loaded == total or (loaded % 16 == 0):
+                    self.loading_progress.emit(loaded, total)
 
                 # Track load time
                 load_time = time.time() - start_time
@@ -383,16 +485,19 @@ class OptimizedThumbnailGrid(QWidget):
 
         # Threading - 初期化を最初に行う
         self.load_mutex = QMutex()
+        # I/O主体のサムネイル読み込みはワーカー数を絞る（過剰並列でディスク詰まり防止）
         self.thumbnail_executor = ThreadPoolExecutor(
-            max_workers=4, thread_name_prefix="thumbnail"
+            max_workers=2, thread_name_prefix="thumbnail"
         )
         self.exif_executor = ThreadPoolExecutor(
-            max_workers=2, thread_name_prefix="exif"
+            max_workers=1, thread_name_prefix="exif"
         )
 
         # UI components initialization
         self.performance_label = None
         self.progress_indicator = None
+        # Theme reapply guard
+        self._theme_updating = False
 
         # UI components
         self.scroll_area: Optional[QScrollArea] = None
@@ -421,6 +526,31 @@ class OptimizedThumbnailGrid(QWidget):
             "Optimized thumbnail grid initialized",
         )
 
+    def changeEvent(self, event):  # type: ignore[override]
+        """Qtの各種変更イベントでテーマを再適用"""
+        try:
+            if (
+                not getattr(self, "_theme_updating", False)
+                and event
+                and event.type() in (
+                    QEvent.Type.PaletteChange,
+                    QEvent.Type.ApplicationPaletteChange,
+                    QEvent.Type.ThemeChange,
+                )
+            ):
+                self._theme_updating = True
+                try:
+                    self._apply_container_theme()
+                    for item in self.thumbnail_items.values():
+                        if hasattr(item, "_update_thumbnail_style"):
+                            item._update_thumbnail_style()
+                finally:
+                    self._theme_updating = False
+        except Exception:
+            pass
+        finally:
+            super().changeEvent(event)
+
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
         try:
@@ -428,6 +558,10 @@ class OptimizedThumbnailGrid(QWidget):
             for thumbnail_item in self.thumbnail_items.values():
                 if hasattr(thumbnail_item, '_update_thumbnail_style'):
                     thumbnail_item._update_thumbnail_style()
+
+            # コンテナのスタイルを更新
+            if hasattr(self, '_apply_container_theme'):
+                self._apply_container_theme()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -451,10 +585,18 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Controls
             self.controls_widget = self._create_controls()
+            try:
+                self.controls_widget.setObjectName("thumbnailControls")
+            except Exception:
+                pass
             layout.addWidget(self.controls_widget)
 
             # Scroll area for thumbnails
             self.scroll_area = QScrollArea()
+            try:
+                self.scroll_area.setObjectName("thumbnailScrollArea")
+            except Exception:
+                pass
             self.scroll_area.setWidgetResizable(True)
             self.scroll_area.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAsNeeded
@@ -465,6 +607,10 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Grid widget
             self.grid_widget = QWidget()
+            try:
+                self.grid_widget.setObjectName("thumbnailGridContainer")
+            except Exception:
+                pass
             self.grid_layout = QGridLayout(self.grid_widget)
             self.grid_layout.setSpacing(self.spacing)
             self.grid_layout.setAlignment(
@@ -474,10 +620,41 @@ class OptimizedThumbnailGrid(QWidget):
             self.scroll_area.setWidget(self.grid_widget)
             layout.addWidget(self.scroll_area)
 
+            # 初期テーマ適用
+            self._apply_container_theme()
+
         except Exception as e:
             self.error_handler.handle_error(
                 e, ErrorCategory.UI_ERROR, {"operation": "setup_ui"}, AIComponent.CURSOR
             )
+
+    def _apply_container_theme(self):
+        """テーマに応じてスクロールエリアやコントロールの背景/色を調整"""
+        try:
+            bg = "#ffffff"
+            fg = "#000000"
+            border = "#dee2e6"
+            if self.theme_manager:
+                bg = self.theme_manager.get_color("background", bg)
+                fg = self.theme_manager.get_color("foreground", fg)
+                border = self.theme_manager.get_color("border", border)
+
+            if self.controls_widget:
+                self.controls_widget.setStyleSheet(
+                    f"QWidget#thumbnailControls {{ background-color: {bg}; color: {fg}; }}"
+                )
+
+            if self.scroll_area:
+                self.scroll_area.setStyleSheet(
+                    f"QScrollArea#thumbnailScrollArea {{ background-color: {bg}; border: 1px solid {border}; }}"
+                )
+
+            if self.grid_widget:
+                self.grid_widget.setStyleSheet(
+                    f"QWidget#thumbnailGridContainer {{ background-color: {bg}; color: {fg}; }}"
+                )
+        except Exception:
+            pass
 
     def _create_controls(self) -> QWidget:
         """Create control widgets"""
@@ -632,9 +809,12 @@ class OptimizedThumbnailGrid(QWidget):
         try:
             if self.image_list:
                 # Submit thumbnail loading task to thread pool
+                # 大量画像での一括読み込みによるI/Oスパイクを避けるため、先頭から一定数に制限し、
+                # 全部読み込みはバックグラウンド続行。
+                preload = self.image_list[:256]
                 future = self.thumbnail_executor.submit(
                     self.thumbnail_loader.load_thumbnails,
-                    self.image_list,
+                    preload,
                     self.thumbnail_size
                 )
                 future.add_done_callback(self._on_loading_complete)
@@ -670,11 +850,13 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
             )
 
-    def _on_thumbnail_loaded(self, image_path: Path, pixmap: QPixmap):
+    def _on_thumbnail_loaded(self, image_path: Path, image: QImage):
         """Handle thumbnail loaded"""
         try:
             if image_path in self.thumbnail_items:
                 thumbnail_item = self.thumbnail_items[image_path]
+                # QPixmapはGUIスレッドで生成
+                pixmap = QPixmap.fromImage(image)
                 thumbnail_item.set_thumbnail(pixmap)
                 self.loaded_count += 1
 
