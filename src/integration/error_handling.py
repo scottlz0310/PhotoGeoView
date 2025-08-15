@@ -171,6 +171,11 @@ class IntegratedErrorHandler:
 
         context = context or {}
 
+        # 型チェック: categoryがErrorCategory型であることを確認
+        if not isinstance(category, ErrorCategory):
+            # 文字列が渡された場合は、デフォルトのErrorCategoryを使用
+            category = ErrorCategory.CORE_ERROR
+
         # Determine severity based on error type and category
         severity = self._determine_severity(error, category)
 

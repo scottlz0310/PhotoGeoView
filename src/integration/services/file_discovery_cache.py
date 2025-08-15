@@ -102,7 +102,8 @@ class FolderScanCache:
         try:
             current_mtime = self.folder_path.stat().st_mtime
             expected_mtime = int(self.cache_key.split("_")[-1])
-            return current_mtime != expected_mtime
+            # 浮動小数点数と整数の比較を適切に行う
+            return abs(current_mtime - expected_mtime) > 1.0  # 1秒以上の差がある場合のみ期限切れ
         except (OSError, FileNotFoundError, ValueError):
             return True
 
@@ -447,28 +448,15 @@ class FileDiscoveryCache:
             return False
 
     def get_cached_folder_scan(self, folder_path: Path) -> Optional[FolderScanCache]:
-        """
-        キャッシュされたフォルダスキャン結果を取得
-
-        Args:
-            folder_path: フォルダパス
-
-        Returns:
-            キャッシュされた結果、またはNone
-        """
-
+        """キャッシュされたフォルダスキャン結果を取得"""
         try:
             with self._lock:
-                # キャッシュキーを生成
+                # FolderScanCacheと同じキャッシュキー生成ロジックを使用
                 try:
                     folder_stat = folder_path.stat()
-                    cache_key = (
-                        f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
-                    )
+                    cache_key = f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
                 except (OSError, FileNotFoundError):
-                    self.folder_metrics.misses += 1
-                    self.folder_metrics.update_hit_rate()
-                    return None
+                    cache_key = f"folder_{hash(str(folder_path))}_{int(time.time())}"
 
                 # キャッシュから取得
                 if cache_key in self._folder_cache:
@@ -506,9 +494,6 @@ class FileDiscoveryCache:
                     return folder_cache
 
                 # キャッシュミス
-                self.folder_metrics.misses += 1
-                self.folder_metrics.update_hit_rate()
-
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "folder_cache_miss",
