@@ -14,6 +14,7 @@ cache/
 .coverage
 htmlcov/
 coverage.xml
+temp/
 
 # PhotoGeoView固有のキャッシュ（個人的な画像情報含む）
 cache/thumbnails/
@@ -68,6 +69,10 @@ venv/
 *.backup
 *.bak
 *~
+.kiro_archive/
+archive/
+config_backup/
+demo_data/
 
 # その他除外したい一時ファイル
 *.spec
