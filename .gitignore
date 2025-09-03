@@ -51,3 +51,13 @@ build/
 *.egg-info/
 *.whl
 *.tar.gz
+
+# Added by add-autogen-gitignore.ps1 on 2025-09-03T15:56:25.7592149+09:00
+*.egg
+.env
+.env.*
+.vscode.bak.*
+uv.lock
+*.sqlite3
+*.db
+node_modules/
