@@ -1,0 +1,143 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+*.whl
+*.tar.gz
+
+# Virtual environments
+.venv/
+venv/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.tox/
+
+# Cache directories
+.cache/
+cache/
+.mypy_cache/
+.ruff_cache/
+temp/
+
+# PhotoGeoView specific cache
+cache/thumbnails/
+.thumbnails/
+.thumb/
+
+# Configuration files
+config/config.json
+config/qt_theme_settings.json
+config/qt_theme_user_settings.json
+config/app_config.json
+config/application_state.json
+config/migration_report.json
+config/migration_backups/
+config/custom_themes/
+config/themes/
+config/logging_config.json
+config/performance_config.json
+config/error_monitoring_config.json
+config/copilot_config.json
+config/cursor_config.json
+config/kiro_config.json
+config.local.json
+
+# Application state
+state/
+state/app_state.json
+state/app_state.backup
+
+# Environment files
+.env
+.env.local
+
+# Log files
+logs/
+*.log
+
+# Test reports
+tests/reports/
+tests/cache/
+
+# OS specific
+.DS_Store
+Thumbs.db
+thumbs.db
+ehthumbs.db
+
+# IDE
+.vscode/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.backup
+*.bak
+.kiro_archive/
+archive/
+config_backup/
+
+# Lock files
+*.lock
+uv.lock
+
+# Dependencies
+requirements.txt
+
+# Demo data
+demo_data/
+
+# CI Simulation Tool
+reports/
+reports/ci-simulation/
+reports/ci-build/
+.kiro/
+.kiro/ci-history/
+temp/ci-simulation/
+*.benchmark.json
+.ci_cache/
+ci_report_*.md
+ci_report_*.json
+build/ci-reports/
+deployment_manifest.json
+performance_baseline.json
+
+# GitHub Actions and CI logs
+github_actions_log*.txt
+*.actions.log
+ci_logs/
+.github/logs/
+
+# Other temporary files
+*.spec
+*.ini
+*.html
