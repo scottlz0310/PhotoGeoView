@@ -1,0 +1,108 @@
+{
+  "migration_timestamp": "2025-07-30T20:51:39.952193",
+  "summary": {
+    "cursor_bld": {
+      "total_operations": 3,
+      "successful": 2,
+      "partial": 0,
+      "failed": 0,
+      "skipped": 1,
+      "total_migrated": 3,
+      "total_errors": 0
+    },
+    "cs4_coding": {
+      "total_operations": 2,
+      "successful": 1,
+      "partial": 0,
+      "failed": 0,
+      "skipped": 1,
+      "total_migrated": 1,
+      "total_errors": 0
+    },
+    "legacy": {
+      "total_operations": 2,
+      "successful": 0,
+      "partial": 1,
+      "failed": 0,
+      "skipped": 1,
+      "total_migrated": 12,
+      "total_errors": 1
+    }
+  },
+  "detailed_results": {
+    "cursor_bld": [
+      {
+        "source_type": "cursor_bld_image_cache",
+        "target_model": "ImageMetadata",
+        "status": "success",
+        "migrated_count": 2,
+        "error_count": 0,
+        "warning_count": 1,
+        "validation_issues": 0
+      },
+      {
+        "source_type": "cursor_bld_theme_data",
+        "target_model": "ThemeConfiguration",
+        "status": "success",
+        "migrated_count": 1,
+        "error_count": 0,
+        "warning_count": 1,
+        "validation_issues": 0
+      },
+      {
+        "source_type": "cursor_bld_ui_state",
+        "target_model": "ApplicationState",
+        "status": "skipped",
+        "migrated_count": 0,
+        "error_count": 0,
+        "warning_count": 2,
+        "validation_issues": 0
+      }
+    ],
+    "cs4_coding": [
+      {
+        "source_type": "cs4_coding_exif_cache",
+        "target_model": "ImageMetadata",
+        "status": "success",
+        "migrated_count": 1,
+        "error_count": 0,
+        "warning_count": 1,
+        "validation_issues": 0
+      },
+      {
+        "source_type": "cs4_coding_map_data",
+        "target_model": "ImageMetadata",
+        "status": "skipped",
+        "migrated_count": 0,
+        "error_count": 0,
+        "warning_count": 2,
+        "validation_issues": 0
+      }
+    ],
+    "legacy": [
+      {
+        "source_type": "legacy_database",
+        "target_model": "ImageMetadata",
+        "status": "partial",
+        "migrated_count": 12,
+        "error_count": 1,
+        "warning_count": 1,
+        "validation_issues": 12
+      },
+      {
+        "source_type": "legacy_settings",
+        "target_model": "ApplicationState",
+        "status": "skipped",
+        "migrated_count": 0,
+        "error_count": 0,
+        "warning_count": 2,
+        "validation_issues": 0
+      }
+    ]
+  },
+  "overall_summary": {
+    "total_migrated_objects": 16,
+    "total_errors": 1,
+    "migration_status": "partial"
+  }
+}

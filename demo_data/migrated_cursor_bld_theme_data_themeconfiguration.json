@@ -1,0 +1,40 @@
+[
+  {
+    "name": "dark_theme",
+    "display_name": "Dark Theme",
+    "description": "",
+    "version": "1.0.0",
+    "author": "",
+    "qt_theme_name": "dark",
+    "style_sheet": "QWidget { background-color: #2b2b2b; }",
+    "color_scheme": {
+      "background": "#2b2b2b",
+      "foreground": "#ffffff",
+      "primary": "#007acc",
+      "secondary": "#6c757d"
+    },
+    "icon_theme": "default",
+    "window_style": {},
+    "button_style": {},
+    "menu_style": {},
+    "toolbar_style": {},
+    "accessibility_features": {
+      "high_contrast": false,
+      "large_fonts": false,
+      "screen_reader_support": true,
+      "keyboard_navigation": true,
+      "focus_indicators": true
+    },
+    "performance_settings": {
+      "animation_enabled": true,
+      "transparency_enabled": true,
+      "shadow_effects": true,
+      "gradient_rendering": true,
+      "anti_aliasing": true
+    },
+    "custom_properties": {},
+    "created_date": "2025-07-30T20:51:39.948709",
+    "last_modified": "2025-07-30T20:51:39.948710",
+    "usage_count": 0
+  }
+]

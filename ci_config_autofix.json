@@ -1,0 +1,26 @@
+{
+    "auto_fix": true,
+    "output_directory": "reports/ci-simulation",
+    "parallel_execution": true,
+    "timeout_seconds": 300,
+    "python_versions": [
+        "system"
+    ],
+    "enabled_checks": [
+        "code_quality"
+    ],
+    "checkers": {
+        "code_quality": {
+            "black": {
+                "line_length": 88,
+                "target_version": [
+                    "py39"
+                ]
+            },
+            "isort": {
+                "profile": "black",
+                "line_length": 88
+            }
+        }
+    }
+}

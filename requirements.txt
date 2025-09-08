@@ -1,0 +1,8 @@
+# Deprecated: use pyproject.toml for dependency management.
+# This file remains to support legacy workflows. It installs the package
+# and resolves dependencies from pyproject.toml.
+
+-e .
+
+# If you specifically need CI/dev extras, you can use:
+# -e .[ci]

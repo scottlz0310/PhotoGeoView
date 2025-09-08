@@ -1,0 +1,14 @@
+{
+  "theme_system": {
+    "qt_theme_manager": true,
+    "theme_count": 16,
+    "custom_themes": true,
+    "theme_validation": true
+  },
+  "ui_optimization": {
+    "fast_thumbnails": true,
+    "smooth_scrolling": true,
+    "responsive_layout": true,
+    "accessibility_features": true
+  }
+}

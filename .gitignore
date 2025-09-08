@@ -35,13 +35,13 @@ venv/
 htmlcov/
 coverage.xml
 .tox/
+temp/
 
 # Cache directories
 .cache/
 cache/
 .mypy_cache/
 .ruff_cache/
-temp/
 
 # PhotoGeoView specific cache
 cache/thumbnails/
