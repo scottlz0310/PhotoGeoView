@@ -117,7 +117,8 @@ requirements.txt
 demo_data/
 
 # CI Simulation Tool
-reports/
+reports/*
+!reports/.gitkeep
 reports/ci-simulation/
 reports/ci-build/
 .kiro/
