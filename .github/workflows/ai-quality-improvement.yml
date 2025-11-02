@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Python ${{ env.PYTHON_VERSION }} をセットアップ
       uses: actions/setup-python@v5
@@ -77,7 +77,7 @@ jobs:
 
     steps:
     - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: 解析結果をダウンロード
       uses: actions/download-artifact@v4
@@ -120,7 +120,7 @@ jobs:
 
     steps:
     - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -162,7 +162,7 @@ jobs:
 
     steps:
     - name: リポジトリをチェックアウト
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: 解析結果をダウンロード
       uses: actions/download-artifact@v4
