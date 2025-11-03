@@ -297,7 +297,6 @@ class AppController:
     async def emit_event(self, event_name: str, data: Dict[str, Any] = None):
         """Emit an event to all registered handlers"""
 
-        handlers = []
         with self.event_lock:
             handlers = self.event_handlers.get(event_name, []).copy()
 
@@ -327,8 +326,7 @@ class AppController:
     async def _on_image_selected(self, data: Dict[str, Any]):
         """Handle image selection event"""
 
-        image_path = data.get("image_path")
-        if image_path:
+        if image_path := data.get("image_path"):
             self.app_state.selected_image = Path(image_path)
             self.app_state.update_activity()
 
@@ -338,8 +336,7 @@ class AppController:
     async def _on_folder_changed(self, data: Dict[str, Any]):
         """Handle folder change event"""
 
-        folder_path = data.get("folder_path")
-        if folder_path:
+        if folder_path := data.get("folder_path"):
             folder_path = Path(folder_path)
             self.app_state.current_folder = folder_path
             self.app_state.add_to_history(folder_path)

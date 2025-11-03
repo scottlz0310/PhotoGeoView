@@ -59,27 +59,36 @@ folium>=0.14.0             # 古い（最新は0.18.x）
 **モダンPython機能の活用**
 
 実施内容:
-1. ✅ 型ヒントのモダン化（models.py）
-   - `Optional[X]` → `X | None`
-   - `List[X]` → `list[X]`
-   - `Dict[K, V]` → `dict[K, V]`  
-   - `Tuple[X, Y]` → `tuple[X, Y]`
-   - Python 3.10+の組み込み型を活用
-2. ✅ 型安全性の向上
-   - 関数戻り値型アノテーションを追加
-   - より厳密な型定義（`tuple[X, Y] | None`）
-3. ✅ テスト動作確認
-   - pytest で正常動作確認
-   - mypy で型チェック実施
 
-適用範囲:
+#### 4.1 型ヒントのモダン化 ✅
 - `src/integration/models.py` (396行) - 完全モダン化
-- 他ファイルは段階的に適用可能
+  - `Optional[X]` → `X | None`
+  - `List[X]` → `list[X]`
+  - `Dict[K, V]` → `dict[K, V]`  
+  - `Tuple[X, Y]` → `tuple[X, Y]`
+  - Python 3.10+の組み込み型を活用
+  - 関数戻り値型アノテーションを追加
+  - より厳密な型定義（`tuple[X, Y] | None`）
 
-次のステップ:
-- 他のファイルへの段階的適用
-- パターンマッチング（必要に応じて）
-- walrus演算子（適切な箇所で）
+#### 4.3 その他のモダン機能 ✅
+- **walrus演算子 (`:=`)** の導入:
+  - `src/integration/controllers.py` - 3箇所適用
+  - Before: `x = dict.get(key); if x: ...`
+  - After: `if x := dict.get(key): ...`
+  - コード行数削減、可読性向上
+  
+- **f-string debugging** の導入:
+  - `src/integration/logging_system.py` - 適用
+  - Before: `f"Operation: {operation}"`
+  - After: `f"{operation=}"`
+  - デバッグ時の変数名と値の自動表示
+
+テスト結果: ✅ 全テスト成功
+
+適用効果:
+- コードの簡潔性向上
+- デバッグ効率化
+- Python 3.10+機能の実践的活用
 
 ### ✅ Phase 3完了 (2025-11-03)
 **依存関係の最適化**

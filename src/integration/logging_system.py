@@ -325,7 +325,7 @@ class LoggerSystem:
             "performance_data": metrics,
         }
 
-        perf_logger.info(f"Performance metrics for {operation}", extra=extra)
+        perf_logger.info(f"Performance metrics for {operation=}", extra=extra)
 
     def log_error(
         self,
