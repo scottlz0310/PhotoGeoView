@@ -1,0 +1,144 @@
+# PhotoGeoView メインCI/CDワークフロー
+# 
+# このワークフローは以下を実行します:
+# - Python 3.12, 3.13, 3.14でのマルチバージョンテスト
+# - コード品質チェック (ruff lint/format, mypy)
+# - テスト実行とカバレッジ計測
+# - パッケージビルド (hatchling)
+# - セキュリティスキャン (bandit, safety)
+#
+# 使用技術: uv (高速パッケージマネージャー)
+
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install system dependencies for Qt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            xvfb \
+            libxkbcommon-x11-0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-xinput0 \
+            libxcb-xfixes0 \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run linter (ruff)
+        run: uv run ruff check src/
+
+      - name: Run formatter check (ruff)
+        run: uv run ruff format --check src/
+
+      - name: Run type checker (mypy)
+        run: uv run mypy src/ --config-file=pyproject.toml || true
+
+      - name: Run tests
+        run: |
+          xvfb-run -a uv run pytest tests/ \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Build package
+        run: uv build
+
+      - name: Check build artifacts
+        run: |
+          ls -lh dist/
+          uv run twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --group security
+
+      - name: Run bandit
+        run: uv run bandit -r src/ -f json -o bandit-report.json || true
+
+      - name: Run safety check
+        run: uv run safety check --json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json

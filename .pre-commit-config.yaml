@@ -27,7 +27,7 @@ repos:
 
   # セキュリティチェック
   - repo: https://github.com/pycqa/bandit
-    rev: 1.7.5
+    rev: 1.8.0
     hooks:
       - id: bandit
         args: [-r, src/, -f, json]
@@ -35,7 +35,7 @@ repos:
 
   # 基本的なチェック
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
