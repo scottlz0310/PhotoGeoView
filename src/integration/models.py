@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 class ProcessingStatus(Enum):
@@ -53,58 +53,59 @@ class ImageMetadata:
     file_format: str = ""
 
     # EXIF information (CS4Coding precision)
-    camera_make: Optional[str] = None
-    camera_model: Optional[str] = None
-    lens_model: Optional[str] = None
-    focal_length: Optional[float] = None
-    aperture: Optional[float] = None
-    shutter_speed: Optional[str] = None
-    iso: Optional[int] = None
-    flash: Optional[str] = None
-    white_balance: Optional[str] = None
-    exposure_mode: Optional[str] = None
-    metering_mode: Optional[str] = None
+    camera_make: str | None = None
+    camera_model: str | None = None
+    lens_model: str | None = None
+    focal_length: float | None = None
+    aperture: float | None = None
+    shutter_speed: str | None = None
+    iso: int | None = None
+    flash: str | None = None
+    white_balance: str | None = None
+    exposure_mode: str | None = None
+    metering_mode: str | None = None
 
     # GPS information (CS4Coding precision)
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    altitude: Optional[float] = None
-    gps_timestamp: Optional[datetime] = None
-    gps_direction: Optional[float] = None
-    gps_speed: Optional[float] = None
+    latitude: float | None = None
+    longitude: float | None = None
+    altitude: float | None = None
+    gps_timestamp: datetime | None = None
+    gps_direction: float | None = None
+    gps_speed: float | None = None
 
     # Image technical details
-    width: Optional[int] = None
-    height: Optional[int] = None
-    color_space: Optional[str] = None
-    bit_depth: Optional[int] = None
-    compression: Optional[str] = None
+    width: int | None = None
+    height: int | None = None
+    color_space: str | None = None
+    bit_depth: int | None = None
+    compression: str | None = None
 
     # UI information (CursorBLD optimization)
-    thumbnail_path: Optional[Path] = None
-    thumbnail_size: Optional[Tuple[int, int]] = None
+    thumbnail_path: Path | None = None
+    thumbnail_size: tuple[int, int] | None = None
     display_name: str = ""
     preview_available: bool = False
 
     # Kiro integration information
     processing_status: ProcessingStatus = ProcessingStatus.PENDING
-    cache_key: Optional[str] = None
-    performance_metrics: Dict[str, Any] = field(default_factory=dict)
-    ai_processor: Optional[AIComponent] = None
-    last_accessed: Optional[datetime] = None
+    cache_key: str | None = None
+    performance_metrics: dict[str, Any] = field(default_factory=dict)
+    ai_processor: AIComponent | None = None
+    last_accessed: datetime | None = None
     access_count: int = 0
 
     # Error handling
-    processing_errors: List[str] = field(default_factory=list)
+    processing_errors: list[str] = field(default_factory=list)
     validation_status: bool = True
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Post-initialization processing"""
         if not self.display_name:
             self.display_name = self.file_path.name
 
         if not self.cache_key:
-            self.cache_key = f"{self.file_path.stem}_{self.file_size}_{int(self.modified_date.timestamp())}"
+            timestamp = int(self.modified_date.timestamp())
+            self.cache_key = f"{self.file_path.stem}_{self.file_size}_{timestamp}"
 
     @property
     def has_gps(self) -> bool:
@@ -112,21 +113,21 @@ class ImageMetadata:
         return self.latitude is not None and self.longitude is not None
 
     @property
-    def gps_coordinates(self) -> Optional[Tuple[float, float]]:
+    def gps_coordinates(self) -> tuple[float, float] | None:
         """Get GPS coordinates as tuple"""
-        if self.has_gps:
+        if self.has_gps and self.latitude is not None and self.longitude is not None:
             return (self.latitude, self.longitude)
         return None
 
     @property
-    def aspect_ratio(self) -> Optional[float]:
+    def aspect_ratio(self) -> float | None:
         """Calculate aspect ratio"""
         if self.width and self.height:
             return self.width / self.height
         return None
 
     @property
-    def megapixels(self) -> Optional[float]:
+    def megapixels(self) -> float | None:
         """Calculate megapixels"""
         if self.width and self.height:
             return (self.width * self.height) / 1_000_000
@@ -153,17 +154,17 @@ class ThemeConfiguration:
     # CursorBLD theme system integration
     qt_theme_name: str = ""
     style_sheet: str = ""
-    color_scheme: Dict[str, str] = field(default_factory=dict)
+    color_scheme: dict[str, str] = field(default_factory=dict)
     icon_theme: str = "default"
 
     # UI component styling
-    window_style: Dict[str, Any] = field(default_factory=dict)
-    button_style: Dict[str, Any] = field(default_factory=dict)
-    menu_style: Dict[str, Any] = field(default_factory=dict)
-    toolbar_style: Dict[str, Any] = field(default_factory=dict)
+    window_style: dict[str, Any] = field(default_factory=dict)
+    button_style: dict[str, Any] = field(default_factory=dict)
+    menu_style: dict[str, Any] = field(default_factory=dict)
+    toolbar_style: dict[str, Any] = field(default_factory=dict)
 
     # Kiro accessibility features
-    accessibility_features: Dict[str, bool] = field(
+    accessibility_features: dict[str, bool] = field(
         default_factory=lambda: {
             "high_contrast": False,
             "large_fonts": False,
@@ -174,7 +175,7 @@ class ThemeConfiguration:
     )
 
     # Kiro performance settings
-    performance_settings: Dict[str, Any] = field(
+    performance_settings: dict[str, Any] = field(
         default_factory=lambda: {
             "animation_enabled": True,
             "transparency_enabled": True,
@@ -185,7 +186,7 @@ class ThemeConfiguration:
     )
 
     # Custom properties for extensibility
-    custom_properties: Dict[str, Any] = field(default_factory=dict)
+    custom_properties: dict[str, Any] = field(default_factory=dict)
 
     # Metadata
     created_date: datetime = field(default_factory=datetime.now)
@@ -229,20 +230,20 @@ class ApplicationState:
     """
 
     # File system state
-    current_folder: Optional[Path] = None
-    selected_image: Optional[Path] = None
-    loaded_images: List[Path] = field(default_factory=list)
+    current_folder: Path | None = None
+    selected_image: Path | None = None
+    loaded_images: list[Path] = field(default_factory=list)
 
     # CursorBLD UI state
     current_theme: str = "default"
     thumbnail_size: int = 150
-    folder_history: List[Path] = field(default_factory=list)
-    ui_layout: Dict[str, Any] = field(default_factory=dict)
-    window_geometry: Optional[Tuple[int, int, int, int]] = None  # x, y, width, height
-    splitter_states: Dict[str, bytes] = field(default_factory=dict)
+    folder_history: list[Path] = field(default_factory=list)
+    ui_layout: dict[str, Any] = field(default_factory=dict)
+    window_geometry: tuple[int, int, int, int | None] = None  # x, y, width, height
+    splitter_states: dict[str, bytes] = field(default_factory=dict)
 
     # CS4Coding functional state
-    map_center: Optional[Tuple[float, float]] = None
+    map_center: tuple[float, float | None] = None
     map_zoom: int = 10
     exif_display_mode: str = "detailed"  # detailed, compact, minimal
     image_sort_mode: str = "name"  # name, date, size, type
@@ -250,13 +251,13 @@ class ApplicationState:
 
     # Image viewer state
     current_zoom: float = 1.0
-    current_pan: Tuple[int, int] = (0, 0)
+    current_pan: tuple[int, int] = (0, 0)
     fit_mode: str = "fit_window"  # fit_window, fit_width, actual_size
 
     # Kiro integration state
     performance_mode: str = "balanced"  # performance, balanced, quality
-    cache_status: Dict[str, Any] = field(default_factory=dict)
-    ai_component_status: Dict[str, str] = field(
+    cache_status: dict[str, Any] = field(default_factory=dict)
+    ai_component_status: dict[str, str] = field(
         default_factory=lambda: {
             "copilot": "active",
             "cursor": "active",
@@ -268,15 +269,15 @@ class ApplicationState:
     session_start: datetime = field(default_factory=datetime.now)
     last_activity: datetime = field(default_factory=datetime.now)
     images_processed: int = 0
-    operations_performed: List[str] = field(default_factory=list)
+    operations_performed: list[str] = field(default_factory=list)
 
     # Error tracking
-    recent_errors: List[Dict[str, Any]] = field(default_factory=list)
+    recent_errors: list[dict[str, Any]] = field(default_factory=list)
     error_count: int = 0
 
     # Performance metrics
-    memory_usage_history: List[Tuple[datetime, float]] = field(default_factory=list)
-    operation_times: Dict[str, List[float]] = field(default_factory=dict)
+    memory_usage_history: list[tuple[datetime, float]] = field(default_factory=list)
+    operation_times: dict[str, list[float]] = field(default_factory=dict)
 
     def update_activity(self):
         """Update last activity timestamp"""
@@ -297,7 +298,7 @@ class ApplicationState:
         # Keep only last 100 measurements
         self.operation_times[operation] = self.operation_times[operation][-100:]
 
-    def add_error(self, error: Dict[str, Any], max_errors: int = 50):
+    def add_error(self, error: dict[str, Any], max_errors: int = 50):
         """Add error to recent errors list"""
         error["timestamp"] = datetime.now()
         self.recent_errors.insert(0, error)
@@ -310,7 +311,7 @@ class ApplicationState:
         return (datetime.now() - self.session_start).total_seconds()
 
     @property
-    def average_operation_time(self) -> Dict[str, float]:
+    def average_operation_time(self) -> dict[str, float]:
         """Get average operation times"""
         return {
             operation: sum(times) / len(times)
@@ -331,7 +332,7 @@ class CacheEntry:
     last_accessed: datetime = field(default_factory=datetime.now)
     access_count: int = 0
     size_bytes: int = 0
-    ttl_seconds: Optional[int] = None  # Time to live
+    ttl_seconds: int | None = None  # Time to live
 
     @property
     def is_expired(self) -> bool:
