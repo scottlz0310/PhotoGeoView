@@ -2,9 +2,6 @@
 Unit tests for core interfaces and abstract classes.
 """
 
-from abc import ABC
-from unittest.mock import MagicMock, Mock
-
 import pytest
 from interfaces import (
     CheckerError,
@@ -12,13 +9,13 @@ from interfaces import (
     CheckerInterface,
     CISimulationError,
     ConfigurationError,
+    DependencyError,
     EnvironmentError,
     EnvironmentManagerInterface,
     OrchestratorInterface,
     ReporterInterface,
-    DependencyError,
 )
-from models import CheckResult, CheckStatus, CheckTask, SimulationResult
+from models import CheckResult, CheckStatus, CheckTask
 
 
 class ConcreteChecker(CheckerInterface):

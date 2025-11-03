@@ -9,7 +9,6 @@ Requirements: 2.1, 4.1, 4.3
 """
 
 import asyncio
-import os
 import platform
 import tempfile
 import time
@@ -19,8 +18,13 @@ from unittest.mock import Mock, patch
 import pytest
 
 from src.integration.logging_system import LoggerSystem
-from src.integration.navigation_integration_controller import NavigationIntegrationController
-from src.integration.services.file_system_watcher import FileChangeType, FileSystemWatcher
+from src.integration.navigation_integration_controller import (
+    NavigationIntegrationController,
+)
+from src.integration.services.file_system_watcher import (
+    FileChangeType,
+    FileSystemWatcher,
+)
 from src.ui.breadcrumb_bar import BreadcrumbAddressBar
 
 
@@ -53,10 +57,7 @@ class TestFileSystemWatcherIntegration:
     @pytest.fixture
     def file_system_watcher(self, logger_system):
         """Create file system watcher"""
-        return FileSystemWatcher(
-            logger_system=logger_system,
-            enable_monitoring=True
-        )
+        return FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
     @pytest.fixture
     def mock_config_manager(self):
@@ -67,12 +68,14 @@ class TestFileSystemWatcherIntegration:
         return config_manager
 
     @pytest.fixture
-    def navigation_controller(self, mock_config_manager, logger_system, file_system_watcher):
+    def navigation_controller(
+        self, mock_config_manager, logger_system, file_system_watcher
+    ):
         """Create navigation integration controller"""
         return NavigationIntegrationController(
             config_manager=mock_config_manager,
             logger_system=logger_system,
-            file_system_watcher=file_system_watcher
+            file_system_watcher=file_system_watcher,
         )
 
     @pytest.fixture
@@ -81,7 +84,7 @@ class TestFileSystemWatcherIntegration:
         return BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
             logger_system=logger_system,
-            config_manager=mock_config_manager
+            config_manager=mock_config_manager,
         )
 
     def _mock_get_setting(self, key: str, default=None):
@@ -97,7 +100,9 @@ class TestFileSystemWatcherIntegration:
         }
         return config_values.get(key, default)
 
-    def test_file_system_watcher_initialization(self, file_system_watcher, temp_directory):
+    def test_file_system_watcher_initialization(
+        self, file_system_watcher, temp_directory
+    ):
         """Test file system watcher initialization and setup"""
         # Start watching directory
         result = file_system_watcher.start_watching(temp_directory / "watched_folder")
@@ -106,7 +111,9 @@ class TestFileSystemWatcherIntegration:
         assert result is True
         assert file_system_watcher.is_watching is True
 
-    def test_directory_creation_detection(self, file_system_watcher, breadcrumb_bar, temp_directory):
+    def test_directory_creation_detection(
+        self, file_system_watcher, breadcrumb_bar, temp_directory
+    ):
         """Test detection of new directory creation"""
         watched_dir = temp_directory / "watched_folder"
         breadcrumb_bar.set_current_path(watched_dir)
@@ -116,6 +123,7 @@ class TestFileSystemWatcherIntegration:
 
         # Add change listener
         change_events = []
+
         def change_listener(path, change_type):
             change_events.append((path, change_type))
 
@@ -135,7 +143,9 @@ class TestFileSystemWatcherIntegration:
         assert len(change_events) > 0
         assert any(str(new_dir) in str(event[0]) for event in change_events)
 
-    def test_directory_deletion_detection(self, file_system_watcher, breadcrumb_bar, temp_directory):
+    def test_directory_deletion_detection(
+        self, file_system_watcher, breadcrumb_bar, temp_directory
+    ):
         """Test detection of directory deletion"""
         watched_dir = temp_directory / "watched_folder"
         target_dir = watched_dir / "subfolder1"
@@ -145,6 +155,7 @@ class TestFileSystemWatcherIntegration:
 
         # Add change listener
         change_events = []
+
         def change_listener(path, change_type):
             change_events.append((path, change_type))
 
@@ -152,6 +163,7 @@ class TestFileSystemWatcherIntegration:
 
         # Delete directory
         import shutil
+
         shutil.rmtree(target_dir)
 
         # Simulate file system change notification
@@ -159,7 +171,9 @@ class TestFileSystemWatcherIntegration:
 
         # Verify deletion was detected
         assert len(change_events) > 0
-        assert any(change_type == FileChangeType.DELETED for _, change_type in change_events)
+        assert any(
+            change_type == FileChangeType.DELETED for _, change_type in change_events
+        )
 
     def test_file_modification_detection(self, file_system_watcher, temp_directory):
         """Test detection of file modifications"""
@@ -170,6 +184,7 @@ class TestFileSystemWatcherIntegration:
 
         # Add change listener
         change_events = []
+
         def change_listener(path, change_type):
             change_events.append((path, change_type))
 
@@ -179,14 +194,20 @@ class TestFileSystemWatcherIntegration:
         target_file.write_text("modified content")
 
         # Simulate file system change notification
-        file_system_watcher._notify_change_listeners(target_file, FileChangeType.MODIFIED)
+        file_system_watcher._notify_change_listeners(
+            target_file, FileChangeType.MODIFIED
+        )
 
         # Verify modification was detected
         assert len(change_events) > 0
-        assert any(change_type == FileChangeType.MODIFIED for _, change_type in change_events)
+        assert any(
+            change_type == FileChangeType.MODIFIED for _, change_type in change_events
+        )
 
     @pytest.mark.asyncio
-    async def test_breadcrumb_file_system_integration(self, breadcrumb_bar, file_system_watcher, temp_directory):
+    async def test_breadcrumb_file_system_integration(
+        self, breadcrumb_bar, file_system_watcher, temp_directory
+    ):
         """Test integration between breadcrumb and file system watcher"""
         watched_dir = temp_directory / "watched_folder"
         breadcrumb_bar.set_current_path(watched_dir)
@@ -229,19 +250,26 @@ class TestFileSystemWatcherIntegration:
         await navigation_controller._handle_path_change(new_dir, FileChangeType.CREATED)
 
         # Verify navigation controller handled the change
-        assert navigation_controller.current_navigation_state.current_path == watched_dir
+        assert (
+            navigation_controller.current_navigation_state.current_path == watched_dir
+        )
 
-    def test_current_directory_deletion_handling(self, breadcrumb_bar, navigation_controller, temp_directory):
+    def test_current_directory_deletion_handling(
+        self, breadcrumb_bar, navigation_controller, temp_directory
+    ):
         """Test handling when current directory is deleted"""
         watched_dir = temp_directory / "watched_folder"
         target_dir = watched_dir / "subfolder1"
 
         # Navigate to target directory
         breadcrumb_bar.set_current_path(target_dir)
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb"
+        )
 
         # Delete current directory
         import shutil
+
         shutil.rmtree(target_dir)
 
         # Simulate file system change
@@ -254,8 +282,12 @@ class TestFileSystemWatcherIntegration:
     def test_multiple_watchers_coordination(self, logger_system, temp_directory):
         """Test coordination between multiple file system watchers"""
         # Create multiple watchers
-        watcher1 = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
-        watcher2 = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
+        watcher1 = FileSystemWatcher(
+            logger_system=logger_system, enable_monitoring=True
+        )
+        watcher2 = FileSystemWatcher(
+            logger_system=logger_system, enable_monitoring=True
+        )
 
         watched_dir1 = temp_directory / "watched_folder"
         watched_dir2 = temp_directory / "unwatched_folder"
@@ -283,6 +315,7 @@ class TestFileSystemWatcherIntegration:
 
         # Add change listener
         change_count = 0
+
         def change_listener(path, change_type):
             nonlocal change_count
             change_count += 1
@@ -296,7 +329,9 @@ class TestFileSystemWatcherIntegration:
             test_file = watched_dir / f"load_test_{i}.txt"
             test_file.write_text(f"content {i}")
             # Simulate change notification
-            file_system_watcher._notify_change_listeners(test_file, FileChangeType.CREATED)
+            file_system_watcher._notify_change_listeners(
+                test_file, FileChangeType.CREATED
+            )
 
         end_time = time.time()
 
@@ -314,6 +349,7 @@ class TestFileSystemWatcherIntegration:
 
         # Add change listener
         change_events = []
+
         def change_listener(path, change_type):
             change_events.append((path, change_type, time.time()))
 
@@ -322,7 +358,9 @@ class TestFileSystemWatcherIntegration:
         # Make rapid changes to same file
         for i in range(5):
             target_file.write_text(f"content {i}")
-            file_system_watcher._notify_change_listeners(target_file, FileChangeType.MODIFIED)
+            file_system_watcher._notify_change_listeners(
+                target_file, FileChangeType.MODIFIED
+            )
             time.sleep(0.01)  # 10ms between changes
 
         # Wait for debounce period
@@ -333,9 +371,11 @@ class TestFileSystemWatcherIntegration:
         assert len(change_events) <= 5
 
     @pytest.mark.parametrize("platform_name", ["Windows", "Linux", "Darwin"])
-    def test_cross_platform_file_system_events(self, file_system_watcher, temp_directory, platform_name):
+    def test_cross_platform_file_system_events(
+        self, file_system_watcher, temp_directory, platform_name
+    ):
         """Test cross-platform file system event handling"""
-        with patch('platform.system', return_value=platform_name):
+        with patch("platform.system", return_value=platform_name):
             watched_dir = temp_directory / "watched_folder"
 
             # Start watching with platform-specific configuration
@@ -351,7 +391,9 @@ class TestFileSystemWatcherIntegration:
             test_file.write_text("platform test")
 
             # Simulate platform-specific event
-            file_system_watcher._notify_change_listeners(test_file, FileChangeType.CREATED)
+            file_system_watcher._notify_change_listeners(
+                test_file, FileChangeType.CREATED
+            )
 
             # Should handle event regardless of platform
             assert file_system_watcher.is_watching is True
@@ -375,6 +417,7 @@ class TestFileSystemWatcherIntegration:
 
         # Add change listener
         change_events = []
+
         def change_listener(path, change_type):
             change_events.append((path, change_type))
 
@@ -387,7 +430,9 @@ class TestFileSystemWatcherIntegration:
         file_system_watcher._notify_change_listeners(link_path, FileChangeType.MODIFIED)
 
         # Should handle symbolic links appropriately
-        assert len(change_events) >= 0  # May or may not detect depending on implementation
+        assert (
+            len(change_events) >= 0
+        )  # May or may not detect depending on implementation
 
     def test_watcher_error_recovery(self, file_system_watcher, temp_directory):
         """Test file system watcher error recovery"""
@@ -398,7 +443,9 @@ class TestFileSystemWatcherIntegration:
         assert file_system_watcher.is_watching is True
 
         # Simulate watcher error
-        with patch.object(file_system_watcher, '_handle_watcher_error') as mock_error_handler:
+        with patch.object(
+            file_system_watcher, "_handle_watcher_error"
+        ) as mock_error_handler:
             # Trigger error condition
             file_system_watcher._simulate_error("Test error")
 
@@ -436,13 +483,16 @@ class TestFileSystemWatcherIntegration:
         listener2.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_async_file_system_event_handling(self, file_system_watcher, temp_directory):
+    async def test_async_file_system_event_handling(
+        self, file_system_watcher, temp_directory
+    ):
         """Test asynchronous file system event handling"""
         watched_dir = temp_directory / "watched_folder"
         file_system_watcher.start_watching(watched_dir)
 
         # Add async change listener
         async_events = []
+
         async def async_change_listener(path, change_type):
             await asyncio.sleep(0.01)  # Simulate async processing
             async_events.append((path, change_type))
@@ -453,7 +503,9 @@ class TestFileSystemWatcherIntegration:
         for i in range(3):
             test_file = watched_dir / f"async_test_{i}.txt"
             test_file.write_text(f"async content {i}")
-            await file_system_watcher._notify_async_listeners(test_file, FileChangeType.CREATED)
+            await file_system_watcher._notify_async_listeners(
+                test_file, FileChangeType.CREATED
+            )
 
         # Wait for async processing
         await asyncio.sleep(0.1)

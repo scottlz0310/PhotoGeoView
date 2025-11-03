@@ -18,17 +18,15 @@ import sys
 import tempfile
 import time
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from integration.logging_system import LoggerSystem
 from integration.services.file_discovery_cache import (
-    CacheMetrics,
     FileDiscoveryCache,
     FileDiscoveryResult,
-    FolderScanCache,
 )
 
 
@@ -39,8 +37,11 @@ class TestFileDiscoveryCache(unittest.TestCase):
         """テストセットアップ"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
-            self.skipTest("Windows環境ではファイルディスカバリーキャッシュテストをスキップ")
+            self.skipTest(
+                "Windows環境ではファイルディスカバリーキャッシュテストをスキップ"
+            )
 
         self.logger_system = LoggerSystem()
         self.cache = FileDiscoveryCache(

@@ -10,14 +10,13 @@ import logging
 import subprocess
 import sys
 import time
-from pathlib import Path
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 def run_check(check_name: str, timeout: int = 300) -> bool:
     """
@@ -36,15 +35,20 @@ def run_check(check_name: str, timeout: int = 300) -> bool:
     try:
         # Run the check with timeout
         cmd = [
-            sys.executable, "-m", "tools.ci.simulator", "run",
-            check_name, "--timeout", str(timeout)
+            sys.executable,
+            "-m",
+            "tools.ci.simulator",
+            "run",
+            check_name,
+            "--timeout",
+            str(timeout),
         ]
 
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=timeout + 30  # Add 30 seconds buffer
+            timeout=timeout + 30,  # Add 30 seconds buffer
         )
 
         duration = time.time() - start_time
@@ -67,6 +71,7 @@ def run_check(check_name: str, timeout: int = 300) -> bool:
         duration = time.time() - start_time
         logger.error(f"✗ {check_name} failed with error after {duration:.2f}s: {e}")
         return False
+
 
 def main():
     """Main function to run all CI checks sequentially."""
@@ -95,21 +100,22 @@ def main():
         time.sleep(2)
 
     # Print summary
-    logger.info("\n" + "="*50)
+    logger.info("\n" + "=" * 50)
     logger.info("CI CHECKS SUMMARY")
-    logger.info("="*50)
+    logger.info("=" * 50)
 
     for check_name, success in results.items():
         status = "✓ PASS" if success else "✗ FAIL"
         logger.info(f"{check_name:20} : {status}")
 
-    logger.info("="*50)
+    logger.info("=" * 50)
     if overall_success:
         logger.info("✓ All checks completed successfully!")
         return 0
     else:
         logger.warning("⚠ Some checks failed, but continuing...")
         return 0  # Return 0 to continue CI pipeline
+
 
 if __name__ == "__main__":
     sys.exit(main())

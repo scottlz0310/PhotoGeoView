@@ -7,10 +7,7 @@ import os
 
 # Import reporters
 import sys
-import tempfile
 from datetime import datetime
-from pathlib import Path
-from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
@@ -74,7 +71,7 @@ class TestMarkdownReporter:
 
         assert os.path.exists(result_path)
 
-        with open(result_path, "r") as f:
+        with open(result_path) as f:
             content = f.read()
 
         assert "❌ FAILURE" in content
@@ -106,7 +103,7 @@ class TestMarkdownReporter:
 
         result_path = reporter.generate_report(simulation_result, output_path)
 
-        with open(result_path, "r") as f:
+        with open(result_path) as f:
             content = f.read()
 
         assert "## Performance Regressions" in content
@@ -231,7 +228,7 @@ class TestJSONReporter:
         assert os.path.exists(output_path)
 
         # Check report content
-        with open(output_path, "r") as f:
+        with open(output_path) as f:
             data = json.load(f)
 
         assert data["overall_status"] == sample_simulation_result.overall_status.value
@@ -253,7 +250,7 @@ class TestJSONReporter:
 
         result_path = reporter.generate_report(sample_simulation_result, output_path)
 
-        with open(result_path, "r") as f:
+        with open(result_path) as f:
             data = json.load(f)
 
         assert "configuration" in data["metadata"]
@@ -285,7 +282,7 @@ class TestJSONReporter:
 
         result_path = reporter.generate_report(simulation_result, output_path)
 
-        with open(result_path, "r") as f:
+        with open(result_path) as f:
             data = json.load(f)
 
         assert "regression_issues" in data
@@ -351,7 +348,7 @@ class TestHistoryTracker:
         assert saved_path.endswith(".json")
 
         # Verify saved content
-        with open(saved_path, "r") as f:
+        with open(saved_path) as f:
             data = json.load(f)
 
         assert data["overall_status"] == sample_simulation_result.overall_status.value
@@ -524,7 +521,7 @@ class TestHistoryTracker:
 
         assert os.path.exists(tracker.trends_file)
 
-        with open(tracker.trends_file, "r") as f:
+        with open(tracker.trends_file) as f:
             saved_data = json.load(f)
 
         assert saved_data["success_rate"] == 0.85
@@ -570,8 +567,8 @@ class TestReporterIntegration:
             assert hasattr(reporter, "file_extension")
 
             # Test required methods
-            assert callable(getattr(reporter, "generate_report"))
-            assert callable(getattr(reporter, "validate_output_path"))
+            assert callable(reporter.generate_report)
+            assert callable(reporter.validate_output_path)
 
     def test_multiple_report_formats(self, sample_simulation_result, temp_dir):
         """Test generating reports in multiple formats."""
@@ -596,10 +593,10 @@ class TestReporterIntegration:
         assert os.path.exists(report_paths["json"])
 
         # Verify content is different but related
-        with open(report_paths["markdown"], "r") as f:
+        with open(report_paths["markdown"]) as f:
             md_content = f.read()
 
-        with open(report_paths["json"], "r") as f:
+        with open(report_paths["json"]) as f:
             json_content = json.load(f)
 
         assert "# CI Simulation Report" in md_content

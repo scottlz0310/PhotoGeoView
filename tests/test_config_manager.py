@@ -8,16 +8,14 @@ Author: Kiro AI Integration System
 
 import json
 import tempfile
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
 from src.integration.config_manager import ConfigManager
 from src.integration.error_handling import IntegratedErrorHandler
 from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent, ApplicationState
+from src.integration.models import ApplicationState
 
 
 class TestConfigManager:
@@ -27,6 +25,7 @@ class TestConfigManager:
     def temp_config_dir(self):
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             pytest.skip("Windows環境では設定マネージャーテストをスキップ")
         """Create temporary configuration directory"""

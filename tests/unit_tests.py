@@ -11,9 +11,8 @@ import shutil
 import sys
 import tempfile
 import unittest
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 

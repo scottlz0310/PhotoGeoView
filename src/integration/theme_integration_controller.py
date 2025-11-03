@@ -12,7 +12,6 @@ Requirements: 1.2, 1.3, 1.4, 5.1, 5.2
 import asyncio
 import threading
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
 from .config_manager import ConfigManager
@@ -20,7 +19,7 @@ from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
 from .models import AIComponent
 from .theme_interfaces import IThemeAware, IThemeManager
-from .theme_models import ThemeConfiguration, ThemeInfo, ThemeType
+from .theme_models import ThemeConfiguration, ThemeInfo
 
 
 class ThemeIntegrationController:
@@ -36,7 +35,7 @@ class ThemeIntegrationController:
         self,
         config_manager: ConfigManager,
         logger_system: LoggerSystem,
-        error_handler: Optional[IntegratedErrorHandler] = None
+        error_handler: Optional[IntegratedErrorHandler] = None,
     ):
         """
         Initialize the theme integration controller
@@ -45,7 +44,7 @@ class ThemeIntegrationController:
             config_manager: Configuration manager instance
             logger_system: Logging system instance
             error_handler: Error handler instance (opt
-     """
+        """
         self.config_manager = config_manager
         self.logger_system = logger_system
         self.logger = logger_system.get_logger(__name__)
@@ -105,28 +104,34 @@ class ThemeIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "theme_controller_initialization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_theme_preferences(self) -> None:
         """Load theme preferences from configuration"""
         try:
-            preferences = self.config_manager.get_setting(self.theme_preferences_key, {})
+            preferences = self.config_manager.get_setting(
+                self.theme_preferences_key, {}
+            )
 
             # Load current theme
-            current_theme_name = self.config_manager.get_setting(self.theme_config_key, self.fallback_theme)
+            current_theme_name = self.config_manager.get_setting(
+                self.theme_config_key, self.fallback_theme
+            )
 
             # Load theme history
             theme_history = self.config_manager.get_setting(self.theme_history_key, [])
 
-            self.logger.debug(f"Loaded theme preferences: current={current_theme_name}, history={len(theme_history)} entries")
+            self.logger.debug(
+                f"Loaded theme preferences: current={current_theme_name}, history={len(theme_history)} entries"
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "load_theme_preferences"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _initialize_theme_history(self) -> None:
@@ -181,7 +186,9 @@ class ThemeIntegrationController:
         try:
             with self._lock:
                 if name in self.theme_managers:
-                    self.logger.warning(f"Theme manager '{name}' already registered, replacing")
+                    self.logger.warning(
+                        f"Theme manager '{name}' already registered, replacing"
+                    )
 
                 self.theme_managers[name] = theme_manager
 
@@ -197,7 +204,7 @@ class ThemeIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "register_theme_manager", "manager_name": name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -225,7 +232,7 @@ class ThemeIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "unregister_theme_manager", "manager_name": name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -236,15 +243,19 @@ class ThemeIntegrationController:
 
             for manager_name, theme_manager in self.theme_managers.items():
                 try:
-                    if hasattr(theme_manager, 'get_available_themes'):
+                    if hasattr(theme_manager, "get_available_themes"):
                         themes = theme_manager.get_available_themes()
                         for theme_info in themes:
                             self.available_themes[theme_info.name] = theme_info
 
-                        self.logger.debug(f"Loaded {len(themes)} themes from manager '{manager_name}'")
+                        self.logger.debug(
+                            f"Loaded {len(themes)} themes from manager '{manager_name}'"
+                        )
 
                 except Exception as e:
-                    self.logger.error(f"Failed to load themes from manager '{manager_name}': {e}")
+                    self.logger.error(
+                        f"Failed to load themes from manager '{manager_name}': {e}"
+                    )
 
             self.logger.info(f"Total available themes: {len(self.available_themes)}")
 
@@ -253,12 +264,14 @@ class ThemeIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "load_available_themes"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     # Component Registration
 
-    def register_component(self, component: IThemeAware, component_id: Optional[str] = None) -> bool:
+    def register_component(
+        self, component: IThemeAware, component_id: Optional[str] = None
+    ) -> bool:
         """
         Register a theme-aware component
 
@@ -272,7 +285,9 @@ class ThemeIntegrationController:
         try:
             with self._lock:
                 if component in self.registered_components:
-                    self.logger.debug(f"Component already registered: {type(component).__name__}")
+                    self.logger.debug(
+                        f"Component already registered: {type(component).__name__}"
+                    )
                     return True
 
                 self.registered_components.add(component)
@@ -286,7 +301,9 @@ class ThemeIntegrationController:
                     try:
                         component.apply_theme(self.current_theme)
                     except Exception as e:
-                        self.logger.error(f"Failed to apply current theme to new component: {e}")
+                        self.logger.error(
+                            f"Failed to apply current theme to new component: {e}"
+                        )
 
                 self.logger.debug(f"Component registered: {type(component).__name__}")
                 return True
@@ -295,12 +312,17 @@ class ThemeIntegrationController:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "register_component", "component_type": type(component).__name__},
-                AIComponent.KIRO
+                {
+                    "operation": "register_component",
+                    "component_type": type(component).__name__,
+                },
+                AIComponent.KIRO,
             )
             return False
 
-    def unregister_component(self, component: IThemeAware, component_id: Optional[str] = None) -> bool:
+    def unregister_component(
+        self, component: IThemeAware, component_id: Optional[str] = None
+    ) -> bool:
         """
         Unregister a theme-aware component
 
@@ -325,7 +347,9 @@ class ThemeIntegrationController:
                     success = True
 
                 if success:
-                    self.logger.debug(f"Component unregistered: {type(component).__name__}")
+                    self.logger.debug(
+                        f"Component unregistered: {type(component).__name__}"
+                    )
 
                 return success
 
@@ -333,8 +357,11 @@ class ThemeIntegrationController:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "unregister_component", "component_type": type(component).__name__},
-                AIComponent.KIRO
+                {
+                    "operation": "unregister_component",
+                    "component_type": type(component).__name__,
+                },
+                AIComponent.KIRO,
             )
             return False
 
@@ -368,7 +395,9 @@ class ThemeIntegrationController:
             with self._lock:
                 # Validate theme exists
                 if theme_name not in self.available_themes:
-                    await self._handle_theme_error(theme_name, f"Theme '{theme_name}' not found")
+                    await self._handle_theme_error(
+                        theme_name, f"Theme '{theme_name}' not found"
+                    )
                     if theme_name != self.fallback_theme:
                         return await self._apply_fallback_theme()
                     else:
@@ -379,7 +408,9 @@ class ThemeIntegrationController:
                 # Load theme configuration
                 theme_config = await self._load_theme_configuration(theme_name)
                 if not theme_config:
-                    await self._handle_theme_error(theme_name, f"Failed to load theme configuration")
+                    await self._handle_theme_error(
+                        theme_name, "Failed to load theme configuration"
+                    )
                     if theme_name != self.fallback_theme:
                         return await self._apply_fallback_theme()
                     else:
@@ -388,7 +419,9 @@ class ThemeIntegrationController:
                 # Apply theme to all registered theme managers
                 success = await self._apply_theme_to_managers(theme_name)
                 if not success:
-                    await self._handle_theme_error(theme_name, f"Failed to apply theme to managers")
+                    await self._handle_theme_error(
+                        theme_name, "Failed to apply theme to managers"
+                    )
                     if theme_name != self.fallback_theme:
                         return await self._apply_fallback_theme()
                     else:
@@ -397,7 +430,9 @@ class ThemeIntegrationController:
                 # Apply theme to all registered components
                 success = await self._apply_theme_to_components(theme_config)
                 if not success:
-                    await self._handle_theme_error(theme_name, f"Failed to apply theme to components")
+                    await self._handle_theme_error(
+                        theme_name, "Failed to apply theme to components"
+                    )
                     if theme_name != self.fallback_theme:
                         return await self._apply_fallback_theme()
                     else:
@@ -420,7 +455,9 @@ class ThemeIntegrationController:
                 application_time = (datetime.now() - start_time).total_seconds()
                 self.theme_switch_times.append(application_time)
 
-                self.logger.info(f"Theme applied successfully: {theme_name} (took {application_time:.3f}s)")
+                self.logger.info(
+                    f"Theme applied successfully: {theme_name} (took {application_time:.3f}s)"
+                )
                 return True
 
         except Exception as e:
@@ -428,17 +465,21 @@ class ThemeIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "apply_theme", "theme_name": theme_name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             fallback_result = await self._apply_fallback_theme()
             return fallback_result if fallback_result is not None else False
 
-    async def _load_theme_configuration(self, theme_name: str) -> Optional[ThemeConfiguration]:
+    async def _load_theme_configuration(
+        self, theme_name: str
+    ) -> Optional[ThemeConfiguration]:
         """Load theme configuration from theme managers"""
         try:
             for manager_name, theme_manager in self.theme_managers.items():
                 try:
-                    if hasattr(theme_manager, 'get_current_theme') and hasattr(theme_manager, 'apply_theme'):
+                    if hasattr(theme_manager, "get_current_theme") and hasattr(
+                        theme_manager, "apply_theme"
+                    ):
                         # Try to get theme from this manager
                         if theme_manager.apply_theme(theme_name):
                             theme_config = theme_manager.get_current_theme()
@@ -446,12 +487,16 @@ class ThemeIntegrationController:
                                 return theme_config
 
                 except Exception as e:
-                    self.logger.warning(f"Failed to load theme from manager '{manager_name}': {e}")
+                    self.logger.warning(
+                        f"Failed to load theme from manager '{manager_name}': {e}"
+                    )
 
             return None
 
         except Exception as e:
-            self.logger.error(f"Failed to load theme configuration for '{theme_name}': {e}")
+            self.logger.error(
+                f"Failed to load theme configuration for '{theme_name}': {e}"
+            )
             return None
 
     async def _apply_theme_to_managers(self, theme_name: str) -> bool:
@@ -462,16 +507,22 @@ class ThemeIntegrationController:
 
             for manager_name, theme_manager in self.theme_managers.items():
                 try:
-                    if hasattr(theme_manager, 'apply_theme'):
+                    if hasattr(theme_manager, "apply_theme"):
                         if theme_manager.apply_theme(theme_name):
                             success_count += 1
                         else:
-                            self.logger.warning(f"Theme manager '{manager_name}' failed to apply theme")
+                            self.logger.warning(
+                                f"Theme manager '{manager_name}' failed to apply theme"
+                            )
                     else:
-                        self.logger.warning(f"Theme manager '{manager_name}' does not support apply_theme")
+                        self.logger.warning(
+                            f"Theme manager '{manager_name}' does not support apply_theme"
+                        )
 
                 except Exception as e:
-                    self.logger.error(f"Error applying theme to manager '{manager_name}': {e}")
+                    self.logger.error(
+                        f"Error applying theme to manager '{manager_name}': {e}"
+                    )
 
             # Consider successful if at least one manager succeeded
             return success_count > 0
@@ -480,7 +531,9 @@ class ThemeIntegrationController:
             self.logger.error(f"Failed to apply theme to managers: {e}")
             return False
 
-    async def _apply_theme_to_components(self, theme_config: ThemeConfiguration) -> bool:
+    async def _apply_theme_to_components(
+        self, theme_config: ThemeConfiguration
+    ) -> bool:
         """Apply theme to all registered components"""
         try:
             success_count = 0
@@ -491,25 +544,33 @@ class ThemeIntegrationController:
 
             # Apply theme to components with timeout
             tasks = []
-            for component in self.registered_components.copy():  # Copy to avoid modification during iteration
-                task = asyncio.create_task(self._apply_theme_to_component(component, theme_config))
+            for component in (
+                self.registered_components.copy()
+            ):  # Copy to avoid modification during iteration
+                task = asyncio.create_task(
+                    self._apply_theme_to_component(component, theme_config)
+                )
                 tasks.append(task)
 
             # Wait for all components with timeout
             try:
                 results = await asyncio.wait_for(
                     asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=self.theme_application_timeout
+                    timeout=self.theme_application_timeout,
                 )
 
                 for result in results:
                     if result is True:
                         success_count += 1
                     elif isinstance(result, Exception):
-                        self.logger.error(f"Component theme application failed: {result}")
+                        self.logger.error(
+                            f"Component theme application failed: {result}"
+                        )
 
             except asyncio.TimeoutError:
-                self.logger.warning(f"Theme application timed out after {self.theme_application_timeout}s")
+                self.logger.warning(
+                    f"Theme application timed out after {self.theme_application_timeout}s"
+                )
                 # Still count partial successes
                 pass
 
@@ -521,7 +582,9 @@ class ThemeIntegrationController:
             self.logger.error(f"Failed to apply theme to components: {e}")
             return False
 
-    async def _apply_theme_to_component(self, component: IThemeAware, theme_config: ThemeConfiguration) -> bool:
+    async def _apply_theme_to_component(
+        self, component: IThemeAware, theme_config: ThemeConfiguration
+    ) -> bool:
         """Apply theme to a single component"""
         try:
             component_name = type(component).__name__
@@ -538,15 +601,19 @@ class ThemeIntegrationController:
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to apply theme to component {type(component).__name__}: {e}")
+            self.logger.error(
+                f"Failed to apply theme to component {type(component).__name__}: {e}"
+            )
             return False
 
     async def _apply_fallback_theme(self) -> bool:
         """Apply fallback theme in case of errors"""
         try:
             # Prevent infinite recursion by checking if we're already applying fallback
-            if hasattr(self, '_applying_fallback') and self._applying_fallback:
-                self.logger.error("Already applying fallback theme, preventing recursion")
+            if hasattr(self, "_applying_fallback") and self._applying_fallback:
+                self.logger.error(
+                    "Already applying fallback theme, preventing recursion"
+                )
                 return False
 
             if self.fallback_theme in self.available_themes:
@@ -554,10 +621,16 @@ class ThemeIntegrationController:
                 self._applying_fallback = True
                 try:
                     # Directly apply fallback without going through full apply_theme to avoid recursion
-                    theme_config = await self._load_theme_configuration(self.fallback_theme)
+                    theme_config = await self._load_theme_configuration(
+                        self.fallback_theme
+                    )
                     if theme_config:
-                        manager_success = await self._apply_theme_to_managers(self.fallback_theme)
-                        component_success = await self._apply_theme_to_components(theme_config)
+                        manager_success = await self._apply_theme_to_managers(
+                            self.fallback_theme
+                        )
+                        component_success = await self._apply_theme_to_components(
+                            theme_config
+                        )
 
                         # Consider successful if at least one succeeded
                         if manager_success or component_success:
@@ -565,7 +638,9 @@ class ThemeIntegrationController:
                             await self._persist_theme_selection(self.fallback_theme)
                             return True
                         else:
-                            self.logger.error("Failed to apply fallback theme to any managers or components")
+                            self.logger.error(
+                                "Failed to apply fallback theme to any managers or components"
+                            )
                             return False
                     else:
                         self.logger.error("Failed to load fallback theme configuration")
@@ -600,11 +675,13 @@ class ThemeIntegrationController:
             history_entry = {
                 "theme_name": theme_name,
                 "timestamp": datetime.now().isoformat(),
-                "success": True
+                "success": True,
             }
 
             # Remove duplicate entries for the same theme
-            history = [entry for entry in history if entry.get("theme_name") != theme_name]
+            history = [
+                entry for entry in history if entry.get("theme_name") != theme_name
+            ]
 
             # Add new entry at the beginning
             history.insert(0, history_entry)
@@ -642,7 +719,9 @@ class ThemeIntegrationController:
             self.logger.error(f"Failed to add theme change listener: {e}")
             return False
 
-    def remove_theme_change_listener(self, callback: Callable[[str, str], None]) -> bool:
+    def remove_theme_change_listener(
+        self, callback: Callable[[str, str], None]
+    ) -> bool:
         """
         Remove a theme change listener
 
@@ -663,7 +742,9 @@ class ThemeIntegrationController:
             self.logger.error(f"Failed to remove theme change listener: {e}")
             return False
 
-    def add_theme_applied_listener(self, callback: Callable[[ThemeConfiguration], None]) -> bool:
+    def add_theme_applied_listener(
+        self, callback: Callable[[ThemeConfiguration], None]
+    ) -> bool:
         """
         Add a theme applied listener
 
@@ -705,7 +786,9 @@ class ThemeIntegrationController:
             self.logger.error(f"Failed to add theme error listener: {e}")
             return False
 
-    async def _notify_theme_change(self, old_theme: Optional[str], new_theme: str) -> None:
+    async def _notify_theme_change(
+        self, old_theme: Optional[str], new_theme: str
+    ) -> None:
         """Notify theme change listeners"""
         try:
             with self._notification_lock:
@@ -780,14 +863,15 @@ class ThemeIntegrationController:
         try:
             return {
                 "total_theme_switches": len(self.theme_switch_times),
-                "average_switch_time": sum(self.theme_switch_times) / max(len(self.theme_switch_times), 1),
+                "average_switch_time": sum(self.theme_switch_times)
+                / max(len(self.theme_switch_times), 1),
                 "registered_components": len(self.registered_components),
                 "registered_managers": len(self.theme_managers),
                 "component_application_times": {
                     component: sum(times) / len(times)
                     for component, times in self.component_application_times.items()
                     if times
-                }
+                },
             }
 
         except Exception as e:
@@ -806,7 +890,7 @@ class ThemeIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "reload_themes"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 

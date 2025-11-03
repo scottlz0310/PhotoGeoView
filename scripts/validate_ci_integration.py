@@ -12,14 +12,11 @@ AI貢献者:
 作成日: 2025年1月30日
 """
 
-import sys
-import subprocess
 import json
-import os
-from pathlib import Path
-from typing import Dict, List, Any, Optional
+import subprocess
+import sys
 import tempfile
-import shutil
+from pathlib import Path
 
 
 class CIIntegrationValidator:
@@ -39,7 +36,7 @@ class CIIntegrationValidator:
             "Makefile",
             ".pre-commit-config.yaml",
             "tools/ci/simulator.py",
-            "tools/create_deployment_package.py"
+            "tools/create_deployment_package.py",
         ]
 
         required_directories = [
@@ -47,7 +44,7 @@ class CIIntegrationValidator:
             "tools/ci/checkers",
             "tools/ci/reporters",
             "tools/ci/environment",
-            ".kiro/specs/ci-cd-simulation"
+            ".kiro/specs/ci-cd-simulation",
         ]
 
         missing_files = []
@@ -82,7 +79,7 @@ class CIIntegrationValidator:
             return False
 
         try:
-            with open(pyproject_path, "r", encoding="utf-8") as f:
+            with open(pyproject_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Check for CI simulator script entries
@@ -121,7 +118,7 @@ class CIIntegrationValidator:
             return False
 
         try:
-            with open(makefile_path, "r", encoding="utf-8") as f:
+            with open(makefile_path, encoding="utf-8") as f:
                 content = f.read()
 
             required_targets = [
@@ -129,7 +126,7 @@ class CIIntegrationValidator:
                 "ci-quick:",
                 "ci-full:",
                 "setup-hooks:",
-                "validate-ci-integration:"
+                "validate-ci-integration:",
             ]
 
             missing_targets = []
@@ -156,33 +153,43 @@ class CIIntegrationValidator:
 
         try:
             # Test CI simulator import
-            result = subprocess.run([
-                sys.executable,
-                "-c",
-                "from tools.ci.simulator import CISimulator; print('Import successful')"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    "from tools.ci.simulator import CISimulator; print('Import successful')",
+                ],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode != 0:
                 print(f"❌ CI simulator import failed: {result.stderr}")
                 return False
 
             # Test CI simulator help
-            result = subprocess.run([
-                sys.executable,
-                "-m", "tools.ci.simulator",
-                "--help"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, "-m", "tools.ci.simulator", "--help"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode != 0:
                 print(f"❌ CI simulator help command failed: {result.stderr}")
                 return False
 
             # Test CI simulator list command
-            result = subprocess.run([
-                sys.executable,
-                "-m", "tools.ci.simulator",
-                "list"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, "-m", "tools.ci.simulator", "list"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode != 0:
                 print(f"❌ CI simulator list command failed: {result.stderr}")
@@ -204,20 +211,25 @@ class CIIntegrationValidator:
 
         try:
             # Check if we're in a Git repository
-            result = subprocess.run([
-                "git", "rev-parse", "--git-dir"
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "rev-parse", "--git-dir"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode != 0:
                 print("⚠️ Not in a Git repository, skipping Git hook validation")
                 return True
 
             # Test Git hook status command
-            result = subprocess.run([
-                sys.executable,
-                "-m", "tools.ci.simulator",
-                "hook", "status"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, "-m", "tools.ci.simulator", "hook", "status"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode != 0:
                 print(f"❌ Git hook status command failed: {result.stderr}")
@@ -244,7 +256,7 @@ class CIIntegrationValidator:
 
         try:
             # Check if deployment script imports CI simulator functionality
-            with open(deployment_script, "r", encoding="utf-8") as f:
+            with open(deployment_script, encoding="utf-8") as f:
                 content = f.read()
 
             if "run_ci_simulation" not in content:
@@ -256,11 +268,13 @@ class CIIntegrationValidator:
                 return False
 
             # Test deployment script help
-            result = subprocess.run([
-                sys.executable,
-                str(deployment_script),
-                "--help"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, str(deployment_script), "--help"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode != 0:
                 print(f"❌ Deployment script help failed: {result.stderr}")
@@ -288,7 +302,7 @@ class CIIntegrationValidator:
         required_workflows = [
             "ai-integration-ci.yml",
             "ai-integration-tests.yml",
-            "ci-simulator.yml"
+            "ci-simulator.yml",
         ]
 
         missing_workflows = []
@@ -300,10 +314,13 @@ class CIIntegrationValidator:
 
             # Check if workflow references CI simulator
             try:
-                with open(workflow_path, "r", encoding="utf-8") as f:
+                with open(workflow_path, encoding="utf-8") as f:
                     content = f.read()
 
-                if "tools.ci.simulator" not in content and workflow == "ci-simulator.yml":
+                if (
+                    "tools.ci.simulator" not in content
+                    and workflow == "ci-simulator.yml"
+                ):
                     print(f"⚠️ {workflow} doesn't reference CI simulator")
 
             except Exception as e:
@@ -328,20 +345,30 @@ class CIIntegrationValidator:
                 temp_path = Path(temp_dir)
 
                 # Run a quick CI simulation test
-                result = subprocess.run([
-                    sys.executable,
-                    "-m", "tools.ci.simulator",
-                    "run",
-                    "code_quality",
-                    "--format", "json",
-                    "--output-dir", str(temp_path),
-                    "--timeout", "300"
-                ], cwd=self.project_root, capture_output=True, text=True, timeout=360)
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "tools.ci.simulator",
+                        "run",
+                        "code_quality",
+                        "--format",
+                        "json",
+                        "--output-dir",
+                        str(temp_path),
+                        "--timeout",
+                        "300",
+                    ],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=360,
+                )
 
                 # Check if CI simulator ran successfully (even if checks failed)
                 # We look for the CI simulation summary in the output
                 if "CI SIMULATION SUMMARY" not in result.stdout:
-                    print(f"❌ Integration test failed - CI simulator did not complete:")
+                    print("❌ Integration test failed - CI simulator did not complete:")
                     print(f"Return code: {result.returncode}")
                     print(f"STDOUT: {result.stdout}")
                     print(f"STDERR: {result.stderr}")
@@ -361,14 +388,16 @@ class CIIntegrationValidator:
 
                 # Validate report content
                 try:
-                    with open(json_reports[0], "r", encoding="utf-8") as f:
+                    with open(json_reports[0], encoding="utf-8") as f:
                         report_data = json.load(f)
 
                     if "overall_status" not in report_data:
                         print("❌ Invalid CI report format")
                         return False
 
-                    print(f"✅ Integration test passed (Status: {report_data['overall_status']})")
+                    print(
+                        f"✅ Integration test passed (Status: {report_data['overall_status']})"
+                    )
                     return True
                 except json.JSONDecodeError:
                     print("❌ Invalid JSON report format")
@@ -395,7 +424,7 @@ class CIIntegrationValidator:
             ("Git Hook Integration", self.validate_git_hook_integration),
             ("Deployment Integration", self.validate_deployment_integration),
             ("GitHub Actions Integration", self.validate_github_actions_integration),
-            ("Integration Test", self.run_integration_test)
+            ("Integration Test", self.run_integration_test),
         ]
 
         results = {}
@@ -453,7 +482,7 @@ def main():
             "success": success,
             "timestamp": "2025-01-30T00:00:00Z",
             "project_root": str(project_root),
-            "validation_results": validator.validation_results
+            "validation_results": validator.validation_results,
         }
         print(json.dumps(result, indent=2))
 

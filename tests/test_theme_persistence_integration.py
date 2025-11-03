@@ -8,7 +8,6 @@ Author: Kiro AI Integration System
 Requirements: 1.2, 1.3, 4.1
 """
 
-import json
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -47,8 +46,7 @@ class TestThemePersistenceIntegration:
     def theme_controller(self, config_manager, logger_system):
         """Create theme integration controller"""
         return ThemeIntegrationController(
-            config_manager=config_manager,
-            logger_system=logger_system
+            config_manager=config_manager, logger_system=logger_system
         )
 
     def test_theme_configuration_save(self, theme_controller, config_manager):
@@ -60,7 +58,7 @@ class TestThemePersistenceIntegration:
             description="Theme for testing persistence",
             author="Test Author",
             version="1.0.0",
-            theme_type=ThemeType.CUSTOM
+            theme_type=ThemeType.CUSTOM,
         )
 
         # Set current theme
@@ -82,14 +80,17 @@ class TestThemePersistenceIntegration:
         """Test loading theme configuration from file"""
         # Setup saved theme configuration
         config_maer.set_setting("ui.theme", "saved_theme")
-        config_manager.set_setting("ui.theme_details", {
-            "name": "saved_theme",
-            "display_name": "Saved Theme",
-            "description": "Previously saved theme",
-            "author": "Previous User",
-            "version": "1.0.0",
-            "theme_type": "custom"
-        })
+        config_manager.set_setting(
+            "ui.theme_details",
+            {
+                "name": "saved_theme",
+                "display_name": "Saved Theme",
+                "description": "Previously saved theme",
+                "author": "Previous User",
+                "version": "1.0.0",
+                "theme_type": "custom",
+            },
+        )
 
         # Load theme configuration
         loaded_theme = theme_controller._load_theme_from_config()
@@ -107,13 +108,15 @@ class TestThemePersistenceIntegration:
         # Create mock theme manager
         mock_theme_manager = Mock()
         mock_theme_manager.apply_theme = Mock(return_value=True)
-        mock_theme_manager.get_current_theme = Mock(return_value=ThemeConfiguration(
-            name="startup_theme",
-            display_name="Startup Theme",
-            description="Theme restored on startup",
-            author="System",
-            version="1.0.0"
-        ))
+        mock_theme_manager.get_current_theme = Mock(
+            return_value=ThemeConfiguration(
+                name="startup_theme",
+                display_name="Startup Theme",
+                description="Theme restored on startup",
+                author="System",
+                version="1.0.0",
+            )
+        )
         theme_controller.register_theme_manager("startup_manager", mock_theme_manager)
 
         # Restore theme on startup
@@ -135,7 +138,7 @@ class TestThemePersistenceIntegration:
             display_name="Temporary Theme",
             description="Non-persistent theme",
             author="Test",
-            version="1.0.0"
+            version="1.0.0",
         )
         theme_controller.current_theme = theme_config
 
@@ -180,20 +183,24 @@ class TestThemePersistenceIntegration:
         assert history[-1]["theme_name"] == "theme4"
         assert history[-2]["theme_name"] == "theme3"
 
-    def test_configuration_file_corruption_handling(self, theme_controller, config_manager, temp_config_dir):
+    def test_configuration_file_corruption_handling(
+        self, theme_controller, config_manager, temp_config_dir
+    ):
         """Test handling of corrupted configuration files"""
         # Create corrupted config file
         config_file = temp_config_dir / "config.json"
         config_file.write_text("invalid json content {")
 
         # Try to load theme configuration
-        with patch.object(config_manager, 'handle_config_error') as mock_error_handler:
+        with patch.object(config_manager, "handle_config_error") as mock_error_handler:
             loaded_theme = theme_controller._load_theme_from_config()
 
             # Should handle corruption gracefully
             assert loaded_theme == "default"  # Fallback theme
 
-    def test_theme_backup_and_restore(self, theme_controller, config_manager, temp_config_dir):
+    def test_theme_backup_and_restore(
+        self, theme_controller, config_manager, temp_config_dir
+    ):
         """Test theme configuration backup and restore"""
         # Create theme configuration
         theme_config = {
@@ -201,8 +208,8 @@ class TestThemePersistenceIntegration:
             "ui.theme_details": {
                 "name": "backup_theme",
                 "display_name": "Backup Theme",
-                "description": "Theme for backup testing"
-            }
+                "description": "Theme for backup testing",
+            },
         }
 
         # Save configuration
@@ -238,7 +245,7 @@ class TestThemePersistenceIntegration:
                 display_name=f"Theme {theme_name}",
                 description=f"Concurrent theme {theme_name}",
                 author="Test",
-                version="1.0.0"
+                version="1.0.0",
             )
             theme_controller.current_theme = theme_config
             theme_controller._save_theme_to_config()
@@ -258,7 +265,7 @@ class TestThemePersistenceIntegration:
         old_config = {
             "theme_name": "old_theme",
             "theme_style": "dark",
-            "custom_colors": {"primary": "#000000"}
+            "custom_colors": {"primary": "#000000"},
         }
         config_manager.set_setting("ui.legacy_theme", old_config)
 
@@ -272,7 +279,9 @@ class TestThemePersistenceIntegration:
         assert new_theme == "old_theme"
         assert theme_details.get("name") == "old_theme"
 
-    def test_theme_export_import(self, theme_controller, config_manager, temp_config_dir):
+    def test_theme_export_import(
+        self, theme_controller, config_manager, temp_config_dir
+    ):
         """Test theme configuration export and import"""
         # Create theme configuration
         theme_config = ThemeConfiguration(
@@ -281,7 +290,7 @@ class TestThemePersistenceIntegration:
             description="Theme for export testing",
             author="Export User",
             version="1.0.0",
-            theme_type=ThemeType.CUSTOM
+            theme_type=ThemeType.CUSTOM,
         )
         theme_controller.current_theme = theme_config
 
@@ -303,14 +312,16 @@ class TestThemePersistenceIntegration:
         assert imported_theme.name == "export_theme"
         assert imported_theme.display_name == "Export Theme"
 
-    def test_theme_persistence_with_user_preferences(self, theme_controller, config_manager):
+    def test_theme_persistence_with_user_preferences(
+        self, theme_controller, config_manager
+    ):
         """Test theme persistence with user-specific preferences"""
         # Setup user preferences
         user_prefs = {
             "auto_dark_mode": True,
             "follow_system_theme": False,
             "custom_accent_color": "#3498db",
-            "font_scaling": 1.2
+            "font_scaling": 1.2,
         }
 
         for key, value in user_prefs.items():
@@ -322,7 +333,7 @@ class TestThemePersistenceIntegration:
             display_name="User Theme",
             description="Theme with user preferences",
             author="User",
-            version="1.0.0"
+            version="1.0.0",
         )
         theme_controller.current_theme = theme_config
         theme_controller._save_theme_with_preferences()

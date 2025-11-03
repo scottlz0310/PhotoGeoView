@@ -12,7 +12,6 @@ Author: Kiro AI Integration System
 
 import asyncio
 import sys
-import time
 from pathlib import Path
 
 # Add src to path - adjusted for examples folder
@@ -82,7 +81,7 @@ async def main():
 
     # Show cache statistics
     cache_stats = cache_system.get_stats()
-    print(f"\n   Cache Statistics:")
+    print("\n   Cache Statistics:")
     print(f"   - Total entries: {cache_stats['overall']['total_entries']}")
     print(f"   - Total size: {cache_stats['overall']['total_size_mb']:.2f} MB")
     print(f"   - Hit rate: {cache_stats['overall']['hit_rate']:.1%}")
@@ -103,13 +102,13 @@ async def main():
         print(f"   ✓ Set {key} = {value}: {success}")
 
     # Get state values back
-    for key in state_changes.keys():
+    for key in state_changes:
         value = state_manager.get_state_value(key)
         print(f"   ✓ Retrieved {key} = {value}")
 
     # Show state summary
     state_summary = state_manager.get_state_summary()
-    print(f"\n   State Summary:")
+    print("\n   State Summary:")
     print(f"   - Session duration: {state_summary['session_duration']:.1f}s")
     print(f"   - Current theme: {state_summary['current_theme']}")
     print(f"   - Performance mode: {state_summary['performance_mode']}")
@@ -136,7 +135,7 @@ async def main():
 
     # Get performance metrics
     perf_metrics = performance_monitor.get_performance_metrics()
-    print(f"\n   Performance Metrics:")
+    print("\n   Performance Metrics:")
     print(f"   - Memory usage: {perf_metrics['memory']['process_rss_mb']:.1f} MB")
     print(f"   - CPU usage: {perf_metrics['cpu']['process_percent']:.1f}%")
 
@@ -184,7 +183,7 @@ async def main():
     for i in range(50):
         cache_system.put("general", f"large_item_{i}", large_data)
 
-    print(f"   ✓ Added 50 large cache items")
+    print("   ✓ Added 50 large cache items")
     print(f"   ✓ Memory pressure callbacks called: {pressure_callbacks_called}")
 
     # Remove callback
@@ -248,20 +247,20 @@ async def main():
     final_perf_metrics = performance_monitor.get_performance_metrics()
     final_state_summary = state_manager.get_state_summary()
 
-    print(f"   Cache System:")
+    print("   Cache System:")
     print(f"   - Total cache hits: {final_cache_stats['overall']['total_hits']}")
     print(f"   - Total cache misses: {final_cache_stats['overall']['total_misses']}")
     print(f"   - Overall hit rate: {final_cache_stats['overall']['hit_rate']:.1%}")
     print(f"   - Memory usage: {final_cache_stats['overall']['total_size_mb']:.2f} MB")
 
-    print(f"\n   Performance Monitor:")
+    print("\n   Performance Monitor:")
     print(
         f"   - System memory: {final_perf_metrics['memory']['process_rss_mb']:.1f} MB"
     )
     print(f"   - CPU usage: {final_perf_metrics['cpu']['process_percent']:.1f}%")
     print(f"   - AI components monitored: {len(final_perf_metrics['ai_components'])}")
 
-    print(f"\n   State Manager:")
+    print("\n   State Manager:")
     print(f"   - Session duration: {final_state_summary['session_duration']:.1f}s")
     print(
         f"   - State changes tracked: {len(final_state_summary['performance_operations'])}"

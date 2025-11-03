@@ -17,7 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from integration.data_migration import DataMigrationManager, MigrationStatus
-from integration.data_validation import DataValidator, ValidationSeverity
+from integration.data_validation import DataValidator
 from integration.error_handling import IntegratedErrorHandler
 from integration.logging_system import LoggerSystem
 from integration.models import (
@@ -36,8 +36,8 @@ def create_sample_data():
 
     # Create sample image files
     for i in range(3):
-        img_file = data_dir / f"sample_image_{i+1}.jpg"
-        img_file.write_text(f"fake image content {i+1}")
+        img_file = data_dir / f"sample_image_{i + 1}.jpg"
+        img_file.write_text(f"fake image content {i + 1}")
 
     # Create sample CursorBLD image cache
     cursor_cache = [
@@ -414,14 +414,16 @@ def demonstrate_data_migration():
                 for warning in result.warnings[:2]:  # Show first 2 warnings
                     print(f"         Warning: {warning}")
 
-    print(f"\n3. Migration Summary:")
+    print("\n3. Migration Summary:")
     print(f"   Total objects migrated: {total_migrated}")
     print(f"   Total errors: {total_errors}")
 
     overall_status = (
         "SUCCESS"
         if total_errors == 0
-        else "PARTIAL" if total_migrated > 0 else "FAILED"
+        else "PARTIAL"
+        if total_migrated > 0
+        else "FAILED"
     )
     print(f"   Overall status: {overall_status}")
 
@@ -437,7 +439,7 @@ def demonstrate_data_migration():
     # Check for migrated data files
     migrated_files = list(data_dir.glob("migrated_*.json"))
     if migrated_files:
-        print(f"\n4. Migrated Data Files:")
+        print("\n4. Migrated Data Files:")
         for file in migrated_files:
             size_kb = file.stat().st_size / 1024
             print(f"   {file.name}: {size_kb:.1f} KB")
@@ -447,7 +449,7 @@ def demonstrate_data_migration():
     if backup_dir.exists():
         backup_files = list(backup_dir.glob("*"))
         if backup_files:
-            print(f"\n5. Backup Files Created:")
+            print("\n5. Backup Files Created:")
             for file in backup_files:
                 size_kb = file.stat().st_size / 1024
                 print(f"   {file.name}: {size_kb:.1f} KB")
@@ -483,7 +485,7 @@ def demonstrate_integration():
         print(f"\n2. Validating {migrated_file.name}...")
 
         try:
-            with open(migrated_file, "r") as f:
+            with open(migrated_file) as f:
                 migrated_data = json.load(f)
 
             if not isinstance(migrated_data, list):
@@ -542,17 +544,11 @@ def demonstrate_integration():
                         result = validator.validate_theme_configuration(obj)
                     elif model_type == "ApplicationState":
                         obj_data_copy = obj_data.copy()
-                        if (
-                            "current_folder" in obj_data_copy
-                            and obj_data_copy["current_folder"]
-                        ):
+                        if obj_data_copy.get("current_folder"):
                             obj_data_copy["current_folder"] = Path(
                                 obj_data_copy["current_folder"]
                             )
-                        if (
-                            "selected_image" in obj_data_copy
-                            and obj_data_copy["selected_image"]
-                        ):
+                        if obj_data_copy.get("selected_image"):
                             obj_data_copy["selected_image"] = Path(
                                 obj_data_copy["selected_image"]
                             )
@@ -567,11 +563,11 @@ def demonstrate_integration():
                     if i < 3:  # Show details for first 3 objects
                         status = "✓ VALID" if result.is_valid else "⚠ ISSUES"
                         print(
-                            f"     Object {i+1}: {status} ({result.total_issues} issues)"
+                            f"     Object {i + 1}: {status} ({result.total_issues} issues)"
                         )
 
                 except Exception as e:
-                    print(f"     Object {i+1}: ✗ ERROR - {str(e)}")
+                    print(f"     Object {i + 1}: ✗ ERROR - {e!s}")
 
             if sample_size < file_objects:
                 print(f"     ... and {file_objects - sample_size} more objects")
@@ -587,7 +583,7 @@ def demonstrate_integration():
         except Exception as e:
             print(f"   Error processing {migrated_file.name}: {e}")
 
-    print(f"\n3. Overall Validation Summary:")
+    print("\n3. Overall Validation Summary:")
     print(f"   Total migrated objects: {total_objects}")
     print(f"   Valid objects (sampled): {total_valid}")
     print(f"   Total validation issues: {total_issues}")
@@ -635,11 +631,11 @@ def main():
         print("=" * 60)
 
         # Show final status
-        print(f"\nFinal Status:")
-        print(f"  - Sample data created and processed")
-        print(f"  - Data validation demonstrated with various scenarios")
-        print(f"  - Data migration completed for multiple AI implementations")
-        print(f"  - Integration validation performed on migrated data")
+        print("\nFinal Status:")
+        print("  - Sample data created and processed")
+        print("  - Data validation demonstrated with various scenarios")
+        print("  - Data migration completed for multiple AI implementations")
+        print("  - Integration validation performed on migrated data")
 
         # Ask about cleanup
         response = input("\nClean up demo data files? (y/N): ").strip().lower()

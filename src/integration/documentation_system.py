@@ -13,15 +13,13 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import ast
-import json
 import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 
 class AIContributor(Enum):
@@ -335,7 +333,7 @@ class DocumentationSystem:
             header_lines.append("")
 
         header_lines.extend(
-            [f'最終更新: {file_doc.last_updated.strftime("%Y年%m月%d日")}', '"""', ""]
+            [f"最終更新: {file_doc.last_updated.strftime('%Y年%m月%d日')}", '"""', ""]
         )
 
         return "\n".join(header_lines)
@@ -350,7 +348,7 @@ class DocumentationSystem:
         doc_lines = [
             "# PhotoGeoView AI統合 APIドキュメント",
             "",
-            f'生成日時: {datetime.now().strftime("%Y年%m月%d日 %H:%M:%S")}',
+            f"生成日時: {datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')}",
             "",
             "## 概要",
             "",
@@ -410,7 +408,7 @@ class DocumentationSystem:
         guide_lines = [
             "# PhotoGeoView トラブルシューティングガイド",
             "",
-            f'生成日時: {datetime.now().strftime("%Y年%m月%d日 %H:%M:%S")}',
+            f"生成日時: {datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')}",
             "",
             "## AI コンポーネント別問題解決",
             "",
@@ -586,7 +584,7 @@ class DocumentationSystem:
         report_lines = [
             "# PhotoGeoView AI貢献度レポート",
             "",
-            f'生成日時: {datetime.now().strftime("%Y年%m月%d日 %H:%M:%S")}',
+            f"生成日時: {datetime.now().strftime('%Y年%m月%d日 %H:%M:%S')}",
             "",
             "## 概要",
             "",
@@ -628,9 +626,9 @@ class DocumentationSystem:
             report_lines.extend(
                 [
                     f"### {contributor.value}",
-                    f'- **貢献数**: {stats["count"]} ({percentage:.1f}%)',
-                    f'- **対象ファイル数**: {len(stats["files"])}',
-                    f'- **貢献タイプ**: {", ".join([t.value for t in stats["types"]])}',
+                    f"- **貢献数**: {stats['count']} ({percentage:.1f}%)",
+                    f"- **対象ファイル数**: {len(stats['files'])}",
+                    f"- **貢献タイプ**: {', '.join([t.value for t in stats['types']])}",
                     "",
                 ]
             )

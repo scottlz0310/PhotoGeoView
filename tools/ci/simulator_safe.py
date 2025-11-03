@@ -7,7 +7,6 @@ by using safer execution methods and proper timeout handling.
 """
 
 import logging
-import signal
 import subprocess
 import sys
 import time
@@ -16,10 +15,10 @@ from typing import Dict, List
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("ci_simulator_safe")
+
 
 class SafeChecker:
     """Base class for safe checkers with timeout protection."""
@@ -33,11 +32,7 @@ class SafeChecker:
         try:
             self.logger.info(f"Running: {' '.join(cmd)}")
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                cwd=Path.cwd()
+                cmd, capture_output=True, text=True, timeout=timeout, cwd=Path.cwd()
             )
             return result.returncode == 0, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
@@ -53,8 +48,9 @@ class SafeChecker:
             "name": self.name,
             "status": "skipped",
             "message": "Not implemented",
-            "duration": 0
+            "duration": 0,
         }
+
 
 class CodeQualityChecker(SafeChecker):
     """Safe code quality checker."""
@@ -66,14 +62,14 @@ class CodeQualityChecker(SafeChecker):
         start_time = time.time()
 
         # Simple syntax check instead of Black/flake8
-        python_files = list(Path(".").rglob("*.py"))[:10]  # Limit to first 10 files
+        python_files = list(Path().rglob("*.py"))[:10]  # Limit to first 10 files
 
         syntax_errors = 0
         for py_file in python_files:
             try:
-                success, stdout, stderr = self.run_command_safe([
-                    sys.executable, "-m", "py_compile", str(py_file)
-                ], timeout=10)
+                success, stdout, stderr = self.run_command_safe(
+                    [sys.executable, "-m", "py_compile", str(py_file)], timeout=10
+                )
                 if not success:
                     syntax_errors += 1
             except Exception:
@@ -86,15 +82,16 @@ class CodeQualityChecker(SafeChecker):
                 "name": self.name,
                 "status": "success",
                 "message": f"Syntax check passed for {len(python_files)} files",
-                "duration": duration
+                "duration": duration,
             }
         else:
             return {
                 "name": self.name,
                 "status": "failure",
                 "message": f"Found {syntax_errors} syntax errors",
-                "duration": duration
+                "duration": duration,
             }
+
 
 class TestChecker(SafeChecker):
     """Safe test checker."""
@@ -106,7 +103,7 @@ class TestChecker(SafeChecker):
         start_time = time.time()
 
         # Just check if test files exist
-        test_files = list(Path(".").rglob("test_*.py")) + list(Path(".").rglob("*_test.py"))
+        test_files = list(Path().rglob("test_*.py")) + list(Path().rglob("*_test.py"))
 
         duration = time.time() - start_time
 
@@ -114,8 +111,9 @@ class TestChecker(SafeChecker):
             "name": self.name,
             "status": "success",
             "message": f"Found {len(test_files)} test files",
-            "duration": duration
+            "duration": duration,
         }
+
 
 class SecurityChecker(SafeChecker):
     """Safe security checker."""
@@ -134,19 +132,18 @@ class SecurityChecker(SafeChecker):
         return {
             "name": self.name,
             "status": "success" if has_requirements else "warning",
-            "message": "pyproject.toml found" if has_requirements else "No pyproject.toml found",
-            "duration": duration
+            "message": "pyproject.toml found"
+            if has_requirements
+            else "No pyproject.toml found",
+            "duration": duration,
         }
+
 
 def run_safe_ci():
     """Run CI checks safely."""
     logger.info("Starting Safe CI Simulation...")
 
-    checkers = [
-        CodeQualityChecker(),
-        TestChecker(),
-        SecurityChecker()
-    ]
+    checkers = [CodeQualityChecker(), TestChecker(), SecurityChecker()]
 
     results = []
     overall_success = True
@@ -161,22 +158,26 @@ def run_safe_ci():
                 "success": "✅",
                 "warning": "⚠️",
                 "failure": "❌",
-                "skipped": "⏭️"
+                "skipped": "⏭️",
             }.get(result["status"], "❓")
 
-            logger.info(f"{status_icon} {result['name']}: {result['message']} ({result['duration']:.2f}s)")
+            logger.info(
+                f"{status_icon} {result['name']}: {result['message']} ({result['duration']:.2f}s)"
+            )
 
             if result["status"] == "failure":
                 overall_success = False
 
         except Exception as e:
             logger.error(f"Checker {checker.name} failed: {e}")
-            results.append({
-                "name": checker.name,
-                "status": "failure",
-                "message": f"Exception: {e}",
-                "duration": 0
-            })
+            results.append(
+                {
+                    "name": checker.name,
+                    "status": "failure",
+                    "message": f"Exception: {e}",
+                    "duration": 0,
+                }
+            )
             overall_success = False
 
     # Print summary
@@ -189,15 +190,18 @@ def run_safe_ci():
             "success": "✅",
             "warning": "⚠️",
             "failure": "❌",
-            "skipped": "⏭️"
+            "skipped": "⏭️",
         }.get(result["status"], "❓")
         logger.info(f"{status_icon} {result['name']}: {result['message']}")
 
-    final_status = "✅ ALL CHECKS COMPLETED" if overall_success else "⚠️ SOME ISSUES FOUND"
+    final_status = (
+        "✅ ALL CHECKS COMPLETED" if overall_success else "⚠️ SOME ISSUES FOUND"
+    )
     logger.info(final_status)
     logger.info("=" * 60)
 
     return 0 if overall_success else 1
+
 
 if __name__ == "__main__":
     try:

@@ -10,9 +10,9 @@ Requirements: 5.1, 5.2, 5.3
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol, Union
+from typing import Any, Callable, Dict, List, Optional, Protocol
 
-from .theme_models import ThemeConfiguration, ThemeInfo, ThemeType
+from .theme_models import ThemeConfiguration, ThemeInfo
 
 
 class IThemeProvider(ABC):
@@ -145,7 +145,7 @@ class IThemeManager(ABC):
         pass
 
     @abstractmethod
-    def register_component(self, component: 'IThemeAware') -> bool:
+    def register_component(self, component: "IThemeAware") -> bool:
         """
         Register a component for theme updates
 
@@ -158,7 +158,7 @@ class IThemeManager(ABC):
         pass
 
     @abstractmethod
-    def unregister_component(self, component: 'IThemeAware') -> bool:
+    def unregister_component(self, component: "IThemeAware") -> bool:
         """
         Unregister a component from theme updates
 
@@ -184,7 +184,9 @@ class IThemeManager(ABC):
         pass
 
     @abstractmethod
-    def remove_theme_change_listener(self, callback: Callable[[str, str], None]) -> bool:
+    def remove_theme_change_listener(
+        self, callback: Callable[[str, str], None]
+    ) -> bool:
         """
         Remove a theme change listener
 
@@ -477,7 +479,9 @@ class IThemeRenderer(ABC):
         pass
 
     @abstractmethod
-    def render_component_styles(self, theme: ThemeConfiguration, component_type: str) -> Dict[str, str]:
+    def render_component_styles(
+        self, theme: ThemeConfiguration, component_type: str
+    ) -> Dict[str, str]:
         """
         Render styles for a specific component type
 
@@ -501,7 +505,9 @@ class IThemeRenderer(ABC):
         pass
 
     @abstractmethod
-    def validate_rendering(self, theme: ThemeConfiguration, format_type: str) -> List[str]:
+    def validate_rendering(
+        self, theme: ThemeConfiguration, format_type: str
+    ) -> List[str]:
         """
         Validate that theme can be rendered in specified format
 
@@ -538,7 +544,9 @@ class IThemeCache(ABC):
         pass
 
     @abstractmethod
-    def cache_theme(self, theme_name: str, cache_key: str, data: Any, ttl: Optional[int] = None) -> bool:
+    def cache_theme(
+        self, theme_name: str, cache_key: str, data: Any, ttl: Optional[int] = None
+    ) -> bool:
         """
         Cache theme data
 

@@ -8,13 +8,12 @@ Author: Kiro AI Integration System
 """
 
 import json
-import pickle
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from .data_validation import DataValidator, ValidationResult
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -309,7 +308,7 @@ class DataMigrationManager:
                 self._create_backup(source_file)
 
                 # Load source data
-                with open(source_file, "r", encoding="utf-8") as f:
+                with open(source_file, encoding="utf-8") as f:
                     source_data = json.load(f)
 
                 # Convert to list if single object
@@ -345,10 +344,10 @@ class DataMigrationManager:
                                 )
 
                     except Exception as e:
-                        result.errors.append(f"Failed to migrate object: {str(e)}")
+                        result.errors.append(f"Failed to migrate object: {e!s}")
 
             except Exception as e:
-                result.errors.append(f"Failed to process {source_file}: {str(e)}")
+                result.errors.append(f"Failed to process {source_file}: {e!s}")
 
         # Save migrated objects
         if migrated_objects:
@@ -443,18 +442,16 @@ class DataMigrationManager:
 
                                 except Exception as e:
                                     result.errors.append(
-                                        f"Failed to migrate row from {query_name}: {str(e)}"
+                                        f"Failed to migrate row from {query_name}: {e!s}"
                                     )
 
                         except Exception as e:
                             result.errors.append(
-                                f"Failed to execute query {query_name}: {str(e)}"
+                                f"Failed to execute query {query_name}: {e!s}"
                             )
 
             except Exception as e:
-                result.errors.append(
-                    f"Failed to process database {source_file}: {str(e)}"
-                )
+                result.errors.append(f"Failed to process database {source_file}: {e!s}")
 
         # Save migrated objects
         if migrated_objects:
@@ -861,7 +858,9 @@ class DataMigrationManager:
             "migration_status": (
                 "success"
                 if total_errors == 0
-                else "partial" if total_migrated > 0 else "failed"
+                else "partial"
+                if total_migrated > 0
+                else "failed"
             ),
         }
 

@@ -10,13 +10,10 @@ AI貢献者:
 作成日: 2025年1月26日
 """
 
-import asyncio
-import json
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -463,24 +460,24 @@ class TestRequirementValidation:
         # ドキュメントファイルの存在確認
         docs_dir = project_root / "docs" / "ai_integration"
 
-        assert (
-            docs_dir.exists()
-        ), "要件4.1: AI統合ドキュメントディレクトリが存在しません"
-        assert (
-            docs_dir / "api_documentation.md"
-        ).exists(), "要件4.1: APIドキュメントが存在しません"
-        assert (
-            docs_dir / "ai_contribution_report.md"
-        ).exists(), "要件4.1: AI貢献度レポートが存在しません"
+        assert docs_dir.exists(), (
+            "要件4.1: AI統合ドキュメントディレクトリが存在しません"
+        )
+        assert (docs_dir / "api_documentation.md").exists(), (
+            "要件4.1: APIドキュメントが存在しません"
+        )
+        assert (docs_dir / "ai_contribution_report.md").exists(), (
+            "要件4.1: AI貢献度レポートが存在しません"
+        )
 
     def test_requirement_5_1_quality_assurance(self):
         """要件5.1: 品質保証システムの検証"""
         # 品質保証ツールの存在確認
         tools_dir = project_root / "tools"
 
-        assert (
-            tools_dir / "ai_quality_checker.py"
-        ).exists(), "要件5.1: AI品質チェッカーが存在しません"
+        assert (tools_dir / "ai_quality_checker.py").exists(), (
+            "要件5.1: AI品質チェッカーが存在しません"
+        )
         # 実際のワークフローファイル名に修正
         assert (
             project_root / ".github" / "workflows" / "multiplatform-ci.yml"

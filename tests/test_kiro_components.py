@@ -12,18 +12,16 @@ Author: Kiro AI Integration System
 import shutil
 import sys
 import tempfile
-import threading
 import time
 import unittest
-from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from integration.config_manager import ConfigManager
 from integration.logging_system import LoggerSystem
-from integration.models import AIComponent, ApplicationState, PerformanceMetrics
+from integration.models import AIComponent, ApplicationState
 from integration.performance_monitor import (
     KiroPerformanceMonitor,
     PerformanceAlert,

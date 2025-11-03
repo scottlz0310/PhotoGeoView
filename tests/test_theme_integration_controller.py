@@ -13,18 +13,20 @@ Requirements: 1.2, 1.3, 1.4, 5.1, 5.2
 """
 
 import asyncio
+from unittest.mock import Mock
+
 import pytest
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from src.integration.config_manager import ConfigManager
 from src.integration.error_handling import ErrorCategory, IntegratedErrorHandler
 from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent
 from src.integration.theme_integration_controller import ThemeIntegrationController
 from src.integration.theme_interfaces import IThemeAware, IThemeManager
-from src.integration.theme_models import ThemeConfiguration, ThemeInfo, ThemeType, ColorScheme
+from src.integration.theme_models import (
+    ThemeConfiguration,
+    ThemeInfo,
+    ThemeType,
+)
 
 
 class MockThemeAware(IThemeAware):
@@ -65,7 +67,7 @@ class MockThemeManager(IThemeManager):
         themes = [
             ("default", "Default Light", False),
             ("dark", "Dark Theme", True),
-            ("custom", "Custom Theme", False)
+            ("custom", "Custom Theme", False),
         ]
 
         for name, display_name, is_dark in themes:
@@ -77,8 +79,12 @@ class MockThemeManager(IThemeManager):
                 version="1.0.0",
                 theme_type=ThemeType.BUILT_IN,
                 is_dark=is_dark,
-                preview_colors={"primary": "#007acc", "background": "#ffffff", "text": "#000000"},
-                is_available=True
+                preview_colors={
+                    "primary": "#007acc",
+                    "background": "#ffffff",
+                    "text": "#000000",
+                },
+                is_available=True,
             )
             self.available_themes[name] = theme_info
 
@@ -99,7 +105,7 @@ class MockThemeManager(IThemeManager):
                 description=theme_info.description,
                 author=theme_info.author,
                 version=theme_info.version,
-                theme_type=theme_info.theme_type
+                theme_type=theme_info.theme_type,
             )
             return True
         return False
@@ -178,7 +184,7 @@ def theme_controller(mock_config_manager, mock_logger_system, mock_error_handler
     return ThemeIntegrationController(
         config_manager=mock_config_manager,
         logger_system=mock_logger_system,
-        error_handler=mock_error_handler
+        error_handler=mock_error_handler,
     )
 
 
@@ -209,7 +215,9 @@ class TestThemeIntegrationController:
     def test_register_theme_manager(self, theme_controller, mock_theme_manager):
         """Test theme manager registration"""
         # Test successful registration
-        result = theme_controller.register_theme_manager("test_manager", mock_theme_manager)
+        result = theme_controller.register_theme_manager(
+            "test_manager", mock_theme_manager
+        )
         assert result is True
         assert "test_manager" in theme_controller.theme_managers
         assert theme_controller.theme_managers["test_manager"] == mock_theme_manager
@@ -237,13 +245,20 @@ class TestThemeIntegrationController:
     def test_register_component(self, theme_controller, mock_theme_component):
         """Test component registration"""
         # Test successful registration
-        result = theme_controller.register_component(mock_theme_component, "test_component")
+        result = theme_controller.register_component(
+            mock_theme_component, "test_component"
+        )
         assert result is True
         assert mock_theme_component in theme_controller.registered_components
-        assert theme_controller.component_registry["test_component"] == mock_theme_component
+        assert (
+            theme_controller.component_registry["test_component"]
+            == mock_theme_component
+        )
 
         # Test duplicate registration
-        result = theme_controller.register_component(mock_theme_component, "test_component")
+        result = theme_controller.register_component(
+            mock_theme_component, "test_component"
+        )
         assert result is True  # Should still return True but not duplicate
 
     def test_unregister_component(self, theme_controller, mock_theme_component):
@@ -252,7 +267,9 @@ class TestThemeIntegrationController:
         theme_controller.register_component(mock_theme_component, "test_component")
 
         # Test successful unregistration
-        result = theme_controller.unregister_component(mock_theme_component, "test_component")
+        result = theme_controller.unregister_component(
+            mock_theme_component, "test_component"
+        )
         assert result is True
         assert mock_theme_component not in theme_controller.registered_components
         assert "test_component" not in theme_controller.component_registry
@@ -275,7 +292,9 @@ class TestThemeIntegrationController:
         assert component is None
 
     @pytest.mark.asyncio
-    async def test_apply_theme_success(self, theme_controller, mock_theme_manager, mock_theme_component):
+    async def test_apply_theme_success(
+        self, theme_controller, mock_theme_manager, mock_theme_component
+    ):
         """Test successful theme application"""
         # Setup
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
@@ -303,7 +322,9 @@ class TestThemeIntegrationController:
         assert theme_controller.current_theme.name == "default"
 
     @pytest.mark.asyncio
-    async def test_apply_theme_manager_failure(self, theme_controller, mock_theme_manager, mock_theme_component):
+    async def test_apply_theme_manager_failure(
+        self, theme_controller, mock_theme_manager, mock_theme_component
+    ):
         """Test theme application when manager fails"""
         # Setup - make manager fail for non-default themes but succeed for default
         original_apply_theme = mock_theme_manager.apply_theme
@@ -326,7 +347,9 @@ class TestThemeIntegrationController:
         assert result is True  # Fallback should succeed
 
     @pytest.mark.asyncio
-    async def test_apply_theme_component_failure(self, theme_controller, mock_theme_manager):
+    async def test_apply_theme_component_failure(
+        self, theme_controller, mock_theme_manager
+    ):
         """Test theme application when component fails"""
         # Setup
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
@@ -373,7 +396,9 @@ class TestThemeIntegrationController:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_theme_change_notification(self, theme_controller, mock_theme_manager):
+    async def test_theme_change_notification(
+        self, theme_controller, mock_theme_manager
+    ):
         """Test theme change notification system"""
         # Setup
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
@@ -418,7 +443,7 @@ class TestThemeIntegrationController:
             display_name="Test Theme",
             description="Test",
             author="Test",
-            version="1.0.0"
+            version="1.0.0",
         )
         theme_controller.current_theme = theme_config
 
@@ -442,7 +467,11 @@ class TestThemeIntegrationController:
         # Mock history data
         history_data = [
             {"theme_name": "dark", "timestamp": "2023-01-01T12:00:00", "success": True},
-            {"theme_name": "default", "timestamp": "2023-01-01T11:00:00", "success": True}
+            {
+                "theme_name": "default",
+                "timestamp": "2023-01-01T11:00:00",
+                "success": True,
+            },
         ]
         mock_config_manager.get_setting.return_value = history_data
 
@@ -508,7 +537,9 @@ class TestThemeIntegrationController:
         assert len(theme_controller.theme_managers) == 0
 
     @pytest.mark.asyncio
-    async def test_persistence_integration(self, theme_controller, mock_theme_manager, mock_config_manager):
+    async def test_persistence_integration(
+        self, theme_controller, mock_theme_manager, mock_config_manager
+    ):
         """Test theme persistence integration"""
         # Setup
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
@@ -526,7 +557,9 @@ class TestThemeIntegrationController:
         assert theme_calls[-1][0][1] == "dark"  # Last call should be for "dark" theme
 
     @pytest.mark.asyncio
-    async def test_error_handling_integration(self, theme_controller, mock_error_handler):
+    async def test_error_handling_integration(
+        self, theme_controller, mock_error_handler
+    ):
         """Test error handling integration"""
         # Try to apply theme without any managers (should trigger error handling)
         result = await theme_controller.apply_theme("non_existent")
@@ -558,9 +591,13 @@ class TestThemeIntegrationController:
 
                 for i in range(10):
                     component = MockThemeAware(f"thread_{thread_id}_component_{i}")
-                    result = theme_controller.register_component(component, f"thread_{thread_id}_component_{i}")
+                    result = theme_controller.register_component(
+                        component, f"thread_{thread_id}_component_{i}"
+                    )
                     results.append(result)
-                    time.sleep(0.001)  # Small delay to increase chance of race conditions
+                    time.sleep(
+                        0.001
+                    )  # Small delay to increase chance of race conditions
             except Exception as e:
                 errors.append(e)
 
@@ -580,8 +617,12 @@ class TestThemeIntegrationController:
 
         # Check results
         assert len(errors) == 0  # No errors should occur
-        assert len(theme_controller.registered_components) == 50  # All components registered
-        assert len(theme_controller.component_registry) == 50  # All components in registry
+        assert (
+            len(theme_controller.registered_components) == 50
+        )  # All components registered
+        assert (
+            len(theme_controller.component_registry) == 50
+        )  # All components in registry
 
 
 class TestThemeIntegrationControllerEdgeCases:
@@ -619,7 +660,7 @@ class TestThemeIntegrationControllerEdgeCases:
         controller = ThemeIntegrationController(
             config_manager=failing_config,
             logger_system=mock_logger_system,
-            error_handler=mock_error_handler
+            error_handler=mock_error_handler,
         )
 
         # Should handle errors gracefully
@@ -627,7 +668,9 @@ class TestThemeIntegrationControllerEdgeCases:
         mock_error_handler.handle_error.assert_called()
 
     @pytest.mark.asyncio
-    async def test_async_listener_error_handling(self, theme_controller, mock_theme_manager):
+    async def test_async_listener_error_handling(
+        self, theme_controller, mock_theme_manager
+    ):
         """Test error handling in async listeners"""
         # Setup
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)

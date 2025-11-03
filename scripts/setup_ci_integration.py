@@ -12,13 +12,10 @@ AI貢献者:
 作成日: 2025年1月30日
 """
 
-import sys
-import subprocess
 import json
-import os
-import shutil
+import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Any, Optional
 
 
 class CIIntegrationSetup:
@@ -36,7 +33,7 @@ class CIIntegrationSetup:
             "logs",
             ".kiro/ci-history",
             "temp/ci-simulation",
-            "tools/ci/templates"
+            "tools/ci/templates",
         ]
 
         try:
@@ -85,14 +82,14 @@ class CIIntegrationSetup:
             "",
             "# Performance benchmarks",
             "benchmark.json",
-            "performance_baseline.json"
+            "performance_baseline.json",
         ]
 
         try:
             # Read existing .gitignore
             existing_content = ""
             if gitignore_path.exists():
-                with open(gitignore_path, "r", encoding="utf-8") as f:
+                with open(gitignore_path, encoding="utf-8") as f:
                     existing_content = f.read()
 
             # Check if CI entries already exist
@@ -117,10 +114,12 @@ class CIIntegrationSetup:
 
         try:
             # Install project with CI dependencies
-            result = subprocess.run([
-                sys.executable,
-                "-m", "pip", "install", "-e", ".[ci]"
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-e", ".[ci]"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode != 0:
                 print(f"❌ Failed to install CI dependencies: {result.stderr}")
@@ -139,20 +138,24 @@ class CIIntegrationSetup:
 
         try:
             # Check if we're in a Git repository
-            result = subprocess.run([
-                "git", "rev-parse", "--git-dir"
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "rev-parse", "--git-dir"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode != 0:
                 print("⚠️ Not in a Git repository, skipping Git hooks setup")
                 return True
 
             # Install recommended hooks
-            result = subprocess.run([
-                sys.executable,
-                "-m", "tools.ci.simulator",
-                "hook", "setup"
-            ], cwd=self.project_root, capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, "-m", "tools.ci.simulator", "hook", "setup"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+            )
 
             if result.returncode != 0:
                 print(f"⚠️ Git hooks setup failed: {result.stderr}")
@@ -189,62 +192,59 @@ class CIIntegrationSetup:
                         "black": {"enabled": True, "line_length": 88},
                         "isort": {"enabled": True, "profile": "black"},
                         "flake8": {"enabled": True, "max_line_length": 88},
-                        "mypy": {"enabled": True, "strict": False}
-                    }
+                        "mypy": {"enabled": True, "strict": False},
+                    },
                 },
                 "test_runner": {
                     "enabled": True,
                     "coverage_threshold": 80.0,
-                    "test_types": ["unit", "integration", "ai_compatibility"]
+                    "test_types": ["unit", "integration", "ai_compatibility"],
                 },
                 "security_scanner": {
                     "enabled": True,
                     "fail_on_high": False,
                     "tools": {
                         "safety": {"enabled": True},
-                        "bandit": {"enabled": True, "confidence": "medium"}
-                    }
+                        "bandit": {"enabled": True, "confidence": "medium"},
+                    },
                 },
                 "performance_analyzer": {
                     "enabled": True,
                     "regression_threshold": 30.0,
-                    "benchmark_iterations": 3
+                    "benchmark_iterations": 3,
                 },
                 "ai_component_tester": {
                     "enabled": True,
                     "demo_tests": True,
-                    "components": ["copilot", "cursor", "kiro"]
-                }
+                    "components": ["copilot", "cursor", "kiro"],
+                },
             },
             "directories": {
                 "reports": "reports/ci-simulation",
                 "logs": "logs",
                 "history": ".kiro/ci-history",
-                "temp": "temp/ci-simulation"
+                "temp": "temp/ci-simulation",
             },
             "git_hooks": {
                 "pre_commit": {
                     "enabled": True,
-                    "checks": ["code_quality", "test_runner"]
+                    "checks": ["code_quality", "test_runner"],
                 },
-                "pre_push": {
-                    "enabled": False,
-                    "checks": ["all"]
-                }
+                "pre_push": {"enabled": False, "checks": ["all"]},
             },
             "notifications": {
                 "slack_webhook": "",
                 "email_recipients": [],
-                "github_status": True
+                "github_status": True,
             },
             "ai_integration": {
                 "quality_threshold": 70.0,
                 "components": {
                     "copilot": {"focus": "core_functionality", "quality_weight": 1.2},
                     "cursor": {"focus": "ui_ux", "quality_weight": 1.0},
-                    "kiro": {"focus": "integration", "quality_weight": 1.5}
-                }
-            }
+                    "kiro": {"focus": "integration", "quality_weight": 1.5},
+                },
+            },
         }
 
         try:
@@ -270,7 +270,7 @@ class CIIntegrationSetup:
         templates_dir.mkdir(parents=True, exist_ok=True)
 
         # Pre-commit hook template
-        pre_commit_template = '''#!/bin/sh
+        pre_commit_template = """#!/bin/sh
 # PhotoGeoView CI Simulator Pre-commit Hook
 # Generated by CI Integration Setup
 
@@ -290,10 +290,10 @@ fi
 
 echo "✅ Pre-commit checks passed."
 exit 0
-'''
+"""
 
         # Report template
-        report_template = '''# CI Simulation Report
+        report_template = """# CI Simulation Report
 
 **Generated:** {{timestamp}}
 **Duration:** {{duration}} seconds
@@ -346,7 +346,7 @@ exit 0
 
 ---
 *Generated by PhotoGeoView CI Simulator*
-'''
+"""
 
         try:
             # Write pre-commit hook template
@@ -372,11 +372,13 @@ exit 0
 
         try:
             # Test CI simulator functionality
-            result = subprocess.run([
-                sys.executable,
-                "-m", "tools.ci.simulator",
-                "list"
-            ], cwd=self.project_root, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                [sys.executable, "-m", "tools.ci.simulator", "list"],
+                cwd=self.project_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode != 0:
                 print(f"❌ CI simulator validation failed: {result.stderr}")
@@ -405,7 +407,7 @@ exit 0
             ("Creating default configuration", self.create_default_config),
             ("Creating template files", self.create_template_files),
             ("Setting up Git hooks", self.setup_git_hooks),
-            ("Validating setup", self.validate_setup)
+            ("Validating setup", self.validate_setup),
         ]
 
         all_successful = True
@@ -450,8 +452,12 @@ def main():
 
     parser = argparse.ArgumentParser(description="CI統合セットアップスクリプト")
     parser.add_argument("--project-root", type=Path, help="プロジェクトルートパス")
-    parser.add_argument("--skip-hooks", action="store_true", help="Git hooksセットアップをスキップ")
-    parser.add_argument("--skip-deps", action="store_true", help="依存関係インストールをスキップ")
+    parser.add_argument(
+        "--skip-hooks", action="store_true", help="Git hooksセットアップをスキップ"
+    )
+    parser.add_argument(
+        "--skip-deps", action="store_true", help="依存関係インストールをスキップ"
+    )
 
     args = parser.parse_args()
 

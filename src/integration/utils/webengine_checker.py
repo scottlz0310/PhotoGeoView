@@ -6,8 +6,6 @@ PyQtWebEngineの利用可能性をチェックし、適切な初期化を行う�
 Author: Kiro AI Integration System
 """
 
-import sys
-from pathlib import Path
 from typing import Optional, Tuple
 
 
@@ -88,13 +86,14 @@ def get_webengine_status() -> dict:
         "importable": False,
         "initializable": False,
         "view_creatable": False,
-        "error_messages": []
+        "error_messages": [],
     }
 
     # インポートチェック
     try:
         from PySide6.QtWebEngineCore import QWebEngineProfile
         from PySide6.QtWebEngineWidgets import QWebEngineView
+
         status["importable"] = True
     except ImportError as e:
         status["error_messages"].append(f"Import error: {e}")

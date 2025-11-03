@@ -11,10 +11,8 @@ Requirements: 5.2, 5.3
 import asyncio
 import threading
 import time
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
-from weakref import WeakSet
 
 from .logging_system import LoggerSystem
 
@@ -100,7 +98,9 @@ class LazyResourceLoader:
         """Check if resource is already loaded"""
         return resource_id in self._loaded_resources
 
-    async def load_resource(self, resource_id: str, loader_func: callable, *args, **kwargs) -> Any:
+    async def load_resource(
+        self, resource_id: str, loader_func: callable, *args, **kwargs
+    ) -> Any:
         """Load resource lazily with deduplication"""
         with self._lock:
             # Return immediately if already loaded
@@ -112,11 +112,15 @@ class LazyResourceLoader:
                 try:
                     return await self._loading_tasks[resource_id]
                 except Exception as e:
-                    self.logger.error(f"Failed to wait for loading task {resource_id}: {e}")
+                    self.logger.error(
+                        f"Failed to wait for loading task {resource_id}: {e}"
+                    )
                     return False
 
             # Start new loading task
-            task = asyncio.create_task(self._load_resource_impl(resource_id, loader_func, *args, **kwargs))
+            task = asyncio.create_task(
+                self._load_resource_impl(resource_id, loader_func, *args, **kwargs)
+            )
             self._loading_tasks[resource_id] = task
 
             try:
@@ -127,7 +131,9 @@ class LazyResourceLoader:
                 if resource_id in self._loading_tasks:
                     del self._loading_tasks[resource_id]
 
-    async def _load_resource_impl(self, resource_id: str, loader_func: callable, *args, **kwargs) -> Any:
+    async def _load_resource_impl(
+        self, resource_id: str, loader_func: callable, *args, **kwargs
+    ) -> Any:
         """Internal resource loading implementation"""
         try:
             start_time = time.time()
@@ -150,7 +156,9 @@ class LazyResourceLoader:
                         else:
                             callback(resource_id, result)
                     except Exception as e:
-                        self.logger.error(f"Resource callback failed for {resource_id}: {e}")
+                        self.logger.error(
+                            f"Resource callback failed for {resource_id}: {e}"
+                        )
 
                 # Clean up callbacks
                 del self._resource_callbacks[resource_id]
@@ -196,11 +204,15 @@ class PerformanceMonitor:
         with self._lock:
             self._start_times[operation_id] = time.time()
 
-    def end_operation(self, operation_id: str, operation_type: str = "general") -> float:
+    def end_operation(
+        self, operation_id: str, operation_type: str = "general"
+    ) -> float:
         """End timing an operation and record the duration"""
         with self._lock:
             if operation_id not in self._start_times:
-                self.logger.warning(f"No start time found for operation: {operation_id}")
+                self.logger.warning(
+                    f"No start time found for operation: {operation_id}"
+                )
                 return 0.0
 
             duration = time.time() - self._start_times[operation_id]
@@ -214,7 +226,9 @@ class PerformanceMonitor:
 
             # Limit history size
             if len(self._metrics[operation_type]) > self.max_metric_history:
-                self._metrics[operation_type] = self._metrics[operation_type][-self.max_metric_history:]
+                self._metrics[operation_type] = self._metrics[operation_type][
+                    -self.max_metric_history :
+                ]
 
             # Update counter
             self._counters[operation_type] = self._counters.get(operation_type, 0) + 1
@@ -231,7 +245,9 @@ class PerformanceMonitor:
 
             # Limit history size
             if len(self._metrics[metric_name]) > self.max_metric_history:
-                self._metrics[metric_name] = self._metrics[metric_name][-self.max_metric_history:]
+                self._metrics[metric_name] = self._metrics[metric_name][
+                    -self.max_metric_history :
+                ]
 
     def increment_counter(self, counter_name: str, amount: int = 1) -> None:
         """Increment a counter"""
@@ -250,7 +266,7 @@ class PerformanceMonitor:
                 "min": min(values),
                 "max": max(values),
                 "avg": sum(values) / len(values),
-                "recent_avg": sum(values[-10:]) / min(len(values), 10)
+                "recent_avg": sum(values[-10:]) / min(len(values), 10),
             }
 
     def get_all_metrics(self) -> Dict[str, Dict[str, float]]:
@@ -352,15 +368,23 @@ class PerformanceOptimizer:
                 summary = []
 
                 # Add key metrics
-                for metric_name in ["theme_switch", "breadcrumb_render", "path_validation"]:
+                for metric_name in [
+                    "theme_switch",
+                    "breadcrumb_render",
+                    "path_validation",
+                ]:
                     if metric_name in metrics:
                         stats = metrics[metric_name]
-                        summary.append(f"{metric_name}: {stats['avg']:.3f}s avg ({stats['count']} ops)")
+                        summary.append(
+                            f"{metric_name}: {stats['avg']:.3f}s avg ({stats['count']} ops)"
+                        )
 
                 # Add cache stats
-                summary.append(f"Caches: theme={self.theme_cache.size()}, "
-                             f"stylesheet={self.stylesheet_cache.size()}, "
-                             f"path={self.path_cache.size()}")
+                summary.append(
+                    f"Caches: theme={self.theme_cache.size()}, "
+                    f"stylesheet={self.stylesheet_cache.size()}, "
+                    f"path={self.path_cache.size()}"
+                )
 
                 if summary:
                     self.logger.debug(f"Performance summary: {', '.join(summary)}")
@@ -370,7 +394,9 @@ class PerformanceOptimizer:
 
     # Theme optimization methods
 
-    async def optimize_theme_loading(self, theme_name: str, loader_func: callable) -> Any:
+    async def optimize_theme_loading(
+        self, theme_name: str, loader_func: callable
+    ) -> Any:
         """Optimize theme loading with caching and lazy loading"""
         if not self.enable_lazy_loading:
             return await asyncio.to_thread(loader_func)
@@ -397,7 +423,7 @@ class PerformanceOptimizer:
     def cache_path_info(self, path: Path, path_info: Dict[str, Any]) -> None:
         """Cache path information for breadcrumb rendering"""
         if self.enable_caching:
-            cache_key = f"path_{str(path)}"
+            cache_key = f"path_{path!s}"
             self.path_cache.set(cache_key, path_info)
 
     def get_cached_path_info(self, path: Path) -> Optional[Dict[str, Any]]:
@@ -405,16 +431,18 @@ class PerformanceOptimizer:
         if not self.enable_caching:
             return None
 
-        cache_key = f"path_{str(path)}"
+        cache_key = f"path_{path!s}"
         return self.path_cache.get(cache_key)
 
-    async def optimize_breadcrumb_rendering(self, path: Path, segments: List[Any]) -> List[Any]:
+    async def optimize_breadcrumb_rendering(
+        self, path: Path, segments: List[Any]
+    ) -> List[Any]:
         """Optimize breadcrumb rendering for long paths"""
         if len(segments) <= 5:  # Short paths don't need optimization
             return segments
 
         # Use cached truncation if available
-        cache_key = f"truncated_{str(path)}_{len(segments)}"
+        cache_key = f"truncated_{path!s}_{len(segments)}"
         cached_result = self.path_cache.get(cache_key)
         if cached_result:
             return cached_result
@@ -478,11 +506,11 @@ class PerformanceOptimizer:
             "cache_stats": {
                 "theme_cache_size": self.theme_cache.size(),
                 "stylesheet_cache_size": self.stylesheet_cache.size(),
-                "path_cache_size": self.path_cache.size()
+                "path_cache_size": self.path_cache.size(),
             },
             "optimization_settings": {
                 "lazy_loading_enabled": self.enable_lazy_loading,
                 "caching_enabled": self.enable_caching,
-                "monitoring_enabled": self.enable_monitoring
-            }
+                "monitoring_enabled": self.enable_monitoring,
+            },
         }

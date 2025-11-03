@@ -3,9 +3,10 @@
 Convenient CI runner script for PhotoGeoView.
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
+
 
 def main():
     project_root = Path(__file__).parent.parent
@@ -23,6 +24,7 @@ def main():
     result = subprocess.run(cmd, cwd=project_root)
 
     return result.returncode
+
 
 if __name__ == "__main__":
     sys.exit(main())

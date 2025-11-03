@@ -27,13 +27,10 @@ UI構成:
 Author: Kiro AI Integration System
 """
 
-import os
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from PySide6.QtCore import QModelIndex, Qt, QTimer, Signal
-from PySide6.QtGui import QIcon, QStandardItem, QStandardItemModel
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -251,6 +248,7 @@ class EnhancedFolderNavigator(QWidget):
             self.file_system_model.setRootPath("")
             # Fix: Use QDir.Filter instead of model.Filter
             from PySide6.QtCore import QDir
+
             self.file_system_model.setFilter(
                 QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot
             )
@@ -468,14 +466,14 @@ class EnhancedFolderNavigator(QWidget):
                 error_message = f"フォルダ '{folder_name}' の読み込みがタイムアウトしました。\nネットワークドライブの場合は接続を確認してください。"
                 user_message = "読み込みタイムアウト"
             else:
-                error_message = f"フォルダ '{folder_name}' の画像検出中にエラーが発生しました。\n詳細: {str(error)}"
+                error_message = f"フォルダ '{folder_name}' の画像検出中にエラーが発生しました。\n詳細: {error!s}"
                 user_message = "画像検出エラー"
 
             # ログにエラー詳細を記録
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "discovery_error_handling",
-                f"ファイル検出エラー処理: {folder_path} - {error_type}: {str(error)}",
+                f"ファイル検出エラー処理: {folder_path} - {error_type}: {error!s}",
                 level="ERROR",
             )
 
@@ -816,7 +814,7 @@ class EnhancedFolderNavigator(QWidget):
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "image_file_check_error",
-                f"画像ファイルチェック中にエラー: {file_path} - {str(e)}",
+                f"画像ファイルチェック中にエラー: {file_path} - {e!s}",
                 level="ERROR",
             )
             return False

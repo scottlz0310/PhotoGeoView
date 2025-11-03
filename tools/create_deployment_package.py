@@ -12,7 +12,6 @@ AI貢献者:
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -101,7 +100,7 @@ class DeploymentPackageCreator:
             # 品質レポートを確認
             quality_report_path = self.build_dir / "quality_report.json"
             if quality_report_path.exists():
-                with open(quality_report_path, "r", encoding="utf-8") as f:
+                with open(quality_report_path, encoding="utf-8") as f:
                     quality_data = json.load(f)
 
                 quality_score = quality_data.get("overall_score", 0)
@@ -503,7 +502,7 @@ if __name__ == "__main__":
                     latest_report = max(json_reports, key=lambda p: p.stat().st_mtime)
 
                     try:
-                        with open(latest_report, "r", encoding="utf-8") as f:
+                        with open(latest_report, encoding="utf-8") as f:
                             ci_data = json.load(f)
 
                         print(
@@ -568,7 +567,7 @@ if __name__ == "__main__":
                         duration = ci_data.get("total_duration", 0)
                         print(f"CI simulation duration: {duration:.2f} seconds")
 
-                    except (json.JSONDecodeError, IOError) as e:
+                    except (OSError, json.JSONDecodeError) as e:
                         print(f"⚠️ Could not parse CI report: {e}")
 
                 return True

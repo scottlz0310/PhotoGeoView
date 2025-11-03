@@ -19,7 +19,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 class CIIntegrator:
@@ -64,7 +64,7 @@ class CIIntegrator:
         pyproject_path = self.project_root / "pyproject.toml"
         if pyproject_path.exists():
             try:
-                with open(pyproject_path, "r", encoding="utf-8") as f:
+                with open(pyproject_path, encoding="utf-8") as f:
                     content = f.read()
 
                 if "ci-simulator" in content:
@@ -97,7 +97,7 @@ class CIIntegrator:
         makefile_path = self.project_root / "Makefile"
         if makefile_path.exists():
             try:
-                with open(makefile_path, "r", encoding="utf-8") as f:
+                with open(makefile_path, encoding="utf-8") as f:
                     content = f.read()
 
                 if "tools.ci.simulator" in content:
@@ -395,7 +395,7 @@ class CIIntegrator:
 
         try:
             # Read current workflow
-            with open(workflow_path, "r", encoding="utf-8") as f:
+            with open(workflow_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Check if CI simulator is already integrated

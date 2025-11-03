@@ -33,7 +33,6 @@ from .models import (
     ImageMetadata,
     PerformanceMetrics,
     ProcessingStatus,
-    ThemeConfiguration,
 )
 from .performance_monitor import KiroPerformanceMonitor
 from .state_manager import StateManager
@@ -120,7 +119,6 @@ class AppController:
             with self.logger_system.operation_context(
                 AIComponent.KIRO, "app_initialization"
             ):
-
                 # Initialize AI components
                 await self._initialize_ai_components()
 
@@ -416,7 +414,6 @@ class AppController:
             with self.logger_system.operation_context(
                 AIComponent.COPILOT, "image_processing"
             ):
-
                 # Check cache first
                 cache_key = f"image_{image_path.stem}_{image_path.stat().st_mtime}"
                 cached_metadata = self.get_from_cache(cache_key)
@@ -566,7 +563,6 @@ class AppController:
             with self.logger_system.operation_context(
                 AIComponent.CURSOR, "folder_loading"
             ):
-
                 # Get supported formats
                 supported_formats = self.image_processor.get_supported_formats()
 
@@ -680,7 +676,6 @@ class AppController:
 
         try:
             with self.logger_system.operation_context(AIComponent.KIRO, "app_shutdown"):
-
                 # Save application state
                 await self.save_application_state()
 

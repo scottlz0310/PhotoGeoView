@@ -7,7 +7,6 @@ Demonstrates the unified configuration management system for AI integration.
 Author: Kiro AI Integration System
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -15,9 +14,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from integration.config_manager import ConfigManager
-from integration.error_handling import IntegratedErrorHandler
-from integration.logging_system import LoggerSystem
-from integration.models import AIComponent, ApplicationState
 
 
 def main():
@@ -129,12 +125,12 @@ def main():
         print("\n8. Configuration Summary:")
         summary = config_manager.get_config_summary()
         print(f"   Total Settings: {summary['total_settings']}")
-        print(f"   AI Configurations:")
+        print("   AI Configurations:")
         for ai_name, count in summary["ai_configs"].items():
             print(f"     - {ai_name}: {count} settings")
 
         state_summary = config_manager.get_state_summary()
-        print(f"   Application State:")
+        print("   Application State:")
         print(f"     - Current Theme: {state_summary['current_theme']}")
         print(f"     - Images Processed: {state_summary['images_processed']}")
         print(f"     - Session Duration: {state_summary['session_duration']:.2f}s")
@@ -201,7 +197,7 @@ def main():
         print("=" * 60)
 
         # Show final configuration state
-        print(f"\nFinal Configuration State:")
+        print("\nFinal Configuration State:")
         print(f"  - UI Theme: {config_manager.get_setting('ui.theme')}")
         print(f"  - Thumbnail Size: {config_manager.get_setting('ui.thumbnail_size')}")
         print(f"  - Performance Mode: {config_manager.get_setting('performance.mode')}")

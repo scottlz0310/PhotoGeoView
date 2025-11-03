@@ -10,22 +10,18 @@ Author: Kiro AI Integration System
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
-from PySide6.QtCore import QSize, Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QAction, QCloseEvent, QIcon, QKeySequence
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
-    QApplication,
     QHBoxLayout,
     QLabel,
     QMainWindow,
-    QMenu,
-    QMenuBar,
     QMessageBox,
     QProgressBar,
     QSplitter,
     QStatusBar,
-    QToolBar,
     QVBoxLayout,
     QWidget,
 )
@@ -33,9 +29,8 @@ from PySide6.QtWidgets import (
 from ..config_manager import ConfigManager
 from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
-from ..models import AIComponent, ApplicationState, PerformanceMetrics
+from ..models import AIComponent
 from ..services.file_discovery_service import FileDiscoveryService
-from ..services.file_system_watcher import FileSystemWatcher
 from ..state_manager import StateManager
 
 # from .folder_navigator import EnhancedFolderNavigator  # Removed: Using breadcrumb navigation instead
@@ -50,8 +45,10 @@ except ImportError:
     try:
         import sys
         from pathlib import Path
+
         sys.path.append(str(Path(__file__).parent.parent.parent))
         from ui.breadcrumb_bar import BreadcrumbAddressBar
+
         from .theme_manager import IntegratedThemeManager
     except ImportError:
         # Create mock classes if imports fail
@@ -73,8 +70,6 @@ except ImportError:
 
             def get_current_theme(self):
                 return "light"
-
-
 
         class BreadcrumbAddressBar(QObject):
             path_changed = Signal(object)
@@ -266,12 +261,15 @@ class IntegratedMainWindow(QMainWindow):
 
         # Advanced theme selector
         self.advanced_theme_action = QAction("🎨 テーマ設定", self)
-        self.advanced_theme_action.setStatusTip("Open advanced theme selector with preview")
+        self.advanced_theme_action.setStatusTip(
+            "Open advanced theme selector with preview"
+        )
         self.advanced_theme_action.triggered.connect(self._show_advanced_theme_selector)
         toolbar.addAction(self.advanced_theme_action)
 
         # Theme toggle button for selected themes
         from ...ui.theme_selector import ThemeToggleButton
+
         self.theme_toggle_button = ThemeToggleButton(self.theme_manager_widget, self)
         self.theme_toggle_button.theme_changed.connect(self._on_toggle_theme_changed)
         toolbar.addWidget(self.theme_toggle_button)
@@ -310,17 +308,20 @@ class IntegratedMainWindow(QMainWindow):
         try:
             border_col = (
                 self.theme_manager_widget.get_color("border", "#bdc3c7")
-                if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                if self.theme_manager_widget
+                and hasattr(self.theme_manager_widget, "get_color")
                 else "#bdc3c7"
             )
             hover_col = (
                 self.theme_manager_widget.get_color("primary", "#3498db")
-                if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                if self.theme_manager_widget
+                and hasattr(self.theme_manager_widget, "get_color")
                 else "#3498db"
             )
             pressed_col = (
                 self.theme_manager_widget.get_color("accent", "#2980b9")
-                if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                if self.theme_manager_widget
+                and hasattr(self.theme_manager_widget, "get_color")
                 else "#2980b9"
             )
         except Exception:
@@ -354,36 +355,40 @@ class IntegratedMainWindow(QMainWindow):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "breadcrumb_widget_added",
-                    "Breadcrumb widget added to left panel"
+                    "Breadcrumb widget added to left panel",
                 )
             else:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "breadcrumb_widget_missing",
                     "Breadcrumb widget not available for left panel",
-                    level="WARNING"
+                    level="WARNING",
                 )
 
         if not breadcrumb_added:
             # ブレッドクラムが利用できない場合は、プレースホルダーを追加
             from PySide6.QtWidgets import QLabel
+
             placeholder = QLabel("ブレッドクラムナビゲーション利用不可")
             placeholder.setMinimumHeight(40)
             placeholder.setMaximumHeight(60)
             try:
                 ph_bg = (
                     self.theme_manager_widget.get_color("hover", "#f8f9fa")
-                    if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                    if self.theme_manager_widget
+                    and hasattr(self.theme_manager_widget, "get_color")
                     else "#f8f9fa"
                 )
                 ph_border = (
                     self.theme_manager_widget.get_color("border", "#dee2e6")
-                    if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                    if self.theme_manager_widget
+                    and hasattr(self.theme_manager_widget, "get_color")
                     else "#dee2e6"
                 )
                 ph_fg = (
                     self.theme_manager_widget.get_color("foreground", "#6c757d")
-                    if self.theme_manager_widget and hasattr(self.theme_manager_widget, "get_color")
+                    if self.theme_manager_widget
+                    and hasattr(self.theme_manager_widget, "get_color")
                     else "#6c757d"
                 )
             except Exception:
@@ -405,20 +410,27 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "breadcrumb_placeholder_added",
-                "Breadcrumb placeholder added to left panel"
+                "Breadcrumb placeholder added to left panel",
             )
 
         # 2. Thumbnail grid (上段)
         self.thumbnail_grid = OptimizedThumbnailGrid(
-            self.config_manager, self.state_manager, self.logger_system, self.theme_manager_widget
+            self.config_manager,
+            self.state_manager,
+            self.logger_system,
+            self.theme_manager_widget,
         )
         self.thumbnail_grid.setMinimumHeight(200)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.thumbnail_grid)
 
         # 3. EXIF information panel (下段)
         from .exif_panel import EXIFPanel
+
         self.exif_panel = EXIFPanel(
-            self.config_manager, self.state_manager, self.logger_system, self.theme_manager_widget
+            self.config_manager,
+            self.state_manager,
+            self.logger_system,
+            self.theme_manager_widget,
         )
         self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.exif_panel)
@@ -428,7 +440,9 @@ class IntegratedMainWindow(QMainWindow):
 
         # 各エリアの伸縮設定（3つのウィジェット）
         self.left_panel_splitter.setStretchFactor(0, 0)  # ブレッドクラム: 固定
-        self.left_panel_splitter.setStretchFactor(1, 1)  # サムネイルグリッド: 伸縮可能（メイン）
+        self.left_panel_splitter.setStretchFactor(
+            1, 1
+        )  # サムネイルグリッド: 伸縮可能（メイン）
         self.left_panel_splitter.setStretchFactor(2, 1)  # EXIFパネル: 伸縮可能
 
         # 左パネルスプリッターをメインスプリッターに追加
@@ -444,7 +458,9 @@ class IntegratedMainWindow(QMainWindow):
             splitter_states = self.config_manager.get_setting("ui.splitter_states", {})
 
             if "left_panel_splitter" in splitter_states:
-                self.left_panel_splitter.restoreState(splitter_states["left_panel_splitter"])
+                self.left_panel_splitter.restoreState(
+                    splitter_states["left_panel_splitter"]
+                )
 
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -482,6 +498,7 @@ class IntegratedMainWindow(QMainWindow):
 
         # Image preview panel (Kiro component)
         from .image_preview_panel import ImagePreviewPanel
+
         self.image_preview_panel = ImagePreviewPanel(
             self.config_manager, self.state_manager, self.logger_system
         )
@@ -489,6 +506,7 @@ class IntegratedMainWindow(QMainWindow):
 
         # Map panel (Kiro component)
         from .map_panel import MapPanel
+
         self.map_panel = MapPanel(
             self.config_manager, self.state_manager, self.logger_system
         )
@@ -535,16 +553,18 @@ class IntegratedMainWindow(QMainWindow):
             self.theme_manager_widget = self.theme_manager
 
             # Debug: テーマの状況を確認
-            if hasattr(self.theme_manager_widget, 'debug_theme_status'):
+            if hasattr(self.theme_manager_widget, "debug_theme_status"):
                 self.theme_manager_widget.debug_theme_status()
 
             # Connect theme change signals
-            self.theme_manager_widget.theme_changed_compat.connect(self._on_simple_theme_changed)
+            self.theme_manager_widget.theme_changed_compat.connect(
+                self._on_simple_theme_changed
+            )
             self.theme_manager_widget.theme_applied.connect(self._on_theme_applied)
             self.theme_manager_widget.theme_error.connect(self._on_theme_error)
 
             # Populate theme menu after theme manager is initialized
-            if hasattr(self, 'theme_menu'):
+            if hasattr(self, "theme_menu"):
                 self._populate_theme_menu()
 
         except Exception as e:
@@ -562,9 +582,10 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system.info("Initializing breadcrumb address bar...")
 
             # Initialize file system watcher if not already available
-            if not hasattr(self, 'file_system_watcher'):
+            if not hasattr(self, "file_system_watcher"):
                 self.logger_system.info("Creating file system watcher...")
                 from ..services.file_system_watcher import FileSystemWatcher
+
                 self.file_system_watcher = FileSystemWatcher(
                     logger_system=self.logger_system, enable_monitoring=True
                 )
@@ -574,9 +595,14 @@ class IntegratedMainWindow(QMainWindow):
             try:
                 self.logger_system.info("Creating BreadcrumbAddressBar instance...")
                 self.breadcrumb_bar = BreadcrumbAddressBar(
-                    self.file_system_watcher, self.logger_system, self.config_manager, self
+                    self.file_system_watcher,
+                    self.logger_system,
+                    self.config_manager,
+                    self,
                 )
-                self.logger_system.info("BreadcrumbAddressBar instance created successfully")
+                self.logger_system.info(
+                    "BreadcrumbAddressBar instance created successfully"
+                )
 
                 # Verify breadcrumb widget is available
                 self.logger_system.info("Checking breadcrumb widget availability...")
@@ -586,7 +612,7 @@ class IntegratedMainWindow(QMainWindow):
                         AIComponent.KIRO,
                         "breadcrumb_widget_unavailable",
                         "Breadcrumb widget not available, creating fallback",
-                        level="WARNING"
+                        level="WARNING",
                     )
                     # Set breadcrumb_bar to None instead of creating fallback
                     self.breadcrumb_bar = None
@@ -594,35 +620,51 @@ class IntegratedMainWindow(QMainWindow):
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "breadcrumb_widget_available",
-                        "Breadcrumb widget successfully initialized"
+                        "Breadcrumb widget successfully initialized",
                     )
-                    self.logger_system.info(f"Breadcrumb widget type: {type(breadcrumb_widget)}")
+                    self.logger_system.info(
+                        f"Breadcrumb widget type: {type(breadcrumb_widget)}"
+                    )
             except Exception as e:
                 self.logger_system.error(f"Failed to initialize breadcrumb bar: {e}")
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "breadcrumb_init_error",
                     f"Failed to initialize breadcrumb bar: {e}",
-                    level="WARNING"
+                    level="WARNING",
                 )
                 self.breadcrumb_bar = None
 
             # Connect breadcrumb signals
             if self.breadcrumb_bar:
                 self.logger_system.info("Connecting breadcrumb signals...")
-                self.breadcrumb_bar.path_changed.connect(self._on_breadcrumb_path_changed)
-                self.breadcrumb_bar.segment_clicked.connect(self._on_breadcrumb_segment_clicked)
-                self.breadcrumb_bar.navigation_requested.connect(self._on_breadcrumb_navigation_requested)
+                self.breadcrumb_bar.path_changed.connect(
+                    self._on_breadcrumb_path_changed
+                )
+                self.breadcrumb_bar.segment_clicked.connect(
+                    self._on_breadcrumb_segment_clicked
+                )
+                self.breadcrumb_bar.navigation_requested.connect(
+                    self._on_breadcrumb_navigation_requested
+                )
                 self.breadcrumb_bar.breadcrumb_error.connect(self._on_breadcrumb_error)
                 # Breadcrumb path changes are handled by _on_breadcrumb_path_changed
 
                 # Set initial path from state
-                current_folder = self.state_manager.get_state_value("current_folder", Path.home())
-                self.logger_system.info(f"Setting initial breadcrumb path: {current_folder}")
+                current_folder = self.state_manager.get_state_value(
+                    "current_folder", Path.home()
+                )
+                self.logger_system.info(
+                    f"Setting initial breadcrumb path: {current_folder}"
+                )
                 self.breadcrumb_bar.set_current_path(current_folder)
-                self.logger_system.info("Breadcrumb signals connected and initial path set")
+                self.logger_system.info(
+                    "Breadcrumb signals connected and initial path set"
+                )
             else:
-                self.logger_system.warning("Breadcrumb bar is None, skipping signal connections")
+                self.logger_system.warning(
+                    "Breadcrumb bar is None, skipping signal connections"
+                )
 
         except Exception as e:
             self.logger_system.error(f"Failed to initialize breadcrumb bar: {e}")
@@ -630,7 +672,7 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.KIRO,
                 "breadcrumb_init_error",
                 f"Failed to initialize breadcrumb bar: {e}",
-                level="ERROR"
+                level="ERROR",
             )
             # Set breadcrumb_bar to None instead of creating fallback
             self.breadcrumb_bar = None
@@ -641,8 +683,6 @@ class IntegratedMainWindow(QMainWindow):
                 {"operation": "breadcrumb_bar_init"},
                 AIComponent.KIRO,
             )
-
-
 
     def _apply_initial_theme(self):
         """Apply the initial theme from configuration"""
@@ -686,23 +726,25 @@ class IntegratedMainWindow(QMainWindow):
             # Connect folder changes to thumbnail grid
             self.folder_changed.connect(self._update_thumbnail_grid)
             # Connect status messages if available
-            if hasattr(self.thumbnail_grid, 'status_message'):
+            if hasattr(self.thumbnail_grid, "status_message"):
                 self.thumbnail_grid.status_message.connect(self._on_status_message)
 
         # Connect EXIF panel signals
         if self.exif_panel:
-            self.exif_panel.gps_coordinates_updated.connect(self._on_gps_coordinates_updated)
+            self.exif_panel.gps_coordinates_updated.connect(
+                self._on_gps_coordinates_updated
+            )
             # 画像選択時にEXIFパネルに画像を設定
             self.thumbnail_grid.image_selected.connect(self.exif_panel.set_image)
             # Connect status messages if available
-            if hasattr(self.exif_panel, 'status_message'):
+            if hasattr(self.exif_panel, "status_message"):
                 self.exif_panel.status_message.connect(self._on_status_message)
 
         # Connect image preview panel signals
         if self.image_preview_panel:
             self.image_preview_panel.image_loaded.connect(self._on_image_preview_loaded)
             # Connect status messages if available
-            if hasattr(self.image_preview_panel, 'status_message'):
+            if hasattr(self.image_preview_panel, "status_message"):
                 self.image_preview_panel.status_message.connect(self._on_status_message)
 
         # Connect map panel signals
@@ -710,7 +752,7 @@ class IntegratedMainWindow(QMainWindow):
             self.map_panel.map_loaded.connect(self._on_map_loaded)
             self.map_panel.map_error.connect(self._on_map_error)
             # Connect status messages if available
-            if hasattr(self.map_panel, 'status_message'):
+            if hasattr(self.map_panel, "status_message"):
                 self.map_panel.status_message.connect(self._on_status_message)
 
         # Connect performance alerts
@@ -773,12 +815,10 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.CURSOR,
             )
 
-
-
     def _populate_theme_menu(self):
         """Populate theme menu with available themes"""
         try:
-            if not hasattr(self, 'theme_menu') or not self.theme_manager_widget:
+            if not hasattr(self, "theme_menu") or not self.theme_manager_widget:
                 return
 
             # Clear existing actions
@@ -790,13 +830,18 @@ class IntegratedMainWindow(QMainWindow):
 
             # Create action group for exclusive selection
             from PySide6.QtGui import QActionGroup
+
             self.theme_action_group = QActionGroup(self)
 
             # Add theme actions
             for theme_name in sorted(available_themes):
                 # Get theme display name
                 theme_info = self.theme_manager_widget.get_theme_info(theme_name)
-                display_name = theme_info.get('display_name', theme_name.replace('_', ' ').title()) if theme_info else theme_name.replace('_', ' ').title()
+                display_name = (
+                    theme_info.get("display_name", theme_name.replace("_", " ").title())
+                    if theme_info
+                    else theme_name.replace("_", " ").title()
+                )
 
                 # Create action
                 action = QAction(display_name, self)
@@ -805,7 +850,9 @@ class IntegratedMainWindow(QMainWindow):
                 action.setData(theme_name)  # Store theme name in action data
 
                 # Connect to theme change handler
-                action.triggered.connect(lambda checked, name=theme_name: self._apply_theme(name))
+                action.triggered.connect(
+                    lambda checked, name=theme_name: self._apply_theme(name)
+                )
 
                 # Add to action group and menu
                 self.theme_action_group.addAction(action)
@@ -824,7 +871,9 @@ class IntegratedMainWindow(QMainWindow):
             self.theme_menu.addAction(advanced_theme_action)
 
             self.logger_system.log_ai_operation(
-                AIComponent.KIRO, "theme_menu_populated", f"Added {len(available_themes)} themes to menu"
+                AIComponent.KIRO,
+                "theme_menu_populated",
+                f"Added {len(available_themes)} themes to menu",
             )
 
         except Exception as e:
@@ -842,11 +891,15 @@ class IntegratedMainWindow(QMainWindow):
                 success = self.theme_manager_widget.apply_theme(theme_name)
                 if success:
                     self.logger_system.log_ai_operation(
-                        AIComponent.CURSOR, "theme_applied", f"Theme applied: {theme_name}"
+                        AIComponent.CURSOR,
+                        "theme_applied",
+                        f"Theme applied: {theme_name}",
                     )
                 else:
                     self.logger_system.log_ai_operation(
-                        AIComponent.CURSOR, "theme_apply_failed", f"Failed to apply theme: {theme_name}"
+                        AIComponent.CURSOR,
+                        "theme_apply_failed",
+                        f"Failed to apply theme: {theme_name}",
                     )
         except Exception as e:
             self.error_handler.handle_error(
@@ -883,7 +936,9 @@ class IntegratedMainWindow(QMainWindow):
             dialog.exec()
 
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "advanced_theme_selector_opened", "Advanced theme selector opened"
+                AIComponent.CURSOR,
+                "advanced_theme_selector_opened",
+                "Advanced theme selector opened",
             )
         except Exception as e:
             self.error_handler.handle_error(
@@ -897,7 +952,9 @@ class IntegratedMainWindow(QMainWindow):
         """Handle themes applied from advanced selector"""
         try:
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "advanced_theme_applied", f"Themes applied from advanced selector: {theme_list}"
+                AIComponent.CURSOR,
+                "advanced_theme_applied",
+                f"Themes applied from advanced selector: {theme_list}",
             )
 
             # 選択されたテーマを管理
@@ -911,7 +968,7 @@ class IntegratedMainWindow(QMainWindow):
                 self._update_toggle_button_text()
 
             # 選択されたテーマリストをトグルボタンに設定
-            if hasattr(self, 'theme_toggle_button'):
+            if hasattr(self, "theme_toggle_button"):
                 self.theme_toggle_button.set_selected_themes(theme_list)
 
             # Update menu selection
@@ -928,12 +985,16 @@ class IntegratedMainWindow(QMainWindow):
         """Handle theme change from toggle button"""
         try:
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "toggle_theme_changed", f"Theme toggled: {theme_name}"
+                AIComponent.CURSOR,
+                "toggle_theme_changed",
+                f"Theme toggled: {theme_name}",
             )
 
             # 選択されたテーマを循環切り替え
             if self.selected_themes and len(self.selected_themes) > 1:
-                self.current_theme_index = (self.current_theme_index + 1) % len(self.selected_themes)
+                self.current_theme_index = (self.current_theme_index + 1) % len(
+                    self.selected_themes
+                )
                 next_theme = self.selected_themes[self.current_theme_index]
 
                 # テーママネージャーに直接適用
@@ -953,7 +1014,7 @@ class IntegratedMainWindow(QMainWindow):
     def _update_toggle_button_text(self):
         """Update toggle button text to show current theme"""
         try:
-            if hasattr(self, 'theme_toggle_button'):
+            if hasattr(self, "theme_toggle_button"):
                 if self.selected_themes:
                     current_theme = self.selected_themes[self.current_theme_index]
                     self.theme_toggle_button.setText(f"テーマ切替: {current_theme}")
@@ -971,28 +1032,38 @@ class IntegratedMainWindow(QMainWindow):
         """Handle theme change from SimpleThemeManager"""
         try:
             # Update menu selection
-            if hasattr(self, 'theme_action_group'):
+            if hasattr(self, "theme_action_group"):
                 for action in self.theme_action_group.actions():
                     theme_name = action.data()
                     action.setChecked(theme_name == new_theme)
 
             # Update toolbar theme button text
-            if hasattr(self, 'theme_action'):
+            if hasattr(self, "theme_action"):
                 theme_config = self.theme_manager_widget.get_theme_config(new_theme)
-                display_name = theme_config.get('display_name', new_theme.replace('_', ' ').title()) if theme_config else new_theme.replace('_', ' ').title()
+                display_name = (
+                    theme_config.get(
+                        "display_name", new_theme.replace("_", " ").title()
+                    )
+                    if theme_config
+                    else new_theme.replace("_", " ").title()
+                )
                 self.theme_action.setText(f"🎨 {display_name}")
-                self.theme_action.setStatusTip(f"Current theme: {display_name}. Click to toggle between light and dark.")
+                self.theme_action.setStatusTip(
+                    f"Current theme: {display_name}. Click to toggle between light and dark."
+                )
 
             # Emit theme changed signal
             self.theme_changed.emit(new_theme)
 
             # EXIFパネルへテーマ再適用
-            if hasattr(self, 'exif_panel') and self.exif_panel:
-                if hasattr(self.exif_panel, 'apply_theme'):
+            if hasattr(self, "exif_panel") and self.exif_panel:
+                if hasattr(self.exif_panel, "apply_theme"):
                     self.exif_panel.apply_theme()
 
             self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "theme_changed", f"Theme changed: {old_theme} -> {new_theme}"
+                AIComponent.CURSOR,
+                "theme_changed",
+                f"Theme changed: {old_theme} -> {new_theme}",
             )
 
         except Exception as e:
@@ -1140,14 +1211,23 @@ class IntegratedMainWindow(QMainWindow):
                     )
 
                     # 個別の画像の位置にフォーカス
-                    self.map_panel.set_coordinates(latitude, longitude, focus_on_location=True, image_path=str(image_path))
+                    self.map_panel.set_coordinates(
+                        latitude,
+                        longitude,
+                        focus_on_location=True,
+                        image_path=str(image_path),
+                    )
 
                 # ログ出力
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "add_gps_to_map",
                     f"GPS座標を地図に追加: {image_path.name} ({latitude:.6f}, {longitude:.6f})",
-                    context={"image_path": str(image_path), "latitude": latitude, "longitude": longitude},
+                    context={
+                        "image_path": str(image_path),
+                        "latitude": latitude,
+                        "longitude": longitude,
+                    },
                 )
             else:
                 # GPS座標がない場合の処理
@@ -1176,8 +1256,7 @@ class IntegratedMainWindow(QMainWindow):
         try:
             # Update state with GPS coordinates
             self.state_manager.update_state(
-                current_latitude=latitude,
-                current_longitude=longitude
+                current_latitude=latitude, current_longitude=longitude
             )
 
             # Log GPS coordinates update
@@ -1188,21 +1267,22 @@ class IntegratedMainWindow(QMainWindow):
                 context={"latitude": latitude, "longitude": longitude},
             )
 
-                        # Update map panel
+            # Update map panel
             if self.map_panel:
                 self.map_panel.set_coordinates(latitude, longitude)
 
             # Update status bar
-            self.status_bar.showMessage(
-                f"GPS: {latitude:.6f}°, {longitude:.6f}°",
-                3000
-            )
+            self.status_bar.showMessage(f"GPS: {latitude:.6f}°, {longitude:.6f}°", 3000)
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "gps_coordinates_update", "lat": latitude, "lon": longitude},
+                {
+                    "operation": "gps_coordinates_update",
+                    "lat": latitude,
+                    "lon": longitude,
+                },
                 AIComponent.KIRO,
             )
 
@@ -1219,7 +1299,7 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "breadcrumb_path_changed",
-                f"Path changed via breadcrumb: {path}"
+                f"Path changed via breadcrumb: {path}",
             )
 
         except Exception as e:
@@ -1247,14 +1327,18 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "breadcrumb_segment_clicked",
-                f"Segment {segment_index} clicked: {path}"
+                f"Segment {segment_index} clicked: {path}",
             )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "breadcrumb_segment_clicked", "segment": segment_index, "path": str(path)},
+                {
+                    "operation": "breadcrumb_segment_clicked",
+                    "segment": segment_index,
+                    "path": str(path),
+                },
                 AIComponent.KIRO,
             )
 
@@ -1280,7 +1364,7 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "breadcrumb_navigation_requested",
-                f"Navigation requested: {path}"
+                f"Navigation requested: {path}",
             )
 
         except Exception as e:
@@ -1302,21 +1386,24 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.KIRO,
                 "breadcrumb_error",
                 f"Breadcrumb error ({error_type}): {error_message}",
-                level="ERROR"
+                level="ERROR",
             )
 
             # Show user notification if available
-            if hasattr(self, 'notification_system') and self.notification_system:
+            if hasattr(self, "notification_system") and self.notification_system:
                 self.notification_system.show_error(
-                    "Breadcrumb Navigation Error",
-                    error_message
+                    "Breadcrumb Navigation Error", error_message
                 )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "breadcrumb_error_handling", "error_type": error_type, "error_message": error_message},
+                {
+                    "operation": "breadcrumb_error_handling",
+                    "error_type": error_type,
+                    "error_message": error_message,
+                },
                 AIComponent.KIRO,
             )
 
@@ -1325,7 +1412,9 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status bar
-            self.status_bar.showMessage(f"画像プレビュー読み込み完了: {image_path.name}", 2000)
+            self.status_bar.showMessage(
+                f"画像プレビュー読み込み完了: {image_path.name}", 2000
+            )
 
             # Log the event
             self.logger_system.log_ai_operation(
@@ -1348,7 +1437,9 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status bar
-            self.status_bar.showMessage(f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}", 2000)
+            self.status_bar.showMessage(
+                f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}", 2000
+            )
 
             # Log the event
             self.logger_system.log_ai_operation(
@@ -1362,7 +1453,11 @@ class IntegratedMainWindow(QMainWindow):
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "map_loaded", "latitude": latitude, "longitude": longitude},
+                {
+                    "operation": "map_loaded",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                },
                 AIComponent.KIRO,
             )
 
@@ -1415,25 +1510,31 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update integrated theme manager to stay in sync
-            if self.theme_manager and hasattr(self.theme_manager, 'apply_theme'):
+            if self.theme_manager and hasattr(self.theme_manager, "apply_theme"):
                 self.theme_manager.apply_theme(new_theme)
 
             # Update status
-            self.status_bar.showMessage(f"Theme changed from {old_theme} to {new_theme}", 2000)
+            self.status_bar.showMessage(
+                f"Theme changed from {old_theme} to {new_theme}", 2000
+            )
 
             # Log the change
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "theme_changed_via_widget",
                 f"Theme changed from {old_theme} to {new_theme}",
-                context={"old_theme": old_theme, "new_theme": new_theme}
+                context={"old_theme": old_theme, "new_theme": new_theme},
             )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "theme_manager_widget_change", "old_theme": old_theme, "new_theme": new_theme},
+                {
+                    "operation": "theme_manager_widget_change",
+                    "old_theme": old_theme,
+                    "new_theme": new_theme,
+                },
                 AIComponent.KIRO,
             )
 
@@ -1449,7 +1550,7 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.KIRO,
                 "theme_applied",
                 f"Theme applied successfully: {theme_name}",
-                context={"theme_name": theme_name}
+                context={"theme_name": theme_name},
             )
 
         except Exception as e:
@@ -1476,18 +1577,25 @@ class IntegratedMainWindow(QMainWindow):
             )
 
             # Show user notification for critical errors
-            if "not found" in error_message.lower() or "failed to load" in error_message.lower():
+            if (
+                "not found" in error_message.lower()
+                or "failed to load" in error_message.lower()
+            ):
                 QMessageBox.warning(
                     self,
                     "Theme Error",
-                    f"Failed to apply theme '{theme_name}':\n{error_message}\n\nReverting to default theme."
+                    f"Failed to apply theme '{theme_name}':\n{error_message}\n\nReverting to default theme.",
                 )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "theme_error_handling", "theme": theme_name, "error": error_message},
+                {
+                    "operation": "theme_error_handling",
+                    "theme": theme_name,
+                    "error": error_message,
+                },
                 AIComponent.KIRO,
             )
 
@@ -1511,7 +1619,7 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.KIRO,
                 "breadcrumb_navigation",
                 f"Navigated via breadcrumb to: {new_path}",
-                context={"path": str(new_path)}
+                context={"path": str(new_path)},
             )
 
         except Exception as e:
@@ -1527,21 +1635,27 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status
-            self.status_bar.showMessage(f"Navigated to segment {segment_index}: {path.name}", 2000)
+            self.status_bar.showMessage(
+                f"Navigated to segment {segment_index}: {path.name}", 2000
+            )
 
             # Log the segment click
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "breadcrumb_segment_click",
                 f"Clicked breadcrumb segment {segment_index}: {path}",
-                context={"segment_index": segment_index, "path": str(path)}
+                context={"segment_index": segment_index, "path": str(path)},
             )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "breadcrumb_segment_click", "segment": segment_index, "path": str(path)},
+                {
+                    "operation": "breadcrumb_segment_click",
+                    "segment": segment_index,
+                    "path": str(path),
+                },
                 AIComponent.KIRO,
             )
 
@@ -1551,7 +1665,9 @@ class IntegratedMainWindow(QMainWindow):
         try:
             # Validate path before navigation
             if not target_path.exists() or not target_path.is_dir():
-                self.status_bar.showMessage(f"Cannot navigate to: {target_path} (path not accessible)", 3000)
+                self.status_bar.showMessage(
+                    f"Cannot navigate to: {target_path} (path not accessible)", 3000
+                )
                 return
 
             # Perform navigation
@@ -1562,14 +1678,17 @@ class IntegratedMainWindow(QMainWindow):
                 AIComponent.KIRO,
                 "breadcrumb_navigation_request",
                 f"Navigation requested to: {target_path}",
-                context={"target_path": str(target_path)}
+                context={"target_path": str(target_path)},
             )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "breadcrumb_navigation_request", "path": str(target_path)},
+                {
+                    "operation": "breadcrumb_navigation_request",
+                    "path": str(target_path),
+                },
                 AIComponent.KIRO,
             )
 
@@ -1592,7 +1711,11 @@ class IntegratedMainWindow(QMainWindow):
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.UI_ERROR,
-                {"operation": "breadcrumb_error_handling", "error_type": error_type, "error": error_message},
+                {
+                    "operation": "breadcrumb_error_handling",
+                    "error_type": error_type,
+                    "error": error_message,
+                },
                 AIComponent.KIRO,
             )
 
@@ -1609,44 +1732,46 @@ class IntegratedMainWindow(QMainWindow):
             # Folder navigator removed - no theming needed
 
             # Add thumbnail grid if it supports theming
-            if self.thumbnail_grid and hasattr(self.thumbnail_grid, 'apply_theme'):
+            if self.thumbnail_grid and hasattr(self.thumbnail_grid, "apply_theme"):
                 components_to_register.append(self.thumbnail_grid)
 
             # Add EXIF panel if it supports theming
-            if hasattr(self, 'exif_panel') and hasattr(self.exif_panel, 'apply_theme'):
+            if hasattr(self, "exif_panel") and hasattr(self.exif_panel, "apply_theme"):
                 components_to_register.append(self.exif_panel)
 
             # Add image preview panel if it supports theming
-            if hasattr(self, 'image_preview_panel') and hasattr(self.image_preview_panel, 'apply_theme'):
+            if hasattr(self, "image_preview_panel") and hasattr(
+                self.image_preview_panel, "apply_theme"
+            ):
                 components_to_register.append(self.image_preview_panel)
 
             # Add map panel if it supports theming
-            if hasattr(self, 'map_panel') and hasattr(self.map_panel, 'apply_theme'):
+            if hasattr(self, "map_panel") and hasattr(self.map_panel, "apply_theme"):
                 components_to_register.append(self.map_panel)
 
             # Add breadcrumb bar widget if it supports theming
             if self.breadcrumb_bar and self.breadcrumb_bar.get_widget():
                 breadcrumb_widget = self.breadcrumb_bar.get_widget()
-                if hasattr(breadcrumb_widget, 'apply_theme'):
+                if hasattr(breadcrumb_widget, "apply_theme"):
                     components_to_register.append(breadcrumb_widget)
 
             # Register all theme-aware components
             for component in components_to_register:
-                if hasattr(self.theme_manager_widget, 'register_component'):
+                if hasattr(self.theme_manager_widget, "register_component"):
                     success = self.theme_manager_widget.register_component(component)
                     if success:
                         self.logger_system.log_ai_operation(
                             AIComponent.KIRO,
                             "component_registered_for_theming",
                             f"Component registered for theme updates: {type(component).__name__}",
-                            context={"component_type": type(component).__name__}
+                            context={"component_type": type(component).__name__},
                         )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "theme_aware_components_registered",
                 f"Registered {len(components_to_register)} components for theme updates",
-                context={"component_count": len(components_to_register)}
+                context={"component_count": len(components_to_register)},
             )
 
         except Exception as e:
@@ -1735,9 +1860,7 @@ class IntegratedMainWindow(QMainWindow):
 
             except Exception as discovery_error:
                 # Handle FileDiscoveryService errors
-                error_msg = (
-                    f"ファイル検出中にエラーが発生しました: {str(discovery_error)}"
-                )
+                error_msg = f"ファイル検出中にエラーが発生しました: {discovery_error!s}"
 
                 self.logger_system.log_error(
                     AIComponent.KIRO,
@@ -1757,13 +1880,13 @@ class IntegratedMainWindow(QMainWindow):
                 self._show_error_dialog(
                     "ファイル検出エラー",
                     f"フォルダ '{folder_path.name}' の画像ファイル検出中にエラーが発生しました。\n\n"
-                    f"詳細: {str(discovery_error)}\n\n"
+                    f"詳細: {discovery_error!s}\n\n"
                     "フォルダの権限を確認するか、別のフォルダを選択してください。",
                 )
 
         except Exception as e:
             # Handle unexpected errors
-            error_msg = f"サムネイル更新中に予期しないエラーが発生しました: {str(e)}"
+            error_msg = f"サムネイル更新中に予期しないエラーが発生しました: {e!s}"
 
             self.error_handler.handle_error(
                 e,
@@ -1827,7 +1950,10 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # UI要素が初期化されているかチェック
-            if not hasattr(self, "status_performance") or self.status_performance is None:
+            if (
+                not hasattr(self, "status_performance")
+                or self.status_performance is None
+            ):
                 return
 
             # Get performance summary from state manager
@@ -1876,7 +2002,9 @@ class IntegratedMainWindow(QMainWindow):
             self.status_memory.setText(f"Memory: {memory_mb:.1f} MB")
 
             # Check for memory thresholds (no text overwrite; could update tooltip or color later if needed)
-            _max_memory = self.config_manager.get_setting("performance.max_memory_mb", 512)
+            _max_memory = self.config_manager.get_setting(
+                "performance.max_memory_mb", 512
+            )
             if memory_mb > _max_memory * 0.9:
                 self.status_memory.setStyleSheet("color: red;")
             elif memory_mb > _max_memory * 0.7:
@@ -1902,13 +2030,13 @@ class IntegratedMainWindow(QMainWindow):
             self.config_manager.set_setting("ui.window_geometry", self.saveGeometry())
 
             # Save splitter states
-            splitter_states = {
-                "main_splitter": self.main_splitter.saveState()
-            }
+            splitter_states = {"main_splitter": self.main_splitter.saveState()}
 
             # 左パネルスプリッターの状態も保存
             if hasattr(self, "left_panel_splitter"):
-                splitter_states["left_panel_splitter"] = self.left_panel_splitter.saveState()
+                splitter_states["left_panel_splitter"] = (
+                    self.left_panel_splitter.saveState()
+                )
 
             self.config_manager.set_setting("ui.splitter_states", splitter_states)
 

@@ -36,7 +36,7 @@ def main():
         config_manager=config_manager, logger_system=logger_system
     )
 
-    print(f"   ✓ ImageProcessor initialized")
+    print("   ✓ ImageProcessor initialized")
     print(f"   ✓ Supported formats: {len(processor.get_supported_formats())}")
     print(
         f"   ✓ Libraries available: {processor.get_performance_stats()['libraries_available']}"

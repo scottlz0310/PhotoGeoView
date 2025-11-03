@@ -22,7 +22,7 @@ def setup_hooks():
         return False
 
     # pre-commit フック
-    pre_commit_content = '''#!/bin/sh
+    pre_commit_content = """#!/bin/sh
 # PhotoGeoView Simple CI Pre-commit Hook
 # Updated for simple CI system
 
@@ -63,10 +63,10 @@ elif [ $EXIT_CODE -ne 0 ]; then
 fi
 
 echo "✅ CI checks passed. Proceeding with commit."
-exit 0'''
+exit 0"""
 
     # pre-push フック
-    pre_push_content = '''#!/bin/sh
+    pre_push_content = """#!/bin/sh
 # PhotoGeoView Simple CI Pre-push Hook
 # Updated for simple CI system
 
@@ -130,13 +130,10 @@ elif [ $EXIT_CODE -ne 0 ]; then
 fi
 
 echo "✅ CI checks passed. Proceeding with push."
-exit 0'''
+exit 0"""
 
     # フックファイルを作成
-    hooks = [
-        ("pre-commit", pre_commit_content),
-        ("pre-push", pre_push_content)
-    ]
+    hooks = [("pre-commit", pre_commit_content), ("pre-push", pre_push_content)]
 
     for hook_name, content in hooks:
         hook_file = hooks_dir / hook_name
@@ -148,7 +145,7 @@ exit 0'''
             print(f"📋 既存の{hook_name}をバックアップ: {backup_file}")
 
         # 新しいフックファイルを作成
-        with open(hook_file, 'w', encoding='utf-8') as f:
+        with open(hook_file, "w", encoding="utf-8") as f:
             f.write(content)
 
         # 実行権限を付与
@@ -206,7 +203,7 @@ def status_hooks():
 
         if hook_file.exists():
             # ファイルの内容をチェック
-            with open(hook_file, 'r', encoding='utf-8') as f:
+            with open(hook_file, encoding="utf-8") as f:
                 content = f.read()
 
             if "PhotoGeoView Simple CI" in content:
@@ -218,16 +215,16 @@ def status_hooks():
 
             # 実行権限をチェック
             if os.access(hook_file, os.X_OK):
-                print(f"   実行権限: ✅")
+                print("   実行権限: ✅")
             else:
-                print(f"   実行権限: ❌")
+                print("   実行権限: ❌")
         else:
             print(f"❌ {hook_name}: 未設定")
 
         # バックアップファイルの確認
         backup_file = hooks_dir / f"{hook_name}.backup"
         if backup_file.exists():
-            print(f"   バックアップ: 📋 あり")
+            print("   バックアップ: 📋 あり")
 
 
 def main():
@@ -235,8 +232,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="PhotoGeoView Git Hooks Setup")
-    parser.add_argument("action", choices=["setup", "remove", "status"],
-                       help="実行するアクション")
+    parser.add_argument(
+        "action", choices=["setup", "remove", "status"], help="実行するアクション"
+    )
 
     args = parser.parse_args()
 

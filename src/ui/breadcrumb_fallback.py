@@ -4,13 +4,11 @@ BreadcrumbWidget フォールバック実装
 breadcrumb_addressbarライブラリが利用できない場合の代替実装
 """
 
-from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QLabel, QPushButton, QFrame
-)
-from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QFont, QPalette
 from pathlib import Path
-from typing import List, Optional
+
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QWidget
+
 
 class BreadcrumbSegment(QPushButton):
     """ブレッドクラムセグメント"""
@@ -37,6 +35,7 @@ class BreadcrumbSegment(QPushButton):
             }
         """)
 
+
 class BreadcrumbSeparator(QLabel):
     """ブレッドクラム区切り文字"""
 
@@ -49,6 +48,7 @@ class BreadcrumbSeparator(QLabel):
                 font-weight: normal;
             }
         """)
+
 
 class BreadcrumbWidgetFallback(QWidget):
     """
@@ -106,6 +106,7 @@ class BreadcrumbWidgetFallback(QWidget):
                 self.pathChanged.emit(str(self.current_path))
         except Exception as e:
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(f"Invalid path: {path} - {e}")
 
@@ -139,7 +140,7 @@ class BreadcrumbWidgetFallback(QWidget):
                     self.add_separator()
 
                 # パスを構築
-                segment_path = Path(*parts[:i+1])
+                segment_path = Path(*parts[: i + 1])
                 self.add_segment(part, segment_path)
         else:
             # 全セグメントを表示
@@ -148,7 +149,7 @@ class BreadcrumbWidgetFallback(QWidget):
                     self.add_separator()
 
                 # パスを構築
-                segment_path = Path(*parts[:i+1])
+                segment_path = Path(*parts[: i + 1])
                 self.add_segment(part, segment_path)
 
     def add_segment(self, text: str, path: Path):
@@ -180,6 +181,7 @@ class BreadcrumbWidgetFallback(QWidget):
         for separator in self.separators:
             separator.deleteLater()
         self.separators.clear()
+
 
 # breadcrumb_addressbarからのインポートを試行し、失敗した場合はフォールバックを使用
 try:

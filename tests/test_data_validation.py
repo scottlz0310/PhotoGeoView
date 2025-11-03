@@ -9,7 +9,7 @@ Author: Kiro AI Integration System
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -36,6 +36,7 @@ class TestDataValidator:
     def temp_dir(self):
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             pytest.skip("Windows環境ではデータ検証テストをスキップ")
         """Create temporary directory for test files"""

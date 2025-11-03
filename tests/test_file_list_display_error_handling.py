@@ -12,32 +12,21 @@ Author: Kiro AI Integration System
 
 import os
 import shutil
-import stat
 import sys
 import tempfile
 import time
 import unittest
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import Mock
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent
-from src.integration.services.file_discovery_errors import (
-    CorruptedFileError,
-    FileDiscoveryError,
-    FileValidationError,
-    FolderAccessError,
-    FolderNotFoundError,
-    PermissionDeniedError,
-)
 from src.integration.services.file_discovery_service import FileDiscoveryService
 from src.integration.state_manager import StateManager
-from src.integration.ui.folder_navigator import EnhancedFolderNavigator
 
 
 class FileListDisplayErrorHandlingTest(unittest.TestCase):
@@ -55,8 +44,11 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
         """テストセットアップ"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
-            self.skipTest("Windows環境ではファイルリスト表示エラーハンドリングテストをスキップ")
+            self.skipTest(
+                "Windows環境ではファイルリスト表示エラーハンドリングテストをスキップ"
+            )
 
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
@@ -232,7 +224,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 存在しないフォルダのエラーハンドリング成功")
+            print("✅ 存在しないフォルダのエラーハンドリング成功")
             print(f"   フォルダパス: {self.nonexistent_folder}")
             print(f"   検出された画像: {len(discovered_images)}個（期待値: 0）")
             print(f"   処理時間: {duration:.3f}秒")
@@ -327,7 +319,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 権限のないフォルダのエラーハンドリング成功")
+            print("✅ 権限のないフォルダのエラーハンドリング成功")
             print(f"   フォルダパス: {self.restricted_folder}")
             print(f"   検出された画像: {len(discovered_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
@@ -440,7 +432,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 破損ファイルのエラーハンドリング成功")
+            print("✅ 破損ファイルのエラーハンドリング成功")
             print(f"   フォルダパス: {self.corrupted_files_folder}")
             print(f"   検出された有効画像: {len(discovered_images)}個（期待値: 0）")
             print(f"   テストした破損ファイル: {len(validation_results)}個")
@@ -543,7 +535,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 混在フォルダのエラーハンドリング成功")
+            print("✅ 混在フォルダのエラーハンドリング成功")
             print(f"   フォルダパス: {self.mixed_folder}")
             print(f"   検出された画像: {len(discovered_images)}個（期待値: 1）")
             print(f"   検出されたファイル: {[img.name for img in discovered_images]}")
@@ -641,7 +633,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 日本語エラーメッセージの包括的テスト成功")
+            print("✅ 日本語エラーメッセージの包括的テスト成功")
             print(f"   テストシナリオ数: {len(error_scenarios)}個")
             print(f"   処理時間: {duration:.3f}秒")
             print(
@@ -749,7 +741,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ エラー回復と処理継続テスト成功")
+            print("✅ エラー回復と処理継続テスト成功")
             print(f"   処理フォルダ数: {total_processes}個")
             print(f"   成功: {successful_processes}個")
             print(f"   エラー: {total_processes - successful_processes}個")
@@ -852,7 +844,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ UIエラー統合テスト成功")
+            print("✅ UIエラー統合テスト成功")
             print(f"   エラーシナリオ数: {len(error_scenarios)}個")
             print(f"   処理時間: {duration:.3f}秒")
             print(

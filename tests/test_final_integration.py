@@ -9,22 +9,22 @@ Tests the complete integration of all AI components:
 Author: Kiro AI Integration System
 """
 
-import pytest
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+
+import pytest
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QTimer
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from integration.ui.main_window import IntegratedMainWindow
 from integration.config_manager import ConfigManager
 from integration.error_handling import IntegratedErrorHandler
 from integration.logging_system import LoggerSystem
-from integration.state_manager import StateManager
 from integration.models import AIComponent
+from integration.state_manager import StateManager
+from integration.ui.main_window import IntegratedMainWindow
 
 
 class TestFinalIntegration:
@@ -43,10 +43,12 @@ class TestFinalIntegration:
     @pytest.fixture
     def mock_dependencies(self):
         """Mock external dependencies"""
-        with patch('integration.ui.main_window.FileDiscoveryService'), \
-             patch('integration.ui.main_window.FileSystemWatcher'), \
-             patch('integration.services.file_discovery_service.FileDiscoveryService'), \
-             patch('integration.services.file_system_watcher.FileSystemWatcher'):
+        with (
+            patch("integration.ui.main_window.FileDiscoveryService"),
+            patch("integration.ui.main_window.FileSystemWatcher"),
+            patch("integration.services.file_discovery_service.FileDiscoveryService"),
+            patch("integration.services.file_system_watcher.FileSystemWatcher"),
+        ):
             yield
 
     @pytest.fixture
@@ -74,37 +76,37 @@ class TestFinalIntegration:
         assert main_window.minimumSize().height() >= 800
 
         # Verify core components are initialized
-        assert hasattr(main_window, 'config_manager')
-        assert hasattr(main_window, 'error_handler')
-        assert hasattr(main_window, 'logger_system')
-        assert hasattr(main_window, 'state_manager')
+        assert hasattr(main_window, "config_manager")
+        assert hasattr(main_window, "error_handler")
+        assert hasattr(main_window, "logger_system")
+        assert hasattr(main_window, "state_manager")
 
         # Verify UI components
-        assert hasattr(main_window, 'status_bar')
-        assert hasattr(main_window, 'folder_navigator')
-        assert hasattr(main_window, 'thumbnail_grid')
+        assert hasattr(main_window, "status_bar")
+        assert hasattr(main_window, "folder_navigator")
+        assert hasattr(main_window, "thumbnail_grid")
 
     def test_ai_component_integration(self, main_window):
         """Test that all AI components are properly integrated"""
 
         # Test CS4Coding components (image processing)
-        assert hasattr(main_window, 'exif_panel')
+        assert hasattr(main_window, "exif_panel")
 
         # Test CursorBLD components (UI/UX)
-        assert hasattr(main_window, 'folder_navigator')
-        assert hasattr(main_window, 'thumbnail_grid')
-        assert hasattr(main_window, 'theme_manager')
+        assert hasattr(main_window, "folder_navigator")
+        assert hasattr(main_window, "thumbnail_grid")
+        assert hasattr(main_window, "theme_manager")
 
         # Test Kiro components (optimization and integration)
-        assert hasattr(main_window, 'performance_timer')
-        assert hasattr(main_window, 'memory_monitor')
-        assert hasattr(main_window, 'error_handler')
+        assert hasattr(main_window, "performance_timer")
+        assert hasattr(main_window, "memory_monitor")
+        assert hasattr(main_window, "error_handler")
 
     def test_status_message_handling(self, main_window):
         """Test status message handling system"""
 
         # Verify status message handler exists
-        assert hasattr(main_window, '_on_status_message')
+        assert hasattr(main_window, "_on_status_message")
 
         # Test status message handling
         test_message = "Test status message"
@@ -120,15 +122,15 @@ class TestFinalIntegration:
         """Test that signals are properly connected between components"""
 
         # Verify signal connection method exists
-        assert hasattr(main_window, '_connect_signals')
+        assert hasattr(main_window, "_connect_signals")
 
         # Test that components have expected signals
         if main_window.folder_navigator:
-            assert hasattr(main_window.folder_navigator, 'folder_changed')
-            assert hasattr(main_window.folder_navigator, 'status_message')
+            assert hasattr(main_window.folder_navigator, "folder_changed")
+            assert hasattr(main_window.folder_navigator, "status_message")
 
         if main_window.thumbnail_grid:
-            assert hasattr(main_window.thumbnail_grid, 'image_selected')
+            assert hasattr(main_window.thumbnail_grid, "image_selected")
 
     def test_error_handling_integration(self, main_window):
         """Test integrated error handling system"""
@@ -147,7 +149,7 @@ class TestFinalIntegration:
                 Exception("Test error"),
                 ErrorCategory.UI_ERROR,
                 {"test": "data"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
         except Exception as e:
             pytest.fail(f"Error handling failed: {e}")
@@ -162,9 +164,7 @@ class TestFinalIntegration:
         # Test logging doesn't crash
         try:
             main_window.logger_system.log_ai_operation(
-                AIComponent.KIRO,
-                "test_operation",
-                "Test log message"
+                AIComponent.KIRO, "test_operation", "Test log message"
             )
         except Exception as e:
             pytest.fail(f"Logging failed: {e}")
@@ -195,7 +195,9 @@ class TestFinalIntegration:
         try:
             # Test state operations with existing state keys
             # Use a simpler state key that should work
-            original_value = main_window.state_manager.get_state_value("current_theme", "default")
+            original_value = main_window.state_manager.get_state_value(
+                "current_theme", "default"
+            )
 
             # Test setting and getting a state value
             test_result = main_window.state_manager.update_state(current_theme="dark")
@@ -211,9 +213,9 @@ class TestFinalIntegration:
         """Test performance monitoring integration"""
 
         # Verify performance monitoring components
-        assert hasattr(main_window, 'performance_timer')
-        assert hasattr(main_window, 'memory_monitor')
-        assert hasattr(main_window, '_on_performance_alert')
+        assert hasattr(main_window, "performance_timer")
+        assert hasattr(main_window, "memory_monitor")
+        assert hasattr(main_window, "_on_performance_alert")
 
         # Test performance alert handling
         try:
@@ -225,10 +227,10 @@ class TestFinalIntegration:
         """Test theme management integration"""
 
         # Verify theme manager is integrated
-        assert hasattr(main_window, 'theme_manager')
+        assert hasattr(main_window, "theme_manager")
 
         # Test theme change handling
-        if hasattr(main_window, '_on_theme_changed'):
+        if hasattr(main_window, "_on_theme_changed"):
             try:
                 main_window._on_theme_changed("dark")
             except Exception as e:

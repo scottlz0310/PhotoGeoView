@@ -10,14 +10,10 @@ Author: Kiro AI Integration System
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 # Import new theme and navigation interfaces
-from .theme_interfaces import IThemeManager as IThemeManagerNew, IThemeProvider, IThemeValidator
-from .navigation_interfaces import INavigationManager, INavigationProvider, IBreadcrumbRenderer
-from .theme_navigation_integration import IThemeNavigationIntegration
 
 
 class IImageProcessor(ABC):
@@ -406,6 +402,7 @@ class IPerformanceMonitor(ABC):
             Dictionary mapping AI component names to status strings
         """
         pass
+
 
 # Note: Additional interfaces for theme and navigation integration are available in:
 # - theme_interfaces.py: Theme management interfaces (IThemeProvider, IThemeValidator, etc.)

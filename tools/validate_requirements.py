@@ -12,12 +12,11 @@ AI貢献者:
 """
 
 import json
-import subprocess
 import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 
 class ValidationStatus(Enum):
@@ -604,7 +603,7 @@ def main():
             print(report)
 
     # 結果表示
-    print(f"\n要件検証完了:")
+    print("\n要件検証完了:")
     print(f"  総要件数: {summary['total_requirements']}")
     print(f"  合格: {summary['passed']}")
     print(f"  不合格: {summary['failed']}")

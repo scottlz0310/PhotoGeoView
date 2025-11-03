@@ -24,6 +24,7 @@ from ..state_manager import StateManager
 
 class QtThemeManagerProtocol(Protocol):
     """Protocol for Qt theme manager"""
+
     def get_available_themes(self) -> Dict[str, Any]: ...
     def set_theme(self, theme_name: str) -> bool: ...
 
@@ -147,7 +148,7 @@ class IntegratedThemeManager(QObject):
                 import qt_theme_manager
 
                 self.qt_theme_manager = qt_theme_manager.ThemeController()
-                if hasattr(self.qt_theme_manager, 'get_available_themes'):
+                if hasattr(self.qt_theme_manager, "get_available_themes"):
                     themes = self.qt_theme_manager.get_available_themes()
                     self.qt_themes_available = list(themes.keys())
                 else:
@@ -233,18 +234,28 @@ class IntegratedThemeManager(QObject):
                 },
             ]
 
-            self.logger_system.info(f"Processing {len(builtin_themes)} built-in themes...")
+            self.logger_system.info(
+                f"Processing {len(builtin_themes)} built-in themes..."
+            )
 
             for theme_info in builtin_themes:
                 try:
                     theme_config = self._create_builtin_theme_config(theme_info)
                     self.themes[theme_config.name] = theme_config
-                    self.logger_system.info(f"Created theme: {theme_config.name} ({theme_config.display_name})")
+                    self.logger_system.info(
+                        f"Created theme: {theme_config.name} ({theme_config.display_name})"
+                    )
                 except Exception as e:
-                    self.logger_system.error(f"Failed to create theme {theme_info['name']}: {e}")
+                    self.logger_system.error(
+                        f"Failed to create theme {theme_info['name']}: {e}"
+                    )
 
-            self.logger_system.info(f"Successfully loaded {len(self.themes)} built-in themes")
-            self.logger_system.info(f"Available theme names: {list(self.themes.keys())}")
+            self.logger_system.info(
+                f"Successfully loaded {len(self.themes)} built-in themes"
+            )
+            self.logger_system.info(
+                f"Available theme names: {list(self.themes.keys())}"
+            )
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -364,22 +375,28 @@ class IntegratedThemeManager(QObject):
         """Load custom theme configurations"""
 
         try:
-            self.logger_system.info(f"Loading custom themes from: {self.custom_theme_dir}")
+            self.logger_system.info(
+                f"Loading custom themes from: {self.custom_theme_dir}"
+            )
 
             for theme_file in self.custom_theme_dir.glob("*.json"):
                 try:
                     self.logger_system.info(f"Processing theme file: {theme_file}")
 
-                    with open(theme_file, "r", encoding="utf-8") as f:
+                    with open(theme_file, encoding="utf-8") as f:
                         theme_data = json.load(f)
 
                     self.logger_system.info(f"Theme data type: {type(theme_data)}")
 
                     # テーマファイルが配列形式の場合の処理
                     if isinstance(theme_data, list):
-                        self.logger_system.info(f"Processing {len(theme_data)} themes from array")
+                        self.logger_system.info(
+                            f"Processing {len(theme_data)} themes from array"
+                        )
                         for theme_item in theme_data:
-                            if isinstance(theme_item, dict) and self._validate_theme_config(theme_item):
+                            if isinstance(
+                                theme_item, dict
+                            ) and self._validate_theme_config(theme_item):
                                 theme_config = ThemeConfiguration(**theme_item)
                                 self.themes[theme_config.name] = theme_config
 
@@ -456,7 +473,9 @@ class IntegratedThemeManager(QObject):
     def get_available_themes(self) -> List[str]:
         """Get list of available theme names"""
         themes_list = list(self.themes.keys())
-        self.logger_system.info(f"get_available_themes called, returning {len(themes_list)} themes: {themes_list}")
+        self.logger_system.info(
+            f"get_available_themes called, returning {len(themes_list)} themes: {themes_list}"
+        )
         return themes_list
 
     def debug_theme_status(self):
@@ -468,11 +487,15 @@ class IntegratedThemeManager(QObject):
             self.logger_system.info(f"Available themes: {list(self.themes.keys())}")
 
             for theme_name, theme_config in self.themes.items():
-                self.logger_system.info(f"  - {theme_name}: {theme_config.display_name}")
-                if hasattr(theme_config, 'color_scheme'):
+                self.logger_system.info(
+                    f"  - {theme_name}: {theme_config.display_name}"
+                )
+                if hasattr(theme_config, "color_scheme"):
                     self.logger_system.info(f"    Colors: {theme_config.color_scheme}")
-                if hasattr(theme_config, 'style_sheet'):
-                    self.logger_system.info(f"    Style sheet length: {len(theme_config.style_sheet)}")
+                if hasattr(theme_config, "style_sheet"):
+                    self.logger_system.info(
+                        f"    Style sheet length: {len(theme_config.style_sheet)}"
+                    )
 
             self.logger_system.info("=== End Theme Manager Debug Status ===")
 
@@ -486,32 +509,42 @@ class IntegratedThemeManager(QObject):
             self.logger_system.info(f"Starting theme application: {theme_name}")
 
             if theme_name not in self.themes:
-                self.logger_system.error(f"Theme '{theme_name}' not found in available themes: {list(self.themes.keys())}")
+                self.logger_system.error(
+                    f"Theme '{theme_name}' not found in available themes: {list(self.themes.keys())}"
+                )
                 self.theme_error.emit(theme_name, f"Theme '{theme_name}' not found")
                 return False
 
             theme = self.themes[theme_name]
-            self.logger_system.info(f"Found theme configuration: {theme.name} - {theme.display_name}")
+            self.logger_system.info(
+                f"Found theme configuration: {theme.name} - {theme.display_name}"
+            )
 
             # Apply Qt theme (CursorBLD integration)
             success = self._apply_qt_theme(theme)
 
             if success:
-                self.logger_system.info("Qt theme applied successfully, applying additional features...")
+                self.logger_system.info(
+                    "Qt theme applied successfully, applying additional features..."
+                )
 
                 # Apply accessibility features (Kiro enhancement)
                 try:
                     self._apply_accessibility_features(theme)
                     self.logger_system.info("Accessibility features applied")
                 except Exception as e:
-                    self.logger_system.warning(f"Failed to apply accessibility features: {e}")
+                    self.logger_system.warning(
+                        f"Failed to apply accessibility features: {e}"
+                    )
 
                 # Apply performance settings (Kiro enhancement)
                 try:
                     self._apply_performance_settings(theme)
                     self.logger_system.info("Performance settings applied")
                 except Exception as e:
-                    self.logger_system.warning(f"Failed to apply performance settings: {e}")
+                    self.logger_system.warning(
+                        f"Failed to apply performance settings: {e}"
+                    )
 
                 # Update current theme
                 old_theme = self.current_theme
@@ -522,7 +555,9 @@ class IntegratedThemeManager(QObject):
                     self.config_manager.set_setting("ui.theme", theme_name)
                     self.logger_system.info("Theme configuration saved")
                 except Exception as e:
-                    self.logger_system.warning(f"Failed to save theme configuration: {e}")
+                    self.logger_system.warning(
+                        f"Failed to save theme configuration: {e}"
+                    )
 
                 # Update state
                 try:
@@ -542,10 +577,14 @@ class IntegratedThemeManager(QObject):
                     self.logger_system.warning(f"Failed to emit theme signals: {e}")
 
                 self.logger_system.log_ai_operation(
-                    AIComponent.CURSOR, "theme_apply", f"Theme applied successfully: {theme_name}"
+                    AIComponent.CURSOR,
+                    "theme_apply",
+                    f"Theme applied successfully: {theme_name}",
                 )
 
-                self.logger_system.info(f"Theme application completed successfully: {theme_name}")
+                self.logger_system.info(
+                    f"Theme application completed successfully: {theme_name}"
+                )
                 return True
             else:
                 self.logger_system.error(f"Failed to apply Qt theme: {theme_name}")
@@ -555,6 +594,7 @@ class IntegratedThemeManager(QObject):
         except Exception as e:
             self.logger_system.error(f"Exception during theme application: {e}")
             import traceback
+
             self.logger_system.error(f"Traceback: {traceback.format_exc()}")
 
             self.error_handler.handle_error(
@@ -569,30 +609,30 @@ class IntegratedThemeManager(QObject):
         """Get configuration for the specified theme"""
 
         # Return basic theme info based on theme name
-        is_dark = 'dark' in theme_name.lower()
+        is_dark = "dark" in theme_name.lower()
 
         # Define color schemes for different theme types
         if is_dark:
             color_scheme = {
-                'border': '#2c3e50',
-                'primary': '#3498db',
-                'accent': '#2980b9',
-                'background': '#2c3e50',
-                'text': '#ecf0f1'
+                "border": "#2c3e50",
+                "primary": "#3498db",
+                "accent": "#2980b9",
+                "background": "#2c3e50",
+                "text": "#ecf0f1",
             }
         else:
             color_scheme = {
-                'border': '#bdc3c7',
-                'primary': '#3498db',
-                'accent': '#2980b9',
-                'background': '#ffffff',
-                'text': '#2c3e50'
+                "border": "#bdc3c7",
+                "primary": "#3498db",
+                "accent": "#2980b9",
+                "background": "#ffffff",
+                "text": "#2c3e50",
             }
 
         return {
             "name": theme_name,
-            "display_name": theme_name.replace('_', ' ').title(),
-            "description": f'{theme_name} theme',
+            "display_name": theme_name.replace("_", " ").title(),
+            "description": f"{theme_name} theme",
             "color_scheme": color_scheme,
             "accessibility_features": {},
             "performance_settings": {},
@@ -605,9 +645,9 @@ class IntegratedThemeManager(QObject):
         theme_config = self.get_theme_config(theme_name)
         if theme_config:
             return {
-                'display_name': theme_config.get('display_name', theme_name),
-                'description': theme_config.get('description', f'{theme_name} theme'),
-                'name': theme_name
+                "display_name": theme_config.get("display_name", theme_name),
+                "description": theme_config.get("description", f"{theme_name} theme"),
+                "name": theme_name,
             }
         return None
 
@@ -617,26 +657,26 @@ class IntegratedThemeManager(QObject):
             current_theme = self.get_current_theme()
             theme_config = self.get_theme_config(current_theme)
 
-            if theme_config and 'color_scheme' in theme_config:
-                color_scheme = theme_config['color_scheme']
+            if theme_config and "color_scheme" in theme_config:
+                color_scheme = theme_config["color_scheme"]
                 if color_type in color_scheme:
                     return color_scheme[color_type]
 
             # Fallback colors based on theme type
-            if current_theme in ['dark', 'dark_blue', 'dark_green', 'dark_purple']:
-                if color_type == 'border':
-                    return '#2c3e50'
-                elif color_type == 'primary':
-                    return '#3498db'
-                elif color_type == 'accent':
-                    return '#2980b9'
+            if current_theme in ["dark", "dark_blue", "dark_green", "dark_purple"]:
+                if color_type == "border":
+                    return "#2c3e50"
+                elif color_type == "primary":
+                    return "#3498db"
+                elif color_type == "accent":
+                    return "#2980b9"
             else:  # Light themes
-                if color_type == 'border':
-                    return '#bdc3c7'
-                elif color_type == 'primary':
-                    return '#3498db'
-                elif color_type == 'accent':
-                    return '#2980b9'
+                if color_type == "border":
+                    return "#bdc3c7"
+                elif color_type == "primary":
+                    return "#3498db"
+                elif color_type == "accent":
+                    return "#2980b9"
 
             return default_color
         except Exception:
@@ -697,36 +737,56 @@ class IntegratedThemeManager(QObject):
             success = True
 
             # 1. Qt-Theme-Managerのテーマを適用
-            if self.qt_theme_manager and hasattr(theme, 'qt_theme_name') and theme.qt_theme_name:
-                if hasattr(self.qt_theme_manager, 'set_theme'):
+            if (
+                self.qt_theme_manager
+                and hasattr(theme, "qt_theme_name")
+                and theme.qt_theme_name
+            ):
+                if hasattr(self.qt_theme_manager, "set_theme"):
                     qt_success = self.qt_theme_manager.set_theme(theme.qt_theme_name)
                     if qt_success:
-                        self.logger_system.info(f"Qt-Theme-Manager theme applied: {theme.qt_theme_name}")
+                        self.logger_system.info(
+                            f"Qt-Theme-Manager theme applied: {theme.qt_theme_name}"
+                        )
                     else:
-                        self.logger_system.warning(f"Failed to apply Qt theme: {theme.qt_theme_name}")
+                        self.logger_system.warning(
+                            f"Failed to apply Qt theme: {theme.qt_theme_name}"
+                        )
                     success = qt_success and success
                 else:
-                    self.logger_system.warning("Qt-Theme-Manager set_theme method not found")
+                    self.logger_system.warning(
+                        "Qt-Theme-Manager set_theme method not found"
+                    )
             else:
-                self.logger_system.info("Qt-Theme-Manager not available or no qt_theme_name specified")
+                self.logger_system.info(
+                    "Qt-Theme-Manager not available or no qt_theme_name specified"
+                )
 
             # 2. カスタムスタイルシートを適用
-            if hasattr(theme, 'style_sheet') and theme.style_sheet:
-                self.logger_system.info(f"Applying custom stylesheet: {len(theme.style_sheet)} characters")
+            if hasattr(theme, "style_sheet") and theme.style_sheet:
+                self.logger_system.info(
+                    f"Applying custom stylesheet: {len(theme.style_sheet)} characters"
+                )
                 style_success = self._apply_style_sheet(theme.style_sheet)
                 success = style_success and success
             else:
                 self.logger_system.info("No custom stylesheet provided")
 
             # 3. カラースキームを適用（最も重要）
-            if hasattr(theme, 'color_scheme') and theme.color_scheme:
-                self.logger_system.info(f"Applying color scheme: {list(theme.color_scheme.keys())}")
+            if hasattr(theme, "color_scheme") and theme.color_scheme:
+                self.logger_system.info(
+                    f"Applying color scheme: {list(theme.color_scheme.keys())}"
+                )
                 color_success = self._apply_color_scheme(theme.color_scheme)
                 success = color_success and success
             else:
-                self.logger_system.warning("No color scheme provided, generating from theme name")
+                self.logger_system.warning(
+                    "No color scheme provided, generating from theme name"
+                )
                 # テーマ名からカラースキームを生成
-                generated_scheme = self._generate_color_scheme_from_theme_name(theme.name)
+                generated_scheme = self._generate_color_scheme_from_theme_name(
+                    theme.name
+                )
                 color_success = self._apply_color_scheme(generated_scheme)
                 success = color_success and success
 
@@ -740,6 +800,7 @@ class IntegratedThemeManager(QObject):
         except Exception as e:
             self.logger_system.error(f"Failed to apply Qt theme: {e}")
             import traceback
+
             self.logger_system.error(f"Traceback: {traceback.format_exc()}")
             return False
 
@@ -747,41 +808,43 @@ class IntegratedThemeManager(QObject):
         """テーマ名からカラースキームを生成"""
         try:
             # ダークテーマの判定
-            is_dark = any(keyword in theme_name.lower() for keyword in ['dark', 'night', 'black'])
+            is_dark = any(
+                keyword in theme_name.lower() for keyword in ["dark", "night", "black"]
+            )
 
             if is_dark:
                 return {
-                    'background': '#2b2b2b',
-                    'foreground': '#ffffff',
-                    'primary': '#007acc',
-                    'secondary': '#6c757d',
-                    'accent': '#17a2b8',
-                    'success': '#28a745',
-                    'warning': '#ffc107',
-                    'error': '#dc3545',
-                    'border': '#495057',
-                    'hover': '#3a3a3a',
-                    'selected': '#0d7377',
-                    'disabled': '#6c757d',
-                    'input_background': '#3a3a3a',
-                    'button_text': '#ffffff'
+                    "background": "#2b2b2b",
+                    "foreground": "#ffffff",
+                    "primary": "#007acc",
+                    "secondary": "#6c757d",
+                    "accent": "#17a2b8",
+                    "success": "#28a745",
+                    "warning": "#ffc107",
+                    "error": "#dc3545",
+                    "border": "#495057",
+                    "hover": "#3a3a3a",
+                    "selected": "#0d7377",
+                    "disabled": "#6c757d",
+                    "input_background": "#3a3a3a",
+                    "button_text": "#ffffff",
                 }
             else:
                 return {
-                    'background': '#ffffff',
-                    'foreground': '#000000',
-                    'primary': '#007acc',
-                    'secondary': '#6c757d',
-                    'accent': '#17a2b8',
-                    'success': '#28a745',
-                    'warning': '#ffc107',
-                    'error': '#dc3545',
-                    'border': '#dee2e6',
-                    'hover': '#f8f9fa',
-                    'selected': '#e3f2fd',
-                    'disabled': '#6c757d',
-                    'input_background': '#ffffff',
-                    'button_text': '#ffffff'
+                    "background": "#ffffff",
+                    "foreground": "#000000",
+                    "primary": "#007acc",
+                    "secondary": "#6c757d",
+                    "accent": "#17a2b8",
+                    "success": "#28a745",
+                    "warning": "#ffc107",
+                    "error": "#dc3545",
+                    "border": "#dee2e6",
+                    "hover": "#f8f9fa",
+                    "selected": "#e3f2fd",
+                    "disabled": "#6c757d",
+                    "input_background": "#ffffff",
+                    "button_text": "#ffffff",
                 }
         except Exception as e:
             self.logger_system.error(f"Failed to generate color scheme: {e}")
@@ -797,14 +860,13 @@ class IntegratedThemeManager(QObject):
             if self.main_window:
                 self.main_window.setStyleSheet(style_sheet)
                 self.logger_system.info(
-                    f"Style sheet applied to main window: "
-                    f"{len(style_sheet)} characters"
+                    f"Style sheet applied to main window: {len(style_sheet)} characters"
                 )
                 return True
             else:
                 # メインウィンドウが設定されていない場合、QApplicationに適用
                 app = QApplication.instance()
-                if app and hasattr(app, 'setStyleSheet'):
+                if app and hasattr(app, "setStyleSheet"):
                     app.setStyleSheet(style_sheet)
                     self.logger_system.info(
                         f"Style sheet applied to QApplication: "
@@ -813,8 +875,7 @@ class IntegratedThemeManager(QObject):
                     return True
                 else:
                     self.logger_system.warning(
-                        "No QApplication instance found for "
-                        "style sheet application"
+                        "No QApplication instance found for style sheet application"
                     )
                     return False
 
@@ -826,7 +887,9 @@ class IntegratedThemeManager(QObject):
         """カラースキームをUIコンポーネントに適用（改善版）"""
         try:
             if not color_scheme:
-                self.logger_system.warning("Color scheme is empty, generating default styles")
+                self.logger_system.warning(
+                    "Color scheme is empty, generating default styles"
+                )
                 # デフォルトのカラースキームを使用
                 color_scheme = self._get_default_color_scheme()
 
@@ -836,9 +899,9 @@ class IntegratedThemeManager(QObject):
             stylesheet_parts: List[str] = []
 
             # 1. メインウィンドウとQWidgetの基本スタイル
-            if 'background' in color_scheme and 'foreground' in color_scheme:
-                bg_color = color_scheme['background']
-                fg_color = color_scheme['foreground']
+            if "background" in color_scheme and "foreground" in color_scheme:
+                bg_color = color_scheme["background"]
+                fg_color = color_scheme["foreground"]
 
                 main_style = f"""
                 QMainWindow {{
@@ -859,10 +922,12 @@ class IntegratedThemeManager(QObject):
                 stylesheet_parts.append(main_style)
 
             # 2. ボタンスタイル
-            if 'primary' in color_scheme:
-                primary_color = color_scheme['primary']
-                hover_color = color_scheme.get('hover', self._darken_color(primary_color))
-                button_text_color = color_scheme.get('button_text', '#ffffff')
+            if "primary" in color_scheme:
+                primary_color = color_scheme["primary"]
+                hover_color = color_scheme.get(
+                    "hover", self._darken_color(primary_color)
+                )
+                button_text_color = color_scheme.get("button_text", "#ffffff")
 
                 button_style = f"""
                 QPushButton {{
@@ -884,16 +949,16 @@ class IntegratedThemeManager(QObject):
                 }}
 
                 QPushButton:disabled {{
-                    background-color: {color_scheme.get('disabled', '#cccccc')};
+                    background-color: {color_scheme.get("disabled", "#cccccc")};
                     color: #666666;
                 }}
                 """
                 stylesheet_parts.append(button_style)
 
             # 3. ラベルとテキストスタイル
-            if 'foreground' in color_scheme:
-                fg_color = color_scheme['foreground']
-                secondary_color = color_scheme.get('secondary', fg_color)
+            if "foreground" in color_scheme:
+                fg_color = color_scheme["foreground"]
+                secondary_color = color_scheme.get("secondary", fg_color)
 
                 text_style = f"""
                 QLabel {{
@@ -902,17 +967,17 @@ class IntegratedThemeManager(QObject):
                 }}
 
                 QTextEdit {{
-                    background-color: {color_scheme.get('input_background', color_scheme.get('background', '#ffffff'))};
+                    background-color: {color_scheme.get("input_background", color_scheme.get("background", "#ffffff"))};
                     color: {fg_color};
-                    border: 1px solid {color_scheme.get('border', '#cccccc')};
+                    border: 1px solid {color_scheme.get("border", "#cccccc")};
                     border-radius: 3px;
                     padding: 4px;
                 }}
 
                 QLineEdit {{
-                    background-color: {color_scheme.get('input_background', color_scheme.get('background', '#ffffff'))};
+                    background-color: {color_scheme.get("input_background", color_scheme.get("background", "#ffffff"))};
                     color: {fg_color};
-                    border: 1px solid {color_scheme.get('border', '#cccccc')};
+                    border: 1px solid {color_scheme.get("border", "#cccccc")};
                     border-radius: 3px;
                     padding: 4px;
                 }}
@@ -920,16 +985,18 @@ class IntegratedThemeManager(QObject):
                 stylesheet_parts.append(text_style)
 
             # 4. メニューとツールバースタイル
-            if 'background' in color_scheme and 'foreground' in color_scheme:
-                bg_color = color_scheme['background']
-                fg_color = color_scheme['foreground']
-                selected_color = color_scheme.get('selected', color_scheme.get('primary', '#0078d4'))
+            if "background" in color_scheme and "foreground" in color_scheme:
+                bg_color = color_scheme["background"]
+                fg_color = color_scheme["foreground"]
+                selected_color = color_scheme.get(
+                    "selected", color_scheme.get("primary", "#0078d4")
+                )
 
                 menu_style = f"""
                 QMenuBar {{
                     background-color: {bg_color};
                     color: {fg_color};
-                    border-bottom: 1px solid {color_scheme.get('border', '#cccccc')};
+                    border-bottom: 1px solid {color_scheme.get("border", "#cccccc")};
                 }}
 
                 QMenuBar::item {{
@@ -945,7 +1012,7 @@ class IntegratedThemeManager(QObject):
                 QMenu {{
                     background-color: {bg_color};
                     color: {fg_color};
-                    border: 1px solid {color_scheme.get('border', '#cccccc')};
+                    border: 1px solid {color_scheme.get("border", "#cccccc")};
                 }}
 
                 QMenu::item:selected {{
@@ -963,9 +1030,9 @@ class IntegratedThemeManager(QObject):
                 stylesheet_parts.append(menu_style)
 
             # 5. スクロールバーとその他のコントロール
-            if 'background' in color_scheme:
-                bg_color = color_scheme['background']
-                border_color = color_scheme.get('border', '#cccccc')
+            if "background" in color_scheme:
+                bg_color = color_scheme["background"]
+                border_color = color_scheme.get("border", "#cccccc")
 
                 control_style = f"""
                 QScrollBar:vertical {{
@@ -981,12 +1048,12 @@ class IntegratedThemeManager(QObject):
                 }}
 
                 QScrollBar::handle:vertical:hover {{
-                    background-color: {color_scheme.get('hover', border_color)};
+                    background-color: {color_scheme.get("hover", border_color)};
                 }}
 
                 QComboBox {{
-                    background-color: {color_scheme.get('input_background', bg_color)};
-                    color: {color_scheme.get('foreground', '#000000')};
+                    background-color: {color_scheme.get("input_background", bg_color)};
+                    color: {color_scheme.get("foreground", "#000000")};
                     border: 1px solid {border_color};
                     border-radius: 3px;
                     padding: 4px;
@@ -997,10 +1064,14 @@ class IntegratedThemeManager(QObject):
             # 生成されたスタイルシートを結合して適用
             if stylesheet_parts:
                 combined_stylesheet = "\n".join(stylesheet_parts)
-                self.logger_system.info(f"Generated stylesheet length: {len(combined_stylesheet)} characters")
+                self.logger_system.info(
+                    f"Generated stylesheet length: {len(combined_stylesheet)} characters"
+                )
 
                 # デバッグ用：生成されたスタイルシートをログに出力
-                self.logger_system.debug(f"Generated stylesheet:\n{combined_stylesheet[:500]}...")
+                self.logger_system.debug(
+                    f"Generated stylesheet:\n{combined_stylesheet[:500]}..."
+                )
 
                 success = self._apply_style_sheet(combined_stylesheet)
                 if success:
@@ -1009,39 +1080,42 @@ class IntegratedThemeManager(QObject):
                     self.logger_system.error("Failed to apply generated stylesheet")
                 return success
             else:
-                self.logger_system.warning("No stylesheet parts generated from color scheme")
+                self.logger_system.warning(
+                    "No stylesheet parts generated from color scheme"
+                )
                 return False
 
         except Exception as e:
             self.logger_system.error(f"Failed to apply color scheme: {e}")
             import traceback
+
             self.logger_system.error(f"Traceback: {traceback.format_exc()}")
             return False
 
     def _get_default_color_scheme(self) -> Dict[str, str]:
         """デフォルトのカラースキームを取得"""
         return {
-            'background': '#ffffff',
-            'foreground': '#000000',
-            'primary': '#0078d4',
-            'secondary': '#6c757d',
-            'accent': '#17a2b8',
-            'success': '#28a745',
-            'warning': '#ffc107',
-            'error': '#dc3545',
-            'border': '#dee2e6',
-            'hover': '#e3f2fd',
-            'selected': '#0d7377',
-            'disabled': '#6c757d',
-            'input_background': '#ffffff',
-            'button_text': '#ffffff'
+            "background": "#ffffff",
+            "foreground": "#000000",
+            "primary": "#0078d4",
+            "secondary": "#6c757d",
+            "accent": "#17a2b8",
+            "success": "#28a745",
+            "warning": "#ffc107",
+            "error": "#dc3545",
+            "border": "#dee2e6",
+            "hover": "#e3f2fd",
+            "selected": "#0d7377",
+            "disabled": "#6c757d",
+            "input_background": "#ffffff",
+            "button_text": "#ffffff",
         }
 
     def _darken_color(self, color: str, factor: float = 0.1) -> str:
         """色を暗くする"""
         try:
             # 簡単な色の暗化処理
-            if color.startswith('#') and len(color) == 7:
+            if color.startswith("#") and len(color) == 7:
                 r = int(color[1:3], 16)
                 g = int(color[3:5], 16)
                 b = int(color[5:7], 16)
@@ -1080,8 +1154,12 @@ class IntegratedThemeManager(QObject):
             self.animation_enabled = settings.get("animation_enabled", True)
             self.transparency_enabled = settings.get("transparency_enabled", True)
 
-            self.config_manager.set_setting("ui.animation_enabled", self.animation_enabled)
-            self.config_manager.set_setting("ui.transparency_enabled", self.transparency_enabled)
+            self.config_manager.set_setting(
+                "ui.animation_enabled", self.animation_enabled
+            )
+            self.config_manager.set_setting(
+                "ui.transparency_enabled", self.transparency_enabled
+            )
 
         except Exception as e:
             self.logger_system.warning(f"Failed to apply performance settings: {e}")

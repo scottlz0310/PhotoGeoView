@@ -14,12 +14,11 @@ import os
 import shutil
 import sys
 import tempfile
-import threading
 import time
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import psutil
 
@@ -48,6 +47,7 @@ class PerformanceFinalCheckTest(unittest.TestCase):
         """テストセットアップ"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではパフォーマンス最終チェックテストをスキップ")
 

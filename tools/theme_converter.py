@@ -46,7 +46,7 @@ def convert_old_theme_to_new(old_theme: Dict[str, Any]) -> Dict[str, Any]:
         "custom_properties": {},
         "created_date": "2024-01-01T00:00:00",
         "last_modified": "2024-01-01T00:00:00",
-        "usage_count": 0
+        "usage_count": 0,
     }
 
     # カラースキームの変換
@@ -131,28 +131,28 @@ def convert_old_theme_to_new(old_theme: Dict[str, Any]) -> Dict[str, Any]:
     # スタイルシートの生成
     style_sheet = f"""
 QMainWindow {{
-    background-color: {color_scheme.get('background', '#ffffff')};
-    color: {color_scheme.get('foreground', '#000000')};
+    background-color: {color_scheme.get("background", "#ffffff")};
+    color: {color_scheme.get("foreground", "#000000")};
 }}
 
 QGroupBox {{
-    border: 1px solid {color_scheme.get('border', '#dee2e6')};
+    border: 1px solid {color_scheme.get("border", "#dee2e6")};
     border-radius: 3px;
     margin-top: 5px;
     padding-top: 5px;
-    background-color: {color_scheme.get('secondary', '#f8f9fa')};
+    background-color: {color_scheme.get("secondary", "#f8f9fa")};
 }}
 
 QGroupBox::title {{
-    color: {color_scheme.get('primary', '#007acc')};
+    color: {color_scheme.get("primary", "#007acc")};
     subcontrol-origin: margin;
     left: 10px;
     padding: 0 3px 0 3px;
 }}
 
 QPushButton {{
-    background-color: {color_scheme.get('primary', '#007acc')};
-    color: {color_scheme.get('foreground', '#ffffff')};
+    background-color: {color_scheme.get("primary", "#007acc")};
+    color: {color_scheme.get("foreground", "#ffffff")};
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
@@ -160,21 +160,21 @@ QPushButton {{
 }}
 
 QPushButton:hover {{
-    background-color: {color_scheme.get('hover', '#0056b3')};
+    background-color: {color_scheme.get("hover", "#0056b3")};
 }}
 
 QPushButton:pressed {{
-    background-color: {color_scheme.get('selected', '#004085')};
+    background-color: {color_scheme.get("selected", "#004085")};
 }}
 
 QLabel {{
-    color: {color_scheme.get('foreground', '#000000')};
+    color: {color_scheme.get("foreground", "#000000")};
 }}
 
 QTextEdit {{
-    background-color: {color_scheme.get('background', '#ffffff')};
-    color: {color_scheme.get('foreground', '#000000')};
-    border: 1px solid {color_scheme.get('border', '#dee2e6')};
+    background-color: {color_scheme.get("background", "#ffffff")};
+    color: {color_scheme.get("foreground", "#000000")};
+    border: 1px solid {color_scheme.get("border", "#dee2e6")};
     border-radius: 3px;
     padding: 5px;
 }}
@@ -191,7 +191,7 @@ def convert_theme_file(input_file: Path, output_file: Path) -> bool:
         print(f"変換中: {input_file} -> {output_file}")
 
         # 入力ファイルを読み込み
-        with open(input_file, 'r', encoding='utf-8') as f:
+        with open(input_file, encoding="utf-8") as f:
             old_data = json.load(f)
 
         # 利用可能なテーマを取得
@@ -209,7 +209,7 @@ def convert_theme_file(input_file: Path, output_file: Path) -> bool:
             converted_themes.append(converted_theme)
 
         # 出力ファイルに保存
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(converted_themes, f, ensure_ascii=False, indent=2)
 
         print(f"変換完了: {len(converted_themes)}個のテーマを変換しました")

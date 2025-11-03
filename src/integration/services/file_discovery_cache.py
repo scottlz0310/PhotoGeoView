@@ -28,14 +28,13 @@ LRUアルゴリズムによる効率的なメモリ使用を実現します。
 Author: Kiro AI Integration System
 """
 
-import hashlib
 import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
@@ -103,7 +102,9 @@ class FolderScanCache:
             current_mtime = self.folder_path.stat().st_mtime
             expected_mtime = int(self.cache_key.split("_")[-1])
             # 浮動小数点数と整数の比較を適切に行う
-            return abs(current_mtime - expected_mtime) > 1.0  # 1秒以上の差がある場合のみ期限切れ
+            return (
+                abs(current_mtime - expected_mtime) > 1.0
+            )  # 1秒以上の差がある場合のみ期限切れ
         except (OSError, FileNotFoundError, ValueError):
             return True
 
@@ -247,7 +248,7 @@ class FileDiscoveryCache:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "cache_file_stat_error",
-                        f"ファイル情報取得エラー: {file_path} - {str(e)}",
+                        f"ファイル情報取得エラー: {file_path} - {e!s}",
                         level="WARNING",
                     )
                     return False
@@ -454,7 +455,9 @@ class FileDiscoveryCache:
                 # FolderScanCacheと同じキャッシュキー生成ロジックを使用
                 try:
                     folder_stat = folder_path.stat()
-                    cache_key = f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
+                    cache_key = (
+                        f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
+                    )
                 except (OSError, FileNotFoundError):
                     cache_key = f"folder_{hash(str(folder_path))}_{int(time.time())}"
 
@@ -720,7 +723,7 @@ class FileDiscoveryCache:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "cache_memory_update_error",
-                f"メモリ使用量更新エラー: {str(e)}",
+                f"メモリ使用量更新エラー: {e!s}",
                 level="WARNING",
             )
 
@@ -936,9 +939,10 @@ class FileDiscoveryCache:
 
         # ログレベルの決定
         log_level = "INFO"
-        if overall_hit_rate < 0.5:  # 50%未満
-            log_level = "WARNING"
-        elif total_memory_mb > self.max_memory_bytes / 1024 / 1024 * 0.9:  # 90%以上
+        if (
+            overall_hit_rate < 0.5
+            or total_memory_mb > self.max_memory_bytes / 1024 / 1024 * 0.9
+        ):  # 50%未満
             log_level = "WARNING"
 
         self.logger_system.log_ai_operation(

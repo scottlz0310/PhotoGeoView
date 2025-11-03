@@ -8,8 +8,6 @@ error conditions gracefully and recover when possible.
 import os
 import subprocess
 import sys
-import tempfile
-import time
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -19,11 +17,9 @@ import pytest
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "tools" / "ci"))
 
-from check_orchestrator import CheckOrchestrator
 from error_handler import ErrorHandler
 from error_recovery_system import ErrorRecoverySystem
-from interfaces import CheckerError, DependencyError, EnvironmentError
-from models import CheckResult, CheckStatus
+from models import CheckStatus
 from simulator import CISimulator
 
 

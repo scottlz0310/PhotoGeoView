@@ -10,20 +10,27 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def test_environment_protection():
     """Test that environment variable protection works"""
     print("🧪 Testing environment variable protection...")
 
     # Set the protection variable
     env = os.environ.copy()
-    env['CI_SIMULATION_RUNNING'] = 'true'
+    env["CI_SIMULATION_RUNNING"] = "true"
 
     # Try to run CI simulator with run command
-    result = subprocess.run([
-        sys.executable,
-        str(Path(__file__).parent.parent / "tools" / "ci" / "simulator.py"),
-        "run", "code_quality"
-    ], capture_output=True, text=True, env=env)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).parent.parent / "tools" / "ci" / "simulator.py"),
+            "run",
+            "code_quality",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
 
     if result.returncode == 0 and "CI simulation already running" in result.stdout:
         print("✅ Environment protection working")
@@ -35,6 +42,7 @@ def test_environment_protection():
         print(f"Stderr: {result.stderr}")
         return False
 
+
 def test_marker_file_protection():
     """Test that marker file protection works"""
     print("🧪 Testing marker file protection...")
@@ -45,10 +53,11 @@ def test_marker_file_protection():
 
     try:
         # Test pre-commit hook
-        result = subprocess.run([
-            "bash", "-c",
-            "cd . && .git/hooks/pre-commit"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            ["bash", "-c", "cd . && .git/hooks/pre-commit"],
+            capture_output=True,
+            text=True,
+        )
 
         if result.returncode == 0 and "CI hooks disabled" in result.stdout:
             print("✅ Marker file protection working")
@@ -63,6 +72,7 @@ def test_marker_file_protection():
         # Clean up
         if marker_file.exists():
             marker_file.unlink()
+
 
 def test_git_command_protection():
     """Test that Git commands run with protection"""
@@ -84,16 +94,22 @@ def test_git_command_protection():
         print(f"Stderr: {stderr}")
         return False
 
+
 def test_simple_ci_run():
     """Test that CI can run normally without protection"""
     print("🧪 Testing normal CI execution...")
 
     # Run CI simulator normally (should work)
-    result = subprocess.run([
-        sys.executable,
-        str(Path(__file__).parent.parent / "tools" / "ci" / "simulator.py"),
-        "list"
-    ], capture_output=True, text=True, timeout=30)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).parent.parent / "tools" / "ci" / "simulator.py"),
+            "list",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
 
     if result.returncode == 0:
         print("✅ Normal CI execution working")
@@ -104,6 +120,7 @@ def test_simple_ci_run():
         print(f"Stdout: {result.stdout}")
         print(f"Stderr: {result.stderr}")
         return False
+
 
 def main():
     """Run all tests"""
@@ -136,6 +153,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Please check the implementation.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

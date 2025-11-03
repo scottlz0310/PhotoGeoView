@@ -12,7 +12,12 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple, Union
 
-from .navigation_models import BreadcrumbSegment, NavigationEvent, NavigationState, PathInfo
+from .navigation_models import (
+    BreadcrumbSegment,
+    NavigationEvent,
+    NavigationState,
+    PathInfo,
+)
 
 
 class INavigationProvider(ABC):
@@ -72,7 +77,7 @@ class INavigationProvider(ABC):
 
         Returns:
             Parent path or None if no parent exists
-     """
+        """
         pass
 
     @abstractmethod
@@ -201,7 +206,9 @@ class INavigationManager(ABC):
         pass
 
     @abstractmethod
-    def add_navigation_listener(self, callback: Callable[[NavigationEvent], None]) -> bool:
+    def add_navigation_listener(
+        self, callback: Callable[[NavigationEvent], None]
+    ) -> bool:
         """
         Add a navigation event listener
 
@@ -214,7 +221,9 @@ class INavigationManager(ABC):
         pass
 
     @abstractmethod
-    def remove_navigation_listener(self, callback: Callable[[NavigationEvent], None]) -> bool:
+    def remove_navigation_listener(
+        self, callback: Callable[[NavigationEvent], None]
+    ) -> bool:
         """
         Remove a navigation event listener
 
@@ -313,7 +322,9 @@ class IBreadcrumbRenderer(ABC):
         pass
 
     @abstractmethod
-    def get_segment_at_position(self, position: Tuple[int, int]) -> Optional[BreadcrumbSegment]:
+    def get_segment_at_position(
+        self, position: Tuple[int, int]
+    ) -> Optional[BreadcrumbSegment]:
         """
         Get the segment at a specific screen position
 
@@ -684,7 +695,9 @@ class INavigationCache(ABC):
         pass
 
     @abstractmethod
-    def cache_path_info(self, path: Path, info: PathInfo, ttl: Optional[int] = None) -> bool:
+    def cache_path_info(
+        self, path: Path, info: PathInfo, ttl: Optional[int] = None
+    ) -> bool:
         """
         Cache path information
 
@@ -747,7 +760,11 @@ class INavigationCache(ABC):
 
 # Type aliases for convenience
 NavigationCallback = Callable[[NavigationEvent], None]  # Navigation event callback
-PathChangeCallback = Callable[[Path, str], None]  # Path change callback (path, event_type)
-FileSystemEventCallback = Callable[[Path, str, str], None]  # FS event callback (path, event_type, details)
+PathChangeCallback = Callable[
+    [Path, str], None
+]  # Path change callback (path, event_type)
+FileSystemEventCallback = Callable[
+    [Path, str, str], None
+]  # FS event callback (path, event_type, details)
 PositionTuple = Tuple[int, int]  # Screen position (x, y)
 TruncationMode = str  # Truncation mode ("smart", "middle", "end", "none")

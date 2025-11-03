@@ -120,22 +120,14 @@ class ImageViewerWidget(QWidget):
         # マウス位置を基準にズーム
         mouse_pos = event.position()
         old_zoom = self.zoom_factor
-        new_zoom = max(
-            self.min_zoom, min(self.max_zoom, self.zoom_factor + zoom_delta)
-        )
+        new_zoom = max(self.min_zoom, min(self.max_zoom, self.zoom_factor + zoom_delta))
 
         if new_zoom != old_zoom:
             # マウス位置を基準にパンオフセットを調整
             zoom_ratio = new_zoom / old_zoom
             self.pan_offset = QPoint(
-                int(
-                    mouse_pos.x()
-                    - (mouse_pos.x() - self.pan_offset.x()) * zoom_ratio
-                ),
-                int(
-                    mouse_pos.y()
-                    - (mouse_pos.y() - self.pan_offset.y()) * zoom_ratio
-                ),
+                int(mouse_pos.x() - (mouse_pos.x() - self.pan_offset.x()) * zoom_ratio),
+                int(mouse_pos.y() - (mouse_pos.y() - self.pan_offset.y()) * zoom_ratio),
             )
 
             self.set_zoom(new_zoom)
@@ -143,8 +135,9 @@ class ImageViewerWidget(QWidget):
             # 全画面表示中の場合、親のImagePreviewPanelにフォーカスを戻す
             parent_panel = self.parent()
             while parent_panel:
-                if (hasattr(parent_panel, 'is_fullscreen_mode') and
-                    hasattr(parent_panel, 'setFocus')):
+                if hasattr(parent_panel, "is_fullscreen_mode") and hasattr(
+                    parent_panel, "setFocus"
+                ):
                     if parent_panel.is_fullscreen_mode:
                         parent_panel.setFocus(Qt.FocusReason.MouseFocusReason)
                     break
@@ -160,8 +153,9 @@ class ImageViewerWidget(QWidget):
             # 全画面表示中の場合、フォーカスを親に確実に設定
             parent_panel = self.parent()
             while parent_panel:
-                if (hasattr(parent_panel, 'is_fullscreen_mode') and
-                    hasattr(parent_panel, 'setFocus')):
+                if hasattr(parent_panel, "is_fullscreen_mode") and hasattr(
+                    parent_panel, "setFocus"
+                ):
                     if parent_panel.is_fullscreen_mode:
                         parent_panel.setFocus(Qt.FocusReason.MouseFocusReason)
                         # 自分自身はフォーカスを放棄
@@ -178,8 +172,9 @@ class ImageViewerWidget(QWidget):
             # 全画面表示中の場合、親のImagePreviewPanelにフォーカスを戻す
             parent_panel = self.parent()
             while parent_panel:
-                if (hasattr(parent_panel, 'is_fullscreen_mode') and
-                    hasattr(parent_panel, 'setFocus')):
+                if hasattr(parent_panel, "is_fullscreen_mode") and hasattr(
+                    parent_panel, "setFocus"
+                ):
                     if parent_panel.is_fullscreen_mode:
                         parent_panel.setFocus(Qt.FocusReason.MouseFocusReason)
                     break
@@ -196,8 +191,9 @@ class ImageViewerWidget(QWidget):
             # パン操作中でも親にフォーカスを維持（重要！）
             parent_panel = self.parent()
             while parent_panel:
-                if (hasattr(parent_panel, 'is_fullscreen_mode') and
-                    hasattr(parent_panel, 'setFocus')):
+                if hasattr(parent_panel, "is_fullscreen_mode") and hasattr(
+                    parent_panel, "setFocus"
+                ):
                     if parent_panel.is_fullscreen_mode:
                         # フォーカスを親に強制的に設定
                         parent_panel.setFocus(Qt.FocusReason.MouseFocusReason)
@@ -211,8 +207,9 @@ class ImageViewerWidget(QWidget):
             parent_panel = self.parent()
             # ImagePreviewPanelを探して上へ遡る（_exit_fullscreenメソッドを持つ親を探す）
             while parent_panel:
-                if (hasattr(parent_panel, '_exit_fullscreen') and
-                    hasattr(parent_panel, 'is_fullscreen_mode')):
+                if hasattr(parent_panel, "_exit_fullscreen") and hasattr(
+                    parent_panel, "is_fullscreen_mode"
+                ):
                     # 全画面モードの場合のみ処理
                     if parent_panel.is_fullscreen_mode:
                         parent_panel._exit_fullscreen()
@@ -351,9 +348,7 @@ class ImagePreviewPanel(QWidget):
         # ズームスライダー
         self.zoom_slider = QSlider(Qt.Orientation.Horizontal)
         self.zoom_slider.setFixedHeight(20)  # 高さを固定
-        self.zoom_slider.setRange(
-            int(self.min_zoom * 100), int(self.max_zoom * 100)
-        )
+        self.zoom_slider.setRange(int(self.min_zoom * 100), int(self.max_zoom * 100))
         self.zoom_slider.setValue(int(self.zoom_factor * 100))
         self.zoom_slider.valueChanged.connect(self._on_zoom_slider_changed)
         controls_layout.addWidget(self.zoom_slider)
@@ -659,11 +654,13 @@ class ImagePreviewPanel(QWidget):
                 # title_layoutを探す（メインレイアウトの最初のアイテム）
                 if main_layout and main_layout.count() > 0:
                     title_layout_item = main_layout.itemAt(0)
-                    if title_layout_item and hasattr(title_layout_item, 'layout'):
+                    if title_layout_item and hasattr(title_layout_item, "layout"):
                         title_layout = title_layout_item.layout()
                         if title_layout:
                             self._original_button_layout = title_layout
-                            self._original_button_index = title_layout.indexOf(self.fullscreen_button)
+                            self._original_button_index = title_layout.indexOf(
+                                self.fullscreen_button
+                            )
                             # ボタンをレイアウトから一時的に削除
                             title_layout.removeWidget(self.fullscreen_button)
 
@@ -704,7 +701,9 @@ class ImagePreviewPanel(QWidget):
                 self.fullscreen_button.raise_()  # 最前面に表示
 
                 # 確実に最前面に表示
-                self.fullscreen_button.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
+                self.fullscreen_button.setAttribute(
+                    Qt.WidgetAttribute.WA_AlwaysShowToolTips
+                )
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
@@ -730,14 +729,20 @@ class ImagePreviewPanel(QWidget):
                 self.fullscreen_button.move(parent_window.width() - 110, 10)
 
                 # 遅延処理でより正確な位置を計算・配置
-                QTimer.singleShot(50, lambda: self._position_fullscreen_button(parent_window))
+                QTimer.singleShot(
+                    50, lambda: self._position_fullscreen_button(parent_window)
+                )
 
             # 全画面表示後に画面フィットを実行
             QTimer.singleShot(100, self._fit_to_screen)
 
             # 複数回のタイミングでボタンの表示を確認
-            QTimer.singleShot(150, lambda: self._position_fullscreen_button(parent_window))
-            QTimer.singleShot(300, lambda: self._position_fullscreen_button(parent_window))
+            QTimer.singleShot(
+                150, lambda: self._position_fullscreen_button(parent_window)
+            )
+            QTimer.singleShot(
+                300, lambda: self._position_fullscreen_button(parent_window)
+            )
 
             # フォーカスを確実に設定（キーイベントを受信するため）
             self.setFocus(Qt.FocusReason.OtherFocusReason)
@@ -771,7 +776,9 @@ class ImagePreviewPanel(QWidget):
                 main_layout = self.layout()
                 if main_layout and hasattr(self, "_original_layout_index"):
                     # 元の位置に再挿入
-                    main_layout.insertWidget(self._original_layout_index, self.image_viewer)
+                    main_layout.insertWidget(
+                        self._original_layout_index, self.image_viewer
+                    )
                     delattr(self, "_original_layout_index")
                 else:
                     # フォールバック：レイアウトの最後に追加
@@ -790,21 +797,27 @@ class ImagePreviewPanel(QWidget):
 
                     # 元のスタイルとウィンドウフラグを復元
                     if hasattr(self, "_original_button_style"):
-                        self.fullscreen_button.setStyleSheet(self._original_button_style)
+                        self.fullscreen_button.setStyleSheet(
+                            self._original_button_style
+                        )
                         delattr(self, "_original_button_style")
 
                     if hasattr(self, "_original_button_flags"):
-                        self.fullscreen_button.setWindowFlags(self._original_button_flags)
+                        self.fullscreen_button.setWindowFlags(
+                            self._original_button_flags
+                        )
                         delattr(self, "_original_button_flags")
 
                     # ボタンテキストを元に戻す
                     self.fullscreen_button.setText("⛶ 全画面表示")
 
                     # 元のレイアウトに再追加
-                    if (hasattr(self, "_original_button_layout") and
-                        hasattr(self, "_original_button_index")):
+                    if hasattr(self, "_original_button_layout") and hasattr(
+                        self, "_original_button_index"
+                    ):
                         self._original_button_layout.insertWidget(
-                            self._original_button_index, self.fullscreen_button)
+                            self._original_button_index, self.fullscreen_button
+                        )
                         delattr(self, "_original_button_layout")
                         delattr(self, "_original_button_index")
 

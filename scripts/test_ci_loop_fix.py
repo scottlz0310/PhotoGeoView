@@ -10,19 +10,24 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 def test_environment_protection():
     """Test that environment variable protection works"""
     print("🧪 Testing environment variable protection...")
 
     # Set the protection variable
-    os.environ['CI_SIMULATION_RUNNING'] = 'true'
+    os.environ["CI_SIMULATION_RUNNING"] = "true"
 
     # Try to run CI simulator
-    result = subprocess.run([
-        sys.executable,
-        str(Path(__file__).parent.parent / "tools" / "ci" / "simulator.py"),
-        "--version"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(Path(__file__).parent.parent / "tools" / "ci" / "simulator.py"),
+            "--version",
+        ],
+        capture_output=True,
+        text=True,
+    )
 
     if result.returncode == 0 and "CI simulation already running" in result.stdout:
         print("✅ Environment protection working")
@@ -34,6 +39,7 @@ def test_environment_protection():
         print(f"Stderr: {result.stderr}")
         return False
 
+
 def test_marker_file_protection():
     """Test that marker file protection works"""
     print("🧪 Testing marker file protection...")
@@ -44,10 +50,11 @@ def test_marker_file_protection():
 
     try:
         # Test pre-commit hook
-        result = subprocess.run([
-            "bash", "-c",
-            "cd . && .git/hooks/pre-commit"
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            ["bash", "-c", "cd . && .git/hooks/pre-commit"],
+            capture_output=True,
+            text=True,
+        )
 
         if result.returncode == 0 and "CI hooks disabled" in result.stdout:
             print("✅ Marker file protection working")
@@ -62,6 +69,7 @@ def test_marker_file_protection():
         # Clean up
         if marker_file.exists():
             marker_file.unlink()
+
 
 def test_git_command_protection():
     """Test that Git commands run with protection"""
@@ -82,6 +90,7 @@ def test_git_command_protection():
         print(f"Return code: {returncode}")
         print(f"Stderr: {stderr}")
         return False
+
 
 def main():
     """Run all tests"""
@@ -113,6 +122,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Please check the implementation.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -2,8 +2,6 @@
 Unit tests for core data models.
 """
 
-import json
-import tempfile
 from datetime import datetime
 from pathlib import Path
 

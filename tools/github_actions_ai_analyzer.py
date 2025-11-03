@@ -15,8 +15,7 @@ from typing import Any, Dict, List, Optional
 
 # ログ設定
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("github_actions_ai_analyzer")
 
@@ -37,13 +36,13 @@ class GitHubActionsAnalyzer:
             "memory_error": r"MemoryError|out of memory|OOM",
             "coverage_error": r"coverage.*failed|Codecov.*failed",
             "qt_error": r"Qt|PyQt|QT_QPA_PLATFORM",
-            "pytest_error": r"pytest.*error|collected.*error"
+            "pytest_error": r"pytest.*error|collected.*error",
         }
 
     def analyze_ci_report(self, report_path: Path) -> Dict[str, Any]:
         """CIレポートを解析"""
         try:
-            with open(report_path, 'r', encoding='utf-8') as f:
+            with open(report_path, encoding="utf-8") as f:
                 report = json.load(f)
 
             analysis = {
@@ -52,7 +51,7 @@ class GitHubActionsAnalyzer:
                 "overall_status": report.get("overall_status", "UNKNOWN"),
                 "total_duration": report.get("total_duration", 0),
                 "issues": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             # チェック結果を解析
@@ -67,12 +66,14 @@ class GitHubActionsAnalyzer:
                         "check": check_name,
                         "status": status,
                         "message": message,
-                        "duration": duration
+                        "duration": duration,
                     }
                     analysis["issues"].append(issue)
 
                     # 改善提案を生成
-                    recommendation = self._generate_recommendation(check_name, status, message)
+                    recommendation = self._generate_recommendation(
+                        check_name, status, message
+                    )
                     if recommendation:
                         analysis["recommendations"].append(recommendation)
 
@@ -85,14 +86,14 @@ class GitHubActionsAnalyzer:
     def analyze_log_file(self, log_path: Path) -> Dict[str, Any]:
         """ログファイルを解析"""
         try:
-            with open(log_path, 'r', encoding='utf-8') as f:
+            with open(log_path, encoding="utf-8") as f:
                 content = f.read()
 
             analysis = {
                 "file": str(log_path),
                 "patterns_found": {},
                 "issues": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             # パターンマッチング
@@ -101,33 +102,43 @@ class GitHubActionsAnalyzer:
                 if matches:
                     analysis["patterns_found"][pattern_name] = {
                         "count": len(matches),
-                        "examples": matches[:5]  # 最初の5つの例
+                        "examples": matches[:5],  # 最初の5つの例
                     }
 
             # 問題の特定
             if analysis["patterns_found"].get("error"):
-                analysis["issues"].append({
-                    "type": "error",
-                    "description": "エラーが検出されました",
-                    "count": analysis["patterns_found"]["error"]["count"]
-                })
+                analysis["issues"].append(
+                    {
+                        "type": "error",
+                        "description": "エラーが検出されました",
+                        "count": analysis["patterns_found"]["error"]["count"],
+                    }
+                )
 
             if analysis["patterns_found"].get("windows_specific"):
-                analysis["issues"].append({
-                    "type": "windows_specific",
-                    "description": "Windows固有の問題が検出されました",
-                    "count": analysis["patterns_found"]["windows_specific"]["count"]
-                })
+                analysis["issues"].append(
+                    {
+                        "type": "windows_specific",
+                        "description": "Windows固有の問題が検出されました",
+                        "count": analysis["patterns_found"]["windows_specific"][
+                            "count"
+                        ],
+                    }
+                )
 
             if analysis["patterns_found"].get("test_failure"):
-                analysis["issues"].append({
-                    "type": "test_failure",
-                    "description": "テスト失敗が検出されました",
-                    "count": analysis["patterns_found"]["test_failure"]["count"]
-                })
+                analysis["issues"].append(
+                    {
+                        "type": "test_failure",
+                        "description": "テスト失敗が検出されました",
+                        "count": analysis["patterns_found"]["test_failure"]["count"],
+                    }
+                )
 
             # 改善提案を生成
-            analysis["recommendations"] = self._generate_log_recommendations(analysis["patterns_found"])
+            analysis["recommendations"] = self._generate_log_recommendations(
+                analysis["patterns_found"]
+            )
 
             return analysis
 
@@ -135,21 +146,23 @@ class GitHubActionsAnalyzer:
             logger.error(f"ログファイル解析エラー: {e}")
             return {"error": str(e)}
 
-    def _generate_recommendation(self, check_name: str, status: str, message: str) -> Optional[str]:
+    def _generate_recommendation(
+        self, check_name: str, status: str, message: str
+    ) -> Optional[str]:
         """チェック結果に基づく改善提案を生成"""
         recommendations = {
             "テストチェック": {
                 "warn": "テストファイルの収集エラーを調査してください。pytest設定を確認し、テストディレクトリの構造を見直してください。",
-                "fail": "テストの実行に失敗しています。テスト環境の設定と依存関係を確認してください。"
+                "fail": "テストの実行に失敗しています。テスト環境の設定と依存関係を確認してください。",
             },
             "構文チェック": {
                 "warn": "構文エラーが検出されました。コードの構文を修正してください。",
-                "fail": "重大な構文エラーがあります。コードの修正が必要です。"
+                "fail": "重大な構文エラーがあります。コードの修正が必要です。",
             },
             "インポートチェック": {
                 "warn": "インポートエラーが検出されました。依存関係とパス設定を確認してください。",
-                "fail": "重要なモジュールのインポートに失敗しています。依存関係のインストールを確認してください。"
-            }
+                "fail": "重要なモジュールのインポートに失敗しています。依存関係のインストールを確認してください。",
+            },
         }
 
         return recommendations.get(check_name, {}).get(status)
@@ -159,28 +172,44 @@ class GitHubActionsAnalyzer:
         recommendations = []
 
         if patterns_found.get("error"):
-            recommendations.append("エラーが多数検出されています。ログの詳細を確認し、根本原因を特定してください。")
+            recommendations.append(
+                "エラーが多数検出されています。ログの詳細を確認し、根本原因を特定してください。"
+            )
 
         if patterns_found.get("windows_specific"):
-            recommendations.append("Windows固有の問題が検出されています。Windows環境でのテスト設定を見直してください。")
+            recommendations.append(
+                "Windows固有の問題が検出されています。Windows環境でのテスト設定を見直してください。"
+            )
 
         if patterns_found.get("test_failure"):
-            recommendations.append("テスト失敗が検出されています。テストケースとテスト環境を確認してください。")
+            recommendations.append(
+                "テスト失敗が検出されています。テストケースとテスト環境を確認してください。"
+            )
 
         if patterns_found.get("import_error"):
-            recommendations.append("インポートエラーが検出されています。依存関係のインストールとパス設定を確認してください。")
+            recommendations.append(
+                "インポートエラーが検出されています。依存関係のインストールとパス設定を確認してください。"
+            )
 
         if patterns_found.get("permission_error"):
-            recommendations.append("権限エラーが検出されています。ファイル権限とアクセス設定を確認してください。")
+            recommendations.append(
+                "権限エラーが検出されています。ファイル権限とアクセス設定を確認してください。"
+            )
 
         if patterns_found.get("memory_error"):
-            recommendations.append("メモリエラーが検出されています。メモリ使用量を最適化してください。")
+            recommendations.append(
+                "メモリエラーが検出されています。メモリ使用量を最適化してください。"
+            )
 
         if patterns_found.get("coverage_error"):
-            recommendations.append("カバレッジエラーが検出されています。カバレッジ設定とファイル生成を確認してください。")
+            recommendations.append(
+                "カバレッジエラーが検出されています。カバレッジ設定とファイル生成を確認してください。"
+            )
 
         if patterns_found.get("qt_error"):
-            recommendations.append("Qt関連のエラーが検出されています。Qt環境設定を確認してください。")
+            recommendations.append(
+                "Qt関連のエラーが検出されています。Qt環境設定を確認してください。"
+            )
 
         return recommendations
 
@@ -193,7 +222,7 @@ class GitHubActionsAnalyzer:
             "warned_reports": 0,
             "trends": {},
             "common_issues": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         # JSONレポートファイルを検索
@@ -204,7 +233,9 @@ class GitHubActionsAnalyzer:
         all_issues = []
         all_recommendations = []
 
-        for json_file in sorted(json_files, key=lambda x: x.stat().st_mtime, reverse=True)[:10]:  # 最新10件
+        for json_file in sorted(
+            json_files, key=lambda x: x.stat().st_mtime, reverse=True
+        )[:10]:  # 最新10件
             report_analysis = self.analyze_ci_report(json_file)
 
             if "error" not in report_analysis:
@@ -231,7 +262,9 @@ class GitHubActionsAnalyzer:
 
         analysis["common_issues"] = [
             {"type": issue_type, "count": count}
-            for issue_type, count in sorted(issue_types.items(), key=lambda x: x[1], reverse=True)
+            for issue_type, count in sorted(
+                issue_types.items(), key=lambda x: x[1], reverse=True
+            )
         ]
 
         # 改善提案を統合
@@ -275,7 +308,9 @@ class GitHubActionsAnalyzer:
 
             if log_analysis.get("patterns_found"):
                 report.append("### 検出されたパターン")
-                for pattern_name, pattern_data in log_analysis["patterns_found"].items():
+                for pattern_name, pattern_data in log_analysis[
+                    "patterns_found"
+                ].items():
                     count = pattern_data.get("count", 0)
                     report.append(f"- **{pattern_name}**: {count}回")
                 report.append("")
@@ -283,7 +318,9 @@ class GitHubActionsAnalyzer:
             if log_analysis.get("issues"):
                 report.append("### 検出された問題")
                 for issue in log_analysis["issues"]:
-                    report.append(f"- **{issue['type']}**: {issue['description']} ({issue['count']}回)")
+                    report.append(
+                        f"- **{issue['type']}**: {issue['description']} ({issue['count']}回)"
+                    )
                 report.append("")
 
             if log_analysis.get("recommendations"):
@@ -326,8 +363,11 @@ def main():
     print(report)
 
     # ファイルに保存
-    output_file = reports_dir / f"ai_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-    with open(output_file, 'w', encoding='utf-8') as f:
+    output_file = (
+        reports_dir
+        / f"ai_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    )
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(report)
 
     logger.info(f"解析レポートを保存しました: {output_file}")

@@ -7,9 +7,7 @@ import os
 
 # Import the config manager
 import sys
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import patch
 
 import pytest
 import yaml
@@ -348,7 +346,7 @@ class TestConfigManager:
         assert os.path.exists(config_path)
 
         # Verify saved content
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             saved_config = yaml.safe_load(f)
 
         assert saved_config["timeout"] == sample_config["timeout"]

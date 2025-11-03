@@ -12,10 +12,8 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
-from PySide6.QtCore import QTimer
-from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 # Add src to path for imports
@@ -58,17 +56,19 @@ class TestMainWindowIntegration(unittest.TestCase):
         """Clean up test fixtures"""
         # Clean up temporary directory
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_main_window_initialization(self):
         """Test that main window initializes with theme manager and breadcrumb components"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Verify main window is created
@@ -81,20 +81,21 @@ class TestMainWindowIntegration(unittest.TestCase):
             self.assertIsNotNone(main_window.breadcrumb_bar)
 
             # Verify components are connected
-            self.assertTrue(hasattr(main_window, '_on_theme_manager_widget_changed'))
-            self.assertTrue(hasattr(main_window, '_on_breadcrumb_path_changed'))
+            self.assertTrue(hasattr(main_window, "_on_theme_manager_widget_changed"))
+            self.assertTrue(hasattr(main_window, "_on_breadcrumb_path_changed"))
 
             main_window.close()
 
     def test_theme_manager_integration(self):
         """Test theme manager integration with main window"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test theme manager widget exists
@@ -113,12 +114,13 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_breadcrumb_bar_integration(self):
         """Test breadcrumb bar integration with main window"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test breadcrumb bar exists
@@ -143,12 +145,13 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_folder_navigator_breadcrumb_connection(self):
         """Test connection between folder navigator and breadcrumb bar"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test that folder navigator and breadcrumb bar are connected
@@ -170,16 +173,17 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_theme_component_registration(self):
         """Test that UI components are registered with theme manager"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test component registration method exists
-            self.assertTrue(hasattr(main_window, '_register_theme_aware_components'))
+            self.assertTrue(hasattr(main_window, "_register_theme_aware_components"))
 
             # Test registration method can be called
             main_window._register_theme_aware_components()
@@ -192,17 +196,20 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_keyboard_shortcuts_integration(self):
         """Test keyboard shortcuts for theme manager"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test that theme manager widget has shortcuts setup
             if main_window.theme_manager_widget:
-                shortcuts_info = main_window.theme_manager_widget.get_keyboard_shortcuts_info()
+                shortcuts_info = (
+                    main_window.theme_manager_widget.get_keyboard_shortcuts_info()
+                )
                 self.assertIsInstance(shortcuts_info, dict)
                 self.assertIn("Ctrl+T", shortcuts_info)
                 self.assertIn("Ctrl+Shift+T", shortcuts_info)
@@ -212,12 +219,13 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_error_handling_integration(self):
         """Test error handling for integrated components"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test theme error handling
@@ -234,12 +242,13 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_left_panel_layout_with_breadcrumb(self):
         """Test that left panel layout includes breadcrumb bar"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test that left panel splitter exists
@@ -257,12 +266,13 @@ class TestMainWindowIntegration(unittest.TestCase):
     def test_state_persistence_with_new_components(self):
         """Test state persistence includes new components"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test state restoration method
@@ -305,17 +315,19 @@ class TestMainWindowComponentCommunication(unittest.TestCase):
         """Clean up test fixtures"""
         # Clean up temporary directory
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_theme_change_propagation(self):
         """Test that theme changes propagate to all components"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Mock theme-aware components
@@ -335,12 +347,13 @@ class TestMainWindowComponentCommunication(unittest.TestCase):
     def test_navigation_synchronization(self):
         """Test navigation synchronization between components"""
 
-        with patch('src.integration.ui.main_window.FileSystemWatcher', return_value=self.file_watcher_mock):
+        with patch(
+            "src.integration.ui.main_window.FileSystemWatcher",
+            return_value=self.file_watcher_mock,
+        ):
             # Create main window
             main_window = IntegratedMainWindow(
-                self.config_manager,
-                self.state_manager,
-                self.logger_system
+                self.config_manager, self.state_manager, self.logger_system
             )
 
             # Test navigation synchronization
@@ -363,5 +376,5 @@ class TestMainWindowComponentCommunication(unittest.TestCase):
             main_window.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -18,7 +18,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 
 class AIComponent(Enum):
@@ -127,7 +127,7 @@ class AIQualityChecker:
         except Exception:
             return AIComponent.KIRO  # デフォルト
 
-        scores = {component: 0 for component in AIComponent}
+        scores = dict.fromkeys(AIComponent, 0)
 
         for component, patterns in self.ai_patterns.items():
             for pattern in patterns:
@@ -172,7 +172,7 @@ class AIQualityChecker:
                             severity=severity,
                             message=f"関数 '{node.name}' が長すぎます ({func_length}行, 推奨: {max_length}行以下)",
                             ai_component=ai_component,
-                            suggestion=f"関数を小さな関数に分割することを検討してください",
+                            suggestion="関数を小さな関数に分割することを検討してください",
                         )
                     )
 
@@ -407,8 +407,8 @@ class AIQualityChecker:
             self.check_file(file_path)
 
         # 統計を計算
-        issues_by_severity = {level: 0 for level in QualityLevel}
-        issues_by_component = {component: 0 for component in AIComponent}
+        issues_by_severity = dict.fromkeys(QualityLevel, 0)
+        issues_by_component = dict.fromkeys(AIComponent, 0)
 
         for issue in self.issues:
             issues_by_severity[issue.severity] += 1
@@ -552,7 +552,7 @@ def main():
         if not args.output:
             print(output)
 
-    print(f"\n品質チェック完了:")
+    print("\n品質チェック完了:")
     print(f"  ファイル数: {report.total_files}")
     print(f"  問題数: {report.total_issues}")
     print(f"  総合スコア: {report.overall_score:.1f}/100")

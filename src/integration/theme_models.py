@@ -8,17 +8,18 @@ Author: Kiro AI Integration System
 Requirements: 5.1, 5.2, 5.3
 """
 
+import json
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-import json
-import re
+from typing import Any, Dict, List, Optional
 
 
 class ThemeType(Enum):
     """Theme type enumeration"""
+
     BUILT_IN = "built_in"
     CUSTOM = "custom"
     IMPORTED = "imported"
@@ -26,12 +27,14 @@ class ThemeType(Enum):
 
 class ValidationError(Exception):
     """Theme validation error"""
+
     pass
 
 
 @dataclass
 class FontConfig:
     """Font configuration for themes"""
+
     family: str
     size: int
     weight: str = "normal"
@@ -42,7 +45,21 @@ class FontConfig:
         if self.size <= 0:
             raise ValidationError(f"Font size must be positive, got {self.size}")
 
-        valid_weights = ["normal", "bold", "lighter", "bolder", "100", "200", "300", "400", "500", "600", "700", "800", "900"]
+        valid_weights = [
+            "normal",
+            "bold",
+            "lighter",
+            "bolder",
+            "100",
+            "200",
+            "300",
+            "400",
+            "500",
+            "600",
+            "700",
+            "800",
+            "900",
+        ]
         if self.weight not in valid_weights:
             raise ValidationError(f"Invalid font weight: {self.weight}")
 
@@ -58,6 +75,7 @@ class FontConfig:
 @dataclass
 class ColorScheme:
     """Color scheme configuration with validation"""
+
     primary: str
     secondary: str
     background: str
@@ -72,15 +90,24 @@ class ColorScheme:
     def __post_init__(self):
         """Validate color values"""
         color_fields = [
-            'primary', 'secondary', 'background', 'surface',
-            'text_primary', 'text_secondary', 'accent',
-            'error', 'warning', 'success'
+            "primary",
+            "secondary",
+            "background",
+            "surface",
+            "text_primary",
+            "text_secondary",
+            "accent",
+            "error",
+            "warning",
+            "success",
         ]
 
         for field_name in color_fields:
             color_value = getattr(self, field_name)
             if not self._is_valid_color(color_value):
-                raise ValidationError(f"Invalid color value for {field_name}: {color_value}")
+                raise ValidationError(
+                    f"Invalid color value for {field_name}: {color_value}"
+                )
 
     @staticmethod
     def _is_valid_color(color: str) -> bool:
@@ -89,18 +116,32 @@ class ColorScheme:
             return False
 
         # Hex colors
-        if re.match(r'^#[0-9A-Fa-f]{6}$', color) or re.match(r'^#[0-9A-Fa-f]{3}$', color):
+        if re.match(r"^#[0-9A-Fa-f]{6}$", color) or re.match(
+            r"^#[0-9A-Fa-f]{3}$", color
+        ):
             return True
 
         # RGB/RGBA colors
-        if re.match(r'^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+)?\s*\)$', color):
+        if re.match(r"^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+)?\s*\)$", color):
             return True
 
         # Named colors (basic set)
         named_colors = {
-            'black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta',
-            'gray', 'grey', 'darkgray', 'darkgrey', 'lightgray', 'lightgrey',
-            'transparent'
+            "black",
+            "white",
+            "red",
+            "green",
+            "blue",
+            "yellow",
+            "cyan",
+            "magenta",
+            "gray",
+            "grey",
+            "darkgray",
+            "darkgrey",
+            "lightgray",
+            "lightgrey",
+            "transparent",
         }
         if color.lower() in named_colors:
             return True
@@ -111,13 +152,13 @@ class ColorScheme:
     def is_dark_theme(self) -> bool:
         """Determine if this is a dark theme based on background color"""
         bg_color = self.background
-        if bg_color.startswith('#'):
+        if bg_color.startswith("#"):
             # Convert hex to RGB and calculate luminance
-            hex_color = bg_color.lstrip('#')
+            hex_color = bg_color.lstrip("#")
             if len(hex_color) == 3:
-                hex_color = ''.join([c*2 for c in hex_color])
+                hex_color = "".join([c * 2 for c in hex_color])
 
-            r, g, b = [int(hex_color[i:i+2], 16) for i in (0, 2, 4)]
+            r, g, b = [int(hex_color[i : i + 2], 16) for i in (0, 2, 4)]
             luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
             return luminance < 0.5
 
@@ -171,7 +212,7 @@ class ThemeConfiguration:
         """Post-initialization validation and setup"""
         # Set default display name if not provided
         if not self.display_name:
-            self.display_name = self.name.replace('_', ' ').replace('-', ' ').title()
+            self.display_name = self.name.replace("_", " ").replace("-", " ").title()
 
         # Set theme type based on is_custom flag
         if self.is_custom:
@@ -200,7 +241,7 @@ class ThemeConfiguration:
             accent="#FF5722",
             error="#F44336",
             warning="#FF9800",
-            success="#4CAF50"
+            success="#4CAF50",
         )
 
     def _get_default_fonts(self) -> Dict[str, FontConfig]:
@@ -209,7 +250,7 @@ class ThemeConfiguration:
             "default": FontConfig("Arial", 12),
             "heading": FontConfig("Arial", 16, "bold"),
             "small": FontConfig("Arial", 10),
-            "monospace": FontConfig("Courier New", 12)
+            "monospace": FontConfig("Courier New", 12),
         }
 
     def validate(self) -> bool:
@@ -229,12 +270,16 @@ class ThemeConfiguration:
             self.validation_errors.append("Theme version is required")
 
         # Validate name format (no spaces, special characters)
-        if self.name and not re.match(r'^[a-zA-Z0-9_-]+$', self.name):
-            self.validation_errors.append("Theme name must contain only letters, numbers, underscores, and hyphens")
+        if self.name and not re.match(r"^[a-zA-Z0-9_-]+$", self.name):
+            self.validation_errors.append(
+                "Theme name must contain only letters, numbers, underscores, and hyphens"
+            )
 
         # Validate version format (semantic versioning)
-        if self.version and not re.match(r'^\d+\.\d+\.\d+$', self.version):
-            self.validation_errors.append("Theme version must follow semantic versioning (x.y.z)")
+        if self.version and not re.match(r"^\d+\.\d+\.\d+$", self.version):
+            self.validation_errors.append(
+                "Theme version must follow semantic versioning (x.y.z)"
+            )
 
         # Validate colors
         try:
@@ -242,7 +287,7 @@ class ThemeConfiguration:
                 # ColorScheme validation happens in __post_init__
                 pass
         except ValidationError as e:
-            self.validation_errors.append(f"Color validation error: {str(e)}")
+            self.validation_errors.append(f"Color validation error: {e!s}")
 
         # Validate fonts
         for font_name, font_config in self.fonts.items():
@@ -250,11 +295,15 @@ class ThemeConfiguration:
                 # FontConfig validation happens in __post_init__
                 pass
             except ValidationError as e:
-                self.validation_errors.append(f"Font '{font_name}' validation error: {str(e)}")
+                self.validation_errors.append(
+                    f"Font '{font_name}' validation error: {e!s}"
+                )
 
         # Validate file path if provided
         if self.file_path and not self.file_path.exists():
-            self.validation_errors.append(f"Theme file does not exist: {self.file_path}")
+            self.validation_errors.append(
+                f"Theme file does not exist: {self.file_path}"
+            )
 
         self.is_valid = len(self.validation_errors) == 0
         return self.is_valid
@@ -285,7 +334,7 @@ class ThemeConfiguration:
                     "family": font.family,
                     "size": font.size,
                     "weight": font.weight,
-                    "style": font.style
+                    "style": font.style,
                 }
                 for name, font in self.fonts.items()
             },
@@ -294,11 +343,11 @@ class ThemeConfiguration:
             "is_custom": self.is_custom,
             "created_date": self.created_date.isoformat(),
             "modified_date": self.modified_date.isoformat(),
-            "usage_count": self.usage_count
+            "usage_count": self.usage_count,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ThemeConfiguration':
+    def from_dict(cls, data: Dict[str, Any]) -> "ThemeConfiguration":
         """Create theme configuration from dictionary"""
         # Parse colors
         colors_data = data.get("colors", {})
@@ -311,8 +360,12 @@ class ThemeConfiguration:
             fonts[name] = FontConfig(**font_data)
 
         # Parse dates
-        created_date = datetime.fromisoformat(data.get("created_date", datetime.now().isoformat()))
-        modified_date = datetime.fromisoformat(data.get("modified_date", datetime.now().isoformat()))
+        created_date = datetime.fromisoformat(
+            data.get("created_date", datetime.now().isoformat())
+        )
+        modified_date = datetime.fromisoformat(
+            data.get("modified_date", datetime.now().isoformat())
+        )
 
         return cls(
             name=data["name"],
@@ -328,7 +381,7 @@ class ThemeConfiguration:
             is_custom=data.get("is_custom", False),
             created_date=created_date,
             modified_date=modified_date,
-            usage_count=data.get("usage_count", 0)
+            usage_count=data.get("usage_count", 0),
         )
 
     def save_to_file(self, file_path: Path) -> bool:
@@ -344,7 +397,7 @@ class ThemeConfiguration:
         try:
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
 
             self.file_path = file_path
@@ -352,11 +405,11 @@ class ThemeConfiguration:
             return True
 
         except Exception as e:
-            self.validation_errors.append(f"Failed to save theme file: {str(e)}")
+            self.validation_errors.append(f"Failed to save theme file: {e!s}")
             return False
 
     @classmethod
-    def load_from_file(cls, file_path: Path) -> Optional['ThemeConfiguration']:
+    def load_from_file(cls, file_path: Path) -> Optional["ThemeConfiguration"]:
         """
         Load theme configuration from file
 
@@ -370,7 +423,7 @@ class ThemeConfiguration:
             if not file_path.exists():
                 return None
 
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 data = json.load(f)
 
             theme = cls.from_dict(data)
@@ -391,18 +444,20 @@ class ThemeConfiguration:
 
         # Color variables
         if self.colors:
-            css_vars.extend([
-                f"--color-primary: {self.colors.primary};",
-                f"--color-secondary: {self.colors.secondary};",
-                f"--color-background: {self.colors.background};",
-                f"--color-surface: {self.colors.surface};",
-                f"--color-text-primary: {self.colors.text_primary};",
-                f"--color-text-secondary: {self.colors.text_secondary};",
-                f"--color-accent: {self.colors.accent};",
-                f"--color-error: {self.colors.error};",
-                f"--color-warning: {self.colors.warning};",
-                f"--color-success: {self.colors.success};"
-            ])
+            css_vars.extend(
+                [
+                    f"--color-primary: {self.colors.primary};",
+                    f"--color-secondary: {self.colors.secondary};",
+                    f"--color-background: {self.colors.background};",
+                    f"--color-surface: {self.colors.surface};",
+                    f"--color-text-primary: {self.colors.text_primary};",
+                    f"--color-text-secondary: {self.colors.text_secondary};",
+                    f"--color-accent: {self.colors.accent};",
+                    f"--color-error: {self.colors.error};",
+                    f"--color-warning: {self.colors.warning};",
+                    f"--color-success: {self.colors.success};",
+                ]
+            )
 
         # Font variables
         for name, font in self.fonts.items():
@@ -416,6 +471,7 @@ class ThemeInfo:
     """
     Lightweight theme information for theme selection UI
     """
+
     name: str
     display_name: str
     description: str
@@ -428,14 +484,14 @@ class ThemeInfo:
     file_path: Optional[Path] = None
 
     @classmethod
-    def from_theme_config(cls, config: ThemeConfiguration) -> 'ThemeInfo':
+    def from_theme_config(cls, config: ThemeConfiguration) -> "ThemeInfo":
         """Create ThemeInfo from ThemeConfiguration"""
         preview_colors = {}
         if config.colors:
             preview_colors = {
                 "primary": config.colors.primary,
                 "background": config.colors.background,
-                "text": config.colors.text_primary
+                "text": config.colors.text_primary,
             }
 
         return cls(
@@ -447,5 +503,5 @@ class ThemeInfo:
             theme_type=config.theme_type,
             is_dark=config.colors.is_dark_theme if config.colors else False,
             preview_colors=preview_colors,
-            file_path=config.file_path
+            file_path=config.file_path,
         )

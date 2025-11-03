@@ -11,16 +11,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
 from .models import (
     AIComponent,
     ApplicationState,
-    CacheEntry,
     ImageMetadata,
-    PerformanceMetrics,
     ProcessingStatus,
     ThemeConfiguration,
 )
@@ -255,7 +253,7 @@ class DataValidator:
             result.add_issue(
                 ValidationSeverity.CRITICAL,
                 "validation_error",
-                f"Validation failed with exception: {str(e)}",
+                f"Validation failed with exception: {e!s}",
             )
 
         return result
@@ -321,7 +319,7 @@ class DataValidator:
             result.add_issue(
                 ValidationSeverity.CRITICAL,
                 "validation_error",
-                f"Validation failed with exception: {str(e)}",
+                f"Validation failed with exception: {e!s}",
             )
 
         return result
@@ -384,7 +382,7 @@ class DataValidator:
             result.add_issue(
                 ValidationSeverity.CRITICAL,
                 "validation_error",
-                f"Validation failed with exception: {str(e)}",
+                f"Validation failed with exception: {e!s}",
             )
 
         return result

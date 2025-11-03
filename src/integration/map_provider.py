@@ -113,18 +113,14 @@ class FoliumMapProvider(IMapProvider):
                 return
 
             # カスタムアイコンを作成
-            icon = folium.Icon(
-                color='red',
-                icon='camera',
-                prefix='fa'
-            )
+            icon = folium.Icon(color="red", icon="camera", prefix="fa")
 
             # マーカーを追加
             folium.Marker(
                 location=[lat, lon],
                 popup=popup,
                 icon=icon,
-                tooltip=f"撮影位置: {lat:.6f}, {lon:.6f}"
+                tooltip=f"撮影位置: {lat:.6f}, {lon:.6f}",
             ).add_to(map_obj)
 
             # ログ出力
@@ -234,7 +230,10 @@ class FoliumMapProvider(IMapProvider):
 
             # 境界座標を検証
             (south, west), (north, east) = bounds
-            if not all(self.validate_coordinates(lat, lon) for lat, lon in [(south, west), (north, east)]):
+            if not all(
+                self.validate_coordinates(lat, lon)
+                for lat, lon in [(south, west), (north, east)]
+            ):
                 self.logger_system.log_warning(
                     "無効な境界座標でオーバーレイをスキップ",
                     {"bounds": bounds},
@@ -247,7 +246,7 @@ class FoliumMapProvider(IMapProvider):
                 image=str(image_path),
                 bounds=[[south, west], [north, east]],
                 opacity=0.7,
-                name="Image Overlay"
+                name="Image Overlay",
             ).add_to(map_obj)
 
             # ログ出力
@@ -261,7 +260,11 @@ class FoliumMapProvider(IMapProvider):
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.CORE_ERROR,
-                {"operation": "add_image_overlay", "image_path": str(image_path), "bounds": bounds},
+                {
+                    "operation": "add_image_overlay",
+                    "image_path": str(image_path),
+                    "bounds": bounds,
+                },
                 AIComponent.COPILOT,
             )
 
@@ -321,11 +324,7 @@ class FoliumMapProvider(IMapProvider):
             return False
 
     def create_map_with_marker(
-        self,
-        lat: float,
-        lon: float,
-        popup: str = "",
-        zoom: int = None
+        self, lat: float, lon: float, popup: str = "", zoom: int = None
     ) -> Optional[str]:
         """
         Create a map with a marker and return HTML
@@ -370,7 +369,12 @@ class FoliumMapProvider(IMapProvider):
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.CORE_ERROR,
-                {"operation": "create_map_with_marker", "lat": lat, "lon": lon, "popup": popup},
+                {
+                    "operation": "create_map_with_marker",
+                    "lat": lat,
+                    "lon": lon,
+                    "popup": popup,
+                },
                 AIComponent.COPILOT,
             )
             return None

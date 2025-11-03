@@ -24,10 +24,11 @@ Author: Kiro AI Integration System
 
 import asyncio
 import time
+from collections.abc import AsyncIterator
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..image_processor import CS4CodingImageProcessor
@@ -39,6 +40,7 @@ from .file_discovery_errors import FileDiscoveryErrorHandler
 
 def measure_performance(operation_name: str, log_level: str = "DEBUG"):
     """パフォーマンス計測の共通デコレータ"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -61,11 +63,13 @@ def measure_performance(operation_name: str, log_level: str = "DEBUG"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     f"{operation_name}_error",
-                    f"{operation_name}エラー: {str(e)} ({duration:.3f}秒)",
+                    f"{operation_name}エラー: {e!s} ({duration:.3f}秒)",
                     level="ERROR",
                 )
                 raise
+
         return wrapper
+
     return decorator
 
 
@@ -214,7 +218,7 @@ class FileDiscoveryService:
                                 "images_found": len(discovered_files),
                                 "scan_duration": scan_duration,
                                 "cache_hit": True,
-                            }
+                            },
                         )
                         return discovered_files
 
@@ -226,7 +230,7 @@ class FileDiscoveryService:
                 self._log_and_performance(
                     "folder_scan_start",
                     f"フォルダスキャンを開始: {folder_path}",
-                    {"supported_extensions": list(self.SUPPORTED_EXTENSIONS)}
+                    {"supported_extensions": list(self.SUPPORTED_EXTENSIONS)},
                 )
 
                 # フォルダの存在確認
@@ -235,10 +239,12 @@ class FileDiscoveryService:
                         "folder_validation",
                         f"フォルダが存在しません: {folder_path}",
                         {"error": "folder_not_found"},
-                        level="WARNING"
+                        level="WARNING",
                     )
                     scan_details["error"] = "folder_not_found"
-                    self._log_performance("scan", scan_details, {"error": "folder_not_found"})
+                    self._log_performance(
+                        "scan", scan_details, {"error": "folder_not_found"}
+                    )
                     return []
 
                 if not folder_path.is_dir():
@@ -246,10 +252,12 @@ class FileDiscoveryService:
                         "folder_validation",
                         f"指定されたパスはフォルダではありません: {folder_path}",
                         {"error": "not_directory"},
-                        level="WARNING"
+                        level="WARNING",
                     )
                     scan_details["error"] = "not_directory"
-                    self._log_performance("scan", scan_details, {"error": "not_directory"})
+                    self._log_performance(
+                        "scan", scan_details, {"error": "not_directory"}
+                    )
                     return []
 
                 # フォルダ内のファイルを走査
@@ -260,7 +268,7 @@ class FileDiscoveryService:
                         "folder_scan_debug",
                         f"フォルダ内ファイル数: {len(all_files)}個",
                         {"file_count": len(all_files)},
-                        level="DEBUG"
+                        level="DEBUG",
                     )
 
                 except PermissionError as e:
@@ -275,7 +283,9 @@ class FileDiscoveryService:
                         AIComponent.KIRO,
                     )
                     scan_details["error"] = "permission_denied"
-                    self._log_performance("scan", scan_details, {"error": "permission_denied"})
+                    self._log_performance(
+                        "scan", scan_details, {"error": "permission_denied"}
+                    )
                     return []
 
                 # 画像ファイルのフィルタリング（キャッシュ対応）
@@ -365,7 +375,10 @@ class FileDiscoveryService:
                 # フォルダスキャン結果をキャッシュに保存
                 if self.enable_cache and self.cache and file_results:
                     self.cache.cache_folder_scan(
-                        folder_path, file_results, len(all_files), 0.0  # デコレータで自動計測
+                        folder_path,
+                        file_results,
+                        len(all_files),
+                        0.0,  # デコレータで自動計測
                     )
 
                 # 詳細なデバッグ情報をログに記録
@@ -381,7 +394,9 @@ class FileDiscoveryService:
 
                 # 統計情報の更新
                 self._update_discovery_stats(
-                    len(all_files), len(discovered_files), 0.0  # デコレータで自動計測
+                    len(all_files),
+                    len(discovered_files),
+                    0.0,  # デコレータで自動計測
                 )
 
                 # 詳細なパフォーマンス情報をログに記録
@@ -404,7 +419,7 @@ class FileDiscoveryService:
                         "total_files_scanned": len(all_files),
                         "images_found": len(discovered_files),
                         "validation_failures": validation_failures,
-                    }
+                    },
                 )
 
                 return discovered_files
@@ -418,7 +433,11 @@ class FileDiscoveryService:
                     }
                 )
 
-                self._log_performance("scan", scan_details, {"error": str(e), "error_type": type(e).__name__})
+                self._log_performance(
+                    "scan",
+                    scan_details,
+                    {"error": str(e), "error_type": type(e).__name__},
+                )
 
                 # 統合ログ機能を使用したエラー詳細記録
                 self.log_error_details(
@@ -484,7 +503,7 @@ class FileDiscoveryService:
                             {
                                 "is_valid": cached_result,
                                 "cache_hit": True,
-                            }
+                            },
                         )
 
                         if cached_result:
@@ -520,7 +539,7 @@ class FileDiscoveryService:
                     self.logger_system.log_ai_operation(
                         AIComponent.COPILOT,
                         "validation_debug",
-                        f"ファイル情報取得エラー: {file_path.name} - {str(stat_error)}",
+                        f"ファイル情報取得エラー: {file_path.name} - {stat_error!s}",
                         level="DEBUG",
                     )
 
@@ -544,7 +563,7 @@ class FileDiscoveryService:
                         {
                             "is_valid": False,
                             "validation_stage": "basic_validation_failed",
-                        }
+                        },
                     )
                     return False
 
@@ -576,7 +595,7 @@ class FileDiscoveryService:
                             "is_valid": False,
                             "validation_stage": "size_check_failed",
                             "failure_reason": "file_too_small",
-                        }
+                        },
                     )
                     return False
 
@@ -650,7 +669,7 @@ class FileDiscoveryService:
                         self.logger_system.log_ai_operation(
                             AIComponent.COPILOT,
                             "corrupted_file_detection",
-                            f"破損ファイル検出中にエラー: {file_path.name} - {str(validation_error)}",
+                            f"破損ファイル検出中にエラー: {file_path.name} - {validation_error!s}",
                             level="WARNING",
                         )
                         is_valid = False
@@ -703,7 +722,7 @@ class FileDiscoveryService:
                     {
                         "is_valid": is_valid,
                         "validation_duration": validation_duration,
-                    }
+                    },
                 )
 
                 # 統合ログ機能を使用した詳細ログ記録
@@ -752,7 +771,7 @@ class FileDiscoveryService:
                         "error": str(e),
                         "error_type": type(e).__name__,
                         "validation_stage": "exception",
-                    }
+                    },
                 )
 
                 # 統合ログ機能を使用したエラー詳細記録
@@ -789,14 +808,14 @@ class FileDiscoveryService:
                 f"{operation}_performance_warning",
                 f"非常に遅い{operation}: {duration:.3f}秒",
                 {"duration": duration, "threshold": 3.0},
-                level="WARNING"
+                level="WARNING",
             )
         elif duration > 1.0:
             self._log_and_performance(
                 f"{operation}_performance_warning",
                 f"遅い{operation}: {duration:.3f}秒",
                 {"duration": duration, "threshold": 1.0},
-                level="WARNING"
+                level="WARNING",
             )
 
     def get_supported_extensions(self) -> Set[str]:
@@ -808,9 +827,15 @@ class FileDiscoveryService:
         stats = self.discovery_stats.copy()
 
         if stats["total_scans"] > 0:
-            stats["avg_files_per_scan"] = stats["total_files_found"] / stats["total_scans"]
+            stats["avg_files_per_scan"] = (
+                stats["total_files_found"] / stats["total_scans"]
+            )
             stats["avg_scan_time"] = stats["total_scan_time"] / stats["total_scans"]
-            stats["success_rate"] = stats["total_valid_files"] / stats["total_files_found"] if stats["total_files_found"] > 0 else 0
+            stats["success_rate"] = (
+                stats["total_valid_files"] / stats["total_files_found"]
+                if stats["total_files_found"] > 0
+                else 0
+            )
         else:
             stats["avg_files_per_scan"] = 0
             stats["avg_scan_time"] = 0
@@ -911,7 +936,7 @@ class FileDiscoveryService:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "basic_validation_debug",
-                    f"ファイル統計情報取得エラー: {file_path.name} - {str(stat_error)}",
+                    f"ファイル統計情報取得エラー: {file_path.name} - {stat_error!s}",
                     level="DEBUG",
                 )
                 return False
@@ -969,7 +994,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "basic_validation_error",
-                f"基本ファイル検証中にエラー: {file_path.name} - {str(e)}",
+                f"基本ファイル検証中にエラー: {file_path.name} - {e!s}",
                 level="ERROR",
             )
 
@@ -1007,7 +1032,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "basic_validation_error",
-                f"基本ファイル検証中にエラー: {file_path.name} - {str(e)}",
+                f"基本ファイル検証中にエラー: {file_path.name} - {e!s}",
                 level="ERROR",
             )
 
@@ -1065,7 +1090,9 @@ class FileDiscoveryService:
             level="DEBUG",
         )
 
-    def _log_performance(self, operation_type: str, details: Dict[str, Any], metrics: Dict[str, Any]):
+    def _log_performance(
+        self, operation_type: str, details: Dict[str, Any], metrics: Dict[str, Any]
+    ):
         """統合パフォーマンスログ記録メソッド"""
         # 基本メトリクス
         performance_metrics = {
@@ -1161,7 +1188,13 @@ class FileDiscoveryService:
                 level="WARNING",
             )
 
-    def _log_discovery_operation(self, operation: str, message: str, details: Dict[str, Any] = None, level: str = "INFO"):
+    def _log_discovery_operation(
+        self,
+        operation: str,
+        message: str,
+        details: Dict[str, Any] = None,
+        level: str = "INFO",
+    ):
         """発見操作のログ出力を統一するヘルパーメソッド"""
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
@@ -1183,7 +1216,9 @@ class FileDiscoveryService:
             if value is not None and hasattr(self, key):
                 setattr(self, key, value)
 
-    def _log_configuration_change(self, config_type: str, config_details: Dict[str, Any]):
+    def _log_configuration_change(
+        self, config_type: str, config_details: Dict[str, Any]
+    ):
         """設定変更のログ出力を統一するヘルパーメソッド"""
         self.log_with_appropriate_level(
             "INFO",
@@ -1195,7 +1230,13 @@ class FileDiscoveryService:
             },
         )
 
-    def _log_and_performance(self, operation: str, message: str, details: Dict[str, Any] = None, level: str = "INFO"):
+    def _log_and_performance(
+        self,
+        operation: str,
+        message: str,
+        details: Dict[str, Any] = None,
+        level: str = "INFO",
+    ):
         """ログ出力とパフォーマンス記録を統合するヘルパーメソッド"""
         # ログ出力
         self.logger_system.log_ai_operation(
@@ -1220,15 +1261,15 @@ class FileDiscoveryService:
             self._log_and_performance(
                 f"{operation_name}_success",
                 f"{operation_name}が正常に完了しました",
-                {"result": str(result) if result else "None"}
+                {"result": str(result) if result else "None"},
             )
             return result
         except Exception as e:
             self._log_and_performance(
                 f"{operation_name}_error",
-                f"{operation_name}でエラーが発生: {str(e)}",
+                f"{operation_name}でエラーが発生: {e!s}",
                 {"error": str(e), "error_type": type(e).__name__},
-                level="ERROR"
+                level="ERROR",
             )
             raise
 
@@ -1262,7 +1303,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "memory_debug",
-                f"メモリ使用量取得エラー: {str(e)}",
+                f"メモリ使用量取得エラー: {e!s}",
                 level="DEBUG",
             )
             return 0.0
@@ -1283,7 +1324,7 @@ class FileDiscoveryService:
             elif isinstance(value, datetime):
                 debug_parts.append(f"{key}: {value.isoformat()}")
             else:
-                debug_parts.append(f"{key}: {str(value)}")
+                debug_parts.append(f"{key}: {value!s}")
 
         debug_message += ", ".join(debug_parts)
 
@@ -1397,9 +1438,7 @@ class FileDiscoveryService:
         error_details.update(error_context)
 
         # エラーレベルでの詳細ログ出力
-        error_message = (
-            f"エラー詳細 [{operation}]: {type(error).__name__} - {str(error)}"
-        )
+        error_message = f"エラー詳細 [{operation}]: {type(error).__name__} - {error!s}"
 
         if error_context:
             context_parts = []
@@ -1428,9 +1467,15 @@ class FileDiscoveryService:
         self, level: str, operation: str, message: str, details: Dict[str, Any] = None
     ):
         """ログレベルに応じた適切な出力を行う（統合版）"""
-        log_level = level.upper() if level.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] else "INFO"
+        log_level = (
+            level.upper()
+            if level.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+            else "INFO"
+        )
 
-        self.logger_system.log_ai_operation(AIComponent.KIRO, operation, message, level=log_level)
+        self.logger_system.log_ai_operation(
+            AIComponent.KIRO, operation, message, level=log_level
+        )
 
         if details:
             if log_level == "DEBUG":
@@ -1452,11 +1497,11 @@ class FileDiscoveryService:
             エラーカテゴリ
         """
 
-        if isinstance(error, PermissionError):
-            return ErrorCategory.FILE_ERROR
-        elif isinstance(error, FileNotFoundError):
-            return ErrorCategory.FILE_ERROR
-        elif isinstance(error, OSError):
+        if (
+            isinstance(error, PermissionError)
+            or isinstance(error, FileNotFoundError)
+            or isinstance(error, OSError)
+        ):
             return ErrorCategory.FILE_ERROR
         elif isinstance(error, MemoryError):
             return ErrorCategory.SYSTEM_ERROR
@@ -1537,11 +1582,13 @@ class FileDiscoveryService:
         """
 
         # 設定変更の共通処理
-        self._update_configuration({
-            "debug_enabled": debug_enabled,
-            "performance_logging_enabled": performance_logging_enabled,
-            "log_level": log_level,
-        })
+        self._update_configuration(
+            {
+                "debug_enabled": debug_enabled,
+                "performance_logging_enabled": performance_logging_enabled,
+                "log_level": log_level,
+            }
+        )
 
         # ログレベルの設定（LoggerSystemに反映）
         if log_level is not None:
@@ -1559,11 +1606,14 @@ class FileDiscoveryService:
                 self.logger_system.log_level = level_mapping[log_level.upper()]
 
         # 設定変更をログに記録
-        self._log_configuration_change("logging", {
-            "debug_enabled": self.debug_enabled,
-            "performance_logging_enabled": self.performance_logging_enabled,
-            "log_level": log_level or "unchanged",
-        })
+        self._log_configuration_change(
+            "logging",
+            {
+                "debug_enabled": self.debug_enabled,
+                "performance_logging_enabled": self.performance_logging_enabled,
+                "log_level": log_level or "unchanged",
+            },
+        )
 
     def get_logging_status(self) -> Dict[str, Any]:
         """現在のログ設定状況を取得する（簡略化版）"""
@@ -1673,12 +1723,15 @@ class FileDiscoveryService:
 
     def enable_debug_logging(self):
         """デバッグログを有効にする（簡略化版）"""
-        self._update_configuration({
-            "debug_enabled": True,
-            "performance_logging_enabled": True,
-        })
+        self._update_configuration(
+            {
+                "debug_enabled": True,
+                "performance_logging_enabled": True,
+            }
+        )
 
         import logging
+
         self.logger_system.log_level = logging.DEBUG
 
         self._log_configuration_change("debug", {"debug_enabled": True})
@@ -1686,13 +1739,16 @@ class FileDiscoveryService:
     def get_performance_summary(self) -> Dict[str, Any]:
         """パフォーマンス統計の要約を取得する（簡略化版）"""
         total_operations = self.discovery_stats["total_scans"]
-        cache_requests = self.discovery_stats["cache_hits"] + self.discovery_stats["cache_misses"]
+        cache_requests = (
+            self.discovery_stats["cache_hits"] + self.discovery_stats["cache_misses"]
+        )
 
         return {
             "operations": {
                 "total_scans": total_operations,
                 "total_files_found": self.discovery_stats["total_files_found"],
-                "avg_files_per_scan": self.discovery_stats["total_files_found"] / max(1, total_operations),
+                "avg_files_per_scan": self.discovery_stats["total_files_found"]
+                / max(1, total_operations),
             },
             "cache": {
                 "hit_rate": self.discovery_stats["cache_hits"] / max(1, cache_requests),
@@ -1752,7 +1808,7 @@ class FileDiscoveryService:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "async_discovery_error",
-                        f"フォルダアクセス権限エラー: {folder_path} - {str(e)}",
+                        f"フォルダアクセス権限エラー: {folder_path} - {e!s}",
                         level="ERROR",
                     )
                     return
@@ -1765,7 +1821,7 @@ class FileDiscoveryService:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "async_batch_start",
-                        f"バッチ処理開始: {i//batch_size + 1}/{(len(all_files) + batch_size - 1)//batch_size} "
+                        f"バッチ処理開始: {i // batch_size + 1}/{(len(all_files) + batch_size - 1) // batch_size} "
                         f"({len(batch_files)}ファイル)",
                         level="DEBUG",
                     )
@@ -1843,7 +1899,7 @@ class FileDiscoveryService:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "async_discovery_error",
-                    f"非同期画像検出エラー: {str(e)}",
+                    f"非同期画像検出エラー: {e!s}",
                     level="ERROR",
                 )
 
@@ -1861,7 +1917,7 @@ class FileDiscoveryService:
                 if progress_callback:
                     # 変数が初期化されていない場合のフォールバック
                     processed = locals().get("total_processed", 0)
-                    progress_callback(processed, processed, f"エラー: {str(e)}")
+                    progress_callback(processed, processed, f"エラー: {e!s}")
 
     async def _validate_image_file_async(self, file_path: Path) -> bool:
         """
@@ -1907,7 +1963,7 @@ class FileDiscoveryService:
                     self.logger_system.log_ai_operation(
                         AIComponent.COPILOT,
                         "async_validation_error",
-                        f"非同期バリデーションエラー: {file_path.name} - {str(validation_error)}",
+                        f"非同期バリデーションエラー: {file_path.name} - {validation_error!s}",
                         level="DEBUG",
                     )
                     return False
@@ -1918,7 +1974,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.COPILOT,
                 "async_validation_exception",
-                f"非同期バリデーション例外: {file_path.name} - {str(e)}",
+                f"非同期バリデーション例外: {file_path.name} - {e!s}",
                 level="WARNING",
             )
             return False
@@ -1965,7 +2021,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "async_scan_error",
-                f"非同期フォルダスキャンエラー: {str(e)}",
+                f"非同期フォルダスキャンエラー: {e!s}",
                 level="ERROR",
             )
             return discovered_files
@@ -2100,7 +2156,7 @@ class FileDiscoveryService:
         try:
             return self.cache.get_cache_summary()
         except Exception as e:
-            return f"キャッシュサマリー取得エラー: {str(e)}"
+            return f"キャッシュサマリー取得エラー: {e!s}"
 
     def configure_cache(self, cache_config: Dict[str, Any]):
         """
@@ -2112,10 +2168,12 @@ class FileDiscoveryService:
 
         try:
             # 設定変更の共通処理
-            self._update_configuration({
-                "cache_enabled": True,
-                "cache_config": cache_config,
-            })
+            self._update_configuration(
+                {
+                    "cache_enabled": True,
+                    "cache_config": cache_config,
+                }
+            )
 
             if not self.enable_cache:
                 # キャッシュが無効の場合は有効化

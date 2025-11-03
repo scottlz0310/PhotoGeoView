@@ -4,13 +4,13 @@
 PhotoGeoView AI統合版 - マルチプラットフォーム対応
 """
 
-import os
-import sys
-import platform
-import subprocess
-import shutil
-from pathlib import Path
 import json
+import os
+import platform
+import shutil
+import subprocess
+import sys
+from pathlib import Path
 
 
 def get_platform_info():
@@ -18,23 +18,14 @@ def get_platform_info():
     system = platform.system().lower()
     arch = platform.machine().lower()
 
-    platform_map = {
-        'linux': 'Linux',
-        'darwin': 'macOS',
-        'windows': 'Windows'
-    }
+    platform_map = {"linux": "Linux", "darwin": "macOS", "windows": "Windows"}
 
-    arch_map = {
-        'x86_64': 'x64',
-        'amd64': 'x64',
-        'arm64': 'arm64',
-        'aarch64': 'arm64'
-    }
+    arch_map = {"x86_64": "x64", "amd64": "x64", "arm64": "arm64", "aarch64": "arm64"}
 
     return {
-        'system': platform_map.get(system, system),
-        'arch': arch_map.get(arch, arch),
-        'python_version': f"{sys.version_info.major}.{sys.version_info.minor}"
+        "system": platform_map.get(system, system),
+        "arch": arch_map.get(arch, arch),
+        "python_version": f"{sys.version_info.major}.{sys.version_info.minor}",
     }
 
 
@@ -48,7 +39,7 @@ import sys
 from pathlib import
 
 # プラットフォーム固有の設定
-platform_system = "{platform_info['system']}"
+platform_system = "{platform_info["system"]}"
 
 block_cipher = None
 
@@ -201,7 +192,7 @@ else:  # Linux
     )
 '''
 
-    with open('PhotoGeoView.spec', 'w', encoding='utf-8') as f:
+    with open("PhotoGeoView.spec", "w", encoding="utf-8") as f:
         f.write(spec_content)
 
     print("✅ PyInstaller specファイル作成完了")
@@ -213,12 +204,19 @@ def build_with_pyinstaller():
 
     try:
         # specファイルを使用してビルド
-        result = subprocess.run([
-            sys.executable, '-m', 'PyInstaller',
-            '--clean',
-            '--noconfirm',
-            'PhotoGeoView.spec'
-        ], check=True, capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "PyInstaller",
+                "--clean",
+                "--noconfirm",
+                "PhotoGeoView.spec",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
 
         print("✅ PyInstallerビルド完了")
         return True
@@ -241,7 +239,9 @@ def create_linux_appimage():
     # 必要なディレクトリ構造
     (appdir / "usr" / "bin").mkdir(parents=True, exist_ok=True)
     (appdir / "usr" / "share" / "applications").mkdir(parents=True, exist_ok=True)
-    (appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(parents=True, exist_ok=True)
+    (appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(
+        parents=True, exist_ok=True
+    )
 
     # 実行ファイルをコピー
     if Path("dist/PhotoGeoView").exists():
@@ -259,10 +259,12 @@ Categories=Graphics;Photography;
 Terminal=false
 """
 
-    with open(appdir / "PhotoGeoView.desktop", 'w') as f:
+    with open(appdir / "PhotoGeoView.desktop", "w") as f:
         f.write(desktop_content)
 
-    with open(appdir / "usr" / "share" / "applications" / "PhotoGeoView.desktop", 'w') as f:
+    with open(
+        appdir / "usr" / "share" / "applications" / "PhotoGeoView.desktop", "w"
+    ) as f:
         f.write(desktop_content)
 
     # AppRunスクリプト作成
@@ -273,7 +275,7 @@ export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
 exec "${HERE}/usr/bin/PhotoGeoView" "$@"
 """
 
-    with open(appdir / "AppRun", 'w') as f:
+    with open(appdir / "AppRun", "w") as f:
         f.write(apprun_content)
     os.chmod(appdir / "AppRun", 0o755)
 
@@ -305,7 +307,7 @@ PhotoGeoView.exe
 pause
 """
 
-    with open(dist_dir / "run.bat", 'w') as f:
+    with open(dist_dir / "run.bat", "w") as f:
         f.write(batch_content)
 
     print("✅ Windows配布パッケージ準備完了")
@@ -338,15 +340,21 @@ def create_build_info():
     platform_info = get_platform_info()
 
     build_info = {
-        "build_date": subprocess.check_output(['date', '+%Y-%m-%d %H:%M:%S'], text=True).strip(),
+        "build_date": subprocess.check_output(
+            ["date", "+%Y-%m-%d %H:%M:%S"], text=True
+        ).strip(),
         "platform": platform_info,
-        "git_commit": subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()[:8],
-        "git_branch": subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).strip(),
+        "git_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True
+        ).strip()[:8],
+        "git_branch": subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True
+        ).strip(),
         "python_version": sys.version,
-        "build_system": "PyInstaller"
+        "build_system": "PyInstaller",
     }
 
-    with open("dist/build_info.json", 'w', encoding='utf-8') as f:
+    with open("dist/build_info.json", "w", encoding="utf-8") as f:
         json.dump(build_info, f, indent=2, ensure_ascii=False)
 
     print("✅ ビルド情報ファイル作成完了")
@@ -366,6 +374,7 @@ def main():
         # PyInstallerの確認
         try:
             import PyInstaller
+
             print(f"✅ PyInstaller version: {PyInstaller.__version__}")
         except ImportError:
             print("❌ PyInstallerがインストールされていません")
@@ -385,11 +394,11 @@ def main():
             return 1
 
         # プラットフォーム固有のパッケージング
-        if platform_info['system'] == 'Linux':
+        if platform_info["system"] == "Linux":
             create_linux_appimage()
-        elif platform_info['system'] == 'Windows':
+        elif platform_info["system"] == "Windows":
             create_windows_installer()
-        elif platform_info['system'] == 'macOS':
+        elif platform_info["system"] == "macOS":
             create_macos_dmg()
 
         # ビルド情報作成
@@ -398,7 +407,7 @@ def main():
         print()
         print("=" * 50)
         print("✅ パッケージ作成完了！")
-        print(f"📁 出力ディレクトリ: dist/")
+        print("📁 出力ディレクトリ: dist/")
 
         # 作成されたファイルを表示
         print("📋 作成されたファイル:")

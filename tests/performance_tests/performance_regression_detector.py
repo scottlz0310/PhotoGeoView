@@ -14,7 +14,7 @@ import json
 import statistics
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -98,7 +98,7 @@ class PerformanceRegressionDetector:
         """ベースラインデータを読み込み"""
         if self.bne_file.exists():
             try:
-                with open(self.baseline_file, "r", encoding="utf-8") as f:
+                with open(self.baseline_file, encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"ベースライン読み込みエラー: {e}")

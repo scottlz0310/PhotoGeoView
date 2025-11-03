@@ -9,7 +9,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock
 
 from src.integration.image_processor import CS4CodingImageProcessor
 from src.integration.logging_system import LoggerSystem
@@ -22,6 +22,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
     def setUp(self):
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             self.skipTest("Windows環境では非同期ファイル検出テストをスキップ")
         """テスト前の準備"""
@@ -250,6 +251,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         """バッチ処理の非同期動作テスト"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             self.skipTest("Windows環境では非同期ファイル検出テストをスキップ")
 

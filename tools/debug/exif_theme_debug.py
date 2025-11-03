@@ -20,8 +20,8 @@ sys.path.insert(0, str(Path(__file__).parents[2]))
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
 from src.integration.state_manager import StateManager
-from src.integration.ui.theme_manager import IntegratedThemeManager
 from src.integration.ui.exif_panel import EXIFPanel
+from src.integration.ui.theme_manager import IntegratedThemeManager
 
 
 def main() -> int:
@@ -61,5 +61,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-

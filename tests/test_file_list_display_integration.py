@@ -16,19 +16,16 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import Mock
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent
 from src.integration.services.file_discovery_service import FileDiscoveryService
 from src.integration.state_manager import StateManager
-from src.integration.ui.folder_navigator import EnhancedFolderNavigator
-from src.integration.ui.thumbnail_grid import OptimizedThumbnailGrid
 
 
 class FileListDisplayIntegrationTest(unittest.TestCase):
@@ -45,6 +42,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
         """テストセットアップ"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             self.skipTest("Windows環境ではファイルリスト表示統合テストをスキップ")
 
@@ -202,7 +200,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 正常ケーステスト成功")
+            print("✅ 正常ケーステスト成功")
             print(f"   検出された画像: {len(discovered_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
             print(f"   検出されたファイル: {[p.name for p in discovered_images]}")
@@ -262,7 +260,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 空フォルダ処理テスト成功")
+            print("✅ 空フォルダ処理テスト成功")
             print(f"   検出された画像: {len(discovered_images)}個（期待値: 0）")
             print(f"   処理時間: {duration:.3f}秒")
 
@@ -319,7 +317,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 存在しないフォルダ処理テスト成功")
+            print("✅ 存在しないフォルダ処理テスト成功")
             print(f"   検出された画像: {len(discovered_images)}個（期待値: 0）")
             print(f"   処理時間: {duration:.3f}秒")
 
@@ -395,10 +393,10 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ ファイルバリデーション統合テスト成功")
+            print("✅ ファイルバリデーション統合テスト成功")
             print(f"   テストしたファイル: {len(validation_results)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(f"   バリデーション結果:")
+            print("   バリデーション結果:")
             for file_name, is_valid in validation_results.items():
                 status = "✅ 有効" if is_valid else "❌ 無効"
                 print(f"     {file_name}: {status}")
@@ -472,10 +470,10 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ コンポーネント間連携フローテスト成功")
+            print("✅ コンポーネント間連携フローテスト成功")
             print(f"   検出された画像: {len(discovered_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(f"   連携フロー: フォルダ選択 → ファイル検出 → サムネイル表示")
+            print("   連携フロー: フォルダ選択 → ファイル検出 → サムネイル表示")
 
         except Exception as e:
             duration = time.time() - start_time
@@ -550,10 +548,10 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 日本語メッセージ表示テスト成功")
+            print("✅ 日本語メッセージ表示テスト成功")
             print(f"   日本語ファイル名の画像: {len(discovered_japanese)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(f"   日本語対応: ファイル名、フォルダ名、エラーメッセージ")
+            print("   日本語対応: ファイル名、フォルダ名、エラーメッセージ")
 
         except Exception as e:
             duration = time.time() - start_time
@@ -620,7 +618,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 基本パフォーマンスチェック成功")
+            print("✅ 基本パフォーマンスチェック成功")
             print(f"   反復回数: {iterations}回")
             print(f"   平均処理時間: {avg_duration:.3f}秒")
             print(f"   最大処理時間: {max_duration:.3f}秒")

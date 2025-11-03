@@ -7,11 +7,7 @@ import subprocess
 
 # Import checkers
 import sys
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
-
-import pytest
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools", "ci"))
 
@@ -20,7 +16,6 @@ from checkers.code_quality import CodeQualityChecker
 from checkers.performance_analyzer import PerformanceAnalyzer
 from checkers.security_scanner import SecurityScanner
 from checkers.test_runner import TestRunner
-from interfaces import CheckerError
 from models import CheckResult, CheckStatus
 
 
@@ -424,7 +419,7 @@ class TestPerformanceAnalyzer:
         # Verify saved content
         import json
 
-        with open(analyzer.baseline_path, "r") as f:
+        with open(analyzer.baseline_path) as f:
             saved_data = json.load(f)
 
         assert saved_data == results
@@ -670,10 +665,10 @@ class TestCheckerIntegration:
             assert hasattr(checker, "dependencies")
 
             # Test required methods
-            assert callable(getattr(checker, "is_available"))
-            assert callable(getattr(checker, "run_check"))
-            assert callable(getattr(checker, "validate_config"))
-            assert callable(getattr(checker, "cleanup"))
+            assert callable(checker.is_available)
+            assert callable(checker.run_check)
+            assert callable(checker.validate_config)
+            assert callable(checker.cleanup)
 
     @patch("subprocess.run")
     def test_checker_cleanup_called(self, mock_run, sample_config):

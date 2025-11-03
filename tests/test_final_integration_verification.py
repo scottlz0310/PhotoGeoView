@@ -15,13 +15,12 @@ import os
 import shutil
 import sys
 import tempfile
-import threading
 import time
 import unittest
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import Mock
 
 import psutil
 
@@ -30,7 +29,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent
 from src.integration.services.file_discovery_service import FileDiscoveryService
 from src.integration.services.file_system_watcher import FileSystemWatcher
 from src.integration.services.memory_aware_file_discovery import (
@@ -38,8 +36,6 @@ from src.integration.services.memory_aware_file_discovery import (
 )
 from src.integration.services.paginated_file_discovery import PaginatedFileDiscovery
 from src.integration.state_manager import StateManager
-from src.integration.ui.folder_navigator import EnhancedFolderNavigator
-from src.integration.ui.thumbnail_grid import OptimizedThumbnailGrid
 
 
 class FinalIntegrationVerificationTest(unittest.TestCase):
@@ -58,6 +54,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
         """テストセットアップ"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             self.skipTest("Windows環境では最終統合検証テストをスキップ")
 
@@ -228,7 +225,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 完全ワークフロー統合テスト成功")
+            print("✅ 完全ワークフロー統合テスト成功")
             print(f"   検出された画像: {len(discovered_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
             print(
@@ -441,7 +438,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ 日本語対応最終確認テスト成功")
+            print("✅ 日本語対応最終確認テスト成功")
             print(f"   日本語ファイル名画像: {len(japanese_images)}個")
             print(f"   日本語サブフォルダ画像: {len(sub_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
@@ -691,7 +688,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(f"✅ ファイルシステム監視統合テスト成功")
+            print("✅ ファイルシステム監視統合テスト成功")
             print(f"   初期画像数: {len(initial_images)}個")
             print(f"   最終画像数: {len(final_images)}個")
             print(f"   変更イベント数: {len(change_events)}個")

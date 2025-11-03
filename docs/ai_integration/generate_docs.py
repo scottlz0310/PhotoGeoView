@@ -25,26 +25,22 @@ from src.integration.documentation_system import DocumentationSystem
 def main():
     """メイン実行関数"""
     parser = argparse.ArgumentParser(
-        description='PhotoGeoView AI統合ドキュメント生成ツール'
+        description="PhotoGeoView AI統合ドキュメント生成ツール"
     )
 
     parser.add_argument(
-        '--update-headers',
-        action='store_true',
-        help='ファイルヘッダーを更新する'
+        "--update-headers", action="store_true", help="ファイルヘッダーを更新する"
     )
 
     parser.add_argument(
-        '--output-dir',
+        "--output-dir",
         type=Path,
-        default=project_root / 'docs' / 'ai_integration',
-        help='出力ディレクトリ（デフォルト: docs/ai_integration）'
+        default=project_root / "docs" / "ai_integration",
+        help="出力ディレクトリ（デフォルト: docs/ai_integration）",
     )
 
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='実際の変更は行わず、処理内容のみ表示'
+        "--dry-run", action="store_true", help="実際の変更は行わず、処理内容のみ表示"
     )
 
     args = parser.parse_args()

@@ -34,7 +34,7 @@ class SimpleCI:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=self.project_root
+                cwd=self.project_root,
             )
             return result.returncode == 0, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
@@ -52,23 +52,25 @@ class SimpleCI:
 
         errors = []
         for py_file in python_files[:20]:  # 最初の20ファイルのみチェック
-            success, _, stderr = self.run_command([
-                sys.executable, "-m", "py_compile", str(py_file)
-            ], timeout=10)
+            success, _, stderr = self.run_command(
+                [sys.executable, "-m", "py_compile", str(py_file)], timeout=10
+            )
 
             if not success and "SyntaxError" in stderr:
-                errors.append(f"{py_file.name}: {stderr.split('SyntaxError:')[-1].strip()}")
+                errors.append(
+                    f"{py_file.name}: {stderr.split('SyntaxError:')[-1].strip()}"
+                )
 
         if errors:
             return {
                 "status": "fail",
                 "message": f"{len(errors)}個の構文エラー",
-                "details": errors[:5]  # 最初の5個のみ表示
+                "details": errors[:5],  # 最初の5個のみ表示
             }
 
         return {
             "status": "pass",
-            "message": f"{len(python_files)}個のファイルの構文チェック完了"
+            "message": f"{len(python_files)}個のファイルの構文チェック完了",
         }
 
     def check_imports(self) -> Dict:
@@ -77,14 +79,18 @@ class SimpleCI:
 
         # main.pyのインポートテスト
         if Path("main.py").exists():
-            success, stdout, stderr = self.run_command([
-                sys.executable, "-c", "import main; print('✅ main.py import OK')"
-            ], timeout=30)
+            success, stdout, stderr = self.run_command(
+                [sys.executable, "-c", "import main; print('✅ main.py import OK')"],
+                timeout=30,
+            )
 
             if success:
                 return {"status": "pass", "message": "main.pyのインポート成功"}
             else:
-                return {"status": "fail", "message": f"main.pyのインポート失敗: {stderr}"}
+                return {
+                    "status": "fail",
+                    "message": f"main.pyのインポート失敗: {stderr}",
+                }
 
         return {"status": "skip", "message": "main.pyが見つかりません"}
 
@@ -93,29 +99,29 @@ class SimpleCI:
         print("🧪 テストファイルチェック中...")
 
         test_files = (
-            list(self.project_root.rglob("test_*.py")) +
-            list(self.project_root.rglob("*_test.py")) +
-            list(self.project_root.rglob("tests/*.py"))
+            list(self.project_root.rglob("test_*.py"))
+            + list(self.project_root.rglob("*_test.py"))
+            + list(self.project_root.rglob("tests/*.py"))
         )
 
         if not test_files:
             return {"status": "warn", "message": "テストファイルが見つかりません"}
 
         # pytest --collect-only で テスト収集のみ実行
-        success, stdout, stderr = self.run_command([
-            sys.executable, "-m", "pytest", "--collect-only", "-q"
-        ], timeout=30)
+        success, stdout, stderr = self.run_command(
+            [sys.executable, "-m", "pytest", "--collect-only", "-q"], timeout=30
+        )
 
         if success:
             test_count = stdout.count("::") if "::" in stdout else len(test_files)
             return {
                 "status": "pass",
-                "message": f"{len(test_files)}個のテストファイル, 約{test_count}個のテスト"
+                "message": f"{len(test_files)}個のテストファイル, 約{test_count}個のテスト",
             }
         else:
             return {
                 "status": "warn",
-                "message": f"{len(test_files)}個のテストファイル (収集エラー)"
+                "message": f"{len(test_files)}個のテストファイル (収集エラー)",
             }
 
     def check_dependencies(self) -> Dict:
@@ -126,9 +132,9 @@ class SimpleCI:
             return {"status": "warn", "message": "pyproject.tomlが見つかりません"}
 
         # pip check で依存関係の整合性をチェック（pyproject管理）
-        success, stdout, stderr = self.run_command([
-            sys.executable, "-m", "pip", "check"
-        ], timeout=30)
+        success, stdout, stderr = self.run_command(
+            [sys.executable, "-m", "pip", "check"], timeout=30
+        )
 
         if success:
             return {"status": "pass", "message": "依存関係の整合性OK"}
@@ -136,7 +142,7 @@ class SimpleCI:
             return {
                 "status": "fail",
                 "message": "依存関係に問題があります",
-                "details": stderr.split('\n')[:3]
+                "details": stderr.split("\n")[:3],
             }
 
     def check_project_structure(self) -> Dict:
@@ -152,12 +158,12 @@ class SimpleCI:
         if missing_files:
             return {
                 "status": "warn",
-                "message": f"推奨ファイルが不足: {', '.join(missing_files)}"
+                "message": f"推奨ファイルが不足: {', '.join(missing_files)}",
             }
 
         return {
             "status": "pass",
-            "message": f"基本構造OK ({len(existing_dirs)}/{len(recommended_dirs)}の推奨ディレクトリ存在)"
+            "message": f"基本構造OK ({len(existing_dirs)}/{len(recommended_dirs)}の推奨ディレクトリ存在)",
         }
 
     def run_all_checks(self) -> Dict:
@@ -183,14 +189,11 @@ class SimpleCI:
                 results[check_name] = result
 
                 # 結果表示
-                status_icons = {
-                    "pass": "✅",
-                    "warn": "⚠️",
-                    "fail": "❌",
-                    "skip": "⏭️"
-                }
+                status_icons = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}
                 icon = status_icons.get(result["status"], "❓")
-                print(f"{icon} {check_name}: {result['message']} ({result['duration']}s)")
+                print(
+                    f"{icon} {check_name}: {result['message']} ({result['duration']}s)"
+                )
 
                 # 詳細があれば表示
                 if "details" in result:
@@ -200,10 +203,10 @@ class SimpleCI:
             except Exception as e:
                 results[check_name] = {
                     "status": "fail",
-                    "message": f"エラー: {str(e)}",
-                    "duration": 0
+                    "message": f"エラー: {e!s}",
+                    "duration": 0,
                 }
-                print(f"❌ {check_name}: エラー - {str(e)}")
+                print(f"❌ {check_name}: エラー - {e!s}")
 
         # サマリー
         total_duration = round(time.time() - self.start_time, 2)
@@ -218,7 +221,9 @@ class SimpleCI:
         print("=" * 50)
 
         for status, count in status_counts.items():
-            icon = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}.get(status, "❓")
+            icon = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}.get(
+                status, "❓"
+            )
             print(f"{icon} {status.upper()}: {count}個")
 
         print(f"\n⏱️  総実行時間: {total_duration}秒")
@@ -239,7 +244,7 @@ class SimpleCI:
             "total_duration": total_duration,
             "checks": results,
             "summary": status_counts,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def save_report(self, results: Dict, format: str = "json"):
@@ -251,21 +256,26 @@ class SimpleCI:
 
         if format == "json":
             report_file = reports_dir / f"ci_report_{timestamp}.json"
-            with open(report_file, 'w', encoding='utf-8') as f:
+            with open(report_file, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
             print(f"📄 JSONレポート保存: {report_file}")
 
         elif format == "markdown":
             report_file = reports_dir / f"ci_report_{timestamp}.md"
-            with open(report_file, 'w', encoding='utf-8') as f:
-                f.write(f"# CI実行レポート\n\n")
+            with open(report_file, "w", encoding="utf-8") as f:
+                f.write("# CI実行レポート\n\n")
                 f.write(f"**実行日時**: {results['timestamp']}\n")
                 f.write(f"**総実行時間**: {results['total_duration']}秒\n")
                 f.write(f"**総合結果**: {results['overall_status']}\n\n")
 
                 f.write("## チェック結果\n\n")
-                for check_name, result in results['checks'].items():
-                    status_icon = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}.get(result['status'], "❓")
+                for check_name, result in results["checks"].items():
+                    status_icon = {
+                        "pass": "✅",
+                        "warn": "⚠️",
+                        "fail": "❌",
+                        "skip": "⏭️",
+                    }.get(result["status"], "❓")
                     f.write(f"### {status_icon} {check_name}\n")
                     f.write(f"- **ステータス**: {result['status'].upper()}\n")
                     f.write(f"- **メッセージ**: {result['message']}\n")
@@ -285,9 +295,15 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="PhotoGeoView Simple CI Simulator")
-    parser.add_argument("--format", choices=["json", "markdown", "both"],
-                       default="json", help="レポート形式")
-    parser.add_argument("--no-report", action="store_true", help="レポート保存をスキップ")
+    parser.add_argument(
+        "--format",
+        choices=["json", "markdown", "both"],
+        default="json",
+        help="レポート形式",
+    )
+    parser.add_argument(
+        "--no-report", action="store_true", help="レポート保存をスキップ"
+    )
 
     args = parser.parse_args()
 

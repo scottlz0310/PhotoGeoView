@@ -7,7 +7,6 @@ and provides detailed reporting of test results.
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -152,7 +151,7 @@ def main():
         print("❌ Some tests failed!")
 
     if args.coverage:
-        print(f"📊 Coverage report generated in: reports/coverage/index.html")
+        print("📊 Coverage report generated in: reports/coverage/index.html")
 
     return exit_code
 

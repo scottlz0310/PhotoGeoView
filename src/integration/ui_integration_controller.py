@@ -6,25 +6,24 @@ Coordinates seamless integration between CursorBLD UI components and CS4Coding f
 Author: Kiro AI Integration System
 """
 
-import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import QMutex, QObject, QThread, QTimer, Signal
+from PySide6.QtCore import QMutex, QObject, QTimer, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 
-from .ui.theme_manager import IntegratedThemeManager
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .image_processor import CS4CodingImageProcessor
 from .logging_system import LoggerSystem
-from .models import AIComponent, ApplicationState, ImageMetadata, ProcessingStatus
+from .models import AIComponent, ImageMetadata
 from .performance_monitor import KiroPerformanceMonitor
 from .state_manager import StateManager
 from .ui.folder_navigator import EnhancedFolderNavigator
+from .ui.theme_manager import IntegratedThemeManager
 from .ui.thumbnail_grid import OptimizedThumbnailGrid
 from .unified_cache import UnifiedCacheSystem
 
@@ -716,7 +715,6 @@ class UIIntegrationController(QObject):
                     and self.integration_state.exif_loading_active
                     and self.integration_state.map_rendering_active
                 ):
-
                     self.ui_performance_alert.emit(
                         "warning", "Multiple heavy operations running simultaneously"
                     )

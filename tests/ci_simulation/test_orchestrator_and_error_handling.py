@@ -6,11 +6,7 @@ import os
 
 # Import components
 import sys
-import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutureTimeoutError
-from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -20,7 +16,7 @@ from check_orchestrator import CheckOrchestrator
 from error_handler import ErrorHandler
 from error_recovery_system import ErrorRecoverySystem
 from interfaces import CheckerError, CheckerInterface, DependencyError, EnvironmentError
-from models import CheckResult, CheckStatus, CheckTask, SimulationResult
+from models import CheckResult, CheckStatus, CheckTask
 
 
 class MockChecker(CheckerInterface):

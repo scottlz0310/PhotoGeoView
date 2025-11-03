@@ -22,6 +22,7 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+
 def setup_logging():
     """ログシステムをセットアップ"""
     log_dir = project_root / "logs"
@@ -29,12 +30,13 @@ def setup_logging():
 
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(log_dir / "photogeoview.log"),
-            logging.StreamHandler(sys.stdout)
-        ]
+            logging.StreamHandler(sys.stdout),
+        ],
     )
+
 
 def print_startup_banner():
     """起動バナーを表示"""
@@ -50,12 +52,13 @@ def print_startup_banner():
         "  ⚡ Kiro: 統合制御・パフォーマンス最適化",
         "=" * 60,
         "🚀 アプリケーションを起動中...",
-        ""
+        "",
     ]
 
     for line in banner_lines:
         logger.info(line)
         print(line)  # コンソールにも表示
+
 
 def check_environment():
     """環境をチェック"""
@@ -86,6 +89,7 @@ def check_environment():
         print(cmd_msg)
         return False
 
+
 def main():
     """メインアプリケーション起動"""
     try:
@@ -114,6 +118,7 @@ def main():
         # WebEngine/WSL対策（QApplication作成前に必要）
         try:
             from PySide6.QtCore import Qt
+
             # GPUが使えない環境（WSL/リモート等）での安定化
             os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
             os.environ.setdefault(
@@ -123,12 +128,8 @@ def main():
             )
             os.environ.setdefault("QT_OPENGL", "software")
 
-            QApplication.setAttribute(
-                Qt.ApplicationAttribute.AA_ShareOpenGLContexts
-            )
-            QApplication.setAttribute(
-                Qt.ApplicationAttribute.AA_UseSoftwareOpenGL
-            )
+            QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+            QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseSoftwareOpenGL)
             print("✅ WebEngine用OpenGL設定完了")
         except Exception as e:
             print(f"⚠️  WebEngine用設定エラー: {e}")
@@ -172,13 +173,17 @@ def main():
 
         logger_system = LoggerSystem()
         config_manager = ConfigManager(logger_system=logger_system)
-        state_manager = StateManager(config_manager=config_manager, logger_system=logger_system)
+        state_manager = StateManager(
+            config_manager=config_manager, logger_system=logger_system
+        )
 
         controller_msg = "🎯 アプリケーションコントローラーを初期化中..."
         logger.info(controller_msg)
         print(controller_msg)
 
-        controller = AppController(config_manager=config_manager, logger_system=logger_system)  # noqa: F841
+        controller = AppController(
+            config_manager=config_manager, logger_system=logger_system
+        )
 
         # メインウィンドウを作成・表示
         window_msg = "🖼️  メインウィンドウを表示中..."
@@ -188,7 +193,7 @@ def main():
         main_window = IntegratedMainWindow(
             config_manager=config_manager,
             state_manager=state_manager,
-            logger_system=logger_system
+            logger_system=logger_system,
         )
         main_window.show()
 
@@ -238,6 +243,7 @@ def main():
         print(error_msg)
         print(detail_msg)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

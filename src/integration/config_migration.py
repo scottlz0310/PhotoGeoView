@@ -228,9 +228,9 @@ class ConfigMigrationManager:
                 # Update totals
                 migration_summary["total_files_processed"] += len(ai_results)
                 for result in ai_results:
-                    migration_summary[
-                        "total_settings_migrated"
-                    ] += result.migrated_settings
+                    migration_summary["total_settings_migrated"] += (
+                        result.migrated_settings
+                    )
                     migration_summary["errors"].extend(result.errors)
                     migration_summary["warnings"].extend(result.warnings)
 
@@ -288,7 +288,7 @@ class ConfigMigrationManager:
 
             try:
                 # Load source configuration
-                with open(source_file, "r", encoding="utf-8") as f:
+                with open(source_file, encoding="utf-8") as f:
                     source_config = json.load(f)
 
                 # Create backup
@@ -370,7 +370,7 @@ class ConfigMigrationManager:
                     warnings.append(f"Source setting not found: {source_key}")
 
             except Exception as e:
-                errors.append(f"Failed to migrate {source_key}: {str(e)}")
+                errors.append(f"Failed to migrate {source_key}: {e!s}")
 
         return migrated_config, errors, warnings
 
@@ -456,7 +456,7 @@ class ConfigMigrationManager:
         existing_config = {}
         if target_file.exists():
             try:
-                with open(target_file, "r", encoding="utf-8") as f:
+                with open(target_file, encoding="utf-8") as f:
                     existing_config = json.load(f)
             except Exception:
                 pass

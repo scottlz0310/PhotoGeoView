@@ -8,17 +8,18 @@ Author: Kiro AI Integration System
 Requirements: 5.1, 5.2, 5.3
 """
 
+import os
+import platform
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
-import os
-import platform
+from typing import Any, Dict, List, Optional
 
 
 class PathType(Enum):
     """Path type enumeration"""
+
     LOCAL = "local"
     NETWORK = "network"
     REMOVABLE = "removable"
@@ -27,6 +28,7 @@ class PathType(Enum):
 
 class SegmentState(Enum):
     """Breadcrumb segment state enumeration"""
+
     NORMAL = "normal"
     CURRENT = "current"
     INACCESSIBLE = "inaccessible"
@@ -36,6 +38,7 @@ class SegmentState(Enum):
 
 class NavigationError(Exception):
     """Navigation-related error"""
+
     pass
 
 
@@ -152,7 +155,7 @@ class BreadcrumbSegment:
             "segment_index": self.segment_index,
             "is_root": self.is_root,
             "is_drive": self.is_drive,
-            "access_count": self.access_count
+            "access_count": self.access_count,
         }
 
 
@@ -206,8 +209,12 @@ class PathInfo:
                     # Check if removable drive
                     try:
                         import win32file
+
                         drive_type = win32file.GetDriveType(f"{self.drive_letter}:\\")
-                        self.is_removable = drive_type in [win32file.DRIVE_REMOVABLE, win32file.DRIVE_CDROM]
+                        self.is_removable = drive_type in [
+                            win32file.DRIVE_REMOVABLE,
+                            win32file.DRIVE_CDROM,
+                        ]
                         if self.is_removable:
                             self.path_type = PathType.REMOVABLE
                     except ImportError:
@@ -229,7 +236,7 @@ class PathInfo:
             # Get disk usage information
             if self.is_accessible and self.path.exists():
                 try:
-                    stat = os.statvfs(self.path) if hasattr(os, 'statvfs') else None
+                    stat = os.statvfs(self.path) if hasattr(os, "statvfs") else None
                     if stat:
                         self.total_space = stat.f_blocks * stat.f_frsize
                         self.free_space = stat.f_bavail * stat.f_frsize
@@ -331,7 +338,7 @@ class NavigationState:
                     name=path_part.name,
                     path=path_part,
                     segment_index=i,
-                    is_root=(i == 0)
+                    is_root=(i == 0),
                 )
 
                 # Mark current segment
@@ -348,7 +355,7 @@ class NavigationState:
 
         except Exception as e:
             self.has_error = True
-            self.error_message = f"Failed to generate segments: {str(e)}"
+            self.error_message = f"Failed to generate segments: {e!s}"
             segments = []
 
         finally:
@@ -366,16 +373,23 @@ class NavigationState:
 
         # Always keep root and current segments
         root_segments = [s for s in self.breadcrumb_segments if s.is_root]
-        current_segments = [s for s in self.breadcrumb_segments if s.state == SegmentState.CURRENT]
+        current_segments = [
+            s for s in self.breadcrumb_segments if s.state == SegmentState.CURRENT
+        ]
 
         # Calculate how many middle segments we can keep
-        reserved_count = len(root_segments) + len(current_segments) + 1  # +1 for ellipsis
+        reserved_count = (
+            len(root_segments) + len(current_segments) + 1
+        )  # +1 for ellipsis
         available_count = self.max_visible_segments - reserved_count
 
         if available_count > 0:
             # Keep some segments before the current one
-            middle_segments = [s for s in self.breadcrumb_segments
-                             if not s.is_root and s.state != SegmentState.CURRENT]
+            middle_segments = [
+                s
+                for s in self.breadcrumb_segments
+                if not s.is_root and s.state != SegmentState.CURRENT
+            ]
 
             if len(middle_segments) > available_count:
                 # Keep the last N segments before current
@@ -392,7 +406,7 @@ class NavigationState:
                         path=Path("..."),
                         display_name="...",
                         is_clickable=False,
-                        icon="ellipsis"
+                        icon="ellipsis",
                     )
                     truncated.append(ellipsis_segment)
 
@@ -442,7 +456,7 @@ class NavigationState:
 
         except Exception as e:
             self.has_error = True
-            self.error_message = f"Navigation failed: {str(e)}"
+            self.error_message = f"Navigation failed: {e!s}"
             return False
 
     def navigate_to_segment(self, segment_index: int) -> bool:
@@ -474,7 +488,7 @@ class NavigationState:
 
         # Trim history to max size
         if len(self.history) > self.max_history_size:
-            self.history = self.history[:self.max_history_size]
+            self.history = self.history[: self.max_history_size]
 
         # Reset history index
         self.history_index = -1
@@ -548,7 +562,7 @@ class NavigationState:
             "error_message": self.error_message,
             "last_update": self.last_update.isoformat() if self.last_update else None,
             "update_count": self.update_count,
-            "segment_generation_time": self.segment_generation_time
+            "segment_generation_time": self.segment_generation_time,
         }
 
 
@@ -579,5 +593,5 @@ class NavigationEvent:
             "timestamp": self.timestamp.isoformat(),
             "success": self.success,
             "error_message": self.error_message,
-            "duration_ms": self.duration_ms
+            "duration_ms": self.duration_ms,
         }

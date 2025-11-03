@@ -10,14 +10,12 @@ Real-time system monitoring for AI integration:
 Author: Kiro AI Integration System
 """
 
-import asyncio
 import os
 import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import psutil
@@ -125,7 +123,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         self.alert_cooldown_duration = 60.0  # seconds between same alerts
 
         # Performance optimization integration
-        self.optimizer: Optional["PerformanceOptimizer"] = None
+        self.optimizer: Optional[PerformanceOptimizer] = None
         self.recent_alerts: deque = deque(maxlen=100)
         self.alert_cooldown: Dict[str, datetime] = {}  # Prevent alert spam
 

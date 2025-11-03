@@ -11,17 +11,11 @@ Created by: Kiro AI Integration System
 Created on: 2025-01-29
 """
 
-import json
-import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import unittest
 from pathlib import Path
-from typing import Any, Dict
-
-import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -35,6 +29,7 @@ class TestCIIntegration(unittest.TestCase):
     def setUpClass(cls):
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             raise unittest.SkipTest("Windows環境ではCI統合テストをスキップ")
         """Set up test environment."""
@@ -71,7 +66,7 @@ class TestCIIntegration(unittest.TestCase):
         pyproject_path = self.project_root / "pyproject.toml"
         self.assertTrue(pyproject_path.exists(), "pyproject.toml not found")
 
-        with open(pyproject_path, "r", encoding="utf-8") as f:
+        with open(pyproject_path, encoding="utf-8") as f:
             content = f.read()
 
         self.assertIn(
@@ -90,7 +85,7 @@ class TestCIIntegration(unittest.TestCase):
         makefile_path = self.project_root / "Makefile"
         self.assertTrue(makefile_path.exists(), "Makefile not found")
 
-        with open(makefile_path, "r", encoding="utf-8") as f:
+        with open(makefile_path, encoding="utf-8") as f:
             content = f.read()
 
         expected_targets = ["ci:", "ci-quick:", "ci-full:", "ci-install:"]
@@ -112,7 +107,7 @@ class TestCIIntegration(unittest.TestCase):
         gitignore_path = self.project_root / ".gitignore"
 
         if gitignore_path.exists():
-            with open(gitignore_path, "r", encoding="utf-8") as f:
+            with open(gitignore_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Check for CI simulation entries
@@ -184,7 +179,7 @@ class TestCIIntegration(unittest.TestCase):
         deployment_script = self.project_root / "tools" / "create_deployment_package.py"
         self.assertTrue(deployment_script.exists(), "Deployment script not found")
 
-        with open(deployment_script, "r", encoding="utf-8") as f:
+        with open(deployment_script, encoding="utf-8") as f:
             content = f.read()
 
         self.assertIn(
@@ -200,7 +195,7 @@ class TestCIIntegration(unittest.TestCase):
         if workflows_dir.exists():
             ci_simulator_workflow = workflows_dir / "ci-simulator.yml"
             if ci_simulator_workflow.exists():
-                with open(ci_simulator_workflow, "r", encoding="utf-8") as f:
+                with open(ci_simulator_workflow, encoding="utf-8") as f:
                     content = f.read()
 
                 self.assertIn(

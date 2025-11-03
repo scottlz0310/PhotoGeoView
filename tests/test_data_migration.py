@@ -11,7 +11,6 @@ import sqlite3
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -33,6 +32,7 @@ class TestDataMigrationManager:
     def temp_dir(self):
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
             pytest.skip("Windows環境ではデータマイグレーションテストをスキップ")
         """Create temporary directory for test data"""
@@ -551,7 +551,7 @@ class TestDataMigrationManager:
         assert "test_data" in backup_file.name
 
         # Verify backup content
-        with open(backup_file, "r") as f:
+        with open(backup_file) as f:
             backup_data = json.load(f)
         assert backup_data == test_data
 

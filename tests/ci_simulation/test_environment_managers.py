@@ -3,12 +3,10 @@ Unit tests for environment management components.
 """
 
 import os
-import subprocess
 
 # Import environment managers
 import sys
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -244,7 +242,6 @@ class TestPythonVersionManager:
             patch.object(manager, "is_version_available", return_value=True),
             patch.object(manager, "setup_virtual_environment", return_value=True),
         ):
-
             success = manager.setup_environment(requirements)
             assert success is True
 
@@ -678,9 +675,9 @@ class TestEnvironmentManagerIntegration:
 
         for manager in managers:
             # Test required methods exist
-            assert callable(getattr(manager, "setup_environment"))
-            assert callable(getattr(manager, "cleanup_environment"))
-            assert callable(getattr(manager, "is_environment_ready"))
+            assert callable(manager.setup_environment)
+            assert callable(manager.cleanup_environment)
+            assert callable(manager.is_environment_ready)
 
     def test_combined_environment_setup(self, temp_dir):
         """Test setting up combined environment with all managers."""
@@ -702,7 +699,6 @@ class TestEnvironmentManagerIntegration:
             patch.object(qt_manager, "setup_environment", return_value=True),
             patch.object(display_manager, "setup_environment", return_value=True),
         ):
-
             # Setup all environments
             python_success = python_manager.setup_environment(requirements)
             qt_success = qt_manager.setup_environment(requirements)

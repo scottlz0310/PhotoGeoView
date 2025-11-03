@@ -11,7 +11,6 @@ Author: Kiro AI Integration System
 """
 
 import gc
-import os
 import shutil
 import sys
 import tempfile
@@ -22,8 +21,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-from unittest.mock import Mock, patch
+from typing import Any, Dict
 
 import psutil
 
@@ -32,12 +30,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.integration.models import AIComponent
 from src.integration.services.file_discovery_service import FileDiscoveryService
 from src.integration.services.memory_aware_file_discovery import (
     MemoryAwareFileDiscovery,
 )
-from src.integration.services.paginated_file_discovery import PaginatedFileDiscovery
 from src.integration.state_manager import StateManager
 
 
@@ -122,8 +118,11 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         """テストセットアップ"""
         # Windows環境での問題を回避
         import platform
+
         if platform.system() == "Windows":
-            self.skipTest("Windows環境ではファイルリスト表示パフォーマンステストをスキップ")
+            self.skipTest(
+                "Windows環境ではファイルリスト表示パフォーマンステストをスキップ"
+            )
 
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
@@ -349,7 +348,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
                 iteration_duration = time.time() - iteration_start
                 print(
-                    f"   反復 {i+1}/{iterations}: {len(discovered_images)}個検出, "
+                    f"   反復 {i + 1}/{iterations}: {len(discovered_images)}個検出, "
                     f"{iteration_duration:.3f}秒, メモリ: {current_memory:.1f}MB"
                 )
 
@@ -393,7 +392,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
             self.performance_results.append(performance_metrics)
 
-            print(f"✅ メモリ使用量監視テスト成功")
+            print("✅ メモリ使用量監視テスト成功")
             print(f"   テストファイル数: {file_count}個")
             print(f"   反復回数: {iterations}回")
             print(f"   総処理時間: {duration:.3f}秒")
@@ -456,7 +455,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
                 measurements.append(response_time)
 
                 print(
-                    f"     測定 {i+1}/{iterations}: {response_time:.3f}秒 ({len(discovered_images)}個検出)"
+                    f"     測定 {i + 1}/{iterations}: {response_time:.3f}秒 ({len(discovered_images)}個検出)"
                 )
 
             # 統計計算
@@ -525,7 +524,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
         self.performance_results.append(overall_performance)
 
-        print(f"\n✅ 応答時間測定テスト成功")
+        print("\n✅ 応答時間測定テスト成功")
         print(f"   テストシナリオ数: {len(test_scenarios)}個")
         print(
             f"   総ファイル数: {sum(r['file_count'] for r in response_time_results)}個"
@@ -636,7 +635,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
             self.performance_results.append(performance_metrics)
 
-            print(f"✅ 並行処理パフォーマンステスト成功")
+            print("✅ 並行処理パフォーマンステスト成功")
             print(f"   処理フォルダ数: {folder_count}個")
             print(f"   総ファイル数: {total_images}個")
             print(f"   並行処理時間: {concurrent_duration:.3f}秒")
@@ -676,7 +675,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             no_cache_duration = time.time() - start_time
             no_cache_times.append(no_cache_duration)
             print(
-                f"   測定 {i+1}: {no_cache_duration:.3f}秒 ({len(discovered_images_no_cache)}個)"
+                f"   測定 {i + 1}: {no_cache_duration:.3f}秒 ({len(discovered_images_no_cache)}個)"
             )
 
         avg_no_cache_time = sum(no_cache_times) / len(no_cache_times)
@@ -705,7 +704,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             cache_hit_duration = time.time() - start_time
             cache_hit_times.append(cache_hit_duration)
             print(
-                f"     測定 {i+1}: {cache_hit_duration:.3f}秒 ({len(discovered_images_cache)}個)"
+                f"     測定 {i + 1}: {cache_hit_duration:.3f}秒 ({len(discovered_images_cache)}個)"
             )
 
         avg_cache_hit_time = sum(cache_hit_times) / len(cache_hit_times)
@@ -752,7 +751,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
         self.performance_results.append(performance_metrics)
 
-        print(f"\n✅ キャッシュパフォーマンス影響テスト成功")
+        print("\n✅ キャッシュパフォーマンス影響テスト成功")
         print(f"   テストファイル数: {file_count}個")
         print(f"   キャッシュ無効平均時間: {avg_no_cache_time:.3f}秒")
         print(f"   キャッシュ初回時間: {cache_first_duration:.3f}秒")
@@ -839,7 +838,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
             self.performance_results.append(performance_metrics)
 
-            print(f"✅ メモリ制限対応処理テスト成功")
+            print("✅ メモリ制限対応処理テスト成功")
             print(f"   テストファイル数: {file_count}個")
             print(f"   検出画像数: {len(discovered_images)}個")
             print(f"   メモリ制限: {memory_limit_mb}MB")
@@ -939,7 +938,7 @@ def run_performance_tests():
     print("=" * 80)
 
     # システム情報の表示
-    print(f"システム情報:")
+    print("システム情報:")
     print(f"  CPU: {psutil.cpu_count()}コア")
     print(f"  メモリ: {psutil.virtual_memory().total / 1024 / 1024 / 1024:.1f}GB")
     print(f"  Python: {sys.version}")
@@ -988,12 +987,12 @@ def run_performance_tests():
             f"ピークメモリ使用量: {report['summary']['peak_memory_overall_mb']:.1f}MB"
         )
 
-        print(f"\nパフォーマンス評価分布:")
+        print("\nパフォーマンス評価分布:")
         for grade, count in report["summary"]["performance_grade_distribution"].items():
             if count > 0:
                 print(f"  {grade}グレード: {count}テスト")
 
-        print(f"\nパフォーマンス基準:")
+        print("\nパフォーマンス基準:")
         for level, criteria in report["performance_benchmarks"].items():
             print(f"  {level}: {criteria}")
 

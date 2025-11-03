@@ -8,24 +8,23 @@ Author: Kiro AI Integration System
 Requirements: 1.2, 1.3, 2.1, 4.1, 4.3
 """
 
-import asyncio
-import os
 import platform
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
 from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
-from src.integration.navigation_integration_controller import NavigationIntegrationController
+from src.integration.navigation_integration_controller import (
+    NavigationIntegrationController,
+)
 from src.integration.services.file_system_watcher import FileSystemWatcher
 from src.integration.theme_integration_controller import ThemeIntegrationController
-from src.integration.theme_models import ThemeConfiguration, ThemeInfo, ThemeType
+from src.integration.theme_models import ThemeConfiguration
 from src.ui.breadcrumb_bar import BreadcrumbAddressBar
 from src.ui.theme_manager import ThemeManagerWidget
 
@@ -76,42 +75,43 @@ class TestQtThemeBreadcrumbIntegration:
     def file_system_watcher(self, mock_logger_system):
         """Create file system watcher"""
         return FileSystemWatcher(
-            logger_system=mock_logger_system,
-            enable_monitoring=True
+            logger_system=mock_logger_system, enable_monitoring=True
         )
 
     @pytest.fixture
     def theme_controller(self, mock_config_manager, mock_logger_system):
         """Create theme integration controller"""
         return ThemeIntegrationController(
-            config_manager=mock_config_manager,
-            logger_system=mock_logger_system
+            config_manager=mock_config_manager, logger_system=mock_logger_system
         )
 
     @pytest.fixture
-    def navigation_controller(self, mock_config_manager, mock_logger_system, file_system_watcher):
+    def navigation_controller(
+        self, mock_config_manager, mock_logger_system, file_system_watcher
+    ):
         """Create navigation integration controller"""
         return NavigationIntegrationController(
             config_manager=mock_config_manager,
             logger_system=mock_logger_system,
-            file_system_watcher=file_system_watcher
+            file_system_watcher=file_system_watcher,
         )
 
     @pytest.fixture
-    def breadcrumb_bar(self, file_system_watcher, mock_logger_system, mock_config_manager):
+    def breadcrumb_bar(
+        self, file_system_watcher, mock_logger_system, mock_config_manager
+    ):
         """Create breadcrumb address bar"""
         return BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
             logger_system=mock_logger_system,
-            config_manager=mock_config_manager
+            config_manager=mock_config_manager,
         )
 
     @pytest.fixture
     def theme_manager_widget(self, mock_config_manager, mock_logger_system):
         """Create theme manager widget"""
         return ThemeManagerWidget(
-            config_manager=mock_config_manager,
-            logger_system=mock_logger_system
+            config_manager=mock_config_manager, logger_system=mock_logger_system
         )
 
     def _mock_get_setting(self, key: str, default=None):
@@ -138,18 +138,22 @@ class TestQtThemeBreadcrumbIntegration:
         """Test theme synchronization across multiple components"""
         # Register components with theme controller
         theme_controller.register_component(breadcrumb_bar, "breadcrumb_bar")
-        theme_controller.register_component(theme_manager_widget, "theme_manager_widget")
+        theme_controller.register_component(
+            theme_manager_widget, "theme_manager_widget"
+        )
 
         # Create mock theme manager
         mock_theme_manager = Mock()
         mock_theme_manager.apply_theme = Mock(return_value=True)
-        mock_theme_manager.get_current_theme = Mock(return_value=ThemeConfiguration(
-            name="dark",
-            display_name="Dark Theme",
-            description="Dark theme for testing",
-            author="Test",
-            version="1.0.0"
-        ))
+        mock_theme_manager.get_current_theme = Mock(
+            return_value=ThemeConfiguration(
+                name="dark",
+                display_name="Dark Theme",
+                description="Dark theme for testing",
+                author="Test",
+                version="1.0.0",
+            )
+        )
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
 
         # Apply theme change
@@ -170,7 +174,9 @@ class TestQtThemeBreadcrumbIntegration:
         """Test error handling during theme changes"""
         # Register components
         theme_controller.register_component(breadcrumb_bar, "breadcrumb_bar")
-        theme_controller.register_component(theme_manager_widget, "theme_manager_widget")
+        theme_controller.register_component(
+            theme_manager_widget, "theme_manager_widget"
+        )
 
         # Create failing theme manager
         mock_theme_manager = Mock()
@@ -190,13 +196,17 @@ class TestQtThemeBreadcrumbIntegration:
     ):
         """Test synchronization between breadcrumb and folder navigator"""
         # Register breadcrumb with navigation controller
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Create mock folder navigator
         mock_folder_navigator = Mock()
         mock_folder_navigator.get_current_state = Mock()
         mock_folder_navigator.navigate_to_path = Mock(return_value=True)
-        navigation_controller.register_navigation_manager("folder_navigator", mock_folder_navigator)
+        navigation_controller.register_navigation_manager(
+            "folder_navigator", mock_folder_navigator
+        )
 
         # Navigate to test directory
         test_path = temp_directory / "folder1"
@@ -219,7 +229,9 @@ class TestQtThemeBreadcrumbIntegration:
         breadcrumb_bar.set_current_path(nested_path)
 
         # Register with navigation controller
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Simulate segment click (navigate to parent)
         parent_path = temp_directory / "folder1"
@@ -227,7 +239,9 @@ class TestQtThemeBreadcrumbIntegration:
 
         # Verify navigation
         assert result is True
-        assert navigation_controller.current_navigation_state.current_path == parent_path
+        assert (
+            navigation_controller.current_navigation_state.current_path == parent_path
+        )
 
     # Test 3: File system watcher integration
     @pytest.mark.asyncio
@@ -260,10 +274,13 @@ class TestQtThemeBreadcrumbIntegration:
         # Navigate to subdirectory
         subdir = temp_directory / "folder1" / "subfolder1"
         breadcrumb_bar.set_current_path(subdir)
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Simulate directory deletion
         import shutil
+
         shutil.rmtree(subdir)
 
         # Simulate file system change
@@ -283,7 +300,7 @@ class TestQtThemeBreadcrumbIntegration:
             display_name="Dark Theme",
             description="Test theme",
             author="Test",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         # Save configuration (simulated)
@@ -312,19 +329,21 @@ class TestQtThemeBreadcrumbIntegration:
         # Mock saved theme configuration
         mock_config_manager.get_setting.side_effect = lambda key, default: {
             "ui.theme": "dark",
-            "ui.theme_persistence": True
+            "ui.theme_persistence": True,
         }.get(key, default)
 
         # Create mock theme manager
         mock_theme_manager = Mock()
         mock_theme_manager.apply_theme = Mock(return_value=True)
-        mock_theme_manager.get_current_theme = Mock(return_value=ThemeConfiguration(
-            name="dark",
-            display_name="Dark Theme",
-            description="Restored theme",
-            author="Test",
-            version="1.0.0"
-        ))
+        mock_theme_manager.get_current_theme = Mock(
+            return_value=ThemeConfiguration(
+                name="dark",
+                display_name="Dark Theme",
+                description="Restored theme",
+                author="Test",
+                version="1.0.0",
+            )
+        )
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
 
         # Simulate startup theme restoration
@@ -340,7 +359,7 @@ class TestQtThemeBreadcrumbIntegration:
         self, breadcrumb_bar, temp_directory, platform_name
     ):
         """Test cross-platform path handling in breadcrumb"""
-        with patch('platform.system', return_value=platform_name):
+        with patch("platform.system", return_value=platform_name):
             # Test path setting with platform-specific paths
             if platform_name == "Windows":
                 # Test Windows-style paths
@@ -391,7 +410,7 @@ class TestQtThemeBreadcrumbIntegration:
             display_name=f"{current_platform} Theme",
             description=f"Theme optimized for {current_platform}",
             author="Test",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         # Mock theme manager with platform-specific behavior
@@ -410,27 +429,42 @@ class TestQtThemeBreadcrumbIntegration:
     # Integration test scenarios
     @pytest.mark.asyncio
     async def test_complete_theme_breadcrumb_workflow(
-        self, theme_controller, navigation_controller, breadcrumb_bar,
-        theme_manager_widget, temp_directory
+        self,
+        theme_controller,
+        navigation_controller,
+        breadcrumb_bar,
+        theme_manager_widget,
+        temp_directory,
     ):
         """Test complete workflow: theme change + navigation + breadcrumb sync"""
         # Setup components
         theme_controller.register_component(breadcrumb_bar, "breadcrumb_bar")
-        theme_controller.register_component(theme_manager_widget, "theme_manager_widget")
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        theme_controller.register_component(
+            theme_manager_widget, "theme_manager_widget"
+        )
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Create mock managers
         mock_theme_manager = Mock()
         mock_theme_manager.apply_theme = Mock(return_value=True)
-        mock_theme_manager.get_current_theme = Mock(return_value=ThemeConfiguration(
-            name="dark", display_name="Dark Theme", description="Test",
-            author="Test", version="1.0.0"
-        ))
+        mock_theme_manager.get_current_theme = Mock(
+            return_value=ThemeConfiguration(
+                name="dark",
+                display_name="Dark Theme",
+                description="Test",
+                author="Test",
+                version="1.0.0",
+            )
+        )
         theme_controller.register_theme_manager("test_manager", mock_theme_manager)
 
         mock_nav_manager = Mock()
         mock_nav_manager.navigate_to_path = Mock(return_value=True)
-        navigation_controller.register_navigation_manager("nav_manager", mock_nav_manager)
+        navigation_controller.register_navigation_manager(
+            "nav_manager", mock_nav_manager
+        )
 
         # Step 1: Apply theme
         theme_result = await theme_controller.apply_theme("dark")
@@ -457,7 +491,9 @@ class TestQtThemeBreadcrumbIntegration:
         """Test error recovery in integrated scenario"""
         # Setup components
         theme_controller.register_component(breadcrumb_bar, "breadcrumb_bar")
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Create failing theme manager
         mock_theme_manager = Mock()
@@ -483,7 +519,9 @@ class TestQtThemeBreadcrumbIntegration:
         """Test performance with multiple rapid operations"""
         # Setup components
         theme_controller.register_component(breadcrumb_bar, "breadcrumb_bar")
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Create multiple directories for testing
         test_dirs = []
@@ -510,7 +548,9 @@ class TestQtThemeBreadcrumbIntegration:
         """Test memory cleanup in integrated components"""
         # Setup components
         theme_controller.register_component(breadcrumb_bar, "breadcrumb_bar")
-        navigation_controller.register_navigation_component(breadcrumb_bar, "breadcrumb_bar")
+        navigation_controller.register_navigation_component(
+            breadcrumb_bar, "breadcrumb_bar"
+        )
 
         # Perform operations to create state
         mock_theme_manager = Mock()

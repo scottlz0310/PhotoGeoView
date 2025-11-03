@@ -500,14 +500,16 @@ class CS4CodingImageProcessor(IImageProcessor):
 
                 if lat_decimal is not None and lon_decimal is not None:
                     if self.validate_coordinates(lat_decimal, lon_decimal):
-                        gps_data.update({
-                            "GPS Latitude": lat_decimal,  # 数値として返す
-                            "GPS Longitude": lon_decimal,  # 数値として返す
-                            "GPS Coordinates": self._format_coordinates(
-                                lat_decimal, lon_decimal
-                            ),
-                            "gps_coordinates": (lat_decimal, lon_decimal),
-                        })
+                        gps_data.update(
+                            {
+                                "GPS Latitude": lat_decimal,  # 数値として返す
+                                "GPS Longitude": lon_decimal,  # 数値として返す
+                                "GPS Coordinates": self._format_coordinates(
+                                    lat_decimal, lon_decimal
+                                ),
+                                "gps_coordinates": (lat_decimal, lon_decimal),
+                            }
+                        )
 
             # 高度の処理
             if "GPS GPSAltitude" in tags:
@@ -529,12 +531,14 @@ class CS4CodingImageProcessor(IImageProcessor):
                 gps_time_tag = tags["GPS GPSTimeStamp"]
                 try:
                     # GPSTimeStampは通常 [時, 分, 秒] の形式
-                    if hasattr(gps_time_tag, '__iter__'):
+                    if hasattr(gps_time_tag, "__iter__"):
                         time_parts = []
                         for part in gps_time_tag:
                             time_parts.append(str(self._parse_rational(str(part))))
                         if len(time_parts) >= 3:
-                            gps_data["GPS Timestamp"] = f"{time_parts[0]}:{time_parts[1]}:{time_parts[2]}"
+                            gps_data["GPS Timestamp"] = (
+                                f"{time_parts[0]}:{time_parts[1]}:{time_parts[2]}"
+                            )
                 except (ValueError, TypeError):
                     pass
 

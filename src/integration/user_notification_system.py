@@ -8,11 +8,9 @@ Author: Kiro AI Integration System
 Requirements: 1.4, 3.4, 4.2, 4.4
 """
 
-import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QIcon, QPixmap
@@ -34,6 +32,7 @@ from .logging_system import LoggerSystem
 
 class NotificationType(Enum):
     """Types of notifications"""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -43,6 +42,7 @@ class NotificationType(Enum):
 
 class NotificationPriority(Enum):
     """Priority levels for notifications"""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -52,7 +52,9 @@ class NotificationPriority(Enum):
 class NotificationAction:
     """Represents an action that can be taken from a notification"""
 
-    def __init__(self, text: str, callback: Callable[[], None], is_primary: bool = False):
+    def __init__(
+        self, text: str, callback: Callable[[], None], is_primary: bool = False
+    ):
         self.text = text
         self.callback = callback
         self.is_primary = is_primary
@@ -70,7 +72,7 @@ class UserNotification:
         duration: Optional[int] = None,  # Duration in seconds, None for persistent
         actions: Optional[List[NotificationAction]] = None,
         details: Optional[str] = None,
-        source_component: Optional[str] = None
+        source_component: Optional[str] = None,
     ):
         self.id = f"notification_{int(datetime.now().timestamp())}_{id(self)}"
         self.title = title
@@ -101,7 +103,7 @@ class UserNotificationSystem(QObject):
         self,
         config_manager: ConfigManager,
         logger_system: LoggerSystem,
-        parent: Optional[QWidget] = None
+        parent: Optional[QWidget] = None,
     ):
         """
         Initialize the user notification system
@@ -208,7 +210,7 @@ class UserNotificationSystem(QObject):
                 # Dismiss oldest notification
                 oldest_id = min(
                     self.active_notifications.keys(),
-                    key=lambda x: self.active_notifications[x].created_at
+                    key=lambda x: self.active_notifications[x].created_at,
                 )
                 self.dismiss_notification(oldest_id)
 
@@ -217,9 +219,15 @@ class UserNotificationSystem(QObject):
             notification.shown_at = datetime.now()
 
             # Show notification based on type and priority
-            if notification.priority == NotificationPriority.URGENT or notification.notification_type == NotificationType.CRITICAL:
+            if (
+                notification.priority == NotificationPriority.URGENT
+                or notification.notification_type == NotificationType.CRITICAL
+            ):
                 self._show_modal_dialog(notification)
-            elif notification.priority == NotificationPriority.HIGH or notification.notification_type == NotificationType.ERROR:
+            elif (
+                notification.priority == NotificationPriority.HIGH
+                or notification.notification_type == NotificationType.ERROR
+            ):
                 self._show_message_box(notification)
             else:
                 self._show_system_tray_notification(notification)
@@ -228,13 +236,16 @@ class UserNotificationSystem(QObject):
             if notification.duration:
                 QTimer.singleShot(
                     notification.duration * 1000,
-                    lambda: self.dismiss_notification(notification.id)
+                    lambda: self.dismiss_notification(notification.id),
                 )
-            elif notification.notification_type in [NotificationType.INFO, NotificationType.SUCCESS]:
+            elif notification.notification_type in [
+                NotificationType.INFO,
+                NotificationType.SUCCESS,
+            ]:
                 # Auto-dismiss info and success notifications
                 QTimer.singleShot(
                     self.auto_dismiss_duration * 1000,
-                    lambda: self.dismiss_notification(notification.id)
+                    lambda: self.dismiss_notification(notification.id),
                 )
 
             # Emit signal
@@ -278,7 +289,9 @@ class UserNotificationSystem(QObject):
                     if action.is_primary:
                         button.setDefault(True)
                     button.clicked.connect(
-                        lambda checked, a=action: self._handle_notification_action(notification.id, a)
+                        lambda checked, a=action: self._handle_notification_action(
+                            notification.id, a
+                        )
                     )
                     button_layout.addWidget(button)
             else:
@@ -327,7 +340,9 @@ class UserNotificationSystem(QObject):
             # Add custom actions or default OK
             if notification.actions:
                 for action in notification.actions:
-                    button = msg_box.addButton(action.text, QMessageBox.ButtonRole.ActionRole)
+                    button = msg_box.addButton(
+                        action.text, QMessageBox.ButtonRole.ActionRole
+                    )
                     if action.is_primary:
                         msg_box.setDefaultButton(button)
             else:
@@ -363,13 +378,15 @@ class UserNotificationSystem(QObject):
                 notification.title,
                 notification.message,
                 icon,
-                (notification.duration or self.auto_dismiss_duration) * 1000
+                (notification.duration or self.auto_dismiss_duration) * 1000,
             )
 
         except Exception as e:
             self.logger.error(f"Failed to show system tray notification: {e}")
 
-    def _handle_notification_action(self, notification_id: str, action: NotificationAction) -> None:
+    def _handle_notification_action(
+        self, notification_id: str, action: NotificationAction
+    ) -> None:
         """Handle notification action"""
         try:
             # Execute action callback
@@ -411,7 +428,9 @@ class UserNotificationSystem(QObject):
 
             # Limit history size
             if len(self.notification_history) > self.max_history_size:
-                self.notification_history = self.notification_history[-self.max_history_size:]
+                self.notification_history = self.notification_history[
+                    -self.max_history_size :
+                ]
 
             # Close dialog if exists
             if notification_id in self.notification_dialogs:
@@ -446,7 +465,11 @@ class UserNotificationSystem(QObject):
 
             for notification_id, notification in self.active_notifications.items():
                 if notification.duration:
-                    if notification.shown_at and (current_time - notification.shown_at).total_seconds() > notification.duration:
+                    if (
+                        notification.shown_at
+                        and (current_time - notification.shown_at).total_seconds()
+                        > notification.duration
+                    ):
                         expired_ids.append(notification_id)
 
             for notification_id in expired_ids:
@@ -463,7 +486,7 @@ class UserNotificationSystem(QObject):
         message: str,
         details: Optional[str] = None,
         actions: Optional[List[NotificationAction]] = None,
-        source_component: Optional[str] = None
+        source_component: Optional[str] = None,
     ) -> str:
         """Show error notification"""
         notification = UserNotification(
@@ -473,7 +496,7 @@ class UserNotificationSystem(QObject):
             priority=NotificationPriority.HIGH,
             details=details,
             actions=actions,
-            source_component=source_component
+            source_component=source_component,
         )
         self.show_notification(notification)
         return notification.id
@@ -484,7 +507,7 @@ class UserNotificationSystem(QObject):
         message: str,
         details: Optional[str] = None,
         actions: Optional[List[NotificationAction]] = None,
-        source_component: Optional[str] = None
+        source_component: Optional[str] = None,
     ) -> str:
         """Show warning notification"""
         notification = UserNotification(
@@ -494,7 +517,7 @@ class UserNotificationSystem(QObject):
             priority=NotificationPriority.NORMAL,
             details=details,
             actions=actions,
-            source_component=source_component
+            source_component=source_component,
         )
         self.show_notification(notification)
         return notification.id
@@ -504,7 +527,7 @@ class UserNotificationSystem(QObject):
         title: str,
         message: str,
         duration: Optional[int] = None,
-        source_component: Optional[str] = None
+        source_component: Optional[str] = None,
     ) -> str:
         """Show info notification"""
         notification = UserNotification(
@@ -513,7 +536,7 @@ class UserNotificationSystem(QObject):
             notification_type=NotificationType.INFO,
             priority=NotificationPriority.LOW,
             duration=duration,
-            source_component=source_component
+            source_component=source_component,
         )
         self.show_notification(notification)
         return notification.id
@@ -523,7 +546,7 @@ class UserNotificationSystem(QObject):
         title: str,
         message: str,
         duration: Optional[int] = None,
-        source_component: Optional[str] = None
+        source_component: Optional[str] = None,
     ) -> str:
         """Show success notification"""
         notification = UserNotification(
@@ -532,7 +555,7 @@ class UserNotificationSystem(QObject):
             notification_type=NotificationType.SUCCESS,
             priority=NotificationPriority.LOW,
             duration=duration,
-            source_component=source_component
+            source_component=source_component,
         )
         self.show_notification(notification)
         return notification.id
@@ -543,7 +566,7 @@ class UserNotificationSystem(QObject):
         message: str,
         details: Optional[str] = None,
         actions: Optional[List[NotificationAction]] = None,
-        source_component: Optional[str] = None
+        source_component: Optional[str] = None,
     ) -> str:
         """Show critical notification"""
         notification = UserNotification(
@@ -553,7 +576,7 @@ class UserNotificationSystem(QObject):
             priority=NotificationPriority.URGENT,
             details=details,
             actions=actions,
-            source_component=source_component
+            source_component=source_component,
         )
         self.show_notification(notification)
         return notification.id
@@ -561,10 +584,7 @@ class UserNotificationSystem(QObject):
     # Theme-specific error notifications
 
     def show_theme_error(
-        self,
-        theme_name: str,
-        error_message: str,
-        fallback_applied: bool = False
+        self, theme_name: str, error_message: str, fallback_applied: bool = False
     ) -> str:
         """Show theme-related error notification"""
         title = "Theme Error"
@@ -575,17 +595,19 @@ class UserNotificationSystem(QObject):
 
         actions = []
         if not fallback_applied:
-            actions.append(NotificationAction(
-                "Use Default Theme",
-                lambda: self._apply_default_theme(),
-                is_primary=True
-            ))
+            actions.append(
+                NotificationAction(
+                    "Use Default Theme",
+                    lambda: self._apply_default_theme(),
+                    is_primary=True,
+                )
+            )
 
         return self.show_error(
             title=title,
             message=message,
             actions=actions,
-            source_component="theme_manager"
+            source_component="theme_manager",
         )
 
     def show_breadcrumb_error(
@@ -593,7 +615,7 @@ class UserNotificationSystem(QObject):
         path: str,
         error_type: str,
         error_message: str,
-        fallback_path: Optional[str] = None
+        fallback_path: Optional[str] = None,
     ) -> str:
         """Show breadcrumb navigation error notification"""
         title = "Navigation Error"
@@ -611,17 +633,17 @@ class UserNotificationSystem(QObject):
 
         actions = []
         if not fallback_path:
-            actions.append(NotificationAction(
-                "Go to Home",
-                lambda: self._navigate_to_home(),
-                is_primary=True
-            ))
+            actions.append(
+                NotificationAction(
+                    "Go to Home", lambda: self._navigate_to_home(), is_primary=True
+                )
+            )
 
         return self.show_error(
             title=title,
             message=message,
             actions=actions,
-            source_component="breadcrumb_bar"
+            source_component="breadcrumb_bar",
         )
 
     def _apply_default_theme(self) -> None:

@@ -26,7 +26,6 @@ watchdogライブラリを使用してクロスプラットフォーム対応の
 Author: Kiro AI Integration System
 """
 
-import threading
 import time
 from datetime import datetime
 from enum import Enum
@@ -282,7 +281,7 @@ class FileSystemWatcher:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "watch_start_error",
-                    f"ファイルシステム監視の開始に失敗しました: {folder_path} - {str(e)}",
+                    f"ファイルシステム監視の開始に失敗しました: {folder_path} - {e!s}",
                     level="ERROR",
                 )
 
@@ -391,7 +390,7 @@ class FileSystemWatcher:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "watch_stop_error",
-                    f"ファイルシステム監視の停止中にエラーが発生しました: {str(e)}",
+                    f"ファイルシステム監視の停止中にエラーが発生しました: {e!s}",
                     level="ERROR",
                 )
 
@@ -514,7 +513,7 @@ class FileSystemWatcher:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "observer_cleanup_error",
-                f"オブザーバーのクリーンアップ中にエラーが発生しました: {str(e)}",
+                f"オブザーバーのクリーンアップ中にエラーが発生しました: {e!s}",
                 level="ERROR",
             )
 
@@ -575,7 +574,7 @@ class FileSystemWatcher:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "listener_notification_error",
-                        f"リスナー通知エラー: {file_path.name} - {str(listener_error)}",
+                        f"リスナー通知エラー: {file_path.name} - {listener_error!s}",
                         level="ERROR",
                     )
 
@@ -609,7 +608,7 @@ class FileSystemWatcher:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "notification_error",
-                f"リスナー通知処理中にエラーが発生しました: {str(e)}",
+                f"リスナー通知処理中にエラーが発生しました: {e!s}",
                 level="ERROR",
             )
 

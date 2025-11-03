@@ -12,8 +12,7 @@ AI貢献者:
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -29,7 +28,6 @@ class TestAIComponentCompatibility:
         """Copilot-Cursor統合テスト"""
         # CS4Coding の画像処理 + CursorBLD の UI
         try:
-
             from src.integration.config_manager import ConfigManager
             from src.integration.image_processor import CS4CodingImageProcessor
             from src.integration.state_manager import StateManager
@@ -77,7 +75,6 @@ class TestAIComponentCompatibility:
         """Cursor-Kiro統合テスト"""
         # CursorBLD の UI + Kiro の統合制御
         try:
-
             from src.integration.config_manager import ConfigManager
             from src.integration.controllers import AppController
             from src.integration.state_manager import StateManager
@@ -154,8 +151,8 @@ class TestAIInterfaceCompatibility:
             assert hasattr(processor, "generate_thumbnail")
 
             # メソッドが呼び出し可能か確認
-            assert callable(getattr(processor, "load_image"))
-            assert callable(getattr(processor, "generate_thumbnail"))
+            assert callable(processor.load_image)
+            assert callable(processor.generate_thumbnail)
 
         except ImportError as e:
             pytest.skip(f"画像プロセッサーインターフェースが利用できません: {e}")
@@ -251,7 +248,6 @@ class TestAIConfigurationCompatibility:
     def test_logging_system_compatibility(self):
         """ログシステム互換性テスト"""
         try:
-
             from src.integration.logging_system import LoggerSystem
             from src.integration.models import AIComponent
 
@@ -300,7 +296,6 @@ class TestAIPerformanceCompatibility:
     def test_cache_system_compatibility(self):
         """キャッシュシステム互換性テスト"""
         try:
-
             from src.integration.config_manager import ConfigManager
             from src.integration.logging_system import LoggerSystem
             from src.integration.unified_cache import UnifiedCacheSystem

@@ -10,7 +10,6 @@ Provides centralized state coordination across AI components:
 Author: Kiro AI Integration System
 """
 
-import asyncio
 import copy
 import json
 import threading
@@ -18,12 +17,12 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
-from .models import AIComponent, ApplicationState, ImageMetadata, ThemeConfiguration
+from .models import AIComponent, ApplicationState
 
 
 @dataclass
@@ -584,7 +583,7 @@ class StateManager:
                     )
                     return True
 
-                with open(source_file, "r", encoding="utf-8") as f:
+                with open(source_file, encoding="utf-8") as f:
                     state_dict = json.load(f)
 
                 # Check for metadata and version
@@ -656,10 +655,10 @@ class StateManager:
 
         try:
             # Convert string paths back to Path objects
-            if "current_folder" in state_dict and state_dict["current_folder"]:
+            if state_dict.get("current_folder"):
                 state_dict["current_folder"] = Path(state_dict["current_folder"])
 
-            if "selected_image" in state_dict and state_dict["selected_image"]:
+            if state_dict.get("selected_image"):
                 state_dict["selected_image"] = Path(state_dict["selected_image"])
 
             if "folder_history" in state_dict:

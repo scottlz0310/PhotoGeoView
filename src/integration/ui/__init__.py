@@ -13,7 +13,7 @@ from .main_window import IntegratedMainWindow
 from .thumbnail_grid import OptimizedThumbnailGrid
 
 __all__ = [
+    "EnhancedFolderNavigator",
     "IntegratedMainWindow",
     "OptimizedThumbnailGrid",
-    "EnhancedFolderNavigator",
 ]

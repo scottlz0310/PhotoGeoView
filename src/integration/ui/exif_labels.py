@@ -18,7 +18,7 @@ DEFAULT_LABELS = {
         "modified": "Modified",
         "extension": "Extension",
         "debug": "Debug",
-        "no_file_info": "No file information"
+        "no_file_info": "No file information",
     },
     "camera_information": {
         "title": "📸 Camera Information",
@@ -26,7 +26,7 @@ DEFAULT_LABELS = {
         "camera_model": "Camera Model",
         "lens_model": "Lens Model",
         "debug": "Debug",
-        "no_camera_info": "No camera information"
+        "no_camera_info": "No camera information",
     },
     "shooting_settings": {
         "title": "⚙️ Shooting Settings",
@@ -35,14 +35,14 @@ DEFAULT_LABELS = {
         "iso_speed": "ISO Speed",
         "focal_length": "Focal Length",
         "debug": "Debug",
-        "no_settings": "No shooting settings"
+        "no_settings": "No shooting settings",
     },
     "shooting_date": {
         "title": "🕒 Shooting Date",
         "date_taken": "Date Taken",
         "date_original": "Date Original",
         "debug": "Debug",
-        "no_date": "No shooting date"
+        "no_date": "No shooting date",
     },
     "position_information": {
         "title": "📍 Position Information & Map Integration",
@@ -53,7 +53,7 @@ DEFAULT_LABELS = {
         "gps_date": "GPS Date",
         "not_available": "Not available",
         "raw_data": "raw data",
-        "conversion_error": "conversion error"
+        "conversion_error": "conversion error",
     },
     "debug_information": {
         "title": "🔧 Debug Information",
@@ -62,18 +62,18 @@ DEFAULT_LABELS = {
         "raw_gps_info": "Raw GPS EXIF Information:",
         "coordinate_conversion": "Coordinate Conversion Information:",
         "no_gps_info": "GPS information not available",
-        "no_conversion_info": "No conversion information"
+        "no_conversion_info": "No conversion information",
     },
     "buttons": {
         "refresh": "🔄 Refresh",
         "show_map": "🗺️ Show on Map",
         "copy_coordinates": "📋 Copy Coordinates",
-        "select_image": "📷 Please select an image"
+        "select_image": "📷 Please select an image",
     },
     "messages": {
         "exif_read_error": "Failed to read EXIF information",
-        "coordinates_copied": "GPS coordinates copied to clipboard"
-    }
+        "coordinates_copied": "GPS coordinates copied to clipboard",
+    },
 }
 
 # Japanese labels (for future localization)
@@ -85,7 +85,7 @@ JAPANESE_LABELS = {
         "modified": "更新日時",
         "extension": "拡張子",
         "debug": "デバッグ",
-        "no_file_info": "ファイル情報なし"
+        "no_file_info": "ファイル情報なし",
     },
     "camera_information": {
         "title": "📸 カメラ情報",
@@ -93,7 +93,7 @@ JAPANESE_LABELS = {
         "camera_model": "モデル",
         "lens_model": "レンズ",
         "debug": "デバッグ",
-        "no_camera_info": "カメラ情報なし"
+        "no_camera_info": "カメラ情報なし",
     },
     "shooting_settings": {
         "title": "⚙️ 撮影設定",
@@ -102,14 +102,14 @@ JAPANESE_LABELS = {
         "iso_speed": "ISO感度",
         "focal_length": "焦点距離",
         "debug": "デバッグ",
-        "no_settings": "撮影設定なし"
+        "no_settings": "撮影設定なし",
     },
     "shooting_date": {
         "title": "🕒 撮影日時",
         "date_taken": "撮影日時",
         "date_original": "元の撮影日時",
         "debug": "デバッグ",
-        "no_date": "撮影日時なし"
+        "no_date": "撮影日時なし",
     },
     "position_information": {
         "title": "📍 位置情報・地図連携",
@@ -120,7 +120,7 @@ JAPANESE_LABELS = {
         "gps_date": "GPS日付",
         "not_available": "未取得",
         "raw_data": "生データ",
-        "conversion_error": "変換エラー"
+        "conversion_error": "変換エラー",
     },
     "debug_information": {
         "title": "🔧 デバッグ情報",
@@ -129,18 +129,18 @@ JAPANESE_LABELS = {
         "raw_gps_info": "生のGPS EXIF情報:",
         "coordinate_conversion": "座標変換情報:",
         "no_gps_info": "GPS情報なし",
-        "no_conversion_info": "変換情報なし"
+        "no_conversion_info": "変換情報なし",
     },
     "buttons": {
         "refresh": "🔄 更新",
         "show_map": "🗺️ 地図表示",
         "copy_coordinates": "📋 座標コピー",
-        "select_image": "📷 画像を選択してください"
+        "select_image": "📷 画像を選択してください",
     },
     "messages": {
         "exif_read_error": "EXIF情報の読み込みに失敗しました",
-        "coordinates_copied": "GPS座標をクリップボードにコピーしました"
-    }
+        "coordinates_copied": "GPS座標をクリップボードにコピーしました",
+    },
 }
 
 
@@ -211,5 +211,5 @@ class EXIFLabelManager:
         return {
             "exif_labels": self.labels,
             "language": self.language,
-            "available_languages": self.get_available_languages()
+            "available_languages": self.get_available_languages(),
         }

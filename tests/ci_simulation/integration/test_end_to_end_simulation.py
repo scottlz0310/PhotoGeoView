@@ -6,21 +6,17 @@ PhotoGeoView project files to verify real-world functionality.
 """
 
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
-
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import pytest
 
 # Add the tools/ci directory to the path for imports
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "tools" / "ci"))
 
-from check_orchestrator import CheckOrchestrator
-from config_manager import ConfigManager
 from models import CheckStatus, SimulationResult
 from simulator import CISimulator
 

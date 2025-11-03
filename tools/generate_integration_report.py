@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -129,7 +129,7 @@ class IntegrationReportGenerator:
 
         if quality_report_path.exists():
             try:
-                with open(quality_report_path, "r", encoding="utf-8") as f:
+                with open(quality_report_path, encoding="utf-8") as f:
                     quality_data = json.load(f)
 
                 return QualityMetrics(
@@ -164,7 +164,7 @@ class IntegrationReportGenerator:
 
         for benchmark_file in benchmark_files:
             try:
-                with open(benchmark_file, "r", encoding="utf-8") as f:
+                with open(benchmark_file, encoding="utf-8") as f:
                     benchmark_data = json.load(f)
 
                 benchmarks = benchmark_data.get("benchmarks", [])
@@ -483,7 +483,7 @@ def main():
 
             shutil.copy2(markdown_path, latest_md)
 
-    print(f"\n📊 レポート概要:")
+    print("\n📊 レポート概要:")
     print(f"  ビルド状態: {report.build_status}")
     print(
         f"  テスト結果: {len([t for t in report.test_results if t.status == 'passed'])}/{len(report.test_results)} 成功"

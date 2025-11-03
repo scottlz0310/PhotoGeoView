@@ -109,7 +109,7 @@ class IntegratedErrorHandler:
         }
 
         # Error statistics
-        self.error_counts: Dict[ErrorCategory, int] = {cat: 0 for cat in ErrorCategory}
+        self.error_counts: Dict[ErrorCategory, int] = dict.fromkeys(ErrorCategory, 0)
         self.recent_errors: List[ErrorContext] = []
         self.max_recent_errors = 100
 
@@ -183,7 +183,7 @@ class IntegratedErrorHandler:
         error_id = f"{category.value}_{int(datetime.now().timestamp())}_{id(error)}"
 
         # Extract technical details
-        technical_details = f"{type(error).__name__}: {str(error)}"
+        technical_details = f"{type(error).__name__}: {error!s}"
         stack_trace = traceback.format_exc()
 
         # Generate user-friendly message
@@ -230,13 +230,15 @@ class IntegratedErrorHandler:
             return ErrorSeverity.CRITICAL
 
         # Category-based severity
-        if category == ErrorCategory.SYSTEM_ERROR:
+        if (
+            category == ErrorCategory.SYSTEM_ERROR
+            or category == ErrorCategory.INTEGRATION_ERROR
+        ):
             return ErrorSeverity.ERROR
-        elif category == ErrorCategory.INTEGRATION_ERROR:
-            return ErrorSeverity.ERROR
-        elif category == ErrorCategory.UI_ERROR:
-            return ErrorSeverity.WARNING
-        elif category == ErrorCategory.VALIDATION_ERROR:
+        elif (
+            category == ErrorCategory.UI_ERROR
+            or category == ErrorCategory.VALIDATION_ERROR
+        ):
             return ErrorSeverity.WARNING
         elif category == ErrorCategory.PERFORMANCE_ERROR:
             return ErrorSeverity.INFO
@@ -259,13 +261,13 @@ class IntegratedErrorHandler:
         elif category == ErrorCategory.CORE_ERROR:
             return f"Feature unavailable in {component_name}. Some functionality may be limited."
         elif category == ErrorCategory.FILE_ERROR:
-            return f"File access problem. Please check file permissions and try again."
+            return "File access problem. Please check file permissions and try again."
         elif category == ErrorCategory.NETWORK_ERROR:
-            return f"Network connection issue. Please check your internet connection."
+            return "Network connection issue. Please check your internet connection."
         elif category == ErrorCategory.VALIDATION_ERROR:
-            return f"Invalid data detected. Please verify your input and try again."
+            return "Invalid data detected. Please verify your input and try again."
         elif category == ErrorCategory.PERFORMANCE_ERROR:
-            return f"Performance issue detected. The application may respond slowly."
+            return "Performance issue detected. The application may respond slowly."
         else:
             return (
                 f"An unexpected error occurred in {component_name}. Please try again."
@@ -522,7 +524,7 @@ class IntegratedErrorHandler:
     def clear_error_history(self):
         """Clear error history and statistics"""
 
-        self.error_counts = {cat: 0 for cat in ErrorCategory}
+        self.error_counts = dict.fromkeys(ErrorCategory, 0)
         self.recent_errors.clear()
 
     def register_recovery_handler(self, operation: str, handler: Callable):

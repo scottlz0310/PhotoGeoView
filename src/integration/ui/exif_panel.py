@@ -10,8 +10,7 @@ Author: Kiro AI Integration System
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from PySide6.QtCore import Qt, Signal, QEvent
-from PySide6.QtGui import QPalette
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QFrame,
@@ -69,15 +68,13 @@ class EXIFPanel(QWidget):
 
         # テーマ変更シグナルの接続
         if self.theme_manager:
-            if hasattr(self.theme_manager, 'theme_changed'):
+            if hasattr(self.theme_manager, "theme_changed"):
                 self.theme_manager.theme_changed.connect(self._on_theme_changed)
-            elif hasattr(self.theme_manager, 'theme_changed_compat'):
+            elif hasattr(self.theme_manager, "theme_changed_compat"):
                 self.theme_manager.theme_changed_compat.connect(self._on_theme_changed)
 
         # EXIF処理エンジン
-        self.image_processor = CS4CodingImageProcessor(
-            config_manager, logger_system
-        )
+        self.image_processor = CS4CodingImageProcessor(config_manager, logger_system)
 
         # 現在の画像パス
         self.current_image_path: Optional[Path] = None
@@ -110,7 +107,7 @@ class EXIFPanel(QWidget):
     def _get_color(self, color_key: str, default: str = "#000000") -> str:
         """テーママネージャーから色を取得"""
         try:
-            if self.theme_manager and hasattr(self.theme_manager, 'get_color'):
+            if self.theme_manager and hasattr(self.theme_manager, "get_color"):
                 return self.theme_manager.get_color(color_key, default)
         except Exception:
             pass
@@ -123,13 +120,12 @@ class EXIFPanel(QWidget):
     def _is_dark_theme(self) -> bool:
         """現在のテーマがダークテーマかどうかを判定"""
         try:
-            if self.theme_manager and hasattr(self.theme_manager, 'get_current_theme'):
+            if self.theme_manager and hasattr(self.theme_manager, "get_current_theme"):
                 current_theme = self.theme_manager.get_current_theme()
-                return 'dark' in current_theme.lower()
+                return "dark" in current_theme.lower()
         except Exception:
             pass
         return False
-
 
     def _apply_panel_theme(self):
         """パネル自体にテーマを適用"""
@@ -148,7 +144,7 @@ class EXIFPanel(QWidget):
             pal = self.palette()
             pal.setColor(self.backgroundRole(), pal.window().color())
             self.setPalette(pal)
-        except Exception as e:
+        except Exception:
             # エラー時はデフォルトスタイルを適用
             self.setStyleSheet("""
                 QWidget#exifPanel {
@@ -157,6 +153,7 @@ class EXIFPanel(QWidget):
                     border-radius: 5px;
                 }
             """)
+
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
         try:
@@ -164,11 +161,14 @@ class EXIFPanel(QWidget):
             self._apply_panel_theme()
 
             # 現在のEXIFデータがある場合は再表示
-            if hasattr(self, '_last_exif_data') and self._last_exif_data:
+            if hasattr(self, "_last_exif_data") and self._last_exif_data:
                 self._create_integrated_sections(self._last_exif_data)
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "theme_change"}, AIComponent.KIRO
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "theme_change"},
+                AIComponent.KIRO,
             )
 
     def _setup_ui(self):
@@ -184,7 +184,9 @@ class EXIFPanel(QWidget):
             # タイトル
             self.title_label = QLabel("📷 画像情報・位置情報")
             title_fg = self._get_color("foreground", "#2c3e50")
-            title_bg = self._get_color("hover", self._get_color("background", "#ecf0f1"))
+            title_bg = self._get_color(
+                "hover", self._get_color("background", "#ecf0f1")
+            )
             self.title_label.setStyleSheet(f"""
                 QLabel {{
                     font-weight: bold;
@@ -208,7 +210,7 @@ class EXIFPanel(QWidget):
                 e,
                 ErrorCategory.UI_ERROR,
                 {"operation": "exif_panel_setup"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _create_integrated_info_area(self):
@@ -258,8 +260,6 @@ class EXIFPanel(QWidget):
 
         self.integrated_scroll_area.setWidget(self.integrated_widget)
 
-
-
     def _clear_layout(self, layout: QVBoxLayout | QGridLayout):
         """Safely clear all items from a layout (widgets and nested layouts)."""
         try:
@@ -275,15 +275,11 @@ class EXIFPanel(QWidget):
         except Exception:
             pass
 
-
-
-
-
     def _create_integrated_sections(self, exif_data: Dict[str, Any]):
         """統合セクションを作成（EXIF + GPS情報）"""
         try:
             # デバッグログ開始
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -292,7 +288,7 @@ class EXIFPanel(QWidget):
 
             # 既存のウィジェットを確実にクリア
             self._clear_layout(self.integrated_layout)
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -306,7 +302,7 @@ class EXIFPanel(QWidget):
                     f"color: {self._get_color('error', '#e74c3c')}; font-style: italic; font-size: 16px; padding: 20px;"
                 )
                 self.integrated_layout.addWidget(self.initial_message_label)
-                if hasattr(self, 'logger_system'):
+                if hasattr(self, "logger_system"):
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "exif_panel_debug",
@@ -315,7 +311,7 @@ class EXIFPanel(QWidget):
                 return
 
             # 1. ファイル情報セクション
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -324,7 +320,7 @@ class EXIFPanel(QWidget):
             self._create_file_info_section(exif_data)
 
             # 2. カメラ情報セクション
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -333,7 +329,7 @@ class EXIFPanel(QWidget):
             self._create_camera_info_section(exif_data)
 
             # 3. 撮影設定セクション
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -342,7 +338,7 @@ class EXIFPanel(QWidget):
             self._create_shooting_settings_section(exif_data)
 
             # 4. 撮影日時セクション
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -351,7 +347,7 @@ class EXIFPanel(QWidget):
             self._create_datetime_section(exif_data)
 
             # 5. GPS位置情報セクション（統合版）
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -360,7 +356,7 @@ class EXIFPanel(QWidget):
             self._create_gps_info_section(exif_data)
 
             # 6. デバッグ情報セクション（折りたたみ可能）
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -369,7 +365,7 @@ class EXIFPanel(QWidget):
             self._create_debug_section_integrated(exif_data)
 
             # 7. 地図連携コントロール
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
@@ -413,7 +409,7 @@ class EXIFPanel(QWidget):
                 pass
 
             # ログ
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_sections_created",
@@ -423,7 +419,10 @@ class EXIFPanel(QWidget):
             # エラー時はユーザーにわかる形で表示
             self._show_error_message("EXIF情報セクションの構築中にエラーが発生しました")
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "create_integrated_sections"}, AIComponent.KIRO
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "create_integrated_sections"},
+                AIComponent.KIRO,
             )
 
     def _create_file_info_section(self, exif_data: Dict[str, Any]):
@@ -443,28 +442,30 @@ class EXIFPanel(QWidget):
             if not file_info:
                 file_info["デバッグ"] = "ファイル情報なし"
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     f"ファイル情報セクション作成: {len(file_info)}件",
                 )
 
-            file_section = self._create_info_section("📁 ファイル情報", file_info, "#34495e")
+            file_section = self._create_info_section(
+                "📁 ファイル情報", file_info, "#34495e"
+            )
             self.integrated_layout.addWidget(file_section)
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     "ファイル情報セクション追加完了",
                 )
         except Exception as e:
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_error",
-                    f"ファイル情報セクション作成エラー: {str(e)}",
+                    f"ファイル情報セクション作成エラー: {e!s}",
                 )
             raise
 
@@ -483,28 +484,30 @@ class EXIFPanel(QWidget):
             if not camera_info:
                 camera_info["デバッグ"] = "カメラ情報なし"
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     f"カメラ情報セクション作成: {len(camera_info)}件",
                 )
 
-            camera_section = self._create_info_section("📸 カメラ情報", camera_info, "#8e44ad")
+            camera_section = self._create_info_section(
+                "📸 カメラ情報", camera_info, "#8e44ad"
+            )
             self.integrated_layout.addWidget(camera_section)
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     "カメラ情報セクション追加完了",
                 )
         except Exception as e:
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_error",
-                    f"カメラ情報セクション作成エラー: {str(e)}",
+                    f"カメラ情報セクション作成エラー: {e!s}",
                 )
             raise
 
@@ -525,28 +528,30 @@ class EXIFPanel(QWidget):
             if not shooting_info:
                 shooting_info["デバッグ"] = "撮影設定情報なし"
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     f"撮影設定セクション作成: {len(shooting_info)}件",
                 )
 
-            shooting_section = self._create_info_section("⚙️ 撮影設定", shooting_info, "#e67e22")
+            shooting_section = self._create_info_section(
+                "⚙️ 撮影設定", shooting_info, "#e67e22"
+            )
             self.integrated_layout.addWidget(shooting_section)
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     "撮影設定セクション追加完了",
                 )
         except Exception as e:
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_error",
-                    f"撮影設定セクション作成エラー: {str(e)}",
+                    f"撮影設定セクション作成エラー: {e!s}",
                 )
             raise
 
@@ -563,28 +568,30 @@ class EXIFPanel(QWidget):
             if not datetime_info:
                 datetime_info["デバッグ"] = "日時情報なし"
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     f"撮影日時セクション作成: {len(datetime_info)}件",
                 )
 
-            datetime_section = self._create_info_section("📅 撮影日時", datetime_info, "#27ae60")
+            datetime_section = self._create_info_section(
+                "📅 撮影日時", datetime_info, "#27ae60"
+            )
             self.integrated_layout.addWidget(datetime_section)
 
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_debug",
                     "撮影日時セクション追加完了",
                 )
         except Exception as e:
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "exif_panel_error",
-                    f"撮影日時セクション作成エラー: {str(e)}",
+                    f"撮影日時セクション作成エラー: {e!s}",
                 )
             raise
 
@@ -623,26 +630,34 @@ class EXIFPanel(QWidget):
         coord_frame = QFrame()
         coord_frame.setFrameStyle(QFrame.Shape.Box)
         coord_border = self._get_color("border", "#bdc3c7")
-        coord_frame.setStyleSheet(f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}")
+        coord_frame.setStyleSheet(
+            f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}"
+        )
         coord_layout = QGridLayout(coord_frame)
         coord_layout.setSpacing(5)
 
         # 緯度
         coord_layout.addWidget(QLabel("緯度:"), 0, 0)
         self.latitude_label = QLabel("Not available")
-        self.latitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
+        self.latitude_label.setStyleSheet(
+            f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
+        )
         coord_layout.addWidget(self.latitude_label, 0, 1)
 
         # 経度
         coord_layout.addWidget(QLabel("経度:"), 1, 0)
         self.longitude_label = QLabel("Not available")
-        self.longitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
+        self.longitude_label.setStyleSheet(
+            f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
+        )
         coord_layout.addWidget(self.longitude_label, 1, 1)
 
         # 高度
         coord_layout.addWidget(QLabel("高度:"), 2, 0)
         self.altitude_label = QLabel("Not available")
-        self.altitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
+        self.altitude_label.setStyleSheet(
+            f"color: {self._get_color('error', '#e74c3c')};"
+        )
         coord_layout.addWidget(self.altitude_label, 2, 1)
 
         gps_layout.addWidget(coord_frame, 0, 0, 1, 2)
@@ -650,27 +665,35 @@ class EXIFPanel(QWidget):
         # GPS時刻・日付情報
         time_frame = QFrame()
         time_frame.setFrameStyle(QFrame.Shape.Box)
-        time_frame.setStyleSheet(f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}")
+        time_frame.setStyleSheet(
+            f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}"
+        )
         time_layout = QGridLayout(time_frame)
         time_layout.setSpacing(5)
 
         # GPS時刻
         time_layout.addWidget(QLabel("GPS時刻:"), 0, 0)
         self.gps_time_label = QLabel("Not available")
-        self.gps_time_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
+        self.gps_time_label.setStyleSheet(
+            f"color: {self._get_color('error', '#e74c3c')};"
+        )
         time_layout.addWidget(self.gps_time_label, 0, 1)
 
         # GPS日付
         time_layout.addWidget(QLabel("GPS日付:"), 1, 0)
         self.gps_date_label = QLabel("Not available")
-        self.gps_date_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
+        self.gps_date_label.setStyleSheet(
+            f"color: {self._get_color('error', '#e74c3c')};"
+        )
         time_layout.addWidget(self.gps_date_label, 1, 1)
 
         gps_layout.addWidget(time_frame, 1, 0, 1, 2)
 
         self.integrated_layout.addWidget(self.gps_group)
 
-    def _create_info_section(self, title: str, info_dict: Dict[str, str], border_color: str = "#bdc3c7") -> QGroupBox:
+    def _create_info_section(
+        self, title: str, info_dict: Dict[str, str], border_color: str = "#bdc3c7"
+    ) -> QGroupBox:
         """情報セクションを作成（統合版）"""
         group = QGroupBox(title)
 
@@ -717,7 +740,7 @@ class EXIFPanel(QWidget):
             hover_bg = "#f8f9fa"  # 明るいホバー背景
 
         # デバッグ情報をログに出力
-        if hasattr(self, 'logger_system'):
+        if hasattr(self, "logger_system"):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "exif_section_colors",
@@ -779,7 +802,7 @@ class EXIFPanel(QWidget):
         """色の明度を計算（0.0-1.0）"""
         try:
             # #RRGGBB形式の色をRGB値に変換
-            if color.startswith('#') and len(color) == 7:
+            if color.startswith("#") and len(color) == 7:
                 r = int(color[1:3], 16) / 255.0
                 g = int(color[3:5], 16) / 255.0
                 b = int(color[5:7], 16) / 255.0
@@ -830,7 +853,7 @@ class EXIFPanel(QWidget):
                 border: 1px solid {warn_bg};
                 border-radius: 3px;
                 padding: 10px;
-                background-color: {self._get_color('background', '#fef9e7')};
+                background-color: {self._get_color("background", "#fef9e7")};
                 margin-top: 5px;
             }}
         """)
@@ -849,7 +872,7 @@ class EXIFPanel(QWidget):
         dbg_border = self._get_color("border", "#bdc3c7")
         self.raw_gps_text.setStyleSheet(f"""
             QTextEdit {{
-                background-color: {self._get_color('background', '#ffffff')};
+                background-color: {self._get_color("background", "#ffffff")};
                 border: 1px solid {dbg_border};
                 border-radius: 3px;
                 font-family: monospace;
@@ -868,9 +891,9 @@ class EXIFPanel(QWidget):
         self.conversion_info_label = QLabel("変換情報なし")
         self.conversion_info_label.setStyleSheet(f"""
             QLabel {{
-                color: {self._get_color('foreground', '#7f8c8d')};
+                color: {self._get_color("foreground", "#7f8c8d")};
                 font-size: 10px;
-                background-color: {self._get_color('background', '#ffffff')};
+                background-color: {self._get_color("background", "#ffffff")};
                 border: 1px solid {dbg_border};
                 border-radius: 3px;
                 padding: 5px;
@@ -976,10 +999,6 @@ class EXIFPanel(QWidget):
 
         self.integrated_layout.addWidget(control_frame)
 
-
-
-
-
     def set_image(self, image_path: Path):
         """画像を設定してEXIF情報を取得"""
         try:
@@ -991,7 +1010,7 @@ class EXIFPanel(QWidget):
                 e,
                 ErrorCategory.UI_ERROR,
                 {"operation": "set_image", "image_path": str(image_path)},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_exif_data(self):
@@ -1018,7 +1037,10 @@ class EXIFPanel(QWidget):
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.CORE_ERROR,
-                {"operation": "load_exif_data", "image_path": str(self.current_image_path)},
+                {
+                    "operation": "load_exif_data",
+                    "image_path": str(self.current_image_path),
+                },
                 AIComponent.KIRO,
             )
             self._show_error_message("EXIF情報の読み込みに失敗しました")
@@ -1033,10 +1055,14 @@ class EXIFPanel(QWidget):
             self._safe_clear_layout()
 
             # 少し待機してからUI再構築
-            if hasattr(self, '_last_exif_data') and self._last_exif_data:
+            if hasattr(self, "_last_exif_data") and self._last_exif_data:
                 self._create_integrated_sections(self._last_exif_data)
                 self._update_gps_display(self._last_exif_data)
-            elif hasattr(self, 'current_image_path') and self.current_image_path and self.current_image_path.exists():
+            elif (
+                hasattr(self, "current_image_path")
+                and self.current_image_path
+                and self.current_image_path.exists()
+            ):
                 self._load_exif_data()
 
             # UI更新を再開
@@ -1046,9 +1072,12 @@ class EXIFPanel(QWidget):
         except Exception as e:
             # エラー時もUI更新を再開
             self.setUpdatesEnabled(True)
-            if hasattr(self, 'error_handler'):
+            if hasattr(self, "error_handler"):
                 self.error_handler.handle_error(
-                    e, ErrorCategory.UI_ERROR, {"operation": "apply_theme_to_exif_panel"}, AIComponent.KIRO
+                    e,
+                    ErrorCategory.UI_ERROR,
+                    {"operation": "apply_theme_to_exif_panel"},
+                    AIComponent.KIRO,
                 )
 
     def _clear_integrated_display(self):
@@ -1075,10 +1104,11 @@ class EXIFPanel(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "clear_integrated_display"}, AIComponent.KIRO
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "clear_integrated_display"},
+                AIComponent.KIRO,
             )
-
-
 
     def _update_gps_display(self, exif_data: Dict[str, Any]):
         """GPS位置情報の表示を更新（統合版）"""
@@ -1103,10 +1133,14 @@ class EXIFPanel(QWidget):
                     # "35.123456°" のような形式から数値を抽出
                     if isinstance(latitude_str, str) and "°" in latitude_str:
                         latitude = float(latitude_str.replace("°", ""))
-                        conversion_info.append(f"緯度変換: '{latitude_str}' → {latitude:.6f}")
+                        conversion_info.append(
+                            f"緯度変換: '{latitude_str}' → {latitude:.6f}"
+                        )
                     elif isinstance(latitude_str, (int, float)):
                         latitude = float(latitude_str)
-                        conversion_info.append(f"緯度変換: {latitude_str} → {latitude:.6f}")
+                        conversion_info.append(
+                            f"緯度変換: {latitude_str} → {latitude:.6f}"
+                        )
                 except (ValueError, TypeError) as e:
                     conversion_info.append(f"緯度変換エラー: {e}")
                     latitude = None
@@ -1117,10 +1151,14 @@ class EXIFPanel(QWidget):
                     # "139.123456°" のような形式から数値を抽出
                     if isinstance(longitude_str, str) and "°" in longitude_str:
                         longitude = float(longitude_str.replace("°", ""))
-                        conversion_info.append(f"経度変換: '{longitude_str}' → {longitude:.6f}")
+                        conversion_info.append(
+                            f"経度変換: '{longitude_str}' → {longitude:.6f}"
+                        )
                     elif isinstance(longitude_str, (int, float)):
                         longitude = float(longitude_str)
-                        conversion_info.append(f"経度変換: {longitude_str} → {longitude:.6f}")
+                        conversion_info.append(
+                            f"経度変換: {longitude_str} → {longitude:.6f}"
+                        )
                 except (ValueError, TypeError) as e:
                     conversion_info.append(f"経度変換エラー: {e}")
                     longitude = None
@@ -1142,42 +1180,62 @@ class EXIFPanel(QWidget):
             # 緯度表示
             if latitude is not None:
                 self.latitude_label.setText(f"{latitude:.6f}°")
-                self.latitude_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')}; font-weight: bold;")
+                self.latitude_label.setStyleSheet(
+                    f"color: {self._get_color('success', '#27ae60')}; font-weight: bold;"
+                )
             else:
                 self.latitude_label.setText("Not available")
-                self.latitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
+                self.latitude_label.setStyleSheet(
+                    f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
+                )
 
             # 経度表示
             if longitude is not None:
                 self.longitude_label.setText(f"{longitude:.6f}°")
-                self.longitude_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')}; font-weight: bold;")
+                self.longitude_label.setStyleSheet(
+                    f"color: {self._get_color('success', '#27ae60')}; font-weight: bold;"
+                )
             else:
                 self.longitude_label.setText("Not available")
-                self.longitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
+                self.longitude_label.setStyleSheet(
+                    f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
+                )
 
             # 高度表示
             if altitude is not None:
                 self.altitude_label.setText(f"{altitude:.1f}m")
-                self.altitude_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')};")
+                self.altitude_label.setStyleSheet(
+                    f"color: {self._get_color('success', '#27ae60')};"
+                )
             else:
                 self.altitude_label.setText("Not available")
-                self.altitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
+                self.altitude_label.setStyleSheet(
+                    f"color: {self._get_color('error', '#e74c3c')};"
+                )
 
             # GPS時刻表示
             if gps_time:
                 self.gps_time_label.setText(str(gps_time))
-                self.gps_time_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')};")
+                self.gps_time_label.setStyleSheet(
+                    f"color: {self._get_color('success', '#27ae60')};"
+                )
             else:
                 self.gps_time_label.setText("Not available")
-                self.gps_time_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
+                self.gps_time_label.setStyleSheet(
+                    f"color: {self._get_color('error', '#e74c3c')};"
+                )
 
             # GPS日付表示
             if gps_date:
                 self.gps_date_label.setText(str(gps_date))
-                self.gps_date_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')};")
+                self.gps_date_label.setStyleSheet(
+                    f"color: {self._get_color('success', '#27ae60')};"
+                )
             else:
                 self.gps_date_label.setText("Not available")
-                self.gps_date_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
+                self.gps_date_label.setStyleSheet(
+                    f"color: {self._get_color('error', '#e74c3c')};"
+                )
 
             # ボタンの有効/無効を設定
             has_gps = latitude is not None and longitude is not None
@@ -1190,9 +1248,11 @@ class EXIFPanel(QWidget):
 
         except Exception as e:
             self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "update_gps_display"}, AIComponent.KIRO
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "update_gps_display"},
+                AIComponent.KIRO,
             )
-
 
     def deleteLater(self):
         """安全なウィジェット削除"""
@@ -1206,7 +1266,7 @@ class EXIFPanel(QWidget):
             # 親クラスのdeleteLaterを呼び出し
             super().deleteLater()
 
-        except Exception as e:
+        except Exception:
             # エラーが発生しても親クラスのdeleteLaterは呼び出す
             super().deleteLater()
 
@@ -1215,7 +1275,7 @@ class EXIFPanel(QWidget):
     def _safe_clear_layout(self):
         """安全なレイアウトクリア（Segmentation fault対策）"""
         try:
-            if hasattr(self, 'integrated_layout') and self.integrated_layout:
+            if hasattr(self, "integrated_layout") and self.integrated_layout:
                 # 子ウィジェットを安全に削除
                 while self.integrated_layout.count():
                     item = self.integrated_layout.takeAt(0)
@@ -1233,11 +1293,11 @@ class EXIFPanel(QWidget):
                 self.integrated_layout.invalidate()
 
         except Exception as e:
-            if hasattr(self, 'logger_system'):
+            if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "safe_clear_layout_error",
-                    f"安全なレイアウトクリア中にエラー: {str(e)}",
+                    f"安全なレイアウトクリア中にエラー: {e!s}",
                 )
 
     def _clear_nested_layout(self, layout):
@@ -1257,8 +1317,6 @@ class EXIFPanel(QWidget):
         except Exception:
             pass
 
-
-
     def _apply_panel_theme(self):
         """パネル自体にテーマを適用"""
         try:
@@ -1272,7 +1330,7 @@ class EXIFPanel(QWidget):
                     border-radius: 5px;
                 }}
             """)
-        except Exception as e:
+        except Exception:
             # エラー時はデフォルトスタイルを適用
             self.setStyleSheet("""
                 QWidget#exifPanel {
@@ -1281,6 +1339,7 @@ class EXIFPanel(QWidget):
                     border-radius: 5px;
                 }
             """)
+
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
         try:
@@ -1297,9 +1356,11 @@ class EXIFPanel(QWidget):
         """テーマに基づいてスタイルを更新"""
         try:
             # タイトルラベルのスタイル更新
-            if hasattr(self, 'title_label'):
+            if hasattr(self, "title_label"):
                 title_fg = self._get_color_safe("foreground", "#2c3e50")
-                title_bg = self._get_color_safe("hover", self._get_color_safe("background", "#ecf0f1"))
+                title_bg = self._get_color_safe(
+                    "hover", self._get_color_safe("background", "#ecf0f1")
+                )
                 self.title_label.setStyleSheet(f"""
                     QLabel {{
                         font-weight: bold;
@@ -1312,7 +1373,7 @@ class EXIFPanel(QWidget):
                 """)
 
             # スクロールエリアのスタイル更新
-            if hasattr(self, 'integrated_scroll_area'):
+            if hasattr(self, "integrated_scroll_area"):
                 scroll_border = self._get_color_safe("border", "#bdc3c7")
                 scroll_bg = self._get_color_safe("background", "#ffffff")
                 scroll_focus = self._get_color_safe("primary", "#3498db")
@@ -1328,7 +1389,7 @@ class EXIFPanel(QWidget):
                 """)
 
             # 初期メッセージラベルのスタイル更新
-            if hasattr(self, 'initial_message_label'):
+            if hasattr(self, "initial_message_label"):
                 msg_color = self._get_color_safe("foreground", "#7f8c8d")
                 msg_bg = self._get_color_safe("background", "#ffffff")
                 self.initial_message_label.setStyleSheet(f"""
@@ -1357,7 +1418,15 @@ class EXIFPanel(QWidget):
 
                 # ウィンドウテキストの色の明度を計算
                 window_text_color = palette.color(palette.ColorRole.WindowText)
-                lightness = (window_text_color.red() + window_text_color.green() + window_text_color.blue()) / 3.0 / 255.0
+                lightness = (
+                    (
+                        window_text_color.red()
+                        + window_text_color.green()
+                        + window_text_color.blue()
+                    )
+                    / 3.0
+                    / 255.0
+                )
 
                 # 明度が0.5より高い場合はダークテーマと判定
                 return lightness > 0.5

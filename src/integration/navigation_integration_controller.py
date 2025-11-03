@@ -21,13 +21,12 @@ from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
 from .models import AIComponent
 from .navigation_interfaces import (
-    IFileSystemWatcher,
     INavigationAware,
     INavigationManager,
     NavigationCallback,
     PathChangeCallback,
 )
-from .navigation_models import NavigationEvent, NavigationState, PathInfo
+from .navigation_models import NavigationEvent, NavigationState
 from .services.file_system_watcher import FileChangeType, FileSystemWatcher
 
 
@@ -46,7 +45,7 @@ class NavigationIntegrationController:
         config_manager: ConfigManager,
         logger_system: LoggerSystem,
         file_system_watcher: Optional[FileSystemWatcher] = None,
-        error_handler: Optional[IntegratedErrorHandler] = None
+        error_handler: Optional[IntegratedErrorHandler] = None,
     ):
         """
         Initialize the navigation integration controller
@@ -64,8 +63,7 @@ class NavigationIntegrationController:
 
         # File system watcher integration
         self.file_system_watcher = file_system_watcher or FileSystemWatcher(
-            logger_system=logger_system,
-            enable_monitoring=True
+            logger_system=logger_system, enable_monitoring=True
         )
 
         # Navigation state management
@@ -122,14 +120,16 @@ class NavigationIntegrationController:
             # Initialize with home directory
             self._initialize_default_navigation_state()
 
-            self.logger.info("Navigation integration controller initialized successfully")
+            self.logger.info(
+                "Navigation integration controller initialized successfully"
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "navigation_controller_initialization"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _load_navigation_preferences(self) -> None:
@@ -157,14 +157,16 @@ class NavigationIntegrationController:
             )
             self.fallback_path = Path(fallback_path_str)
 
-            self.logger.debug(f"Loaded navigation preferences: sync_enabled={self.sync_enabled}")
+            self.logger.debug(
+                f"Loaded navigation preferences: sync_enabled={self.sync_enabled}"
+            )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.CONFIGURATION_ERROR,
                 {"operation": "load_navigation_preferences"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _initialize_navigation_history(self) -> None:
@@ -184,9 +186,13 @@ class NavigationIntegrationController:
 
             # Limit history size
             if len(self.navigation_history) > self.max_history_size:
-                self.navigation_history = self.navigation_history[-self.max_history_size:]
+                self.navigation_history = self.navigation_history[
+                    -self.max_history_size :
+                ]
 
-            self.logger.debug(f"Initialized navigation history with {len(self.navigation_history)} entries")
+            self.logger.debug(
+                f"Initialized navigation history with {len(self.navigation_history)} entries"
+            )
 
         except Exception as e:
             self.logger.warning(f"Failed to initialize navigation history: {e}")
@@ -204,7 +210,7 @@ class NavigationIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "setup_file_system_watcher"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _setup_config_listeners(self) -> None:
@@ -239,7 +245,7 @@ class NavigationIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "initialize_default_navigation_state"},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
 
     def _on_config_changed(self, key: str, old_value: Any, new_value: Any) -> None:
@@ -251,9 +257,7 @@ class NavigationIntegrationController:
     # Component Registration
 
     def register_navigation_component(
-        self,
-        component: INavigationAware,
-        component_id: Optional[str] = None
+        self, component: INavigationAware, component_id: Optional[str] = None
     ) -> bool:
         """
         Register a navigation-aware component
@@ -268,7 +272,9 @@ class NavigationIntegrationController:
         try:
             with self._lock:
                 if component in self.registered_components:
-                    self.logger.debug(f"Component already registered: {type(component).__name__}")
+                    self.logger.debug(
+                        f"Component already registered: {type(component).__name__}"
+                    )
                     return True
 
                 self.registered_components.add(component)
@@ -284,28 +290,33 @@ class NavigationIntegrationController:
                             event_type="navigate",
                             target_path=self.current_navigation_state.current_path,
                             timestamp=datetime.now(),
-                            success=True
+                            success=True,
                         )
                         component.on_navigation_changed(event)
                     except Exception as e:
-                        self.logger.error(f"Failed to send current state to new component: {e}")
+                        self.logger.error(
+                            f"Failed to send current state to new component: {e}"
+                        )
 
-                self.logger.debug(f"Navigation component registered: {type(component).__name__}")
+                self.logger.debug(
+                    f"Navigation component registered: {type(component).__name__}"
+                )
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "register_navigation_component", "component_type": type(component).__name__},
-                AIComponent.KIRO
+                {
+                    "operation": "register_navigation_component",
+                    "component_type": type(component).__name__,
+                },
+                AIComponent.KIRO,
             )
             return False
 
     def unregister_navigation_component(
-        self,
-        component: INavigationAware,
-        component_id: Optional[str] = None
+        self, component: INavigationAware, component_id: Optional[str] = None
     ) -> bool:
         """
         Unregister a navigation-aware component
@@ -331,7 +342,9 @@ class NavigationIntegrationController:
                     success = True
 
                 if success:
-                    self.logger.debug(f"Navigation component unregistered: {type(component).__name__}")
+                    self.logger.debug(
+                        f"Navigation component unregistered: {type(component).__name__}"
+                    )
 
                 return success
 
@@ -339,12 +352,17 @@ class NavigationIntegrationController:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "unregister_navigation_component", "component_type": type(component).__name__},
-                AIComponent.KIRO
+                {
+                    "operation": "unregister_navigation_component",
+                    "component_type": type(component).__name__,
+                },
+                AIComponent.KIRO,
             )
             return False
 
-    def register_navigation_manager(self, name: str, manager: INavigationManager) -> bool:
+    def register_navigation_manager(
+        self, name: str, manager: INavigationManager
+    ) -> bool:
         """
         Register a navigation manager
 
@@ -358,7 +376,9 @@ class NavigationIntegrationController:
         try:
             with self._lock:
                 if name in self.navigation_managers:
-                    self.logger.warning(f"Navigation manager '{name}' already registered, replacing")
+                    self.logger.warning(
+                        f"Navigation manager '{name}' already registered, replacing"
+                    )
 
                 self.navigation_managers[name] = manager
 
@@ -373,7 +393,7 @@ class NavigationIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "register_navigation_manager", "manager_name": name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
@@ -394,9 +414,13 @@ class NavigationIntegrationController:
 
                     # Remove navigation listener
                     try:
-                        manager.remove_navigation_listener(self._on_manager_navigation_event)
+                        manager.remove_navigation_listener(
+                            self._on_manager_navigation_event
+                        )
                     except Exception as e:
-                        self.logger.warning(f"Failed to remove listener from manager '{name}': {e}")
+                        self.logger.warning(
+                            f"Failed to remove listener from manager '{name}': {e}"
+                        )
 
                     del self.navigation_managers[name]
                     self.logger.info(f"Navigation manager unregistered: {name}")
@@ -409,13 +433,15 @@ class NavigationIntegrationController:
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "unregister_navigation_manager", "manager_name": name},
-                AIComponent.KIRO
+                AIComponent.KIRO,
             )
             return False
 
     # Navigation Coordination
 
-    async def navigate_to_path(self, path: Path, source_component: Optional[str] = None) -> bool:
+    async def navigate_to_path(
+        self, path: Path, source_component: Optional[str] = None
+    ) -> bool:
         """
         Navigate to a specific path and synchronize across all components
 
@@ -433,13 +459,15 @@ class NavigationIntegrationController:
                 # Validate path
                 if not await self._validate_path_access(path):
                     await self._handle_navigation_error(
-                        path,
-                        f"Path is not accessible: {path}",
-                        source_component
+                        path, f"Path is not accessible: {path}", source_component
                     )
                     return await self._navigate_to_fallback_path()
 
-                old_path = self.current_navigation_state.current_path if self.current_navigation_state else None
+                old_path = (
+                    self.current_navigation_state.current_path
+                    if self.current_navigation_state
+                    else None
+                )
 
                 # Update navigation state
                 if not self.current_navigation_state:
@@ -448,9 +476,7 @@ class NavigationIntegrationController:
                     success = self.current_navigation_state.navigate_to_path(path)
                     if not success:
                         await self._handle_navigation_error(
-                            path,
-                            "Failed to update navigation state",
-                            source_component
+                            path, "Failed to update navigation state", source_component
                         )
                         return await self._navigate_to_fallback_path()
 
@@ -461,7 +487,9 @@ class NavigationIntegrationController:
                 if self.sync_enabled:
                     success = await self._synchronize_navigation_state(source_component)
                     if not success:
-                        self.logger.warning("Some components failed to synchronize navigation state")
+                        self.logger.warning(
+                            "Some components failed to synchronize navigation state"
+                        )
 
                 # Update navigation history
                 await self._update_navigation_history(path)
@@ -476,7 +504,7 @@ class NavigationIntegrationController:
                     target_path=path,
                     timestamp=datetime.now(),
                     success=True,
-                    duration_ms=(datetime.now() - start_time).total_seconds() * 1000
+                    duration_ms=(datetime.now() - start_time).total_seconds() * 1000,
                 )
                 await self._notify_navigation_listeners(event)
 
@@ -484,15 +512,21 @@ class NavigationIntegrationController:
                 navigation_time = (datetime.now() - start_time).total_seconds()
                 self.navigation_times.append(navigation_time)
 
-                self.logger.info(f"Navigation successful: {path} (took {navigation_time:.3f}s)")
+                self.logger.info(
+                    f"Navigation successful: {path} (took {navigation_time:.3f}s)"
+                )
                 return True
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "navigate_to_path", "path": str(path), "source": source_component},
-                AIComponent.KIRO
+                {
+                    "operation": "navigate_to_path",
+                    "path": str(path),
+                    "source": source_component,
+                },
+                AIComponent.KIRO,
             )
             return await self._navigate_to_fallback_path()
 
@@ -516,7 +550,7 @@ class NavigationIntegrationController:
             try:
                 result = await asyncio.wait_for(
                     asyncio.to_thread(self._sync_validate_path, path),
-                    timeout=self.path_access_timeout
+                    timeout=self.path_access_timeout,
                 )
 
                 # Cache result
@@ -542,11 +576,7 @@ class NavigationIntegrationController:
     def _sync_validate_path(self, path: Path) -> bool:
         """Synchronous path validation"""
         try:
-            return (
-                path.exists() and
-                path.is_dir() and
-                os.access(path, os.R_OK)
-            )
+            return path.exists() and path.is_dir() and os.access(path, os.R_OK)
         except (OSError, PermissionError):
             return False
 
@@ -562,12 +592,16 @@ class NavigationIntegrationController:
             if success:
                 self.logger.debug(f"File system watcher updated for path: {path}")
             else:
-                self.logger.warning(f"Failed to start file system watcher for path: {path}")
+                self.logger.warning(
+                    f"Failed to start file system watcher for path: {path}"
+                )
 
         except Exception as e:
             self.logger.error(f"Failed to update file system watcher: {e}")
 
-    async def _synchronize_navigation_state(self, source_component: Optional[str] = None) -> bool:
+    async def _synchronize_navigation_state(
+        self, source_component: Optional[str] = None
+    ) -> bool:
         """
         Synchronize navigation state across all registered components
 
@@ -592,7 +626,7 @@ class NavigationIntegrationController:
                 event_type="navigate",
                 target_path=self.current_navigation_state.current_path,
                 timestamp=datetime.now(),
-                success=True
+                success=True,
             )
 
             # Synchronize with components (excluding source component)
@@ -612,7 +646,7 @@ class NavigationIntegrationController:
             try:
                 results = await asyncio.wait_for(
                     asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=self.sync_timeout
+                    timeout=self.sync_timeout,
                 )
 
                 for result in results:
@@ -622,7 +656,9 @@ class NavigationIntegrationController:
                         self.logger.error(f"Component synchronization failed: {result}")
 
             except asyncio.TimeoutError:
-                self.logger.warning(f"Navigation synchronization timed out after {self.sync_timeout}s")
+                self.logger.warning(
+                    f"Navigation synchronization timed out after {self.sync_timeout}s"
+                )
 
             # Consider successful if at least 50% of components succeeded
             success_rate = success_count / max(len(tasks), 1) if tasks else 1.0
@@ -632,7 +668,9 @@ class NavigationIntegrationController:
             self.logger.error(f"Failed to synchronize navigation state: {e}")
             return False
 
-    async def _synchronize_component(self, component: INavigationAware, event: NavigationEvent) -> bool:
+    async def _synchronize_component(
+        self, component: INavigationAware, event: NavigationEvent
+    ) -> bool:
         """Synchronize a single component with navigation state"""
         try:
             component_name = type(component).__name__
@@ -654,7 +692,9 @@ class NavigationIntegrationController:
             return True
 
         except Exception as e:
-            self.logger.error(f"Failed to synchronize component {type(component).__name__}: {e}")
+            self.logger.error(
+                f"Failed to synchronize component {type(component).__name__}: {e}"
+            )
             return False
 
     def _get_component_id(self, component: INavigationAware) -> Optional[str]:
@@ -676,7 +716,9 @@ class NavigationIntegrationController:
 
             # Limit history size
             if len(self.navigation_history) > self.max_history_size:
-                self.navigation_history = self.navigation_history[:self.max_history_size]
+                self.navigation_history = self.navigation_history[
+                    : self.max_history_size
+                ]
 
             # Persist history
             await self._persist_navigation_history()
@@ -723,7 +765,7 @@ class NavigationIntegrationController:
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None
+        old_path: Optional[Path] = None,
     ) -> None:
         """Handle file system change events"""
         try:
@@ -734,14 +776,19 @@ class NavigationIntegrationController:
 
             # Check if the change affects current navigation path
             if self._path_affects_navigation(file_path, current_path):
-                asyncio.create_task(self._handle_path_change(file_path, change_type, old_path))
+                asyncio.create_task(
+                    self._handle_path_change(file_path, change_type, old_path)
+                )
 
         except Exception as e:
             self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
-                {"operation": "file_system_change_handler", "file_path": str(file_path)},
-                AIComponent.KIRO
+                {
+                    "operation": "file_system_change_handler",
+                    "file_path": str(file_path),
+                },
+                AIComponent.KIRO,
             )
 
     def _path_affects_navigation(self, changed_path: Path, current_path: Path) -> bool:
@@ -749,9 +796,9 @@ class NavigationIntegrationController:
         try:
             # Check if changed path is current path or affects it
             return (
-                changed_path == current_path or
-                current_path.is_relative_to(changed_path) or
-                changed_path.parent == current_path
+                changed_path == current_path
+                or current_path.is_relative_to(changed_path)
+                or changed_path.parent == current_path
             )
 
         except (ValueError, OSError):
@@ -761,7 +808,7 @@ class NavigationIntegrationController:
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None
+        old_path: Optional[Path] = None,
     ) -> None:
         """Handle path changes that affect navigation"""
         try:
@@ -792,7 +839,7 @@ class NavigationIntegrationController:
                         event_type="refresh",
                         target_path=current_path,
                         timestamp=datetime.now(),
-                        success=True
+                        success=True,
                     )
                     await self._notify_navigation_listeners(event)
 
@@ -816,10 +863,7 @@ class NavigationIntegrationController:
     # Error Handling
 
     async def _handle_navigation_error(
-        self,
-        path: Path,
-        error_message: str,
-        source_component: Optional[str] = None
+        self, path: Path, error_message: str, source_component: Optional[str] = None
     ) -> None:
         """Handle navigation errors and notify listeners"""
         try:
@@ -831,7 +875,7 @@ class NavigationIntegrationController:
                 target_path=path,
                 timestamp=datetime.now(),
                 success=False,
-                error_message=error_message
+                error_message=error_message,
             )
 
             # Notify error listeners
@@ -1021,7 +1065,8 @@ class NavigationIntegrationController:
         """
         avg_navigation_time = (
             sum(self.navigation_times) / len(self.navigation_times)
-            if self.navigation_times else 0.0
+            if self.navigation_times
+            else 0.0
         )
 
         return {
@@ -1032,7 +1077,7 @@ class NavigationIntegrationController:
             "history_size": len(self.navigation_history),
             "sync_enabled": self.sync_enabled,
             "cache_size": len(self.path_validation_cache),
-            "sync_operation_times": dict(self.sync_operation_times)
+            "sync_operation_times": dict(self.sync_operation_times),
         }
 
     def clear_performance_stats(self) -> None:
@@ -1053,7 +1098,9 @@ class NavigationIntegrationController:
 
             # Persist current state
             if self.current_navigation_state:
-                await self._persist_current_path(self.current_navigation_state.current_path)
+                await self._persist_current_path(
+                    self.current_navigation_state.current_path
+                )
 
             await self._persist_navigation_history()
 

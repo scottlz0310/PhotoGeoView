@@ -4,10 +4,11 @@ ThemeManager フォールバック実装
 qt_theme_managerライブラリが利用できない場合の代替実装
 """
 
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtGui import QPalette, QColor
 from typing import Dict, List, Optional
+
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QApplication
+
 
 class ThemeManagerFallback(QObject):
     """
@@ -26,18 +27,18 @@ class ThemeManagerFallback(QObject):
             "default": {
                 "name": "Default Light",
                 "description": "標準のライトテーマ",
-                "style": self._get_light_style()
+                "style": self._get_light_style(),
             },
             "dark": {
                 "name": "Dark",
                 "description": "ダークテーマ",
-                "style": self._get_dark_style()
+                "style": self._get_dark_style(),
             },
             "photography": {
                 "name": "Photography",
                 "description": "写真閲覧用テーマ",
-                "style": self._get_photography_style()
-            }
+                "style": self._get_photography_style(),
+            },
         }
 
     def get_available_themes(self) -> List[str]:
@@ -191,6 +192,7 @@ class ThemeManagerFallback(QObject):
             color: #cccccc;
         }
         """
+
 
 # qt_theme_managerからのインポートを試行し、失敗した場合はフォールバックを使用
 try:

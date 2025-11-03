@@ -29,10 +29,11 @@ Author: Kiro AI Integration System
 """
 
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from ..logging_system import LoggerSystem
 from ..models import AIComponent
@@ -213,7 +214,7 @@ class PaginatedFileDiscovery:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "folder_init_error",
-                    f"フォルダ初期化エラー: {folder_path} - {str(e)}",
+                    f"フォルダ初期化エラー: {folder_path} - {e!s}",
                     level="ERROR",
                 )
 
@@ -302,7 +303,7 @@ class PaginatedFileDiscovery:
             AIComponent.KIRO,
             "batch_retrieved",
             f"バッチ {self._current_batch_index + 1}/{self._total_batches} 取得完了: "
-            f"{len(batch_files)}ファイル ({start_index}-{end_index-1})",
+            f"{len(batch_files)}ファイル ({start_index}-{end_index - 1})",
             level="DEBUG",
         )
 

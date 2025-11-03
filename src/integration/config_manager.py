@@ -201,7 +201,7 @@ class ConfigManager(IConfigManager):
         for ai_component, config_file in self.ai_config_files.items():
             try:
                 if config_file.exists():
-                    with open(config_file, "r", encoding="utf-8") as f:
+                    with open(config_file, encoding="utf-8") as f:
                         ai_config = json.load(f)
                         self.ai_configs[ai_component] = ai_config
 
@@ -290,7 +290,7 @@ class ConfigManager(IConfigManager):
 
         try:
             if self.main_config_file.exists():
-                with open(self.main_config_file, "r", encoding="utf-8") as f:
+                with open(self.main_config_file, encoding="utf-8") as f:
                     main_config = json.load(f)
 
                     # Update last modified time
@@ -323,7 +323,7 @@ class ConfigManager(IConfigManager):
 
         try:
             if self.user_config_file.exists():
-                with open(self.user_config_file, "r", encoding="utf-8") as f:
+                with open(self.user_config_file, encoding="utf-8") as f:
                     user_config = json.load(f)
 
                     # Update last modified time
@@ -877,7 +877,7 @@ class ConfigManager(IConfigManager):
         """
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 import_data = json.load(f)
 
             if "main_config" in import_data:
@@ -1296,7 +1296,7 @@ class ConfigManager(IConfigManager):
                 self.application_state = ApplicationState()
                 return True
 
-            with open(self.state_file, "r", encoding="utf-8") as f:
+            with open(self.state_file, encoding="utf-8") as f:
                 state_dict = json.load(f)
 
             # Convert dictionary back to ApplicationState

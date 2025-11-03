@@ -47,6 +47,7 @@ class TestBasicImports(unittest.TestCase):
             import PySide6
             from PySide6.QtCore import QObject
             from PySide6.QtWidgets import QApplication
+
             self.assertTrue(True, "PySide6のインポート成功")
         except ImportError as e:
             self.skipTest(f"PySide6のインポートスキップ: {e}")
@@ -55,6 +56,7 @@ class TestBasicImports(unittest.TestCase):
         try:
             import PIL
             from PIL import Image
+
             self.assertTrue(True, "Pillowのインポート成功")
         except ImportError as e:
             self.skipTest(f"Pillowのインポートスキップ: {e}")
@@ -62,6 +64,7 @@ class TestBasicImports(unittest.TestCase):
         # Foliumのインポート確認
         try:
             import folium
+
             self.assertTrue(True, "Foliumのインポート成功")
         except ImportError as e:
             self.skipTest(f"Foliumのインポートスキップ: {e}")
@@ -74,13 +77,17 @@ class TestBasicImports(unittest.TestCase):
         required_dirs = ["src", "tests", "docs"]
         for dir_name in required_dirs:
             dir_path = project_root / dir_name
-            self.assertTrue(dir_path.exists(), f"{dir_name}ディレクトリが存在する必要があります")
+            self.assertTrue(
+                dir_path.exists(), f"{dir_name}ディレクトリが存在する必要があります"
+            )
 
         # 主要なファイルの存在確認
         required_files = ["main.py", "pyproject.toml", "README.md"]
         for file_name in required_files:
             file_path = project_root / file_name
-            self.assertTrue(file_path.exists(), f"{file_name}ファイルが存在する必要があります")
+            self.assertTrue(
+                file_path.exists(), f"{file_name}ファイルが存在する必要があります"
+            )
 
     def test_src_modules_import(self):
         """srcモジュールのインポート確認"""
@@ -102,6 +109,7 @@ class TestBasicImports(unittest.TestCase):
 
             # 主要なモジュールのインポートを試行
             import main
+
             self.assertIsNotNone(main, "mainモジュールが正常にインポートされた")
             self.assertTrue(True, "mainモジュールのインポート成功")
         except ImportError as e:
@@ -114,14 +122,14 @@ class TestBasicImports(unittest.TestCase):
         import os
 
         # CI環境での環境変数確認
-        if os.environ.get('CI'):
+        if os.environ.get("CI"):
             self.assertTrue(True, "CI環境で実行中")
 
         # Qt環境変数の確認
-        qt_platform = os.environ.get('QT_QPA_PLATFORM')
+        qt_platform = os.environ.get("QT_QPA_PLATFORM")
         if qt_platform:
             self.assertTrue(True, f"Qtプラットフォーム設定: {qt_platform}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main(verbosity=2)

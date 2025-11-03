@@ -12,7 +12,7 @@ Author: Kiro AI Integration System
 
 from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QDialog,
@@ -37,7 +37,7 @@ class ThemePreviewWidget(QWidget):
         self,
         theme_name: str,
         theme_data: Dict[str, Any],
-        parent: Optional[QWidget] = None
+        parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
         self.theme_name = theme_name
@@ -52,9 +52,7 @@ class ThemePreviewWidget(QWidget):
         layout.setSpacing(4)
 
         # テーマ名ラベル
-        name_label = QLabel(
-            self.theme_data.get('display_name', self.theme_name)
-        )
+        name_label = QLabel(self.theme_data.get("display_name", self.theme_name))
         name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         name_label.setStyleSheet("font-weight: bold; font-size: 12px;")
         layout.addWidget(name_label)
@@ -72,12 +70,8 @@ class ThemePreviewWidget(QWidget):
         sample_label = QLabel("Sample Text")
         sample_label.setFixedSize(80, 16)
 
-        preview_layout.addWidget(
-            sample_button, alignment=Qt.AlignmentFlag.AlignCenter
-        )
-        preview_layout.addWidget(
-            sample_label, alignment=Qt.AlignmentFlag.AlignCenter
-        )
+        preview_layout.addWidget(sample_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        preview_layout.addWidget(sample_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         layout.addWidget(preview_frame)
 
@@ -101,13 +95,13 @@ class ThemePreviewWidget(QWidget):
 
     def _generate_preview_stylesheet(self) -> str:
         """プレビュー用スタイルシートの生成"""
-        colors = self.theme_data.get('colors', {})
+        colors = self.theme_data.get("colors", {})
 
         # 基本色の取得
-        bg_color = colors.get('background', '#ffffff')
-        text_color = colors.get('text', '#000000')
-        accent_color = colors.get('accent', '#0078d4')
-        border_color = colors.get('border', '#cccccc')
+        bg_color = colors.get("background", "#ffffff")
+        text_color = colors.get("text", "#000000")
+        accent_color = colors.get("accent", "#0078d4")
+        border_color = colors.get("border", "#cccccc")
 
         return f"""
         QWidget {{
@@ -186,9 +180,9 @@ class ThemeSelectionDialog(QDialog):
         """保存された選択を読み込む"""
         try:
             # メインウィンドウから選択されたテーマリストを取得
-            if hasattr(self.parent(), 'theme_toggle_button'):
+            if hasattr(self.parent(), "theme_toggle_button"):
                 toggle_button = self.parent().theme_toggle_button
-                if hasattr(toggle_button, 'selected_themes'):
+                if hasattr(toggle_button, "selected_themes"):
                     self.selected_themes = toggle_button.selected_themes.copy()
 
                     # 選択状態の更新
@@ -209,12 +203,8 @@ class ThemeSelectionDialog(QDialog):
         # スクロールエリア
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
-        scroll_area.setVerticalScrollBarPolicy(
-            Qt.ScrollBarPolicy.ScrollBarAsNeeded
-        )
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # グリッドコンテナ
         grid_widget = QWidget()
@@ -241,24 +231,20 @@ class ThemeSelectionDialog(QDialog):
             theme_data = self._get_theme_data(theme_name)
 
             # プレビューウィジェットの作成
-            preview_widget = ThemePreviewWidget(
-                theme_name, theme_data
-            )
+            preview_widget = ThemePreviewWidget(theme_name, theme_data)
             self.preview_widgets[theme_name] = preview_widget
 
             # 選択可能なフレームでラップ
             selectable_frame = SelectableThemeFrame(
                 preview_widget,
                 theme_name,
-                theme_data.get('display_name', theme_name),
+                theme_data.get("display_name", theme_name),
                 is_current=(theme_name == current_theme_name),
             )
             selectable_frame.theme_clicked.connect(self.on_theme_clicked)
 
             # グリッドに追加
-            self.grid_layout.addWidget(
-                selectable_frame, row, col
-            )
+            self.grid_layout.addWidget(selectable_frame, row, col)
 
             col += 1
             if col >= max_cols:
@@ -273,42 +259,44 @@ class ThemeSelectionDialog(QDialog):
 
             if theme_info:
                 return {
-                    'display_name': theme_info.get('display_name', theme_name),
-                    'description': theme_info.get('description', f'{theme_name} theme'),
-                    'type': 'Built-in' if theme_name in ['default', 'dark', 'light'] else 'Custom',
-                    'colors': self._extract_colors_from_theme(theme_name)
+                    "display_name": theme_info.get("display_name", theme_name),
+                    "description": theme_info.get("description", f"{theme_name} theme"),
+                    "type": "Built-in"
+                    if theme_name in ["default", "dark", "light"]
+                    else "Custom",
+                    "colors": self._extract_colors_from_theme(theme_name),
                 }
         except Exception:
             pass
 
         # フォールバック
         return {
-            'display_name': theme_name,
-            'description': f'{theme_name} theme',
-            'type': 'Unknown',
-            'colors': {
-                'background': '#ffffff',
-                'text': '#000000',
-                'accent': '#0078d4',
-                'border': '#cccccc'
-            }
+            "display_name": theme_name,
+            "description": f"{theme_name} theme",
+            "type": "Unknown",
+            "colors": {
+                "background": "#ffffff",
+                "text": "#000000",
+                "accent": "#0078d4",
+                "border": "#cccccc",
+            },
         }
 
     def _extract_colors_from_theme(self, theme_name: str) -> Dict[str, str]:
         """テーマから色情報を抽出"""
         try:
             # テーママネージャーのプレビュー色取得機能を使用
-            if hasattr(self.theme_manager, '_get_preview_colors'):
+            if hasattr(self.theme_manager, "_get_preview_colors"):
                 return self.theme_manager._get_preview_colors(theme_name)
         except Exception:
             pass
 
         # デフォルト色
         return {
-            'background': '#ffffff',
-            'text': '#000000',
-            'accent': '#0078d4',
-            'border': '#cccccc'
+            "background": "#ffffff",
+            "text": "#000000",
+            "accent": "#0078d4",
+            "border": "#cccccc",
         }
 
     def create_button_area(self, parent_layout):
@@ -371,7 +359,9 @@ class ThemeSelectionDialog(QDialog):
             self.selection_label.setText("選択されたテーマ: なし")
             self.selection_label.setStyleSheet("color: gray; font-style: italic;")
         else:
-            theme_names = [self._get_theme_display_name(name) for name in self.selected_themes]
+            theme_names = [
+                self._get_theme_display_name(name) for name in self.selected_themes
+            ]
             self.selection_label.setText(f"選択されたテーマ: {', '.join(theme_names)}")
             self.selection_label.setStyleSheet("color: #0078d4; font-weight: bold;")
 
@@ -379,7 +369,9 @@ class ThemeSelectionDialog(QDialog):
         """テーマの表示名を取得"""
         try:
             theme_info = self.theme_manager.get_theme_info(theme_name)
-            return theme_info.get('display_name', theme_name) if theme_info else theme_name
+            return (
+                theme_info.get("display_name", theme_name) if theme_info else theme_name
+            )
         except Exception:
             return theme_name
 
@@ -439,8 +431,14 @@ class SelectableThemeFrame(QFrame):
 
     theme_clicked = Signal(str)  # テーマ名
 
-    def __init__(self, preview_widget: ThemePreviewWidget, theme_name: str,
-                 display_name: str, is_current: bool = False, parent: Optional[QWidget] = None):
+    def __init__(
+        self,
+        preview_widget: ThemePreviewWidget,
+        theme_name: str,
+        display_name: str,
+        is_current: bool = False,
+        parent: Optional[QWidget] = None,
+    ):
         super().__init__(parent)
         self.preview_widget = preview_widget
         self.theme_name = theme_name
@@ -464,7 +462,9 @@ class SelectableThemeFrame(QFrame):
         if self.is_current:
             current_label = QLabel("現在のテーマ")
             current_label.setAlignment(Qt.AlignCenter)
-            current_label.setStyleSheet("color: green; font-size: 10px; font-weight: bold;")
+            current_label.setStyleSheet(
+                "color: green; font-size: 10px; font-weight: bold;"
+            )
             layout.addWidget(current_label)
 
         # クリックイベントの設定
@@ -621,11 +621,15 @@ class ThemeToggleButton(QToolButton):
                         display_name: str
                         description: str
 
-                    self.available_themes.append(ThemeInfo(
-                        name=theme_name,
-                        display_name=theme_info.get('display_name', theme_name),
-                        description=theme_info.get('description', f'{theme_name} theme')
-                    ))
+                    self.available_themes.append(
+                        ThemeInfo(
+                            name=theme_name,
+                            display_name=theme_info.get("display_name", theme_name),
+                            description=theme_info.get(
+                                "description", f"{theme_name} theme"
+                            ),
+                        )
+                    )
 
             # 現在のテーマのインデックスを取得
             current_theme_name = self.theme_manager.get_current_theme()
@@ -657,9 +661,7 @@ class ThemeToggleButton(QToolButton):
         for i, theme_info in enumerate(self.available_themes):
             action = QAction(theme_info.display_name, self)
             action.setData(i)
-            action.triggered.connect(
-                lambda checked, idx=i: self.on_theme_selected(idx)
-            )
+            action.triggered.connect(lambda checked, idx=i: self.on_theme_selected(idx))
             # 現在のテーマにチェックマーク
             if i == self.current_theme_index:
                 action.setCheckable(True)

@@ -34,7 +34,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 import psutil
 
@@ -256,7 +256,7 @@ class MemoryAwareFileDiscovery:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "memory_aware_discovery_error",
-                    f"メモリ管理機能付きファイル検出エラー: {str(e)}",
+                    f"メモリ管理機能付きファイル検出エラー: {e!s}",
                     level="ERROR",
                 )
                 raise
@@ -288,7 +288,7 @@ class MemoryAwareFileDiscovery:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "memory_stats_error",
-                f"メモリ統計取得エラー: {str(e)}",
+                f"メモリ統計取得エラー: {e!s}",
                 level="WARNING",
             )
 
@@ -368,7 +368,7 @@ class MemoryAwareFileDiscovery:
         try:
             # フォルダの最終更新時刻を含めてキーを生成
             mtime = folder_path.stat().st_mtime
-            return f"{str(folder_path)}_{mtime}"
+            return f"{folder_path!s}_{mtime}"
         except OSError:
             # ファイルアクセスエラーの場合はパスのみを使用
             return str(folder_path)

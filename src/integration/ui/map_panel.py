@@ -57,6 +57,7 @@ except ImportError as e:
         if webengine_status["available"]:
             from PySide6.QtWebEngineCore import QWebEngineSettings
             from PySide6.QtWebEngineWidgets import QWebEngineView
+
             WEBENGINE_AVAILABLE = True
             print("✅ WebEngineチェッカー経由で初期化成功")
     except ImportError:
@@ -496,7 +497,7 @@ class MapPanel(QWidget):
                         <h4>📸 {photo_name}</h4>
                         <p><strong>座標:</strong><br/>
                         {lat:.6f}, {lon:.6f}</p>
-                        {'<p style="color: red; font-weight: bold;">📍 現在選択中</p>' if is_current_photo else ''}
+                        {'<p style="color: red; font-weight: bold;">📍 現在選択中</p>' if is_current_photo else ""}
                     </div>
                     """
                     popup = folium.Popup(popup_content, max_width=250)
@@ -934,7 +935,7 @@ class MapPanel(QWidget):
                 <div class="no-gps-container">
                     <div class="no-gps-icon">📍</div>
                     <div class="no-gps-title">GPS情報が見つかりません</div>
-                    {f'<div class="image-name">📸 {image_name}</div>' if image_name else ''}
+                    {f'<div class="image-name">📸 {image_name}</div>' if image_name else ""}
                     <div class="no-gps-message">
                         この画像にはGPS位置情報が含まれていないため、<br>
                         地図上に撮影場所を表示できません。
@@ -1078,7 +1079,6 @@ class MapPanel(QWidget):
                 and self.current_longitude is not None
                 and self.current_photo is not None
             ):
-
                 # 現在選択されている画像の位置にフォーカス
                 self._focus_on_location(self.current_latitude, self.current_longitude)
 
@@ -1703,12 +1703,9 @@ class MapPanel(QWidget):
         """キーボードイベントの処理"""
         try:
             # ESCキーで地図全画面表示を終了
-            if event.key() == Qt.Key.Key_Escape and self.is_fullscreen_mode:
-                self._toggle_fullscreen()
-                event.accept()
-                return
-            # F11キーで全画面表示切り替え
-            elif event.key() == Qt.Key.Key_F11:
+            if (
+                event.key() == Qt.Key.Key_Escape and self.is_fullscreen_mode
+            ) or event.key() == Qt.Key.Key_F11:
                 self._toggle_fullscreen()
                 event.accept()
                 return

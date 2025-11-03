@@ -10,7 +10,6 @@ Demonstrates the Kiro integration layer components:
 Author: Kiro AI Integration System
 """
 
-import asyncio
 import sys
 import time
 from pathlib import Path
@@ -109,7 +108,7 @@ def main():
 
     # Get cache statistics
     cache_stats = cache_system.get_cache_stats()
-    print(f"   ✓ Cache statistics:")
+    print("   ✓ Cache statistics:")
     for cache_type, stats in cache_stats.items():
         print(
             f"     - {cache_type}: {stats['entry_count']} entries, {stats['hit_rate']:.1%} hit rate"

@@ -10,16 +10,14 @@ Provides intelligent caching for images, thumbnails, and maps:
 Author: Kiro AI Integration System
 """
 
-import hashlib
 import pickle
 import threading
-import time
 import weakref
 from collections import OrderedDict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -181,7 +179,6 @@ class LRUCache:
             len(self._cache) >= self.max_size
             or self.stats.size_bytes + new_entry_size > self.max_memory_bytes
         ):
-
             if not self._cache:
                 break
 

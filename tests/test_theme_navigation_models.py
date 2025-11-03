@@ -7,18 +7,28 @@ Validates model creation, validation, and interface compliance.
 Author: Kiro AI Integration System
 """
 
+import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
-import tempfile
-import json
+
+from src.integration.navigation_models import (
+    BreadcrumbSegment,
+    NavigationEvent,
+    NavigationState,
+    PathInfo,
+    PathType,
+    SegmentState,
+)
 
 # Import the models and interfaces we created
 from src.integration.theme_models import (
-    ThemeConfiguration, ThemeInfo, ThemeType, ColorScheme, FontConfig, ValidationError
-)
-from src.integration.navigation_models import (
-    BreadcrumbSegment, NavigationState, PathInfo, PathType, SegmentState, NavigationEvent
+    ColorScheme,
+    FontConfig,
+    ThemeConfiguration,
+    ThemeInfo,
+    ThemeType,
+    ValidationError,
 )
 
 
@@ -42,7 +52,7 @@ class TestThemeModels(unittest.TestCase):
             accent="#FF5722",
             error="#F44336",
             warning="#FF9800",
-            success="#4CAF50"
+            success="#4CAF50",
         )
 
         self.assertEqual(colors.primary, "#2196F3")
@@ -59,7 +69,7 @@ class TestThemeModels(unittest.TestCase):
             accent="#FF5722",
             error="#F44336",
             warning="#FF9800",
-            success="#4CAF50"
+            success="#4CAF50",
         )
 
         self.assertTrue(dark_colors.is_dark_theme)
@@ -78,7 +88,7 @@ class TestThemeModels(unittest.TestCase):
                 accent="#FF5722",
                 error="#F44336",
                 warning="#FF9800",
-                success="#4CAF50"
+                success="#4CAF50",
             )
 
     def test_font_config_creation(self):
@@ -113,7 +123,7 @@ class TestThemeModels(unittest.TestCase):
             display_name="Test Theme",
             description="A test theme",
             author="Test Author",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         self.assertEqual(theme.name, "test_theme")
@@ -130,7 +140,7 @@ class TestThemeModels(unittest.TestCase):
             display_name="Valid Theme",
             description="A valid theme",
             author="Test Author",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         self.assertTrue(theme.validate())
@@ -143,7 +153,7 @@ class TestThemeModels(unittest.TestCase):
             display_name="Invalid Theme",
             description="An invalid theme",
             author="Test Author",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         self.assertFalse(invalid_theme.validate())
@@ -157,7 +167,7 @@ class TestThemeModels(unittest.TestCase):
             display_name="Test Theme",
             description="A test theme",
             author="Test Author",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         # Test to_dict
@@ -179,7 +189,7 @@ class TestThemeModels(unittest.TestCase):
             display_name="Test Theme",
             description="A test theme",
             author="Test Author",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         theme_info = ThemeInfo.from_theme_config(theme)
@@ -201,10 +211,7 @@ class TestNavigationModels(unittest.TestCase):
 
     def test_breadcrumb_segment_creation(self):
         """Test BreadcrumbSegment creation"""
-        segment = BreadcrumbSegment(
-            name="test_folder",
-            path=self.test_path
-        )
+        segment = BreadcrumbSegment(name="test_folder", path=self.test_path)
 
         self.assertEqual(segment.name, "test_folder")
         self.assertEqual(segment.path, self.test_path)
@@ -261,7 +268,7 @@ class TestNavigationModels(unittest.TestCase):
             event_type="navigate",
             source_path=self.test_path,
             target_path=self.test_path.parent,
-            success=True
+            success=True,
         )
 
         self.assertEqual(event.event_type, "navigate")
@@ -288,26 +295,21 @@ class TestModelIntegration(unittest.TestCase):
     def test_models_import_correctly(self):
         """Test that all models can be imported without errors"""
         # This test ensures all imports work correctly
-        from src.integration.theme_models import ThemeConfiguration, ThemeInfo
-        from src.integration.navigation_models import NavigationState, BreadcrumbSegment
-        from src.integration.theme_interfaces import IThemeManager, IThemeProvider
-        from src.integration.navigation_interfaces import INavigationManager, IBreadcrumbRenderer
-        from src.integration.theme_navigation_integration import IThemeNavigationIntegration
 
         # If we get here, all imports succeeded
         self.assertTrue(True)
 
     def test_interface_compatibility(self):
         """Test that interfaces are properly defined"""
-        from src.integration.theme_interfaces import IThemeManager
         from src.integration.navigation_interfaces import INavigationManager
+        from src.integration.theme_interfaces import IThemeManager
 
         # Check that interfaces have required methods
-        self.assertTrue(hasattr(IThemeManager, 'get_current_theme'))
-        self.assertTrue(hasattr(IThemeManager, 'apply_theme'))
-        self.assertTrue(hasattr(INavigationManager, 'get_current_state'))
-        self.assertTrue(hasattr(INavigationManager, 'navigate_to_path'))
+        self.assertTrue(hasattr(IThemeManager, "get_current_theme"))
+        self.assertTrue(hasattr(IThemeManager, "apply_theme"))
+        self.assertTrue(hasattr(INavigationManager, "get_current_state"))
+        self.assertTrue(hasattr(INavigationManager, "navigate_to_path"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

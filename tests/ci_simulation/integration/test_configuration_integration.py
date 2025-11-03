@@ -8,7 +8,6 @@ with real configuration files and environment variables.
 import json
 import os
 import sys
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -20,7 +19,6 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root / "tools" / "ci"))
 
 from config_manager import ConfigManager
-from models import CheckStatus
 from simulator import CISimulator
 
 

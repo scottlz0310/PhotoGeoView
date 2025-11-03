@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from src.integration.logging_system import LoggerSystem
 from src.integration.services.file_discovery_service import FileDiscoveryService

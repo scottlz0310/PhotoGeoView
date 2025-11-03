@@ -353,7 +353,7 @@ class LoggerSystem:
             **(context or {}),
         }
 
-        logger.error(f"Error in {operation}: {str(error)}", extra=extra, exc_info=True)
+        logger.error(f"Error in {operation}: {error!s}", extra=extra, exc_info=True)
 
     def log_integration_event(
         self, event: str, components: List[AIComponent], details: Dict[str, Any] = None

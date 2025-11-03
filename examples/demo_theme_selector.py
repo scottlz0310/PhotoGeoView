@@ -50,8 +50,7 @@ class ThemeSelectorDemo(QMainWindow):
         self.logger_system = LoggerSystem()
         self.config_manager = ConfigManager(logger_system=self.logger_system)
         self.theme_manager = SimpleThemeManager(
-            config_manager=self.config_manager,
-            logger_system=self.logger_system
+            config_manager=self.config_manager, logger_system=self.logger_system
         )
 
         # 選択されたテーマの管理
@@ -72,7 +71,9 @@ class ThemeSelectorDemo(QMainWindow):
 
         # タイトル
         title_label = QLabel("🎨 テーマ選択UI デモ")
-        title_label.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 10px;")
+        title_label.setStyleSheet(
+            "font-size: 24px; font-weight: bold; margin-bottom: 10px;"
+        )
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title_label)
 
@@ -81,13 +82,17 @@ class ThemeSelectorDemo(QMainWindow):
             "新しいテーマ選択UIの機能をテストできます。\n"
             "下のボタンでテーマ選択ダイアログを開き、プレビュー機能をお試しください。"
         )
-        description_label.setStyleSheet("font-size: 14px; color: gray; margin-bottom: 20px;")
+        description_label.setStyleSheet(
+            "font-size: 14px; color: gray; margin-bottom: 20px;"
+        )
         description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(description_label)
 
         # 現在のテーマ表示
         self.current_theme_label = QLabel("現在のテーマ: 読み込み中...")
-        self.current_theme_label.setStyleSheet("font-size: 16px; font-weight: bold; padding: 10px; border: 2px solid #ccc; border-radius: 5px;")
+        self.current_theme_label.setStyleSheet(
+            "font-size: 16px; font-weight: bold; padding: 10px; border: 2px solid #ccc; border-radius: 5px;"
+        )
         self.current_theme_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.current_theme_label)
 
@@ -145,17 +150,23 @@ class ThemeSelectorDemo(QMainWindow):
     def toggle_theme(self):
         """選択されたテーマを循環切り替え"""
         if not self.selected_themes:
-            self.log_message("選択されたテーマがありません。テーマ設定でテーマを選択してください。")
+            self.log_message(
+                "選択されたテーマがありません。テーマ設定でテーマを選択してください。"
+            )
             return
 
         if len(self.selected_themes) == 1:
-            self.log_message(f"選択されたテーマは1つだけです: {self.selected_themes[0]}")
+            self.log_message(
+                f"選択されたテーマは1つだけです: {self.selected_themes[0]}"
+            )
             return
 
         # 次のテーマに切り替え
-        self.current_theme_index = (self.current_theme_index + 1) % len(self.selected_themes)
+        self.current_theme_index = (self.current_theme_index + 1) % len(
+            self.selected_themes
+        )
         next_theme = self.selected_themes[self.current_theme_index]
-        
+
         self.log_message(f"テーマを切り替え: {next_theme}")
         self.theme_manager.apply_theme(next_theme)
         self.update_toggle_button_text()
@@ -172,7 +183,7 @@ class ThemeSelectorDemo(QMainWindow):
         """ダイアログからテーマが適用された時の処理"""
         self.selected_themes = theme_list
         self.current_theme_index = 0
-        
+
         if self.selected_themes:
             # 最初のテーマを適用
             first_theme = self.selected_themes[0]
@@ -183,10 +194,6 @@ class ThemeSelectorDemo(QMainWindow):
         else:
             self.log_message("テーマが選択されていません")
             self.update_toggle_button_text()
-
-
-
-
 
     def on_theme_changed(self, old_theme: str, new_theme: str):
         """テーマが変更された時の処理"""
@@ -205,6 +212,7 @@ class ThemeSelectorDemo(QMainWindow):
     def log_message(self, message: str):
         """ログメッセージを表示"""
         from datetime import datetime
+
         timestamp = datetime.now().strftime("%H:%M:%S")
         log_entry = f"[{timestamp}] {message}"
         self.log_text.append(log_entry)

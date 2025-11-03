@@ -13,22 +13,25 @@ Requirements: 2.1, 4.1, 4.2, 4.3, 4.4
 """
 
 import asyncio
-import os
 import tempfile
 import unittest
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from src.integration.config_manager import ConfigManager
 from src.integration.error_handling import IntegratedErrorHandler
 from src.integration.logging_system import LoggerSystem
-from src.integration.navigation_integration_controller import NavigationIntegrationController
+from src.integration.navigation_integration_controller import (
+    NavigationIntegrationController,
+)
 from src.integration.navigation_interfaces import INavigationAware, INavigationManager
 from src.integration.navigation_models import NavigationEvent, NavigationState
-from src.integration.services.file_system_watcher import FileChangeType, FileSystemWatcher
+from src.integration.services.file_system_watcher import (
+    FileChangeType,
+    FileSystemWatcher,
+)
 
 
 class MockNavigationAware(INavigationAware):
@@ -162,13 +165,14 @@ class TestNavigationIntegrationController(unittest.TestCase):
             config_manager=self.mock_config_manager,
             logger_system=self.mock_logger_system,
             file_system_watcher=self.mock_file_system_watcher,
-            error_handler=self.mock_error_handler
+            error_handler=self.mock_error_handler,
         )
 
     def tearDown(self):
         """Clean up test fixtures"""
         # Clean up temporary directory
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def _mock_get_setting(self, key: str, default=None):
@@ -194,7 +198,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
             config_manager=self.mock_config_manager,
             logger_system=self.mock_logger_system,
             file_system_watcher=self.mock_file_system_watcher,
-            error_handler=self.mock_error_handler
+            error_handler=self.mock_error_handler,
         )
 
         # Should fallback to home directory
@@ -207,20 +211,28 @@ class TestNavigationIntegrationController(unittest.TestCase):
         component = MockNavigationAware("test_component")
 
         # Register component
-        result = self.controller.register_navigation_component(component, "test_component")
+        result = self.controller.register_navigation_component(
+            component, "test_component"
+        )
 
         self.assertTrue(result)
         self.assertIn(component, self.controller.registered_components)
         self.assertIn("test_component", self.controller.component_registry)
-        self.assertEqual(self.controller.component_registry["test_component"], component)
+        self.assertEqual(
+            self.controller.component_registry["test_component"], component
+        )
 
     def test_register_duplicate_component(self):
         """Test registering the same component twice"""
         component = MockNavigationAware("test_component")
 
         # Register component twice
-        result1 = self.controller.register_navigation_component(component, "test_component")
-        result2 = self.controller.register_navigation_component(component, "test_component")
+        result1 = self.controller.register_navigation_component(
+            component, "test_component"
+        )
+        result2 = self.controller.register_navigation_component(
+            component, "test_component"
+        )
 
         self.assertTrue(result1)
         self.assertTrue(result2)  # Should still return True
@@ -232,7 +244,9 @@ class TestNavigationIntegrationController(unittest.TestCase):
 
         # Register and then unregister component
         self.controller.register_navigation_component(component, "test_component")
-        result = self.controller.unregister_navigation_component(component, "test_component")
+        result = self.controller.unregister_navigation_component(
+            component, "test_component"
+        )
 
         self.assertTrue(result)
         self.assertNotIn(component, self.controller.registered_components)
@@ -273,7 +287,9 @@ class TestNavigationIntegrationController(unittest.TestCase):
         result = await self.controller.navigate_to_path(test_dir)
 
         self.assertTrue(result)
-        self.assertEqual(self.controller.current_navigation_state.current_path, test_dir)
+        self.assertEqual(
+            self.controller.current_navigation_state.current_path, test_dir
+        )
 
     @pytest.mark.asyncio
     async def test_navigate_to_invalid_path(self):
@@ -356,9 +372,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
 
         # Simulate file system change
         changed_file = test_dir / "test_file.txt"
-        self.controller._on_file_system_change(
-            changed_file, FileChangeType.CREATED
-        )
+        self.controller._on_file_system_change(changed_file, FileChangeType.CREATED)
 
         # Should handle the change without errors
         # (Detailed testing would require more complex setup)
@@ -376,9 +390,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
         await self.controller.navigate_to_path(child_dir)
 
         # Simulate directory deletion
-        await self.controller._handle_path_change(
-            child_dir, FileChangeType.DELETED
-        )
+        await self.controller._handle_path_change(child_dir, FileChangeType.DELETED)
 
         # Should navigate to parent or fallback
         current_path = self.controller.current_navigation_state.current_path
@@ -390,7 +402,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
     async def test_path_validation_timeout(self):
         """Test path validation with timeout"""
         # Mock path validation to simulate timeout
-        with patch.object(self.controller, '_sync_validate_path') as mock_validate:
+        with patch.object(self.controller, "_sync_validate_path") as mock_validate:
             mock_validate.side_effect = lambda path: asyncio.sleep(10)  # Long delay
 
             # Set short timeout
@@ -533,9 +545,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
     def test_config_change_handling(self):
         """Test handling of configuration changes"""
         # Simulate configuration change
-        self.controller._on_config_changed(
-            "navigation.sync_enabled", True, False
-        )
+        self.controller._on_config_changed("navigation.sync_enabled", True, False)
 
         # Should reload preferences
         # (Detailed verification would require more complex setup)
@@ -575,10 +585,13 @@ class TestNavigationIntegrationController(unittest.TestCase):
 
         # Should still succeed
         self.assertTrue(result)
-        self.assertEqual(self.controller.current_navigation_state.current_path, test_dir)
+        self.assertEqual(
+            self.controller.current_navigation_state.current_path, test_dir
+        )
 
     def test_component_registration_with_exception(self):
         """Test component registration when component raises exception"""
+
         # Create component that raises exception in on_navigation_changed
         class FaultyComponent(INavigationAware):
             def on_navigation_changed(self, event):
@@ -598,10 +611,12 @@ class TestNavigationIntegrationController(unittest.TestCase):
     @pytest.mark.asyncio
     async def test_synchronization_timeout(self):
         """Test synchronization timeout handling"""
+
         # Create component that takes long time to process
         class SlowComponent(INavigationAware):
             def on_navigation_changed(self, event):
                 import time
+
                 time.sleep(10)  # Simulate slow processing
 
             def get_supported_navigation_events(self):
@@ -660,12 +675,13 @@ class TestNavigationIntegrationControllerIntegration(unittest.TestCase):
         self.controller = NavigationIntegrationController(
             config_manager=self.config_manager,
             logger_system=self.logger_system,
-            file_system_watcher=self.file_system_watcher
+            file_system_watcher=self.file_system_watcher,
         )
 
     def tearDown(self):
         """Clean up integration test fixtures"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     @pytest.mark.asyncio

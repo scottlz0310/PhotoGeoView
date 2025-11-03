@@ -49,25 +49,35 @@ PhotoGeoView/
 │   ├── ui/                   # CursorBLD UIコンポーネント
 │   ├── modules/              # CS4Coding コア機能
 │   └── core/                 # 共通機能
-├── docs/
+├── tests/                    # 本番用テストスイート（30+テスト）
+├── dev_scripts/              # 開発・検証用スクリプト（48個）
+├── docs/                     # ドキュメント（整理済み）
+│   ├── summaries/            # 開発サマリー（23個）
+│   ├── guides/               # ユーザー・開発ガイド（5個）
+│   ├── reports/              # 分析レポート（4個）
+│   ├── specifications/       # プロジェクト仕様書
 │   └── ai_integration/       # AI統合ドキュメント
 ├── config/                   # 設定ファイル
-└── tests/                    # テストスイート
+├── tools/                    # CI/CD ツール
+├── scripts/                  # ビルドスクリプト
+├── main.py                   # アプリケーションエントリーポイント
+└── pyproject.toml            # プロジェクト設定（PEP 621 & PEP 735準拠）
 ```
+
+**注意**: `dev_scripts/` ディレクトリには開発過程で作成された検証・デバッグスクリプトが含まれています。これらはリンター/テストの対象外です。
+
 
 ## 📚 ドキュメント
 
-### AI統合ドキュメント
-詳細なAI貢献度情報とAPIドキュメントは以下をご覧ください：
+すべてのドキュメントは整理され、`docs/` ディレクトリに分類されています。
+詳細は **[ドキュメント索引](docs/README.md)** をご覧ください。
 
-- **[AI統合ドキュメント](docs/ai_integration/README.md)** - 包括的なドキュメント一覧
-- **[APIドキュメント](docs/ai_integration/api_documentation.md)** - 統合API仕様
-- **[AI貢献度レポート](docs/ai_integration/ai_contribution_report.md)** - 各AIの貢献分析
-- **[トラブルシューティング](docs/ai_integration/troubleshooting_guide.md)** - 問題解決ガイド
+### 主要ドキュメント
 
-### プロジェクト仕様
-- **[プロジェクト仕様書](docs/PhotoGeoView_ProjectSpecification.md)** - 完全仕様
-- **[統合計画](docs/integration_plan.md)** - AI統合戦略
+- **[プロジェクト仕様書](docs/specifications/PhotoGeoView_ProjectSpecification.md)** - 完全仕様
+- **[ユーザーガイド](docs/guides/USER_GUIDE_QT_THEME_BREADCRUMB.md)** - 使い方
+- **[AI統合ドキュメント](docs/ai_integration/README.md)** - AI協調開発の詳細
+- **[開発ガイド](docs/guides/ai_quality_integration_guide.md)** - 開発プロセス
 
 ## 🚀 セットアップ
 

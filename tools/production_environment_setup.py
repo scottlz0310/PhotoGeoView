@@ -15,12 +15,10 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.integration.config_manager import ConfigManager
 from src.integration.logging_system import LoggerSystem
 
 

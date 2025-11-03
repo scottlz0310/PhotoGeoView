@@ -74,7 +74,9 @@ class IntegratedLogger(ILogger):
         # File handler for main log
         main_log_file = self.log_dir / "main.log"
         file_handler = logging.handlers.RotatingFileHandler(
-            main_log_file, maxBytes=10 * 1024 * 1024, backupCount=5  # 10MB
+            main_log_file,
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,  # 10MB
         )
 
         # Console handler
@@ -104,7 +106,9 @@ class IntegratedLogger(ILogger):
         # Component-specific log file
         log_file = self.log_dir / f"{component}.log"
         file_handler = logging.handlers.RotatingFileHandler(
-            log_file, maxBytes=5 * 1024 * 1024, backupCount=3  # 5MB
+            log_file,
+            maxBytes=5 * 1024 * 1024,
+            backupCount=3,  # 5MB
         )
 
         # Component-specific formatter
@@ -128,7 +132,9 @@ class IntegratedLogger(ILogger):
         # Performance log file
         perf_log_file = self.log_dir / "performance.log"
         file_handler = logging.handlers.RotatingFileHandler(
-            perf_log_file, maxBytes=20 * 1024 * 1024, backupCount=3  # 20MB
+            perf_log_file,
+            maxBytes=20 * 1024 * 1024,
+            backupCount=3,  # 20MB
         )
 
         # JSON formatter for structured performance data

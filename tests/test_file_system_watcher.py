@@ -252,9 +252,9 @@ class TestFileSystemWatcher:
         ]
 
         for image_file in image_files:
-            assert handler._is_image_file(
-                image_file
-            ), f"{image_file.suffix} should be recognized as image file"
+            assert handler._is_image_file(image_file), (
+                f"{image_file.suffix} should be recognized as image file"
+            )
 
         # 非画像ファイルのテスト
         non_image_files = [
@@ -266,9 +266,9 @@ class TestFileSystemWatcher:
         ]
 
         for non_image_file in non_image_files:
-            assert not handler._is_image_file(
-                non_image_file
-            ), f"{non_image_file.suffix} should not be recognized as image file"
+            assert not handler._is_image_file(non_image_file), (
+                f"{non_image_file.suffix} should not be recognized as image file"
+            )
 
     def test_change_notification_system(self):
         """変更通知システムの統合テスト"""

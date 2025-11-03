@@ -9,13 +9,12 @@ Requirements: 5.1, 5.2, 5.3
 """
 
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol, Union
+from typing import Any, Callable, Dict, List, Optional, Protocol
 
-from .navigation_models import NavigationEvent, NavigationState
-from .theme_models import ThemeConfiguration
 from .navigation_interfaces import INavigationAware
+from .navigation_models import NavigationEvent, NavigationState
 from .theme_interfaces import IThemeAware
+from .theme_models import ThemeConfiguration
 
 
 class IThemeNavigationIntegration(ABC):
@@ -60,7 +59,7 @@ class IThemeNavigationIntegration(ABC):
         pass
 
     @abstractmethod
-    def register_integrated_component(self, component: 'IThemeNavigationAware') -> bool:
+    def register_integrated_component(self, component: "IThemeNavigationAware") -> bool:
         """
         Register a component that needs both theme and navigation updates
 
@@ -73,7 +72,9 @@ class IThemeNavigationIntegration(ABC):
         pass
 
     @abstractmethod
-    def unregister_integrated_component(self, component: 'IThemeNavigationAware') -> bool:
+    def unregister_integrated_component(
+        self, component: "IThemeNavigationAware"
+    ) -> bool:
         """
         Unregister an integrated component
 
@@ -135,7 +136,9 @@ class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
         """
         ...
 
-    def update_integrated_state(self, theme: ThemeConfiguration, nav_state: NavigationState) -> None:
+    def update_integrated_state(
+        self, theme: ThemeConfiguration, nav_state: NavigationState
+    ) -> None:
         """
         Update component state with both theme and navigation information
 
@@ -217,7 +220,9 @@ class IBreadcrumbThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def get_segment_styles(self, theme: ThemeConfiguration, segment_state: str) -> Dict[str, str]:
+    def get_segment_styles(
+        self, theme: ThemeConfiguration, segment_state: str
+    ) -> Dict[str, str]:
         """
         Get styles for breadcrumb segments based on state
 
@@ -253,7 +258,9 @@ class INavigationThemeRenderer(ABC):
     """
 
     @abstractmethod
-    def render_themed_breadcrumb(self, nav_state: NavigationState, theme: ThemeConfiguration) -> Any:
+    def render_themed_breadcrumb(
+        self, nav_state: NavigationState, theme: ThemeConfiguration
+    ) -> Any:
         """
         Render breadcrumb navigation with theme styling
 
@@ -324,7 +331,7 @@ class IIntegratedEventManager(ABC):
     """
 
     @abstractmethod
-    def add_integrated_listener(self, callback: 'IntegratedEventCallback') -> bool:
+    def add_integrated_listener(self, callback: "IntegratedEventCallback") -> bool:
         """
         Add listener for integrated theme/navigation events
 
@@ -337,7 +344,7 @@ class IIntegratedEventManager(ABC):
         pass
 
     @abstractmethod
-    def remove_integrated_listener(self, callback: 'IntegratedEventCallback') -> bool:
+    def remove_integrated_listener(self, callback: "IntegratedEventCallback") -> bool:
         """
         Remove integrated event listener
 
@@ -350,7 +357,9 @@ class IIntegratedEventManager(ABC):
         pass
 
     @abstractmethod
-    def emit_theme_navigation_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    def emit_theme_navigation_event(
+        self, event_type: str, data: Dict[str, Any]
+    ) -> None:
         """
         Emit an integrated theme/navigation event
 
@@ -493,7 +502,9 @@ class IPerformanceIntegration(ABC):
         pass
 
     @abstractmethod
-    def log_integration_operation(self, operation: str, duration: float, details: Dict[str, Any]) -> None:
+    def log_integration_operation(
+        self, operation: str, duration: float, details: Dict[str, Any]
+    ) -> None:
         """
         Log performance data for an integration operation
 
@@ -526,7 +537,9 @@ class IPerformanceIntegration(ABC):
 
 
 # Type aliases for convenience
-IntegratedEventCallback = Callable[[str, Dict[str, Any]], None]  # (event_type, data) -> None
+IntegratedEventCallback = Callable[
+    [str, Dict[str, Any]], None
+]  # (event_type, data) -> None
 ThemeNavigationConfig = Dict[str, Any]  # Configuration dictionary
 IntegrationMetrics = Dict[str, Any]  # Performance metrics dictionary
 StyleProperties = Dict[str, str]  # Style property dictionary
