@@ -9,7 +9,7 @@ Author: Kiro AI Integration System
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QMutex, QObject, QTimer, Signal
 from PySide6.QtGui import QPixmap
@@ -32,16 +32,15 @@ from .unified_cache import UnifiedCacheSystem
 class UIIntegrationState:
     """State tracking for UI integration"""
 
-    current_folder: Optional[Path] = None
-    selected_image: Optional[Path] = None
-    loaded_images: List[Path] = field(default_factory=list)
-    thumbnail_cache_status: Dict[str, Any] = field(default_factory=dict)
+    current_folder: Path | None = None
+    selected_image: Path | None = None
+    loaded_images: list[Path] = field(default_factory=list)
+    thumbnail_cache_status: dict[str, Any] = field(default_factory=dict)
     theme_transition_active: bool = False
     exif_loading_active: bool = False
     map_rendering_active: bool = False
     ui_responsive: bool = True
-    last_integration_update: Optional[datetime] = None
-
+    last_integration_update: datetime | None = None
 
 class UIIntegrationController(QObject):
     """
@@ -278,7 +277,7 @@ class UIIntegrationController(QObject):
                 AIComponent.KIRO,
             )
 
-    def _process_folder_contents(self, folder_path: Path, image_files: List[Path]):
+    def _process_folder_contents(self, folder_path: Path, image_files: list[Path]):
         """Process loaded folder contents"""
         try:
             with self.ui_mutex:
@@ -307,7 +306,7 @@ class UIIntegrationController(QObject):
                 AIComponent.KIRO,
             )
 
-    def _generate_thumbnails_async(self, image_files: List[Path]):
+    def _generate_thumbnails_async(self, image_files: list[Path]):
         """Generate thumbnails asynchronously"""
         try:
             thumbnail_size = self.state_manager.get_state().thumbnail_size
@@ -627,7 +626,7 @@ class UIIntegrationController(QObject):
                 AIComponent.CURSOR,
             )
 
-    def _handle_image_processed(self, image_path: Path, result: Dict[str, Any]):
+    def _handle_image_processed(self, image_path: Path, result: dict[str, Any]):
         """Handle image processing completion"""
         try:
             # Update processing status
@@ -649,7 +648,7 @@ class UIIntegrationController(QObject):
                 AIComponent.COPILOT,
             )
 
-    def _handle_exif_extracted(self, image_path: Path, exif_data: Dict[str, Any]):
+    def _handle_exif_extracted(self, image_path: Path, exif_data: dict[str, Any]):
         """Handle EXIF data extraction"""
         try:
             # Emit EXIF data ready signal

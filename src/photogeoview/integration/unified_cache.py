@@ -12,18 +12,19 @@ Author: Kiro AI Integration System
 
 import pickle
 import threading
-import weakref
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
 from .models import AIComponent, CacheEntry
 
+if TYPE_CHECKING:
+    import weakref
 
 @dataclass
 class CacheStats:
@@ -40,7 +41,6 @@ class CacheStats:
         """Update hit rate calculation"""
         total = self.hits + self.misses
         self.hit_rate = self.hits / total if total > 0 else 0.0
-
 
 class LRUCache:
     """
@@ -67,7 +67,7 @@ class LRUCache:
         # Statistics
         self.stats = CacheStats()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Get item from cache
 
@@ -102,7 +102,7 @@ class LRUCache:
             self.stats.update_hit_rate()
             return None
 
-    def put(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> bool:
+    def put(self, key: str, value: Any, ttl_seconds: int | None = None) -> bool:
         """
         Put item in cache
 
@@ -183,7 +183,7 @@ class LRUCache:
                 break
 
             # Remove least recently used item
-            oldest_key, oldest_entry = self._cache.popitem(last=False)
+            _oldest_key, oldest_entry = self._cache.popitem(last=False)
             self.stats.size_bytes -= oldest_entry.size_bytes
             self.stats.evictions += 1
 
@@ -214,11 +214,10 @@ class LRUCache:
         with self._lock:
             return self.stats
 
-    def get_keys(self) -> List[str]:
+    def get_keys(self) -> list[str]:
         """Get all cache keys"""
         with self._lock:
             return list(self._cache.keys())
-
 
 class UnifiedCacheSystem:
     """
@@ -286,7 +285,7 @@ class UnifiedCacheSystem:
         self.cleanup_interval = timedelta(minutes=5)
 
         # Weak references to objects for automatic cleanup
-        self.weak_refs: Dict[str, weakref.ref] = {}
+        self.weak_refs: dict[str, weakref.ref] = {}
 
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
@@ -294,7 +293,7 @@ class UnifiedCacheSystem:
             f"Unified cache system initialized with {len(self.caches)} cache types",
         )
 
-    def _load_cache_config(self) -> Dict[str, Any]:
+    def _load_cache_config(self) -> dict[str, Any]:
         """Load cache configuration from config manager"""
 
         default_config = {
@@ -329,7 +328,7 @@ class UnifiedCacheSystem:
 
     def get(
         self, cache_type: str, key: str, component: AIComponent = AIComponent.KIRO
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """
         Get item from specified cache
 
@@ -375,7 +374,7 @@ class UnifiedCacheSystem:
         cache_type: str,
         key: str,
         value: Any,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
         component: AIComponent = AIComponent.KIRO,
     ) -> bool:
         """
@@ -456,7 +455,7 @@ class UnifiedCacheSystem:
             )
             return False
 
-    def clear(self, cache_type: Optional[str] = None):
+    def clear(self, cache_type: str | None = None):
         """
         Clear cache(s)
 
@@ -476,7 +475,7 @@ class UnifiedCacheSystem:
                         )
                 else:
                     # Clear all caches
-                    for cache_name, cache in self.caches.items():
+                    for _cache_name, cache in self.caches.items():
                         cache.clear()
 
                     self.weak_refs.clear()
@@ -507,7 +506,7 @@ class UnifiedCacheSystem:
 
     def get_cached_image(
         self, image_path: Path, component: AIComponent = AIComponent.COPILOT
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Get cached image data"""
         key = self._generate_image_key(image_path)
         return self.get("image", key, component=component)
@@ -515,7 +514,7 @@ class UnifiedCacheSystem:
     def cache_thumbnail(
         self,
         image_path: Path,
-        size: Tuple[int, int],
+        size: tuple[int, int],
         thumbnail_data: Any,
         component: AIComponent = AIComponent.CURSOR,
     ) -> bool:
@@ -526,9 +525,9 @@ class UnifiedCacheSystem:
     def get_cached_thumbnail(
         self,
         image_path: Path,
-        size: Tuple[int, int],
+        size: tuple[int, int],
         component: AIComponent = AIComponent.CURSOR,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Get cached thumbnail data"""
         key = self._generate_thumbnail_key(image_path, size)
         return self.get("thumbnail", key, component=component)
@@ -545,14 +544,14 @@ class UnifiedCacheSystem:
 
     def get_cached_metadata(
         self, image_path: Path, component: AIComponent = AIComponent.COPILOT
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Get cached image metadata"""
         key = self._generate_metadata_key(image_path)
         return self.get("metadata", key, component=component)
 
     def cache_map(
         self,
-        center: Tuple[float, float],
+        center: tuple[float, float],
         zoom: int,
         map_data: Any,
         component: AIComponent = AIComponent.COPILOT,
@@ -565,10 +564,10 @@ class UnifiedCacheSystem:
 
     def get_cached_map(
         self,
-        center: Tuple[float, float],
+        center: tuple[float, float],
         zoom: int,
         component: AIComponent = AIComponent.COPILOT,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Get cached map data"""
         key = self._generate_map_key(center, zoom)
         return self.get("map", key, component=component)
@@ -583,7 +582,7 @@ class UnifiedCacheSystem:
         except Exception:
             return f"img_{image_path.stem}_{hash(str(image_path))}"
 
-    def _generate_thumbnail_key(self, image_path: Path, size: Tuple[int, int]) -> str:
+    def _generate_thumbnail_key(self, image_path: Path, size: tuple[int, int]) -> str:
         """Generate cache key for thumbnail"""
         base_key = self._generate_image_key(image_path)
         return f"thumb_{base_key}_{size[0]}x{size[1]}"
@@ -593,7 +592,7 @@ class UnifiedCacheSystem:
         base_key = self._generate_image_key(image_path)
         return f"meta_{base_key}"
 
-    def _generate_map_key(self, center: Tuple[float, float], zoom: int) -> str:
+    def _generate_map_key(self, center: tuple[float, float], zoom: int) -> str:
         """Generate cache key for map"""
         lat, lon = center
         return f"map_{lat:.4f}_{lon:.4f}_{zoom}"
@@ -615,7 +614,7 @@ class UnifiedCacheSystem:
             with self._global_lock:
                 total_removed = 0
 
-                for cache_name, cache in self.caches.items():
+                for _cache_name, cache in self.caches.items():
                     with cache._lock:
                         expired_keys = []
 
@@ -648,7 +647,7 @@ class UnifiedCacheSystem:
 
     # Statistics and monitoring
 
-    def get_cache_stats(self) -> Dict[str, Dict[str, Any]]:
+    def get_cache_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all caches"""
 
         try:
@@ -688,7 +687,7 @@ class UnifiedCacheSystem:
         except Exception:
             return 0.0
 
-    def get_cache_summary(self) -> Dict[str, Any]:
+    def get_cache_summary(self) -> dict[str, Any]:
         """Get summary of cache system"""
 
         try:
@@ -727,7 +726,7 @@ class UnifiedCacheSystem:
 
     # Configuration management
 
-    def update_cache_config(self, new_config: Dict[str, Any]):
+    def update_cache_config(self, new_config: dict[str, Any]):
         """Update cache configuration"""
 
         try:

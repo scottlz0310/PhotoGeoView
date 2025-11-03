@@ -11,8 +11,9 @@ Requirements: 1.2, 1.3, 1.4, 5.1, 5.2
 
 import asyncio
 import threading
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Set
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -35,7 +36,7 @@ class ThemeIntegrationController:
         self,
         config_manager: ConfigManager,
         logger_system: LoggerSystem,
-        error_handler: Optional[IntegratedErrorHandler] = None,
+        error_handler: IntegratedErrorHandler | None = None,
     ):
         """
         Initialize the theme integration controller
@@ -51,18 +52,18 @@ class ThemeIntegrationController:
         self.error_handler = error_handler or IntegratedErrorHandler(logger_system)
 
         # Theme management state
-        self.current_theme: Optional[ThemeConfiguration] = None
-        self.available_themes: Dict[str, ThemeInfo] = {}
-        self.theme_managers: Dict[str, IThemeManager] = {}
+        self.current_theme: ThemeConfiguration | None = None
+        self.available_themes: dict[str, ThemeInfo] = {}
+        self.theme_managers: dict[str, IThemeManager] = {}
 
         # Component registration system
         self.registered_components: Set[IThemeAware] = set()
-        self.component_registry: Dict[str, IThemeAware] = {}
+        self.component_registry: dict[str, IThemeAware] = {}
 
         # Theme change notification system
-        self.theme_change_listeners: List[Callable[[str, str], None]] = []
-        self.theme_applied_listeners: List[Callable[[ThemeConfiguration], None]] = []
-        self.theme_error_listeners: List[Callable[[str, str], None]] = []
+        self.theme_change_listeners: list[Callable[[str, str], None]] = []
+        self.theme_applied_listeners: list[Callable[[ThemeConfiguration], None]] = []
+        self.theme_error_listeners: list[Callable[[str, str], None]] = []
 
         # Thread safety
         self._lock = threading.RLock()
@@ -79,8 +80,8 @@ class ThemeIntegrationController:
         self.max_retry_attempts = 3
 
         # Performance tracking
-        self.theme_switch_times: List[float] = []
-        self.component_application_times: Dict[str, List[float]] = {}
+        self.theme_switch_times: list[float] = []
+        self.component_application_times: dict[str, list[float]] = {}
 
         # Initialize controller
         self._initialize()
@@ -110,7 +111,7 @@ class ThemeIntegrationController:
     def _load_theme_preferences(self) -> None:
         """Load theme preferences from configuration"""
         try:
-            preferences = self.config_manager.get_setting(
+            self.config_manager.get_setting(
                 self.theme_preferences_key, {}
             )
 
@@ -270,7 +271,7 @@ class ThemeIntegrationController:
     # Component Registration
 
     def register_component(
-        self, component: IThemeAware, component_id: Optional[str] = None
+        self, component: IThemeAware, component_id: str | None = None
     ) -> bool:
         """
         Register a theme-aware component
@@ -321,7 +322,7 @@ class ThemeIntegrationController:
             return False
 
     def unregister_component(
-        self, component: IThemeAware, component_id: Optional[str] = None
+        self, component: IThemeAware, component_id: str | None = None
     ) -> bool:
         """
         Unregister a theme-aware component
@@ -365,7 +366,7 @@ class ThemeIntegrationController:
             )
             return False
 
-    def get_registered_component(self, component_id: str) -> Optional[IThemeAware]:
+    def get_registered_component(self, component_id: str) -> IThemeAware | None:
         """
         Get a registered component by ID
 
@@ -472,7 +473,7 @@ class ThemeIntegrationController:
 
     async def _load_theme_configuration(
         self, theme_name: str
-    ) -> Optional[ThemeConfiguration]:
+    ) -> ThemeConfiguration | None:
         """Load theme configuration from theme managers"""
         try:
             for manager_name, theme_manager in self.theme_managers.items():
@@ -503,7 +504,7 @@ class ThemeIntegrationController:
         """Apply theme to all registered theme managers"""
         try:
             success_count = 0
-            total_managers = len(self.theme_managers)
+            len(self.theme_managers)
 
             for manager_name, theme_manager in self.theme_managers.items():
                 try:
@@ -567,7 +568,7 @@ class ThemeIntegrationController:
                             f"Component theme application failed: {result}"
                         )
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.logger.warning(
                     f"Theme application timed out after {self.theme_application_timeout}s"
                 )
@@ -787,7 +788,7 @@ class ThemeIntegrationController:
             return False
 
     async def _notify_theme_change(
-        self, old_theme: Optional[str], new_theme: str
+        self, old_theme: str | None, new_theme: str
     ) -> None:
         """Notify theme change listeners"""
         try:
@@ -846,19 +847,19 @@ class ThemeIntegrationController:
 
     # Public API
 
-    def get_current_theme(self) -> Optional[ThemeConfiguration]:
+    def get_current_theme(self) -> ThemeConfiguration | None:
         """Get the currently active theme"""
         return self.current_theme
 
-    def get_available_themes(self) -> List[ThemeInfo]:
+    def get_available_themes(self) -> list[ThemeInfo]:
         """Get list of available themes"""
         return list(self.available_themes.values())
 
-    def get_theme_history(self) -> List[Dict[str, Any]]:
+    def get_theme_history(self) -> list[dict[str, Any]]:
         """Get theme application history"""
         return self.config_manager.get_setting(self.theme_history_key, [])
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get theme performance metrics"""
         try:
             return {

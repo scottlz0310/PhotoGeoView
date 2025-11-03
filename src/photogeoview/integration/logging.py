@@ -15,7 +15,7 @@ import logging.handlers
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .interfaces import ILogger
 
@@ -145,7 +145,7 @@ class IntegratedLogger(ILogger):
 
         return logger
 
-    def _get_component_from_extra(self, extra: Optional[Dict[str, Any]]) -> str:
+    def _get_component_from_extra(self, extra: dict[str, Any] | None) -> str:
         """Extract component name from extra data"""
         if not extra:
             return "main"
@@ -162,7 +162,7 @@ class IntegratedLogger(ILogger):
             return "main"
 
     def _log_with_component(
-        self, level: int, message: str, extra: Optional[Dict[str, Any]] = None
+        self, level: int, message: str, extra: dict[str, Any] | None = None
     ):
         """Log message with appropriate component logger"""
         with self._lock:
@@ -170,10 +170,7 @@ class IntegratedLogger(ILogger):
             component = self._get_component_from_extra(extra)
 
             # Get appropriate logger
-            if component in self.component_loggers:
-                logger = self.component_loggers[component]
-            else:
-                logger = self.main_logger
+            logger = self.component_loggers.get(component, self.main_logger)
 
             # Add session info to extra data
             if extra is None:
@@ -196,19 +193,19 @@ class IntegratedLogger(ILogger):
                     level, f"[{component.upper()}] {message}", extra=extra
                 )
 
-    def debug(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def debug(self, message: str, extra: dict[str, Any] | None = None) -> None:
         """Log debug message"""
         self._log_with_component(logging.DEBUG, message, extra)
 
-    def info(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def info(self, message: str, extra: dict[str, Any] | None = None) -> None:
         """Log info message"""
         self._log_with_component(logging.INFO, message, extra)
 
-    def warning(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def warning(self, message: str, extra: dict[str, Any] | None = None) -> None:
         """Log warning message"""
         self._log_with_component(logging.WARNING, message, extra)
 
-    def error(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def error(self, message: str, extra: dict[str, Any] | None = None) -> None:
         """Log error message"""
         with self._lock:
             # Track error counts
@@ -218,7 +215,7 @@ class IntegratedLogger(ILogger):
 
         self._log_with_component(logging.ERROR, message, extra)
 
-    def critical(self, message: str, extra: Optional[Dict[str, Any]] = None) -> None:
+    def critical(self, message: str, extra: dict[str, Any] | None = None) -> None:
         """Log critical message"""
         with self._lock:
             # Track critical errors
@@ -234,7 +231,7 @@ class IntegratedLogger(ILogger):
         operation: str,
         duration_ms: float,
         success: bool = True,
-        additional_data: Optional[Dict[str, Any]] = None,
+        additional_data: dict[str, Any] | None = None,
     ):
         """
         Log performance metrics
@@ -260,7 +257,7 @@ class IntegratedLogger(ILogger):
         # Log as JSON for easy parsing
         self.performance_logger.info(json.dumps(perf_data))
 
-    def log_user_action(self, action: str, context: Optional[Dict[str, Any]] = None):
+    def log_user_action(self, action: str, context: dict[str, Any] | None = None):
         """
         Log user actions for UX analysis
 
@@ -284,7 +281,7 @@ class IntegratedLogger(ILogger):
         event_type: str,
         source_ai: str,
         target_ai: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         """
         Log AI integration events
@@ -311,7 +308,7 @@ class IntegratedLogger(ILogger):
             extra=event_data,
         )
 
-    def get_error_statistics(self) -> Dict[str, Any]:
+    def get_error_statistics(self) -> dict[str, Any]:
         """Get error statistics across all components"""
         with self._lock:
             return {
@@ -363,7 +360,6 @@ class IntegratedLogger(ILogger):
 
         for handler in self.performance_logger.handlers:
             handler.close()
-
 
 def create_integrated_logger(
     log_dir: Path = Path("logs"), log_level: int = logging.INFO

@@ -14,10 +14,11 @@ import copy
 import json
 import threading
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -34,7 +35,6 @@ class StateChangeEvent:
     new_value: Any
     component: AIComponent
     timestamp: datetime = field(default_factory=datetime.now)
-
 
 class StateManager:
     """
@@ -68,11 +68,11 @@ class StateManager:
         self.state_lock = threading.RLock()
 
         # Change listeners
-        self.change_listeners: Dict[str, List[Callable]] = defaultdict(list)
-        self.global_listeners: List[Callable] = []
+        self.change_listeners: dict[str, list[Callable]] = defaultdict(list)
+        self.global_listeners: list[Callable] = []
 
         # State history for undo/redo functionality
-        self.state_history: List[Dict[str, Any]] = []
+        self.state_history: list[dict[str, Any]] = []
         self.max_history_size = 50
         self.current_history_index = -1
 
@@ -84,8 +84,8 @@ class StateManager:
         self.last_save_time = datetime.now()
 
         # State validation
-        self.validators: Dict[str, Callable[[Any], bool]] = {}
-        self.migrations: Dict[str, Callable[[Any], Any]] = {}
+        self.validators: dict[str, Callable[[Any], bool]] = {}
+        self.migrations: dict[str, Callable[[Any], Any]] = {}
 
         # Performance tracking
         self.state_access_count = 0
@@ -513,7 +513,7 @@ class StateManager:
 
     # State persistence
 
-    def save_state(self, file_path: Optional[Path] = None) -> bool:
+    def save_state(self, file_path: Path | None = None) -> bool:
         """
         Save current state to file
 
@@ -568,7 +568,7 @@ class StateManager:
                 )
                 return False
 
-    def _load_state(self, file_path: Optional[Path] = None) -> bool:
+    def _load_state(self, file_path: Path | None = None) -> bool:
         """Load state from file"""
 
         with self.state_lock:
@@ -626,7 +626,7 @@ class StateManager:
         if (now - self.last_save_time).total_seconds() >= self.auto_save_interval:
             self.save_state()
 
-    def _state_to_dict(self) -> Dict[str, Any]:
+    def _state_to_dict(self) -> dict[str, Any]:
         """Convert application state to dictionary"""
 
         try:
@@ -649,7 +649,7 @@ class StateManager:
             return {}
 
     def _restore_state_from_dict(
-        self, state_dict: Dict[str, Any], add_to_history: bool = True
+        self, state_dict: dict[str, Any], add_to_history: bool = True
     ):
         """Restore state from dictionary"""
 
@@ -692,8 +692,8 @@ class StateManager:
             self.logger_system.log_error(AIComponent.KIRO, e, "state_restoration", {})
 
     def _migrate_state(
-        self, state_dict: Dict[str, Any], version: str
-    ) -> Dict[str, Any]:
+        self, state_dict: dict[str, Any], version: str
+    ) -> dict[str, Any]:
         """Migrate state from older versions"""
 
         try:
@@ -717,7 +717,7 @@ class StateManager:
 
     # Performance and monitoring
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary of state management"""
 
         try:
@@ -748,7 +748,7 @@ class StateManager:
             )
             return {"status": "error"}
 
-    def get_state_summary(self) -> Dict[str, Any]:
+    def get_state_summary(self) -> dict[str, Any]:
         """Get summary of current application state"""
 
         try:

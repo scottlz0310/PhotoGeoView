@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class ThemeType(Enum):
@@ -24,12 +24,10 @@ class ThemeType(Enum):
     CUSTOM = "custom"
     IMPORTED = "imported"
 
-
 class ValidationError(Exception):
     """Theme validation error"""
 
     pass
-
 
 @dataclass
 class FontConfig:
@@ -70,7 +68,6 @@ class FontConfig:
     def to_css(self) -> str:
         """Convert to CSS font specification"""
         return f"{self.style} {self.weight} {self.size}px {self.family}"
-
 
 @dataclass
 class ColorScheme:
@@ -143,10 +140,7 @@ class ColorScheme:
             "lightgrey",
             "transparent",
         }
-        if color.lower() in named_colors:
-            return True
-
-        return False
+        return color.lower() in named_colors
 
     @property
     def is_dark_theme(self) -> bool:
@@ -163,7 +157,6 @@ class ColorScheme:
             return luminance < 0.5
 
         return False
-
 
 @dataclass
 class ThemeConfiguration:
@@ -186,27 +179,27 @@ class ThemeConfiguration:
     colors: ColorScheme = None
 
     # Font configuration
-    fonts: Dict[str, FontConfig] = field(default_factory=dict)
+    fonts: dict[str, FontConfig] = field(default_factory=dict)
 
     # Style properties
-    styles: Dict[str, str] = field(default_factory=dict)
+    styles: dict[str, str] = field(default_factory=dict)
 
     # Custom properties for extensibility
-    custom_properties: Dict[str, Any] = field(default_factory=dict)
+    custom_properties: dict[str, Any] = field(default_factory=dict)
 
     # File system information
-    file_path: Optional[Path] = None
+    file_path: Path | None = None
     is_custom: bool = False
 
     # Metadata
     created_date: datetime = field(default_factory=datetime.now)
     modified_date: datetime = field(default_factory=datetime.now)
     usage_count: int = 0
-    last_used: Optional[datetime] = None
+    last_used: datetime | None = None
 
     # Validation status
     is_valid: bool = True
-    validation_errors: List[str] = field(default_factory=list)
+    validation_errors: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Post-initialization validation and setup"""
@@ -244,7 +237,7 @@ class ThemeConfiguration:
             success="#4CAF50",
         )
 
-    def _get_default_fonts(self) -> Dict[str, FontConfig]:
+    def _get_default_fonts(self) -> dict[str, FontConfig]:
         """Get default font configuration"""
         return {
             "default": FontConfig("Arial", 12),
@@ -290,7 +283,7 @@ class ThemeConfiguration:
             self.validation_errors.append(f"Color validation error: {e!s}")
 
         # Validate fonts
-        for font_name, font_config in self.fonts.items():
+        for font_name, _font_config in self.fonts.items():
             try:
                 # FontConfig validation happens in __post_init__
                 pass
@@ -308,7 +301,7 @@ class ThemeConfiguration:
         self.is_valid = len(self.validation_errors) == 0
         return self.is_valid
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert theme configuration to dictionary"""
         return {
             "name": self.name,
@@ -347,7 +340,7 @@ class ThemeConfiguration:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ThemeConfiguration":
+    def from_dict(cls, data: dict[str, Any]) -> "ThemeConfiguration":
         """Create theme configuration from dictionary"""
         # Parse colors
         colors_data = data.get("colors", {})
@@ -465,7 +458,6 @@ class ThemeConfiguration:
 
         return "\n".join([":root {"] + [f"  {var}" for var in css_vars] + ["}"])
 
-
 @dataclass
 class ThemeInfo:
     """
@@ -479,9 +471,9 @@ class ThemeInfo:
     version: str
     theme_type: ThemeType
     is_dark: bool
-    preview_colors: Dict[str, str]
+    preview_colors: dict[str, str]
     is_available: bool = True
-    file_path: Optional[Path] = None
+    file_path: Path | None = None
 
     @classmethod
     def from_theme_config(cls, config: ThemeConfiguration) -> "ThemeInfo":

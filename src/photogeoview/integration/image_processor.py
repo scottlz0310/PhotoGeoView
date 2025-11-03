@@ -9,12 +9,13 @@ Author: Kiro AI Integration System
 """
 
 import asyncio
+import contextlib
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -44,7 +45,6 @@ try:
 except ImportError:
     CV2_AVAILABLE = False
 
-
 class CS4CodingImageProcessor(IImageProcessor):
     """
     CS4Coding ImageProcessor with Kiro optimization
@@ -72,7 +72,7 @@ class CS4CodingImageProcessor(IImageProcessor):
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
         # Performance tracking
-        self.processing_times: List[float] = []
+        self.processing_times: list[float] = []
         self.cache_hits = 0
         self.cache_misses = 0
 
@@ -80,8 +80,8 @@ class CS4CodingImageProcessor(IImageProcessor):
         self.executor = ThreadPoolExecutor(max_workers=4)
 
         # Cache for processed images and metadata
-        self.image_cache: Dict[str, Any] = {}
-        self.metadata_cache: Dict[str, ImageMetadata] = {}
+        self.image_cache: dict[str, Any] = {}
+        self.metadata_cache: dict[str, ImageMetadata] = {}
         self.cache_lock = threading.RLock()
 
         # Supported formats (CS4Coding standard)
@@ -106,7 +106,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             "CS4Coding ImageProcessor initialized",
         )
 
-    def load_image(self, path: Path) -> Optional[Any]:
+    def load_image(self, path: Path) -> Any | None:
         """
         Load an image from the specified path
 
@@ -192,7 +192,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             )
             return None
 
-    def _load_with_pil(self, path: Path) -> Optional[Any]:
+    def _load_with_pil(self, path: Path) -> Any | None:
         """Load image using PIL"""
 
         try:
@@ -209,7 +209,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             )
             return None
 
-    def _load_with_cv2(self, path: Path) -> Optional[Any]:
+    def _load_with_cv2(self, path: Path) -> Any | None:
         """Load image using OpenCV"""
 
         try:
@@ -227,7 +227,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             )
             return None
 
-    def generate_thumbnail(self, image: Any, size: Tuple[int, int]) -> Optional[Any]:
+    def generate_thumbnail(self, image: Any, size: tuple[int, int]) -> Any | None:
         """
         Generate a thumbnail from the given image
 
@@ -292,7 +292,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             )
             return None
 
-    def extract_exif(self, path: Path) -> Dict[str, Any]:
+    def extract_exif(self, path: Path) -> dict[str, Any]:
         """
         Extract EXIF metadata from image file (CS4Coding precision)
 
@@ -373,7 +373,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             )
             return {}
 
-    def _extract_with_exifread(self, path: Path) -> Dict[str, Any]:
+    def _extract_with_exifread(self, path: Path) -> dict[str, Any]:
         """Extract EXIF using exifread library (CS4Coding implementation)"""
 
         exif_data = {}
@@ -398,7 +398,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         return exif_data
 
-    def _parse_exifread_tags(self, tags: Dict[str, Any]) -> Dict[str, str]:
+    def _parse_exifread_tags(self, tags: dict[str, Any]) -> dict[str, str]:
         """Parse ExifRead tags into readable format (CS4Coding implementation)"""
 
         parsed = {}
@@ -473,8 +473,8 @@ class CS4CodingImageProcessor(IImageProcessor):
         return parsed
 
     def _extract_gps_from_exifread(
-        self, tags: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        self, tags: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Extract GPS data from ExifRead tags (CS4Coding implementation)"""
 
         try:
@@ -519,7 +519,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                 try:
                     altitude = self._parse_rational(str(altitude_tag))
                     if altitude is not None:
-                        # 高度参照（0=海抜、1=海抜以下）
+                        # 高度参照(0=海抜、1=海抜以下)
                         if str(altitude_ref_tag) == "1":
                             altitude = -altitude
                         gps_data["GPS Altitude"] = altitude
@@ -555,7 +555,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         return None
 
-    def _convert_gps_to_decimal(self, gps_coord: Any, gps_ref: Any) -> Optional[float]:
+    def _convert_gps_to_decimal(self, gps_coord: Any, gps_ref: Any) -> float | None:
         """Convert GPS coordinates from DMS to decimal (CS4Coding implementation)"""
 
         try:
@@ -600,7 +600,7 @@ class CS4CodingImageProcessor(IImageProcessor):
         except Exception:
             return None
 
-    def _parse_rational(self, rational_str: str) -> Optional[float]:
+    def _parse_rational(self, rational_str: str) -> float | None:
         """Parse a rational number string (CS4Coding implementation)"""
 
         try:
@@ -618,7 +618,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         return None
 
-    def _extract_with_pil(self, path: Path) -> Dict[str, Any]:
+    def _extract_with_pil(self, path: Path) -> dict[str, Any]:
         """Extract EXIF using PIL library"""
 
         exif_data = {}
@@ -637,7 +637,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         return exif_data
 
-    def _parse_pil_exif(self, exif_dict: Dict[int, Any]) -> Dict[str, str]:
+    def _parse_pil_exif(self, exif_dict: dict[int, Any]) -> dict[str, str]:
         """Parse PIL EXIF dictionary"""
 
         from PIL.ExifTags import TAGS
@@ -654,7 +654,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         return parsed
 
-    def get_supported_formats(self) -> List[str]:
+    def get_supported_formats(self) -> list[str]:
         """Get list of supported image formats"""
         return self.supported_formats.copy()
 
@@ -706,7 +706,7 @@ class CS4CodingImageProcessor(IImageProcessor):
         lon_dir = "E" if lon >= 0 else "W"
         return f"{abs(lat):.{precision}f}°{lat_dir}, {abs(lon):.{precision}f}°{lon_dir}"
 
-    def _get_file_info(self, path: Path) -> Dict[str, Any]:
+    def _get_file_info(self, path: Path) -> dict[str, Any]:
         """Get basic file information"""
 
         try:
@@ -747,7 +747,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             return f"{size_bytes} B"
 
     def _create_image_metadata(
-        self, path: Path, exif_data: Dict[str, Any]
+        self, path: Path, exif_data: dict[str, Any]
     ) -> ImageMetadata:
         """Create ImageMetadata object from EXIF data"""
 
@@ -771,18 +771,14 @@ class CS4CodingImageProcessor(IImageProcessor):
 
             # Technical settings
             if "F-Number" in exif_data:
-                try:
+                with contextlib.suppress(ValueError, AttributeError):
                     metadata.aperture = float(exif_data["F-Number"].replace("f/", ""))
-                except (ValueError, AttributeError):
-                    pass
 
             metadata.shutter_speed = exif_data.get("Exposure Time")
 
             if "ISO Speed" in exif_data:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     metadata.iso = int(exif_data["ISO Speed"])
-                except (ValueError, TypeError):
-                    pass
 
             if "Focal Length" in exif_data:
                 try:
@@ -796,16 +792,12 @@ class CS4CodingImageProcessor(IImageProcessor):
 
             # Image dimensions
             if "Image Width" in exif_data:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     metadata.width = int(exif_data["Image Width"])
-                except (ValueError, TypeError):
-                    pass
 
             if "Image Height" in exif_data:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     metadata.height = int(exif_data["Image Height"])
-                except (ValueError, TypeError):
-                    pass
 
             # GPS information
             if "gps_coordinates" in exif_data:
@@ -830,7 +822,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                 ai_processor=AIComponent.COPILOT,
             )
 
-    def _metadata_to_dict(self, metadata: ImageMetadata) -> Dict[str, Any]:
+    def _metadata_to_dict(self, metadata: ImageMetadata) -> dict[str, Any]:
         """Convert ImageMetadata to dictionary"""
 
         result = {
@@ -872,7 +864,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
     # Performance monitoring methods (Kiro enhancement)
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics"""
 
         with self.cache_lock:
@@ -914,7 +906,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             AIComponent.KIRO, "cache_clear", "ImageProcessor caches cleared"
         )
 
-    async def process_image_async(self, path: Path) -> Optional[ImageMetadata]:
+    async def process_image_async(self, path: Path) -> ImageMetadata | None:
         """
         Asynchronously process an image and return metadata
 

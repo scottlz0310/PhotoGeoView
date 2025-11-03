@@ -12,7 +12,7 @@ import asyncio
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Set
 
 from .logging_system import LoggerSystem
 
@@ -23,11 +23,11 @@ class ResourceCache:
     def __init__(self, max_size: int = 1000, ttl_seconds: int = 300):
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self._cache: Dict[str, Tuple[Any, float]] = {}
-        self._access_times: Dict[str, float] = {}
+        self._cache: dict[str, tuple[Any, float]] = {}
+        self._access_times: dict[str, float] = {}
         self._lock = threading.RLock()
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get cached value if not expired"""
         with self._lock:
             if key not in self._cache:
@@ -83,15 +83,14 @@ class ResourceCache:
         """Get current cache size"""
         return len(self._cache)
 
-
 class LazyResourceLoader:
     """Lazy loading manager for theme resources"""
 
     def __init__(self, logger_system: LoggerSystem):
         self.logger = logger_system.get_logger(__name__)
         self._loaded_resources: Set[str] = set()
-        self._loading_tasks: Dict[str, asyncio.Task] = {}
-        self._resource_callbacks: Dict[str, List[callable]] = {}
+        self._loading_tasks: dict[str, asyncio.Task] = {}
+        self._resource_callbacks: dict[str, list[callable]] = {}
         self._lock = threading.RLock()
 
     def is_loaded(self, resource_id: str) -> bool:
@@ -187,15 +186,14 @@ class LazyResourceLoader:
                 self._loading_tasks[resource_id].cancel()
                 del self._loading_tasks[resource_id]
 
-
 class PerformanceMonitor:
     """Performance monitoring for theme and navigation operations"""
 
     def __init__(self, logger_system: LoggerSystem):
         self.logger = logger_system.get_logger(__name__)
-        self._metrics: Dict[str, List[float]] = {}
-        self._counters: Dict[str, int] = {}
-        self._start_times: Dict[str, float] = {}
+        self._metrics: dict[str, list[float]] = {}
+        self._counters: dict[str, int] = {}
+        self._start_times: dict[str, float] = {}
         self._lock = threading.RLock()
         self.max_metric_history = 1000
 
@@ -254,7 +252,7 @@ class PerformanceMonitor:
         with self._lock:
             self._counters[counter_name] = self._counters.get(counter_name, 0) + amount
 
-    def get_metrics_summary(self, metric_name: str) -> Dict[str, float]:
+    def get_metrics_summary(self, metric_name: str) -> dict[str, float]:
         """Get summary statistics for a metric"""
         with self._lock:
             if metric_name not in self._metrics or not self._metrics[metric_name]:
@@ -269,7 +267,7 @@ class PerformanceMonitor:
                 "recent_avg": sum(values[-10:]) / min(len(values), 10),
             }
 
-    def get_all_metrics(self) -> Dict[str, Dict[str, float]]:
+    def get_all_metrics(self) -> dict[str, dict[str, float]]:
         """Get summary for all metrics"""
         with self._lock:
             result = {}
@@ -277,7 +275,7 @@ class PerformanceMonitor:
                 result[metric_name] = self.get_metrics_summary(metric_name)
             return result
 
-    def get_counters(self) -> Dict[str, int]:
+    def get_counters(self) -> dict[str, int]:
         """Get all counter values"""
         with self._lock:
             return self._counters.copy()
@@ -288,7 +286,6 @@ class PerformanceMonitor:
             self._metrics.clear()
             self._counters.clear()
             self._start_times.clear()
-
 
 class PerformanceOptimizer:
     """Main performance optimizer coordinating all optimization strategies"""
@@ -310,7 +307,7 @@ class PerformanceOptimizer:
         self.enable_monitoring = True
 
         # Background optimization task
-        self._optimization_task: Optional[asyncio.Task] = None
+        self._optimization_task: asyncio.Task | None = None
         self._running = False
 
     def start_optimization(self) -> None:
@@ -410,7 +407,7 @@ class PerformanceOptimizer:
             cache_key = f"stylesheet_{theme_name}"
             self.stylesheet_cache.set(cache_key, stylesheet)
 
-    def get_cached_stylesheet(self, theme_name: str) -> Optional[str]:
+    def get_cached_stylesheet(self, theme_name: str) -> str | None:
         """Get cached stylesheet"""
         if not self.enable_caching:
             return None
@@ -420,13 +417,13 @@ class PerformanceOptimizer:
 
     # Breadcrumb optimization methods
 
-    def cache_path_info(self, path: Path, path_info: Dict[str, Any]) -> None:
+    def cache_path_info(self, path: Path, path_info: dict[str, Any]) -> None:
         """Cache path information for breadcrumb rendering"""
         if self.enable_caching:
             cache_key = f"path_{path!s}"
             self.path_cache.set(cache_key, path_info)
 
-    def get_cached_path_info(self, path: Path) -> Optional[Dict[str, Any]]:
+    def get_cached_path_info(self, path: Path) -> dict[str, Any] | None:
         """Get cached path information"""
         if not self.enable_caching:
             return None
@@ -435,8 +432,8 @@ class PerformanceOptimizer:
         return self.path_cache.get(cache_key)
 
     async def optimize_breadcrumb_rendering(
-        self, path: Path, segments: List[Any]
-    ) -> List[Any]:
+        self, path: Path, segments: list[Any]
+    ) -> list[Any]:
         """Optimize breadcrumb rendering for long paths"""
         if len(segments) <= 5:  # Short paths don't need optimization
             return segments
@@ -455,13 +452,13 @@ class PerformanceOptimizer:
 
         return optimized_segments
 
-    async def _apply_smart_truncation(self, segments: List[Any]) -> List[Any]:
+    async def _apply_smart_truncation(self, segments: list[Any]) -> list[Any]:
         """Apply smart truncation to breadcrumb segments"""
         if len(segments) <= 7:
             return segments
 
         # Keep first 2, last 3, and add ellipsis in between
-        truncated = segments[:2] + ["..."] + segments[-3:]
+        truncated = [*segments[:2], "...", *segments[-3:]]
         return truncated
 
     # Monitoring methods
@@ -498,7 +495,7 @@ class PerformanceOptimizer:
 
         return self.monitor.end_operation(operation_id, "breadcrumb_render")
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
         return {
             "metrics": self.monitor.get_all_metrics(),

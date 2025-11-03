@@ -5,7 +5,7 @@ FileSystemWatcher - ファイルシステム監視サービス
 watchdogライブラリを使用してクロスプラットフォーム対応のファイル監視機能を提供する。
 
 主な機能:
-- リアルタイムファイル変更監視（作成、削除、変更、移動）
+- リアルタイムファイル変更監視(作成、削除、変更、移動)
 - 画像ファイルのみのフィルタリング機能
 - デバウンス処理による連続イベントの抑制
 - 複数のコールバック関数登録対応
@@ -15,7 +15,7 @@ watchdogライブラリを使用してクロスプラットフォーム対応の
 - watchdogライブラリによるクロスプラットフォーム対応
 - スレッドセーフな監視状態管理
 - メモリ効率的なイベント処理
-- 自動フォールバック機能（watchdog未インストール時）
+- 自動フォールバック機能(watchdog未インストール時)
 - 統合ログシステムによる詳細な動作記録
 
 使用例:
@@ -27,10 +27,11 @@ Author: Kiro AI Integration System
 """
 
 import time
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Set
 
 try:
     from watchdog.events import FileSystemEvent, FileSystemEventHandler
@@ -56,7 +57,6 @@ class FileChangeType(Enum):
     MODIFIED = "modified"
     MOVED = "moved"
 
-
 class FileSystemWatcher:
     """
     ファイルシステム監視サービス
@@ -68,12 +68,12 @@ class FileSystemWatcher:
     - リソース効率的な監視機能
     """
 
-    # 対応画像形式の定数定義（FileDiscoveryServiceと同じ）
+    # 対応画像形式の定数定義(FileDiscoveryServiceと同じ)
     SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
 
     def __init__(
         self,
-        logger_system: Optional[LoggerSystem] = None,
+        logger_system: LoggerSystem | None = None,
         enable_monitoring: bool = True,
     ):
         """
@@ -106,8 +106,8 @@ class FileSystemWatcher:
         self.enable_monitoring = enable_monitoring and self.watchdog_available
 
         # コールバック関数の管理
-        self.change_listeners: List[
-            Callable[[Path, FileChangeType, Optional[Path]], None]
+        self.change_listeners: list[
+            Callable[[Path, FileChangeType, Path | None], None]
         ] = []
 
         # 監視統計情報
@@ -121,8 +121,8 @@ class FileSystemWatcher:
         }
 
         # パフォーマンス設定
-        self.debounce_interval = 0.5  # 連続イベントの抑制間隔（秒）
-        self.last_event_times: Dict[str, float] = {}
+        self.debounce_interval = 0.5  # 連続イベントの抑制間隔(秒)
+        self.last_event_times: dict[str, float] = {}
 
         # 初期化完了をログに記録
         self.logger_system.log_ai_operation(
@@ -137,7 +137,7 @@ class FileSystemWatcher:
         指定されたフォルダの監視を開始する
 
         このメソッドは以下の処理を実行します:
-        1. 既存の監視を停止（必要に応じて）
+        1. 既存の監視を停止(必要に応じて)
         2. フォルダの存在確認とアクセス権限チェック
         3. watchdogオブザーバーの作成と設定
         4. イベントハンドラーの登録
@@ -150,8 +150,8 @@ class FileSystemWatcher:
             bool: 監視開始に成功した場合True、失敗した場合False
 
         Note:
-            - watchdogライブラリが必要（未インストール時は自動的にFalseを返却）
-            - サブフォルダは監視対象外（recursive=False）
+            - watchdogライブラリが必要(未インストール時は自動的にFalseを返却)
+            - サブフォルダは監視対象外(recursive=False)
             - 画像ファイルのみがフィルタリング対象
             - 監視統計情報が自動的にリセットされる
         """
@@ -159,7 +159,7 @@ class FileSystemWatcher:
         # 操作コンテキストを使用してログ記録を自動化
         with self.logger_system.operation_context(
             AIComponent.KIRO, "start_file_watching"
-        ) as ctx:
+        ):
             start_time = time.time()
             watch_details = {
                 "folder_path": str(folder_path),
@@ -311,7 +311,7 @@ class FileSystemWatcher:
 
         with self.logger_system.operation_context(
             AIComponent.KIRO, "stop_file_watching"
-        ) as ctx:
+        ):
             stop_time = time.time()
             stop_details = {
                 "current_folder": (
@@ -412,7 +412,7 @@ class FileSystemWatcher:
                 return False
 
     def add_change_listener(
-        self, callback: Callable[[Path, FileChangeType, Optional[Path]], None]
+        self, callback: Callable[[Path, FileChangeType, Path | None], None]
     ):
         """
         ファイル変更通知のコールバック関数を追加する
@@ -424,8 +424,8 @@ class FileSystemWatcher:
             callback (Callable): ファイル変更時に呼び出されるコールバック関数
                 引数:
                 - file_path (Path): 変更されたファイルのパス
-                - change_type (FileChangeType): 変更タイプ（CREATED, DELETED, MODIFIED, MOVED）
-                - old_path (Optional[Path]): 移動前のパス（移動の場合のみ）
+                - change_type (FileChangeType): 変更タイプ(CREATED, DELETED, MODIFIED, MOVED)
+                - old_path (Optional[Path]): 移動前のパス(移動の場合のみ)
 
         Note:
             - 同じコールバック関数の重複登録は防止される
@@ -444,7 +444,7 @@ class FileSystemWatcher:
             )
 
     def remove_change_listener(
-        self, callback: Callable[[Path, FileChangeType, Optional[Path]], None]
+        self, callback: Callable[[Path, FileChangeType, Path | None], None]
     ):
         """
         ファイル変更通知のコールバック関数を削除する
@@ -463,7 +463,7 @@ class FileSystemWatcher:
                 level="DEBUG",
             )
 
-    def get_watch_status(self) -> Dict[str, Any]:
+    def get_watch_status(self) -> dict[str, Any]:
         """
         現在の監視状態を取得する
 
@@ -521,7 +521,7 @@ class FileSystemWatcher:
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None,
+        old_path: Path | None = None,
     ):
         """
         登録されたリスナーにファイル変更を通知する
@@ -529,7 +529,7 @@ class FileSystemWatcher:
         Args:
             file_path: 変更されたファイルのパス
             change_type: 変更タイプ
-            old_path: 移動前のパス（移動の場合のみ）
+            old_path: 移動前のパス(移動の場合のみ)
         """
 
         notification_start_time = time.time()
@@ -644,7 +644,7 @@ class FileSystemWatcher:
             level="INFO",
         )
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """
         監視パフォーマンスの要約を取得する
 
@@ -719,7 +719,6 @@ class FileSystemWatcher:
         self.logger_system.log_performance(
             AIComponent.KIRO, "watcher_detailed_performance", summary
         )
-
 
 if WATCHDOG_AVAILABLE:
 

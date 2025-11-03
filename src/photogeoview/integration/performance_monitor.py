@@ -14,9 +14,10 @@ import os
 import threading
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 import psutil
 
@@ -39,7 +40,6 @@ class PerformanceAlert:
     threshold: float
     timestamp: datetime = field(default_factory=datetime.now)
 
-
 @dataclass
 class ResourceThresholds:
     """Resource usage thresholds for alerting"""
@@ -52,7 +52,6 @@ class ResourceThresholds:
     disk_critical_percent: float = 95.0
     response_time_warning_ms: float = 1000.0
     response_time_critical_ms: float = 3000.0
-
 
 class KiroPerformanceMonitor(IPerformanceMonitor):
     """
@@ -83,15 +82,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
         # Monitoring state
         self.is_monitoring = False
-        self.monitoring_thread: Optional[threading.Thread] = None
+        self.monitoring_thread: threading.Thread | None = None
         self.monitoring_lock = threading.RLock()
 
         # Performance data storage
         self.metrics_history: deque = deque(maxlen=1000)  # Last 1000 measurements
-        self.current_metrics: Optional[PerformanceMetrics] = None
+        self.current_metrics: PerformanceMetrics | None = None
 
         # AI component tracking
-        self.ai_components: Dict[AIComponent, Dict[str, Any]] = {
+        self.ai_components: dict[AIComponent, dict[str, Any]] = {
             AIComponent.COPILOT: {
                 "status": "unknown",
                 "last_check": None,
@@ -110,9 +109,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         }
 
         # Alert system
-        self.alert_handlers: List[Callable[[PerformanceAlert], None]] = []
+        self.alert_handlers: list[Callable[[PerformanceAlert], None]] = []
         self.alert_history: deque = deque(maxlen=200)
-        self.alert_suppression: Dict[str, datetime] = {}  # Suppress duplicate alerts
+        self.alert_suppression: dict[str, datetime] = {}  # Suppress duplicate alerts
 
         # Thresholds
         self.thresholds = ResourceThresholds()
@@ -123,9 +122,9 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         self.alert_cooldown_duration = 60.0  # seconds between same alerts
 
         # Performance optimization integration
-        self.optimizer: Optional[PerformanceOptimizer] = None
+        self.optimizer: PerformanceOptimizer | None = None
         self.recent_alerts: deque = deque(maxlen=100)
-        self.alert_cooldown: Dict[str, datetime] = {}  # Prevent alert spam
+        self.alert_cooldown: dict[str, datetime] = {}  # Prevent alert spam
 
         # System info
         self.process = psutil.Process(os.getpid())
@@ -189,7 +188,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 AIComponent.KIRO,
             )
 
-    def _get_system_info(self) -> Dict[str, Any]:
+    def _get_system_info(self) -> dict[str, Any]:
         """Get basic system information"""
 
         try:
@@ -245,7 +244,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 AIComponent.KIRO, "monitoring_stop", "Performance monitoring stopped"
             )
 
-    def get_memory_usage(self) -> Dict[str, float]:
+    def get_memory_usage(self) -> dict[str, float]:
         """Get current memory usage statistics"""
 
         try:
@@ -273,7 +272,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             )
             return {}
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get comprehensive performance metrics"""
 
         try:
@@ -360,7 +359,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 AIComponent.KIRO,
             )
 
-    def get_ai_component_status(self) -> Dict[str, str]:
+    def get_ai_component_status(self) -> dict[str, str]:
         """Get status of all AI components"""
 
         try:
@@ -607,11 +606,10 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             alert_key = f"{component.value}_{metric_name}_{level}"
             now = datetime.now()
 
-            if alert_key in self.alert_cooldown:
-                if (
-                    now - self.alert_cooldown[alert_key]
-                ).total_seconds() < 60:  # 1 minute cooldown
-                    return
+            if alert_key in self.alert_cooldown and (
+                now - self.alert_cooldown[alert_key]
+            ).total_seconds() < 60:  # 1 minute cooldown
+                return
 
             # Create alert
             alert = PerformanceAlert(
@@ -669,7 +667,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
 
     # Utility methods
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get a summary of performance data"""
 
         try:
@@ -714,7 +712,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
             )
             return {"status": "error"}
 
-    def get_recent_alerts(self, minutes: int = 60) -> List[Dict[str, Any]]:
+    def get_recent_alerts(self, minutes: int = 60) -> list[dict[str, Any]]:
         """Get recent alerts within specified time window"""
 
         try:
@@ -750,7 +748,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
         self.recent_alerts.clear()
         self.alert_cooldown.clear()
 
-    def update_thresholds(self, new_thresholds: Dict[str, float]):
+    def update_thresholds(self, new_thresholds: dict[str, float]):
         """Update performance thresholds"""
 
         try:
@@ -922,7 +920,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 )
                 time.sleep(5.0)  # Longer sleep on error
 
-    def _collect_enhanced_metrics(self) -> Optional[PerformanceMetrics]:
+    def _collect_enhanced_metrics(self) -> PerformanceMetrics | None:
         """Collect enhanced performance metrics"""
         try:
             process = psutil.Process()
@@ -1014,7 +1012,7 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
     def _check_performance_alerts(self, metrics: PerformanceMetrics):
         """Check for performance alerts with enhanced logic"""
         try:
-            current_time = datetime.now()
+            datetime.now()
 
             # Memory alerts
             if metrics.memory_usage_mb > self.thresholds.memory_critical_mb:
@@ -1254,15 +1252,15 @@ class KiroPerformanceMonitor(IPerformanceMonitor):
                 AIComponent.KIRO,
             )
 
-    def get_current_metrics(self) -> Optional[PerformanceMetrics]:
+    def get_current_metrics(self) -> PerformanceMetrics | None:
         """Get current performance metrics"""
         return self.current_metrics
 
-    def get_metrics_history(self, limit: int = 100) -> List[PerformanceMetrics]:
+    def get_metrics_history(self, limit: int = 100) -> list[PerformanceMetrics]:
         """Get performance metrics history"""
         return list(self.metrics_history)[-limit:]
 
-    def get_ai_component_status(self) -> Dict[AIComponent, Dict[str, Any]]:
+    def get_ai_component_status(self) -> dict[AIComponent, dict[str, Any]]:
         """Get AI component status"""
         return self.ai_components.copy()
 

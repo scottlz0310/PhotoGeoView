@@ -13,7 +13,7 @@ AI貢献者:
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 
 @dataclass
@@ -22,9 +22,8 @@ class DocumentTemplate:
 
     name: str
     template: str
-    variables: List[str]
+    variables: list[str]
     description: str
-
 
 class DocumentTemplateManager:
     """ドキュメントテンプレート管理システム"""
@@ -32,7 +31,7 @@ class DocumentTemplateManager:
     def __init__(self):
         self.templates = self._load_default_templates()
 
-    def _load_default_templates(self) -> Dict[str, DocumentTemplate]:
+    def _load_default_templates(self) -> dict[str, DocumentTemplate]:
         """デフォルトテンプレートを読み込み"""
         templates = {}
 
@@ -201,7 +200,7 @@ AI貢献者情報:
             raise ValueError(f"テンプレート '{template_name}' が見つかりません")
         return self.templates[template_name]
 
-    def render_template(self, template_name: str, variables: Dict[str, Any]) -> str:
+    def render_template(self, template_name: str, variables: dict[str, Any]) -> str:
         """テンプレートをレンダリング"""
         template = self.get_template(template_name)
 
@@ -221,11 +220,11 @@ AI貢献者情報:
         """カスタムテンプレートを追加"""
         self.templates[template.name] = template
 
-    def list_templates(self) -> List[str]:
+    def list_templates(self) -> list[str]:
         """利用可能なテンプレート一覧を取得"""
         return list(self.templates.keys())
 
-    def get_template_info(self, template_name: str) -> Dict[str, Any]:
+    def get_template_info(self, template_name: str) -> dict[str, Any]:
         """テンプレート情報を取得"""
         template = self.get_template(template_name)
         return {
@@ -239,12 +238,11 @@ AI貢献者情報:
             ),
         }
 
-
 class AIAttributionFormatter:
     """AI貢献度情報のフォーマッター"""
 
     @staticmethod
-    def format_contributor_details(contributions: List[Any]) -> str:
+    def format_contributor_details(contributions: list[Any]) -> str:
         """貢献者詳細をフォーマット"""
         if not contributions:
             return "貢献情報なし"
@@ -272,7 +270,7 @@ class AIAttributionFormatter:
         return "\n".join(details)
 
     @staticmethod
-    def format_dependencies_section(dependencies: List[str]) -> str:
+    def format_dependencies_section(dependencies: list[str]) -> str:
         """依存関係セクションをフォーマット"""
         if not dependencies:
             return ""
@@ -287,7 +285,7 @@ class AIAttributionFormatter:
         return "\n".join(section)
 
     @staticmethod
-    def format_api_section(api_endpoints: List[str]) -> str:
+    def format_api_section(api_endpoints: list[str]) -> str:
         """APIセクションをフォーマット"""
         if not api_endpoints:
             return ""
@@ -307,7 +305,6 @@ class AIAttributionFormatter:
         return """- **GitHub Copilot (CS4Coding)**: コア機能実装、EXIF解析、地図表示
 - **Cursor (CursorBLD)**: UI/UX設計、テーマシステム、サムネイル表示
 - **Kiro**: 統合・品質管理、パフォーマンス最適化、ドキュメント生成"""
-
 
 # 使用例
 def example_usage():
@@ -338,7 +335,6 @@ def example_usage():
     logger.info("ファイルヘッダーテンプレートを生成しました")
     print("生成されたファイルヘッダー:")
     print(header)
-
 
 if __name__ == "__main__":
     example_usage()

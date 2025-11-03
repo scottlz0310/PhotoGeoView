@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
@@ -29,7 +29,6 @@ class MigrationStatus(Enum):
     FAILED = "failed"
     SKIPPED = "skipped"
 
-
 @dataclass
 class MigrationResult:
     """Migration result data structure"""
@@ -38,10 +37,9 @@ class MigrationResult:
     target_section: str
     status: MigrationStatus
     migrated_settings: int
-    errors: List[str]
-    warnings: List[str]
-    backup_file: Optional[Path] = None
-
+    errors: list[str]
+    warnings: list[str]
+    backup_file: Path | None = None
 
 class ConfigMigrationManager:
     """
@@ -53,8 +51,8 @@ class ConfigMigrationManager:
 
     def __init__(
         self,
-        config_dir: Path = None,
-        backup_dir: Path = None,
+        config_dir: Path | None = None,
+        backup_dir: Path | None = None,
         logger_system: LoggerSystem = None,
     ):
         """
@@ -72,7 +70,7 @@ class ConfigMigrationManager:
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
         # Migration results
-        self.migration_results: List[MigrationResult] = []
+        self.migration_results: list[MigrationResult] = []
 
         # Create directories
         self.backup_dir.mkdir(parents=True, exist_ok=True)
@@ -82,7 +80,7 @@ class ConfigMigrationManager:
 
         self.logger_system.info("Configuration migration manager initialized")
 
-    def _setup_migration_mappings(self) -> Dict[str, Dict[str, Any]]:
+    def _setup_migration_mappings(self) -> dict[str, dict[str, Any]]:
         """Setup migration mappings for different configuration formats"""
 
         return {
@@ -200,7 +198,7 @@ class ConfigMigrationManager:
             },
         }
 
-    def migrate_all_configurations(self) -> Dict[str, Any]:
+    def migrate_all_configurations(self) -> dict[str, Any]:
         """
         Migrate all existing configuration files to unified system
 
@@ -260,8 +258,8 @@ class ConfigMigrationManager:
             return migration_summary
 
     def _migrate_ai_configuration(
-        self, ai_name: str, mapping_config: Dict[str, Any]
-    ) -> List[MigrationResult]:
+        self, ai_name: str, mapping_config: dict[str, Any]
+    ) -> list[MigrationResult]:
         """Migrate configuration for a specific AI implementation"""
 
         results = []
@@ -345,8 +343,8 @@ class ConfigMigrationManager:
         return results
 
     def _migrate_settings(
-        self, source_config: Dict[str, Any], mappings: Dict[str, str]
-    ) -> Tuple[Dict[str, Any], List[str], List[str]]:
+        self, source_config: dict[str, Any], mappings: dict[str, str]
+    ) -> tuple[dict[str, Any], list[str], list[str]]:
         """Migrate individual settings using mapping configuration"""
 
         migrated_config = {}
@@ -413,7 +411,7 @@ class ConfigMigrationManager:
 
         return value
 
-    def _set_nested_value(self, config: Dict[str, Any], path: str, value: Any):
+    def _set_nested_value(self, config: dict[str, Any], path: str, value: Any):
         """Set nested configuration value using dot notation"""
 
         keys = path.split(".")
@@ -441,7 +439,7 @@ class ConfigMigrationManager:
         return backup_file
 
     def _save_migrated_config(
-        self, target_section: str, migrated_config: Dict[str, Any]
+        self, target_section: str, migrated_config: dict[str, Any]
     ):
         """Save migrated configuration to appropriate file"""
 
@@ -468,7 +466,7 @@ class ConfigMigrationManager:
         with open(target_file, "w", encoding="utf-8") as f:
             json.dump(existing_config, f, indent=2, default=str)
 
-    def _deep_merge(self, target: Dict[str, Any], source: Dict[str, Any]):
+    def _deep_merge(self, target: dict[str, Any], source: dict[str, Any]):
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
@@ -481,7 +479,7 @@ class ConfigMigrationManager:
             else:
                 target[key] = value
 
-    def _determine_overall_status(self, migration_summary: Dict[str, Any]) -> str:
+    def _determine_overall_status(self, migration_summary: dict[str, Any]) -> str:
         """Determine overall migration status"""
 
         total_errors = len(migration_summary["errors"])
@@ -496,7 +494,7 @@ class ConfigMigrationManager:
         else:
             return "no_migration_needed"
 
-    def _generate_migration_report(self, migration_summary: Dict[str, Any]):
+    def _generate_migration_report(self, migration_summary: dict[str, Any]):
         """Generate detailed migration report"""
 
         report_file = self.config_dir / "migration_report.json"
@@ -521,7 +519,7 @@ class ConfigMigrationManager:
 
         self.logger_system.info(f"Migration report saved to {report_file}")
 
-    def rollback_migration(self, migration_timestamp: str = None) -> bool:
+    def rollback_migration(self, migration_timestamp: str | None = None) -> bool:
         """
         Rollback migration by restoring backup files
 
@@ -536,10 +534,7 @@ class ConfigMigrationManager:
             self.logger_system.info("Starting migration rollback")
 
             # Find backup files
-            if migration_timestamp:
-                backup_pattern = f"*_{migration_timestamp}.*"
-            else:
-                backup_pattern = "*"
+            backup_pattern = f"*_{migration_timestamp}.*" if migration_timestamp else "*"
 
             backup_files = list(self.backup_dir.glob(backup_pattern))
 
@@ -582,7 +577,7 @@ class ConfigMigrationManager:
             )
             return False
 
-    def get_migration_status(self) -> Dict[str, Any]:
+    def get_migration_status(self) -> dict[str, Any]:
         """Get current migration status"""
 
         return {

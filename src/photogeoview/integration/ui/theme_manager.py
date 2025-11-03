@@ -10,7 +10,7 @@ Author: Kiro AI Integration System
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication, QWidget
@@ -25,9 +25,8 @@ from ..state_manager import StateManager
 class QtThemeManagerProtocol(Protocol):
     """Protocol for Qt theme manager"""
 
-    def get_available_themes(self) -> Dict[str, Any]: ...
+    def get_available_themes(self) -> dict[str, Any]: ...
     def set_theme(self, theme_name: str) -> bool: ...
-
 
 class IntegratedThemeManager(QObject):
     """
@@ -55,7 +54,7 @@ class IntegratedThemeManager(QObject):
         config_manager: ConfigManager,
         state_manager: StateManager,
         logger_system: LoggerSystem = None,
-        main_window: Optional[QWidget] = None,
+        main_window: QWidget | None = None,
     ):
         """
         Initialize the integrated theme manager
@@ -75,7 +74,7 @@ class IntegratedThemeManager(QObject):
         self.main_window = main_window
 
         # Theme storage
-        self.themes: Dict[str, ThemeConfiguration] = {}
+        self.themes: dict[str, ThemeConfiguration] = {}
         self.current_theme = "default"
 
         # Theme directories
@@ -83,8 +82,8 @@ class IntegratedThemeManager(QObject):
         self.custom_theme_dir = Path("config/custom_themes")
 
         # CursorBLD Qt-Theme-Manager integration
-        self.qt_theme_manager: Optional[QtThemeManagerProtocol] = None
-        self.qt_themes_available: List[str] = []
+        self.qt_theme_manager: QtThemeManagerProtocol | None = None
+        self.qt_themes_available: list[str] = []
 
         # Kiro accessibility features
         self.accessibility_enabled = True
@@ -272,7 +271,7 @@ class IntegratedThemeManager(QObject):
             )
 
     def _create_builtin_theme_config(
-        self, theme_info: Dict[str, Any]
+        self, theme_info: dict[str, Any]
     ) -> ThemeConfiguration:
         """Create theme configuration from theme info"""
         base_colors = self._get_base_colors(theme_info["base"])
@@ -306,7 +305,7 @@ class IntegratedThemeManager(QObject):
             },
         )
 
-    def _get_base_colors(self, base: str) -> Dict[str, str]:
+    def _get_base_colors(self, base: str) -> dict[str, str]:
         """Get base color scheme"""
         if base == "dark":
             return {
@@ -341,7 +340,7 @@ class IntegratedThemeManager(QObject):
                 "disabled": "#6c757d",
             }
 
-    def _apply_high_contrast(self, colors: Dict[str, str]) -> Dict[str, str]:
+    def _apply_high_contrast(self, colors: dict[str, str]) -> dict[str, str]:
         """Apply high contrast modifications"""
         if colors["background"] == "#ffffff":  # Light theme
             colors.update(
@@ -434,7 +433,7 @@ class IntegratedThemeManager(QObject):
                 AIComponent.CURSOR,
             )
 
-    def _validate_theme_config(self, config: Dict[str, Any]) -> bool:
+    def _validate_theme_config(self, config: dict[str, Any]) -> bool:
         """Validate theme configuration"""
         required_fields = ["name", "display_name"]
         return all(field in config for field in required_fields)
@@ -470,7 +469,7 @@ class IntegratedThemeManager(QObject):
 
     # IThemeManager implementation
 
-    def get_available_themes(self) -> List[str]:
+    def get_available_themes(self) -> list[str]:
         """Get list of available theme names"""
         themes_list = list(self.themes.keys())
         self.logger_system.info(
@@ -479,7 +478,7 @@ class IntegratedThemeManager(QObject):
         return themes_list
 
     def debug_theme_status(self):
-        """デバッグ用：テーマの状況を詳細にログ出力"""
+        """デバッグ用:テーマの状況を詳細にログ出力"""
         try:
             self.logger_system.info("=== Theme Manager Debug Status ===")
             self.logger_system.info(f"Total themes loaded: {len(self.themes)}")
@@ -605,7 +604,7 @@ class IntegratedThemeManager(QObject):
             )
             return False
 
-    def get_theme_config(self, theme_name: str) -> Dict[str, Any]:
+    def get_theme_config(self, theme_name: str) -> dict[str, Any]:
         """Get configuration for the specified theme"""
 
         # Return basic theme info based on theme name
@@ -640,7 +639,7 @@ class IntegratedThemeManager(QObject):
             "accessibility_score": 0.8,
         }
 
-    def get_theme_info(self, theme_name: str) -> Optional[Dict[str, Any]]:
+    def get_theme_info(self, theme_name: str) -> dict[str, Any] | None:
         """Get theme info (compatibility method for ThemeToggleButton)"""
         theme_config = self.get_theme_config(theme_name)
         if theme_config:
@@ -686,7 +685,7 @@ class IntegratedThemeManager(QObject):
         """Get the currently active theme name"""
         return self.current_theme
 
-    def create_custom_theme(self, name: str, config: Dict[str, Any]) -> bool:
+    def create_custom_theme(self, name: str, config: dict[str, Any]) -> bool:
         """Create a new custom theme"""
 
         try:
@@ -724,7 +723,7 @@ class IntegratedThemeManager(QObject):
             )
             return False
 
-    def validate_theme_config(self, config: Dict[str, Any]) -> bool:
+    def validate_theme_config(self, config: dict[str, Any]) -> bool:
         """Validate theme configuration"""
         return self._validate_theme_config(config)
 
@@ -772,7 +771,7 @@ class IntegratedThemeManager(QObject):
             else:
                 self.logger_system.info("No custom stylesheet provided")
 
-            # 3. カラースキームを適用（最も重要）
+            # 3. カラースキームを適用(最も重要)
             if hasattr(theme, "color_scheme") and theme.color_scheme:
                 self.logger_system.info(
                     f"Applying color scheme: {list(theme.color_scheme.keys())}"
@@ -804,7 +803,7 @@ class IntegratedThemeManager(QObject):
             self.logger_system.error(f"Traceback: {traceback.format_exc()}")
             return False
 
-    def _generate_color_scheme_from_theme_name(self, theme_name: str) -> Dict[str, str]:
+    def _generate_color_scheme_from_theme_name(self, theme_name: str) -> dict[str, str]:
         """テーマ名からカラースキームを生成"""
         try:
             # ダークテーマの判定
@@ -883,8 +882,8 @@ class IntegratedThemeManager(QObject):
             self.logger_system.error(f"Failed to apply style sheet: {e}")
             return False
 
-    def _apply_color_scheme(self, color_scheme: Dict[str, str]) -> bool:
-        """カラースキームをUIコンポーネントに適用（改善版）"""
+    def _apply_color_scheme(self, color_scheme: dict[str, str]) -> bool:
+        """カラースキームをUIコンポーネントに適用(改善版)"""
         try:
             if not color_scheme:
                 self.logger_system.warning(
@@ -896,7 +895,7 @@ class IntegratedThemeManager(QObject):
             self.logger_system.info(f"Applying color scheme: {color_scheme}")
 
             # カラースキームに基づいてスタイルシートを生成
-            stylesheet_parts: List[str] = []
+            stylesheet_parts: list[str] = []
 
             # 1. メインウィンドウとQWidgetの基本スタイル
             if "background" in color_scheme and "foreground" in color_scheme:
@@ -958,7 +957,7 @@ class IntegratedThemeManager(QObject):
             # 3. ラベルとテキストスタイル
             if "foreground" in color_scheme:
                 fg_color = color_scheme["foreground"]
-                secondary_color = color_scheme.get("secondary", fg_color)
+                color_scheme.get("secondary", fg_color)
 
                 text_style = f"""
                 QLabel {{
@@ -1068,7 +1067,7 @@ class IntegratedThemeManager(QObject):
                     f"Generated stylesheet length: {len(combined_stylesheet)} characters"
                 )
 
-                # デバッグ用：生成されたスタイルシートをログに出力
+                # デバッグ用:生成されたスタイルシートをログに出力
                 self.logger_system.debug(
                     f"Generated stylesheet:\n{combined_stylesheet[:500]}..."
                 )
@@ -1092,7 +1091,7 @@ class IntegratedThemeManager(QObject):
             self.logger_system.error(f"Traceback: {traceback.format_exc()}")
             return False
 
-    def _get_default_color_scheme(self) -> Dict[str, str]:
+    def _get_default_color_scheme(self) -> dict[str, str]:
         """デフォルトのカラースキームを取得"""
         return {
             "background": "#ffffff",

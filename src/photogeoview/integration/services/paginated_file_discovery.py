@@ -1,12 +1,12 @@
 """
 PaginatedFileDiscovery - 段階的ファイル読み込み機能
 
-大量ファイル対応のための段階的読み込み（ページネーション）機能を提供する。
+大量ファイル対応のための段階的読み込み(ページネーション)機能を提供する。
 バッチサイズを設定して、メモリ効率的にファイルを処理する。
 
 主な機能:
-- 大量ファイル（1000個以上）の効率的な処理
-- 設定可能なバッチサイズ（デフォルト100ファイル）
+- 大量ファイル(1000個以上)の効率的な処理
+- 設定可能なバッチサイズ(デフォルト100ファイル)
 - イテレータパターンによる順次処理
 - 詳細な進行状況追跡とパフォーマンス監視
 - メモリ使用量の推定と最適化
@@ -33,7 +33,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..logging_system import LoggerSystem
 from ..models import AIComponent
@@ -44,7 +44,7 @@ from .file_discovery_service import FileDiscoveryService
 class FileBatch:
     """ファイルバッチ情報"""
 
-    files: List[Path]
+    files: list[Path]
     batch_number: int
     total_batches: int
     start_index: int
@@ -57,27 +57,26 @@ class FileBatch:
         """最後のバッチかどうか"""
         return self.batch_number >= self.total_batches - 1
 
-
 class PaginatedFileDiscovery:
     """
     段階的ファイル読み込み機能
 
     大量のファイルがあるフォルダに対しモリ効率的な
-    段階的読み込み（ページネーション）を提供する。
+    段階的読み込み(ページネーション)を提供する。
     """
 
     def __init__(
         self,
-        file_discovery_service: Optional[FileDiscoveryService] = None,
+        file_discovery_service: FileDiscoveryService | None = None,
         page_size: int = 100,
-        logger_system: Optional[LoggerSystem] = None,
+        logger_system: LoggerSystem | None = None,
     ):
         """
         PaginatedFileDiscoveryの初期化
 
         Args:
             file_discovery_service: ファイル検出サービス
-            page_size: バッチサイズ（デフォルト100ファイル）
+            page_size: バッチサイズ(デフォルト100ファイル)
             logger_system: ログシステム
         """
         self.file_discovery_service = file_discovery_service or FileDiscoveryService()
@@ -85,8 +84,8 @@ class PaginatedFileDiscovery:
         self.logger_system = logger_system or LoggerSystem()
 
         # 現在の状態
-        self._current_folder: Optional[Path] = None
-        self._all_files: List[Path] = []
+        self._current_folder: Path | None = None
+        self._all_files: list[Path] = []
         self._current_batch_index = 0
         self._total_batches = 0
         self._is_initialized = False
@@ -108,7 +107,7 @@ class PaginatedFileDiscovery:
             level="INFO",
         )
 
-    def initialize_folder(self, folder_path: Path) -> Dict[str, Any]:
+    def initialize_folder(self, folder_path: Path) -> dict[str, Any]:
         """
         フォルダを初期化し、全ファイルを検出する
 
@@ -125,7 +124,7 @@ class PaginatedFileDiscovery:
             folder_path (Path): 対象フォルダパス
 
         Returns:
-            Dict[str, Any]: 初期化結果の詳細情報
+            dict[str, Any]: 初期化結果の詳細情報
                 - total_files: 検出されたファイル総数
                 - total_batches: 計算されたバッチ総数
                 - batch_size: 設定されたバッチサイズ
@@ -143,7 +142,7 @@ class PaginatedFileDiscovery:
 
         with self.logger_system.operation_context(
             AIComponent.KIRO, "paginated_folder_init"
-        ) as ctx:
+        ):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "folder_init_start",
@@ -204,7 +203,7 @@ class PaginatedFileDiscovery:
 
             except Exception as e:
                 init_duration = time.time() - start_time
-                error_details = {
+                {
                     "folder_path": str(folder_path),
                     "error": str(e),
                     "error_type": type(e).__name__,
@@ -221,7 +220,7 @@ class PaginatedFileDiscovery:
                 self._is_initialized = False
                 raise
 
-    def get_next_batch(self) -> Optional[FileBatch]:
+    def get_next_batch(self) -> FileBatch | None:
         """
         次のバッチを取得する
 
@@ -230,7 +229,7 @@ class PaginatedFileDiscovery:
 
         処理内容:
         1. 初期化状態とバッチ可用性の確認
-        2. バッチ範囲の計算（start_index, end_index）
+        2. バッチ範囲の計算(start_index, end_index)
         3. FileBatchオブジェクトの生成
         4. 統計情報の更新とパフォーマンス記録
         5. 次のバッチインデックスへの更新
@@ -239,7 +238,7 @@ class PaginatedFileDiscovery:
             Optional[FileBatch]: 次のファイルバッチ、または利用可能なバッチがない場合はNone
                 FileBatch属性:
                 - files: バッチ内のファイルパスリスト
-                - batch_number: 現在のバッチ番号（0から開始）
+                - batch_number: 現在のバッチ番号(0から開始)
                 - total_batches: 総バッチ数
                 - start_index, end_index: ファイルリスト内の範囲
                 - processing_time: バッチ生成にかかった時間
@@ -362,7 +361,7 @@ class PaginatedFileDiscovery:
             level="DEBUG",
         )
 
-    def get_pagination_status(self) -> Dict[str, Any]:
+    def get_pagination_status(self) -> dict[str, Any]:
         """
         現在のページネーション状態を取得する
 
@@ -437,13 +436,13 @@ class PaginatedFileDiscovery:
 
     def _estimate_memory_per_batch(self) -> float:
         """
-        バッチあたりの推定メモリ使用量を計算する（MB単位）
+        バッチあたりの推定メモリ使用量を計算する(MB単位)
 
         Returns:
-            推定メモリ使用量（MB）
+            推定メモリ使用量(MB)
         """
         # 基本的な推定: ファイルパス情報 + オーバーヘッド
-        # 1ファイルあたり約1KB（パス情報、メタデータ等）と仮定
+        # 1ファイルあたり約1KB(パス情報、メタデータ等)と仮定
         estimated_mb = (self.page_size * 1024) / (1024 * 1024)  # KB to MB
 
         return round(estimated_mb, 2)

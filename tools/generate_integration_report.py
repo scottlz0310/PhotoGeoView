@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 @dataclass
@@ -28,7 +28,7 @@ class TestResult:
     name: str
     status: str  # passed, failed, skipped
     duration: float
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 @dataclass

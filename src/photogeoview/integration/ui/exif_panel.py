@@ -7,8 +7,9 @@ exifreadライブラリを使用したEXIF情報表示機能。
 Author: Kiro AI Integration System
 """
 
+import contextlib
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtWidgets import (
@@ -53,7 +54,7 @@ class EXIFPanel(QWidget):
         config_manager: ConfigManager,
         state_manager: StateManager,
         logger_system: LoggerSystem,
-        theme_manager: Optional[object] = None,
+        theme_manager: object | None = None,
     ):
         super().__init__()
         # QSSで特定できるようにオブジェクト名を設定
@@ -64,7 +65,7 @@ class EXIFPanel(QWidget):
         self.logger_system = logger_system
         self.error_handler = IntegratedErrorHandler(logger_system)
         self.theme_manager = theme_manager
-        self._last_exif_data: Optional[Dict[str, Any]] = None
+        self._last_exif_data: dict[str, Any] | None = None
 
         # テーマ変更シグナルの接続
         if self.theme_manager:
@@ -77,17 +78,15 @@ class EXIFPanel(QWidget):
         self.image_processor = CS4CodingImageProcessor(config_manager, logger_system)
 
         # 現在の画像パス
-        self.current_image_path: Optional[Path] = None
+        self.current_image_path: Path | None = None
 
         # UI初期化
         self._setup_ui()
         # 背景の自動塗りつぶしを有効化
-        try:
+        with contextlib.suppress(Exception):
             self.setAutoFillBackground(True)
-        except Exception:
-            pass
 
-        # 高さ設定の復元は不要（固定高さのため）
+        # 高さ設定の復元は不要(固定高さのため)
 
     def changeEvent(self, event):  # type: ignore[override]
         """Qtのスタイル/パレット変更時に再適用"""
@@ -114,7 +113,7 @@ class EXIFPanel(QWidget):
         return default
 
     def _get_color_safe(self, color_key: str, default: str = "#000000") -> str:
-        """安全な色取得（エラー時はデフォルト値を返す）"""
+        """安全な色取得(エラー時はデフォルト値を返す)"""
         return self._get_color(color_key, default)
 
     def _is_dark_theme(self) -> bool:
@@ -172,7 +171,7 @@ class EXIFPanel(QWidget):
             )
 
     def _setup_ui(self):
-        """UIの初期化（統合版）"""
+        """UIの初期化(統合版)"""
         try:
             # パネル自体の背景テーマを適用
             self._apply_panel_theme()
@@ -199,11 +198,11 @@ class EXIFPanel(QWidget):
             """)
             layout.addWidget(self.title_label)
 
-            # 統合情報エリア（スクロール可能・300px固定）
+            # 統合情報エリア(スクロール可能・300px固定)
             self._create_integrated_info_area()
             layout.addWidget(self.integrated_scroll_area)
 
-            # サイズ調整コントロールパネルは削除（不要なため）
+            # サイズ調整コントロールパネルは削除(不要なため)
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -214,8 +213,8 @@ class EXIFPanel(QWidget):
             )
 
     def _create_integrated_info_area(self):
-        """統合情報エリアを作成（EXIF + GPS情報）- 300px固定版"""
-        # 統合情報スクロールエリア（300px固定）
+        """統合情報エリアを作成(EXIF + GPS情報)- 300px固定版"""
+        # 統合情報スクロールエリア(300px固定)
         self.integrated_scroll_area = QScrollArea()
         self.integrated_scroll_area.setWidgetResizable(True)
         self.integrated_scroll_area.setFixedHeight(300)  # 300pxに固定
@@ -275,8 +274,8 @@ class EXIFPanel(QWidget):
         except Exception:
             pass
 
-    def _create_integrated_sections(self, exif_data: Dict[str, Any]):
-        """統合セクションを作成（EXIF + GPS情報）"""
+    def _create_integrated_sections(self, exif_data: dict[str, Any]):
+        """統合セクションを作成(EXIF + GPS情報)"""
         try:
             # デバッグログ開始
             if hasattr(self, "logger_system"):
@@ -346,7 +345,7 @@ class EXIFPanel(QWidget):
                 )
             self._create_datetime_section(exif_data)
 
-            # 5. GPS位置情報セクション（統合版）
+            # 5. GPS位置情報セクション(統合版)
             if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -355,7 +354,7 @@ class EXIFPanel(QWidget):
                 )
             self._create_gps_info_section(exif_data)
 
-            # 6. デバッグ情報セクション（折りたたみ可能）
+            # 6. デバッグ情報セクション(折りたたみ可能)
             if hasattr(self, "logger_system"):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -373,14 +372,14 @@ class EXIFPanel(QWidget):
                 )
             self._create_map_controls_integrated()
 
-            # スクロールエリアに再バインド（安全策）
+            # スクロールエリアに再バインド(安全策)
             try:
                 self.integrated_scroll_area.setWidget(self.integrated_widget)
                 self.integrated_scroll_area.setWidgetResizable(True)
             except Exception:
                 pass
 
-            # 再描画をトリガ（強化版）
+            # 再描画をトリガ(強化版)
             try:
                 self.integrated_layout.invalidate()
                 self.integrated_layout.update()
@@ -425,10 +424,10 @@ class EXIFPanel(QWidget):
                 AIComponent.KIRO,
             )
 
-    def _create_file_info_section(self, exif_data: Dict[str, Any]):
+    def _create_file_info_section(self, exif_data: dict[str, Any]):
         """ファイル情報セクションを作成"""
         try:
-            file_info: Dict[str, str] = {}
+            file_info: dict[str, str] = {}
             if "File Name" in exif_data:
                 file_info["ファイル名"] = str(exif_data["File Name"])
             if "File Size" in exif_data:
@@ -438,7 +437,7 @@ class EXIFPanel(QWidget):
             if "Extension" in exif_data:
                 file_info["拡張子"] = str(exif_data["Extension"])
 
-            # デバッグ用: 常にセクションを作成（空でも）
+            # デバッグ用: 常にセクションを作成(空でも)
             if not file_info:
                 file_info["デバッグ"] = "ファイル情報なし"
 
@@ -469,10 +468,10 @@ class EXIFPanel(QWidget):
                 )
             raise
 
-    def _create_camera_info_section(self, exif_data: Dict[str, Any]):
+    def _create_camera_info_section(self, exif_data: dict[str, Any]):
         """カメラ情報セクションを作成"""
         try:
-            camera_info: Dict[str, str] = {}
+            camera_info: dict[str, str] = {}
             if "Camera Make" in exif_data:
                 camera_info["メーカー"] = str(exif_data["Camera Make"])
             if "Camera Model" in exif_data:
@@ -480,7 +479,7 @@ class EXIFPanel(QWidget):
             if "Lens Model" in exif_data:
                 camera_info["レンズ"] = str(exif_data["Lens Model"])
 
-            # デバッグ用: 常にセクションを作成（空でも）
+            # デバッグ用: 常にセクションを作成(空でも)
             if not camera_info:
                 camera_info["デバッグ"] = "カメラ情報なし"
 
@@ -511,10 +510,10 @@ class EXIFPanel(QWidget):
                 )
             raise
 
-    def _create_shooting_settings_section(self, exif_data: Dict[str, Any]):
+    def _create_shooting_settings_section(self, exif_data: dict[str, Any]):
         """撮影設定セクションを作成"""
         try:
-            shooting_info: Dict[str, str] = {}
+            shooting_info: dict[str, str] = {}
             if "F-Number" in exif_data:
                 shooting_info["F値"] = str(exif_data["F-Number"])
             if "Exposure Time" in exif_data:
@@ -524,7 +523,7 @@ class EXIFPanel(QWidget):
             if "Focal Length" in exif_data:
                 shooting_info["焦点距離"] = str(exif_data["Focal Length"])
 
-            # デバッグ用: 常にセクションを作成（空でも）
+            # デバッグ用: 常にセクションを作成(空でも)
             if not shooting_info:
                 shooting_info["デバッグ"] = "撮影設定情報なし"
 
@@ -555,16 +554,16 @@ class EXIFPanel(QWidget):
                 )
             raise
 
-    def _create_datetime_section(self, exif_data: Dict[str, Any]):
+    def _create_datetime_section(self, exif_data: dict[str, Any]):
         """撮影日時セクションを作成"""
         try:
-            datetime_info: Dict[str, str] = {}
+            datetime_info: dict[str, str] = {}
             if "Date Taken" in exif_data:
                 datetime_info["撮影日時"] = str(exif_data["Date Taken"])
             if "Date Original" in exif_data:
                 datetime_info["元データ日時"] = str(exif_data["Date Original"])
 
-            # デバッグ用: 常にセクションを作成（空でも）
+            # デバッグ用: 常にセクションを作成(空でも)
             if not datetime_info:
                 datetime_info["デバッグ"] = "日時情報なし"
 
@@ -595,8 +594,8 @@ class EXIFPanel(QWidget):
                 )
             raise
 
-    def _create_gps_info_section(self, exif_data: Dict[str, Any]):
-        """GPS位置情報セクションを作成（統合版）"""
+    def _create_gps_info_section(self, exif_data: dict[str, Any]):
+        """GPS位置情報セクションを作成(統合版)"""
         self.gps_group = QGroupBox("📍 位置情報 & 地図連携")
         border_col = self._get_color("border", "#3498db")
         title_col = self._get_color("primary", "#2980b9")
@@ -620,11 +619,11 @@ class EXIFPanel(QWidget):
         gps_layout.setSpacing(8)
 
         # GPS座標情報を取得
-        latitude_str = exif_data.get("GPS Latitude")
-        longitude_str = exif_data.get("GPS Longitude")
-        altitude = exif_data.get("GPS Altitude")
-        gps_time = exif_data.get("GPS Timestamp")
-        gps_date = exif_data.get("GPS Date")
+        exif_data.get("GPS Latitude")
+        exif_data.get("GPS Longitude")
+        exif_data.get("GPS Altitude")
+        exif_data.get("GPS Timestamp")
+        exif_data.get("GPS Date")
 
         # 基本GPS座標情報
         coord_frame = QFrame()
@@ -692,9 +691,9 @@ class EXIFPanel(QWidget):
         self.integrated_layout.addWidget(self.gps_group)
 
     def _create_info_section(
-        self, title: str, info_dict: Dict[str, str], border_color: str = "#bdc3c7"
+        self, title: str, info_dict: dict[str, str], border_color: str = "#bdc3c7"
     ) -> QGroupBox:
-        """情報セクションを作成（統合版）"""
+        """情報セクションを作成(統合版)"""
         group = QGroupBox(title)
 
         # テーマから適切な色を取得
@@ -799,7 +798,7 @@ class EXIFPanel(QWidget):
         return group
 
     def _calculate_lightness(self, color: str) -> float:
-        """色の明度を計算（0.0-1.0）"""
+        """色の明度を計算(0.0-1.0)"""
         try:
             # #RRGGBB形式の色をRGB値に変換
             if color.startswith("#") and len(color) == 7:
@@ -807,7 +806,7 @@ class EXIFPanel(QWidget):
                 g = int(color[3:5], 16) / 255.0
                 b = int(color[5:7], 16) / 255.0
 
-                # 相対輝度を計算（WCAG 2.1準拠）
+                # 相対輝度を計算(WCAG 2.1準拠)
                 return 0.2126 * r + 0.7152 * g + 0.0722 * b
         except (ValueError, IndexError):
             pass
@@ -815,8 +814,8 @@ class EXIFPanel(QWidget):
         # デフォルト値
         return 0.5
 
-    def _create_debug_section_integrated(self, exif_data: Dict[str, Any]):
-        """デバッグ情報セクションを作成（統合版）"""
+    def _create_debug_section_integrated(self, exif_data: dict[str, Any]):
+        """デバッグ情報セクションを作成(統合版)"""
         # デバッグ情報の折りたたみボタン
         self.debug_toggle_button = QPushButton("🔧 デバッグ情報を表示")
         self.debug_toggle_button.setCheckable(True)
@@ -845,7 +844,7 @@ class EXIFPanel(QWidget):
         self.debug_toggle_button.clicked.connect(self._toggle_debug_info)
         self.integrated_layout.addWidget(self.debug_toggle_button)
 
-        # デバッグ情報フレーム（初期状態では非表示）
+        # デバッグ情報フレーム(初期状態では非表示)
         self.debug_frame = QFrame()
         self.debug_frame.setFrameStyle(QFrame.Shape.Box)
         self.debug_frame.setStyleSheet(f"""
@@ -905,7 +904,7 @@ class EXIFPanel(QWidget):
         self.integrated_layout.addWidget(self.debug_frame)
 
     def _create_map_controls_integrated(self):
-        """地図連携コントロールを作成（統合版）"""
+        """地図連携コントロールを作成(統合版)"""
         control_frame = QFrame()
         control_frame.setFrameStyle(QFrame.Shape.Box)
         success_bg = self._get_color("success", "#27ae60")
@@ -1014,7 +1013,7 @@ class EXIFPanel(QWidget):
             )
 
     def _load_exif_data(self):
-        """EXIF情報を読み込み（統合版）"""
+        """EXIF情報を読み込み(統合版)"""
         if not self.current_image_path or not self.current_image_path.exists():
             self._clear_integrated_display()
             return
@@ -1046,7 +1045,7 @@ class EXIFPanel(QWidget):
             self._show_error_message("EXIF情報の読み込みに失敗しました")
 
     def apply_theme(self):
-        """テーマ変更時にスタイルを再適用（安全版）"""
+        """テーマ変更時にスタイルを再適用(安全版)"""
         try:
             # テーマ変更中はUIの更新を一時停止
             self.setUpdatesEnabled(False)
@@ -1110,10 +1109,10 @@ class EXIFPanel(QWidget):
                 AIComponent.KIRO,
             )
 
-    def _update_gps_display(self, exif_data: Dict[str, Any]):
-        """GPS位置情報の表示を更新（統合版）"""
+    def _update_gps_display(self, exif_data: dict[str, Any]):
+        """GPS位置情報の表示を更新(統合版)"""
         try:
-            # GPS座標を取得（文字列から数値に変換）
+            # GPS座標を取得(文字列から数値に変換)
             latitude_str = exif_data.get("GPS Latitude")
             longitude_str = exif_data.get("GPS Longitude")
             altitude = exif_data.get("GPS Altitude")
@@ -1273,7 +1272,7 @@ class EXIFPanel(QWidget):
     # Theme helpers
 
     def _safe_clear_layout(self):
-        """安全なレイアウトクリア（Segmentation fault対策）"""
+        """安全なレイアウトクリア(Segmentation fault対策)"""
         try:
             if hasattr(self, "integrated_layout") and self.integrated_layout:
                 # 子ウィジェットを安全に削除

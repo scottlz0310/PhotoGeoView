@@ -298,7 +298,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
                 # 短時間でタイムアウト
                 await asyncio.wait_for(discovery_task(), timeout=0.05)
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # タイムアウトが発生することを期待
                 pass
 

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .logging_system import LoggerSystem
@@ -32,15 +32,14 @@ class ValidationSeverity(Enum):
     ERROR = "error"
     CRITICAL = "critical"
 
-
 @dataclass
 class ValidationResult:
     """Result of a validation operation"""
 
     is_valid: bool
-    errors: List[Dict[str, Any]] = field(default_factory=list)
-    warnings: List[Dict[str, Any]] = field(default_factory=list)
-    info: List[Dict[str, Any]] = field(default_factory=list)
+    errors: list[dict[str, Any]] = field(default_factory=list)
+    warnings: list[dict[str, Any]] = field(default_factory=list)
+    info: list[dict[str, Any]] = field(default_factory=list)
 
     def add_issue(
         self, severity: ValidationSeverity, field: str, message: str, value: Any = None
@@ -78,7 +77,6 @@ class ValidationResult:
     def has_warnings(self) -> bool:
         """Check if there are any warnings"""
         return len(self.warnings) > 0
-
 
 class DataValidator:
     """
@@ -126,7 +124,7 @@ class DataValidator:
             ),
         }
 
-    def _setup_validation_rules(self) -> Dict[str, Dict[str, Any]]:
+    def _setup_validation_rules(self) -> dict[str, dict[str, Any]]:
         """Setup validation rules for different data types"""
         return {
             "image_metadata": {
@@ -392,18 +390,14 @@ class DataValidator:
         if not isinstance(color, str):
             return False
 
-        for pattern in self.color_patterns.values():
-            if pattern.match(color):
-                return True
-
-        return False
+        return any(pattern.match(color) for pattern in self.color_patterns.values())
 
     def validate_all_models(
         self,
-        image_metadata: Optional[ImageMetadata] = None,
-        theme_config: Optional[ThemeConfiguration] = None,
-        app_state: Optional[ApplicationState] = None,
-    ) -> Dict[str, ValidationResult]:
+        image_metadata: ImageMetadata | None = None,
+        theme_config: ThemeConfiguration | None = None,
+        app_state: ApplicationState | None = None,
+    ) -> dict[str, ValidationResult]:
         """Validate multiple models at once"""
         results = {}
 

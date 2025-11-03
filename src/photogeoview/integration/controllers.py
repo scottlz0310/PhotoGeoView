@@ -10,12 +10,14 @@ Author: Kiro AI Integration System
 """
 
 import asyncio
+import contextlib
 import logging
 import threading
 import time
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from .error_handling import ErrorCategory, IntegratedErrorHandler
 from .image_processor import CS4CodingImageProcessor
@@ -66,18 +68,18 @@ class AppController:
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
         # Kiro integration components
-        self.state_manager: Optional[StateManager] = None
-        self.unified_cache: Optional[UnifiedCacheSystem] = None
+        self.state_manager: StateManager | None = None
+        self.unified_cache: UnifiedCacheSystem | None = None
 
         # AI component interfaces (to be initialized)
-        self.image_processor: Optional[IImageProcessor] = None
-        self.theme_manager: Optional[IThemeManager] = None
-        self.map_provider: Optional[IMapProvider] = None
-        self.performance_monitor: Optional[IPerformanceMonitor] = None
+        self.image_processor: IImageProcessor | None = None
+        self.theme_manager: IThemeManager | None = None
+        self.map_provider: IMapProvider | None = None
+        self.performance_monitor: IPerformanceMonitor | None = None
 
         # Kiro integration components
-        self.cache_system: Optional[UnifiedCacheSystem] = None
-        self.state_manager: Optional[StateManager] = None
+        self.cache_system: UnifiedCacheSystem | None = None
+        self.state_manager: StateManager | None = None
 
         # Application state
         self.app_state = ApplicationState()
@@ -85,22 +87,22 @@ class AppController:
         self.is_shutting_down = False
 
         # Component registry
-        self.ai_components: Dict[AIComponent, Dict[str, Any]] = {
+        self.ai_components: dict[AIComponent, dict[str, Any]] = {
             AIComponent.COPILOT: {"status": "inactive", "last_operation": None},
             AIComponent.CURSOR: {"status": "inactive", "last_operation": None},
             AIComponent.KIRO: {"status": "active", "last_operation": "initialization"},
         }
 
         # Event system
-        self.event_handlers: Dict[str, List[Callable]] = {}
+        self.event_handlers: dict[str, list[Callable]] = {}
         self.event_lock = threading.Lock()
 
         # Performance tracking
-        self.operation_times: Dict[str, List[float]] = {}
-        self.performance_history: List[PerformanceMetrics] = []
+        self.operation_times: dict[str, list[float]] = {}
+        self.performance_history: list[PerformanceMetrics] = []
 
         # Cache system
-        self.cache: Dict[str, Any] = {}
+        self.cache: dict[str, Any] = {}
         self.cache_stats = {"hits": 0, "misses": 0, "size": 0}
 
         self.logger_system.log_ai_operation(
@@ -144,7 +146,7 @@ class AppController:
                 return True
 
         except Exception as e:
-            error_context = self.error_handler.handle_error(
+            self.error_handler.handle_error(
                 e,
                 ErrorCategory.INTEGRATION_ERROR,
                 {"operation": "app_initialization"},
@@ -289,12 +291,10 @@ class AppController:
 
         with self.event_lock:
             if event_name in self.event_handlers:
-                try:
+                with contextlib.suppress(ValueError):
                     self.event_handlers[event_name].remove(handler)
-                except ValueError:
-                    pass
 
-    async def emit_event(self, event_name: str, data: Dict[str, Any] = None):
+    async def emit_event(self, event_name: str, data: dict[str, Any] | None = None):
         """Emit an event to all registered handlers"""
 
         with self.event_lock:
@@ -323,7 +323,7 @@ class AppController:
 
     # Core event handlers
 
-    async def _on_image_selected(self, data: Dict[str, Any]):
+    async def _on_image_selected(self, data: dict[str, Any]):
         """Handle image selection event"""
 
         if image_path := data.get("image_path"):
@@ -333,7 +333,7 @@ class AppController:
             # Trigger image processing
             await self.process_image(Path(image_path))
 
-    async def _on_folder_changed(self, data: Dict[str, Any]):
+    async def _on_folder_changed(self, data: dict[str, Any]):
         """Handle folder change event"""
 
         if folder_path := data.get("folder_path"):
@@ -345,7 +345,7 @@ class AppController:
             # Load folder contents
             await self.load_folder_contents(folder_path)
 
-    async def _on_theme_changed(self, data: Dict[str, Any]):
+    async def _on_theme_changed(self, data: dict[str, Any]):
         """Handle theme change event"""
 
         theme_name = data.get("theme_name")
@@ -370,7 +370,7 @@ class AppController:
                     AIComponent.CURSOR,
                 )
 
-    async def _on_error_occurred(self, data: Dict[str, Any]):
+    async def _on_error_occurred(self, data: dict[str, Any]):
         """Handle error occurrence event"""
 
         error_context = data.get("error_context")
@@ -391,7 +391,7 @@ class AppController:
 
     # Core operations
 
-    async def process_image(self, image_path: Path) -> Optional[ImageMetadata]:
+    async def process_image(self, image_path: Path) -> ImageMetadata | None:
         """
         Process an image using integrated AI components
 
@@ -490,7 +490,7 @@ class AppController:
             return None
 
     def _populate_exif_metadata(
-        self, metadata: ImageMetadata, exif_data: Dict[str, Any]
+        self, metadata: ImageMetadata, exif_data: dict[str, Any]
     ):
         """Populate metadata with EXIF information"""
 
@@ -519,7 +519,7 @@ class AppController:
         metadata.width = exif_data.get("width")
         metadata.height = exif_data.get("height")
 
-    def _save_thumbnail(self, image_path: Path, thumbnail) -> Optional[Path]:
+    def _save_thumbnail(self, image_path: Path, thumbnail) -> Path | None:
         """Save thumbnail to cache directory"""
 
         try:
@@ -542,7 +542,7 @@ class AppController:
             )
             return None
 
-    async def load_folder_contents(self, folder_path: Path) -> List[Path]:
+    async def load_folder_contents(self, folder_path: Path) -> list[Path]:
         """
         Load and filter folder contents for supported images
 
@@ -569,9 +569,8 @@ class AppController:
                     if (
                         file_path.is_file()
                         and file_path.suffix.lower() in supported_formats
-                    ):
-                        if self.image_processor.validate_image(file_path):
-                            image_files.append(file_path)
+                    ) and self.image_processor.validate_image(file_path):
+                        image_files.append(file_path)
 
                 # Sort files
                 if self.app_state.image_sort_mode == "name":
@@ -616,7 +615,7 @@ class AppController:
         """Get item from cache"""
         return self.cache.get(key)
 
-    def add_to_cache(self, key: str, value: Any, ttl: Optional[int] = None):
+    def add_to_cache(self, key: str, value: Any, ttl: int | None = None):
         """Add item to cache"""
         self.cache[key] = value
         self.cache_stats["size"] = len(self.cache)
@@ -653,7 +652,7 @@ class AppController:
             cache_misses=self.cache_stats["misses"],
         )
 
-    def get_ai_component_status(self) -> Dict[str, str]:
+    def get_ai_component_status(self) -> dict[str, str]:
         """Get status of all AI components"""
 
         return {
@@ -709,7 +708,7 @@ class AppController:
             logger = logging.getLogger(__name__)
             error_msg = f"Error during shutdown: {e}"
             logger.error(error_msg)
-            print(error_msg)  # コンソールにも出力（シャットダウン時の重要情報）
+            print(error_msg)  # コンソールにも出力(シャットダウン時の重要情報)
 
         finally:
             self.is_initialized = False

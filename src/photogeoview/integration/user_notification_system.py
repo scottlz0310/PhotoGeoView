@@ -8,9 +8,9 @@ Author: Kiro AI Integration System
 Requirements: 1.4, 3.4, 4.2, 4.4
 """
 
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, List, Optional
 
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QIcon, QPixmap
@@ -39,7 +39,6 @@ class NotificationType(Enum):
     CRITICAL = "critical"
     SUCCESS = "success"
 
-
 class NotificationPriority(Enum):
     """Priority levels for notifications"""
 
@@ -47,7 +46,6 @@ class NotificationPriority(Enum):
     NORMAL = 2
     HIGH = 3
     URGENT = 4
-
 
 class NotificationAction:
     """Represents an action that can be taken from a notification"""
@@ -59,7 +57,6 @@ class NotificationAction:
         self.callback = callback
         self.is_primary = is_primary
 
-
 class UserNotification:
     """Represents a user notification"""
 
@@ -69,10 +66,10 @@ class UserNotification:
         message: str,
         notification_type: NotificationType = NotificationType.INFO,
         priority: NotificationPriority = NotificationPriority.NORMAL,
-        duration: Optional[int] = None,  # Duration in seconds, None for persistent
-        actions: Optional[List[NotificationAction]] = None,
-        details: Optional[str] = None,
-        source_component: Optional[str] = None,
+        duration: int | None = None,  # Duration in seconds, None for persistent
+        actions: list[NotificationAction] | None = None,
+        details: str | None = None,
+        source_component: str | None = None,
     ):
         self.id = f"notification_{int(datetime.now().timestamp())}_{id(self)}"
         self.title = title
@@ -84,10 +81,9 @@ class UserNotification:
         self.details = details
         self.source_component = source_component
         self.created_at = datetime.now()
-        self.shown_at: Optional[datetime] = None
-        self.dismissed_at: Optional[datetime] = None
+        self.shown_at: datetime | None = None
+        self.dismissed_at: datetime | None = None
         self.is_dismissed = False
-
 
 class UserNotificationSystem(QObject):
     """
@@ -103,7 +99,7 @@ class UserNotificationSystem(QObject):
         self,
         config_manager: ConfigManager,
         logger_system: LoggerSystem,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ):
         """
         Initialize the user notification system
@@ -119,13 +115,13 @@ class UserNotificationSystem(QObject):
         self.logger = logger_system.get_logger(__name__)
 
         # Notification storage
-        self.active_notifications: Dict[str, UserNotification] = {}
-        self.notification_history: List[UserNotification] = []
+        self.active_notifications: dict[str, UserNotification] = {}
+        self.notification_history: list[UserNotification] = []
         self.max_history_size = 100
 
         # UI components
-        self.system_tray_icon: Optional[QSystemTrayIcon] = None
-        self.notification_dialogs: Dict[str, QDialog] = {}
+        self.system_tray_icon: QSystemTrayIcon | None = None
+        self.notification_dialogs: dict[str, QDialog] = {}
 
         # Configuration
         self.notifications_enabled = True
@@ -464,13 +460,12 @@ class UserNotificationSystem(QObject):
             expired_ids = []
 
             for notification_id, notification in self.active_notifications.items():
-                if notification.duration:
-                    if (
-                        notification.shown_at
-                        and (current_time - notification.shown_at).total_seconds()
-                        > notification.duration
-                    ):
-                        expired_ids.append(notification_id)
+                if notification.duration and (
+                    notification.shown_at
+                    and (current_time - notification.shown_at).total_seconds()
+                    > notification.duration
+                ):
+                    expired_ids.append(notification_id)
 
             for notification_id in expired_ids:
                 self.dismiss_notification(notification_id)
@@ -484,9 +479,9 @@ class UserNotificationSystem(QObject):
         self,
         title: str,
         message: str,
-        details: Optional[str] = None,
-        actions: Optional[List[NotificationAction]] = None,
-        source_component: Optional[str] = None,
+        details: str | None = None,
+        actions: list[NotificationAction] | None = None,
+        source_component: str | None = None,
     ) -> str:
         """Show error notification"""
         notification = UserNotification(
@@ -505,9 +500,9 @@ class UserNotificationSystem(QObject):
         self,
         title: str,
         message: str,
-        details: Optional[str] = None,
-        actions: Optional[List[NotificationAction]] = None,
-        source_component: Optional[str] = None,
+        details: str | None = None,
+        actions: list[NotificationAction] | None = None,
+        source_component: str | None = None,
     ) -> str:
         """Show warning notification"""
         notification = UserNotification(
@@ -526,8 +521,8 @@ class UserNotificationSystem(QObject):
         self,
         title: str,
         message: str,
-        duration: Optional[int] = None,
-        source_component: Optional[str] = None,
+        duration: int | None = None,
+        source_component: str | None = None,
     ) -> str:
         """Show info notification"""
         notification = UserNotification(
@@ -545,8 +540,8 @@ class UserNotificationSystem(QObject):
         self,
         title: str,
         message: str,
-        duration: Optional[int] = None,
-        source_component: Optional[str] = None,
+        duration: int | None = None,
+        source_component: str | None = None,
     ) -> str:
         """Show success notification"""
         notification = UserNotification(
@@ -564,9 +559,9 @@ class UserNotificationSystem(QObject):
         self,
         title: str,
         message: str,
-        details: Optional[str] = None,
-        actions: Optional[List[NotificationAction]] = None,
-        source_component: Optional[str] = None,
+        details: str | None = None,
+        actions: list[NotificationAction] | None = None,
+        source_component: str | None = None,
     ) -> str:
         """Show critical notification"""
         notification = UserNotification(
@@ -615,7 +610,7 @@ class UserNotificationSystem(QObject):
         path: str,
         error_type: str,
         error_message: str,
-        fallback_path: Optional[str] = None,
+        fallback_path: str | None = None,
     ) -> str:
         """Show breadcrumb navigation error notification"""
         title = "Navigation Error"
@@ -662,11 +657,11 @@ class UserNotificationSystem(QObject):
         except Exception as e:
             self.logger.error(f"Failed to navigate to home: {e}")
 
-    def get_notification_history(self) -> List[UserNotification]:
+    def get_notification_history(self) -> list[UserNotification]:
         """Get notification history"""
         return self.notification_history.copy()
 
-    def get_active_notifications(self) -> List[UserNotification]:
+    def get_active_notifications(self) -> list[UserNotification]:
         """Get active notifications"""
         return list(self.active_notifications.values())
 

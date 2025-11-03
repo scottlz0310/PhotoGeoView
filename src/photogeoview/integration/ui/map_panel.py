@@ -11,7 +11,7 @@ Author: Kiro AI Integration System
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from PySide6.QtCore import Qt, QTimer, QUrl, Signal
 from PySide6.QtWidgets import (
@@ -31,7 +31,7 @@ WEBENGINE_AVAILABLE = False
 QWebEngineView = None
 QWebEngineSettings = None
 
-# 直接インポートを試行（OpenGL設定が適用されている場合）
+# 直接インポートを試行(OpenGL設定が適用されている場合)
 try:
     from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineSettings
     from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -88,7 +88,7 @@ class MapPanel(QWidget):
     機能:
     - PyQtWebEngineを使用したHTML地図表示
     - GPS座標に基づく地図更新
-    - 地図操作（ズーム・パン）
+    - 地図操作(ズーム・パン)
     - PyQtWebEngineが利用できない場合の代替表示
     - 複数画像の位置情報表示
     """
@@ -112,26 +112,26 @@ class MapPanel(QWidget):
         self.error_handler = IntegratedErrorHandler(logger_system)
 
         # 地図プロパティ
-        self.current_map_file: Optional[str] = None
-        self.photo_locations: Dict[str, Tuple[float, float]] = {}
-        self.current_photo: Optional[str] = None
-        self.default_location: Tuple[float, float] = (35.6762, 139.6503)  # Tokyo
+        self.current_map_file: str | None = None
+        self.photo_locations: dict[str, tuple[float, float]] = {}
+        self.current_photo: str | None = None
+        self.default_location: tuple[float, float] = (35.6762, 139.6503)  # Tokyo
         self.default_zoom: int = 10
 
         # 現在の座標
-        self.current_latitude: Optional[float] = None
-        self.current_longitude: Optional[float] = None
+        self.current_latitude: float | None = None
+        self.current_longitude: float | None = None
 
         # 複数画像の位置情報
-        self.image_locations: List[Dict[str, Any]] = []
+        self.image_locations: list[dict[str, Any]] = []
 
         # 一時ファイル管理
-        self.temp_html_file: Optional[Path] = None
+        self.temp_html_file: Path | None = None
 
         # UIコンポーネント
-        self.web_view: Optional[QWebEngineView] = None
-        self.status_label: Optional[QLabel] = None
-        self.map_widget: Optional[QWidget] = None
+        self.web_view: QWebEngineView | None = None
+        self.status_label: QLabel | None = None
+        self.map_widget: QWidget | None = None
 
         # 全画面表示フラグ
         self.is_fullscreen_mode = False
@@ -150,7 +150,7 @@ class MapPanel(QWidget):
             layout.setContentsMargins(5, 5, 5, 5)
             layout.setSpacing(5)
 
-            # タイトルバー（全画面ボタン付き）
+            # タイトルバー(全画面ボタン付き)
             title_layout = QHBoxLayout()
 
             title_label = QLabel("🗺️ 地図表示")
@@ -418,9 +418,9 @@ class MapPanel(QWidget):
 
     def _create_map(
         self,
-        center: Tuple[float, float],
+        center: tuple[float, float],
         zoom: int = 10,
-        markers: Optional[Dict[str, Tuple[float, float]]] = None,
+        markers: dict[str, tuple[float, float]] | None = None,
     ):
         """新しいFolium地図を作成"""
         try:
@@ -529,7 +529,7 @@ class MapPanel(QWidget):
         latitude: float,
         longitude: float,
         focus_on_location: bool = True,
-        image_path: str = None,
+        image_path: str | None = None,
     ):
         """座標を設定して地図を更新"""
         try:
@@ -616,7 +616,7 @@ class MapPanel(QWidget):
             distances = []
             for lat, lon in self.photo_locations.values():
                 if lat != latitude or lon != longitude:
-                    # 簡易的な距離計算（緯度経度の差）
+                    # 簡易的な距離計算(緯度経度の差)
                     lat_diff = abs(lat - latitude)
                     lon_diff = abs(lon - longitude)
                     distance = max(lat_diff, lon_diff)
@@ -628,13 +628,13 @@ class MapPanel(QWidget):
             # 最も近い画像との距離に基づいてズームレベルを決定
             min_distance = min(distances)
 
-            if min_distance < 0.001:  # 非常に近い（約100m以内）
+            if min_distance < 0.001:  # 非常に近い(約100m以内)
                 return 18
-            elif min_distance < 0.01:  # 近い（約1km以内）
+            elif min_distance < 0.01:  # 近い(約1km以内)
                 return 16
-            elif min_distance < 0.1:  # 中程度（約10km以内）
+            elif min_distance < 0.1:  # 中程度(約10km以内)
                 return 14
-            elif min_distance < 1.0:  # 遠い（約100km以内）
+            elif min_distance < 1.0:  # 遠い(約100km以内)
                 return 12
             else:  # 非常に遠い
                 return 10
@@ -649,7 +649,7 @@ class MapPanel(QWidget):
             return 15  # デフォルトズーム
 
     def add_image_location(
-        self, image_path: Path, latitude: float, longitude: float, name: str = None
+        self, image_path: Path, latitude: float, longitude: float, name: str | None = None
     ):
         """画像の位置情報を追加"""
         try:
@@ -941,7 +941,7 @@ class MapPanel(QWidget):
                         地図上に撮影場所を表示できません。
                     </div>
                     <div class="suggestion">
-                        <div class="suggestion-title">💡 GPS情報付き画像を撮影するには：</div>
+                        <div class="suggestion-title">💡 GPS情報付き画像を撮影するには:</div>
                         • カメラやスマートフォンの位置情報設定をオンにする<br>
                         • 屋外で十分なGPS信号を受信できる場所で撮影する<br>
                         • 撮影時にGPS機能が有効になっていることを確認する
@@ -1137,7 +1137,7 @@ class MapPanel(QWidget):
         """全ての画像位置を表示"""
         try:
             if self.photo_locations:
-                # 全体的な地図更新（全ての位置を表示）
+                # 全体的な地図更新(全ての位置を表示)
                 self._update_map()
 
                 if self.status_label:
@@ -1219,7 +1219,7 @@ class MapPanel(QWidget):
                 # 他のUI要素を非表示
                 self._hide_other_ui_elements()
 
-                # ステータスバーを非表示（地図をより大きく表示）
+                # ステータスバーを非表示(地図をより大きく表示)
                 if hasattr(self, "status_label") and self.status_label:
                     self.status_label.setVisible(False)
 
@@ -1341,7 +1341,7 @@ class MapPanel(QWidget):
                 self.updateGeometry()
                 self.update()
 
-                # 地図が表示されない場合の代替手段：少し遅延してから地図を再描画
+                # 地図が表示されない場合の代替手段:少し遅延してから地図を再描画
                 QTimer.singleShot(100, self._refresh_map_content)
 
                 # 最終的な表示状態を確認
@@ -1356,7 +1356,7 @@ class MapPanel(QWidget):
                 if hasattr(self, "fullscreen_button"):
                     self.fullscreen_button.setText("⛶ 戻る")
 
-                # フォーカスを確実に設定（ESCキーを受信するため）
+                # フォーカスを確実に設定(ESCキーを受信するため)
                 self.setFocus(Qt.FocusReason.OtherFocusReason)
 
                 # フォーカスポリシーを一時的に強化
@@ -1379,7 +1379,7 @@ class MapPanel(QWidget):
             )
 
     def _hide_other_ui_elements(self):
-        """他のUI要素を非表示にする（安全な方法）"""
+        """他のUI要素を非表示にする(安全な方法)"""
         try:
             # 親ウィンドウを取得
             parent_window = self.window()
@@ -1456,7 +1456,7 @@ class MapPanel(QWidget):
             )
 
     def _show_other_ui_elements(self):
-        """他のUI要素を再表示する（安全な方法）"""
+        """他のUI要素を再表示する(安全な方法)"""
         try:
             # 非表示にしたウィジェットを再表示
             if hasattr(self, "_hidden_widgets"):
@@ -1520,7 +1520,7 @@ class MapPanel(QWidget):
                 AIComponent.KIRO,
             )
 
-    def get_current_coordinates(self) -> Optional[Tuple[float, float]]:
+    def get_current_coordinates(self) -> tuple[float, float] | None:
         """現在の座標を取得"""
         if self.current_latitude is not None and self.current_longitude is not None:
             return (self.current_latitude, self.current_longitude)
@@ -1552,7 +1552,7 @@ class MapPanel(QWidget):
                 AIComponent.KIRO,
             )
 
-    def get_image_locations(self) -> List[Dict[str, Any]]:
+    def get_image_locations(self) -> list[dict[str, Any]]:
         """画像位置情報のリストを取得"""
         return self.image_locations.copy()
 

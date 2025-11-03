@@ -16,7 +16,7 @@ import sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .models import AIComponent, PerformanceMetrics
 
@@ -31,7 +31,6 @@ class LogLevel(Enum):
     DEBUG = "DEBUG"
     PERFORMANCE = "PERFORMANCE"  # Custom level for performance metrics
     AI_OPERATION = "AI_OPERATION"  # Custom level for AI operations
-
 
 class AILogFormatter(logging.Formatter):
     """Custom formatter for AI integration logging"""
@@ -60,14 +59,13 @@ class AILogFormatter(logging.Formatter):
         formatter = logging.Formatter(self.format_string)
         return formatter.format(record)
 
-
 class PerformanceLogHandler(logging.Handler):
     """Custom handler for performance metrics logging"""
 
     def __init__(self, metrics_file: Path):
         super().__init__()
         self.metrics_file = metrics_file
-        self.metrics_buffer: List[Dict[str, Any]] = []
+        self.metrics_buffer: list[dict[str, Any]] = []
         self.buffer_size = 100
 
     def emit(self, record):
@@ -109,7 +107,6 @@ class PerformanceLogHandler(logging.Handler):
             # Fallback to stderr if file writing fails
             print(f"Failed to write performance metrics: {e}", file=sys.stderr)
 
-
 class LoggerSystem:
     """
     Unified logging system that coordinates logging across all AI implementations
@@ -117,7 +114,7 @@ class LoggerSystem:
 
     def __init__(
         self,
-        log_dir: Path = None,
+        log_dir: Path | None = None,
         log_level: str = "INFO",
         enable_performance_logging: bool = True,
         enable_ai_operation_logging: bool = True,
@@ -141,15 +138,15 @@ class LoggerSystem:
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize loggers
-        self.loggers: Dict[str, logging.Logger] = {}
-        self.performance_handler: Optional[PerformanceLogHandler] = None
+        self.loggers: dict[str, logging.Logger] = {}
+        self.performance_handler: PerformanceLogHandler | None = None
 
         # Setup logging system
         self._setup_logging()
 
         # Performance tracking
-        self.operation_counts: Dict[str, int] = {}
-        self.performance_history: List[PerformanceMetrics] = []
+        self.operation_counts: dict[str, int] = {}
+        self.performance_history: list[PerformanceMetrics] = []
 
         # AI component loggers
         self.ai_loggers = {
@@ -303,7 +300,7 @@ class LoggerSystem:
         self.operation_counts[op_key] = self.operation_counts.get(op_key, 0) + 1
 
     def log_performance(
-        self, ai_component: AIComponent, operation: str, metrics: Dict[str, Any]
+        self, ai_component: AIComponent, operation: str, metrics: dict[str, Any]
     ):
         """
         Log performance metrics
@@ -332,7 +329,7 @@ class LoggerSystem:
         ai_component: AIComponent,
         error: Exception,
         operation: str = "",
-        context: Dict[str, Any] = None,
+        context: dict[str, Any] | None = None,
     ):
         """
         Log an error with AI component context
@@ -356,7 +353,7 @@ class LoggerSystem:
         logger.error(f"Error in {operation}: {error!s}", extra=extra, exc_info=True)
 
     def log_integration_event(
-        self, event: str, components: List[AIComponent], details: Dict[str, Any] = None
+        self, event: str, components: list[AIComponent], details: dict[str, Any] | None = None
     ):
         """
         Log an integration event involving multiple AI components
@@ -421,7 +418,7 @@ class LoggerSystem:
 
         return metrics
 
-    def get_operation_statistics(self) -> Dict[str, Any]:
+    def get_operation_statistics(self) -> dict[str, Any]:
         """
         Get operation statistics
 
@@ -509,7 +506,6 @@ class LoggerSystem:
         """
 
         return OperationContext(self, ai_component, operation)
-
 
 class OperationContext:
     """Context manager for operation logging"""

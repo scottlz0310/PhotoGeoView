@@ -19,7 +19,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class AIContributor(Enum):
@@ -28,7 +27,6 @@ class AIContributor(Enum):
     COPILOT = "GitHub Copilot (CS4Coding)"
     CURSOR = "Cursor (CursorBLD)"
     KIRO = "Kiro"
-
 
 class ContributionType(Enum):
     """貢献の種類"""
@@ -40,7 +38,6 @@ class ContributionType(Enum):
     DOCUMENTATION = "ドキュメント"
     ARCHITECTURE = "アーキテクチャ設計"
 
-
 @dataclass
 class AIContribution:
     """AI貢献情報"""
@@ -49,10 +46,9 @@ class AIContribution:
     contribution_type: ContributionType
     description: str
     file_path: Path
-    line_range: Optional[tuple] = None
+    line_range: tuple | None = None
     timestamp: datetime = field(default_factory=datetime.now)
     confidence: float = 1.0  # 貢献度の確信度 (0.0-1.0)
-
 
 @dataclass
 class FileDocumentation:
@@ -60,12 +56,11 @@ class FileDocumentation:
 
     file_path: Path
     primary_contributor: AIContributor
-    contributions: List[AIContribution]
+    contributions: list[AIContribution]
     purpose: str
-    dependencies: List[str] = field(default_factory=list)
-    api_endpoints: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
+    api_endpoints: list[str] = field(default_factory=list)
     last_updated: datetime = field(default_factory=datetime.now)
-
 
 class DocumentationSystem:
     """
@@ -76,11 +71,11 @@ class DocumentationSystem:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.contributions: Dict[str, List[AIContribution]] = {}
-        self.file_docs: Dict[str, FileDocumentation] = {}
+        self.contributions: dict[str, list[AIContribution]] = {}
+        self.file_docs: dict[str, FileDocumentation] = {}
         self.ai_attribution_patterns = self._load_attribution_patterns()
 
-    def _load_attribution_patterns(self) -> Dict[AIContributor, List[str]]:
+    def _load_attribution_patterns(self) -> dict[AIContributor, list[str]]:
         """AI貢献者を識別するパターンを定義"""
         return {
             AIContributor.COPILOT: [
@@ -152,7 +147,7 @@ class DocumentationSystem:
 
     def _extract_contributions_from_content(
         self, content: str, file_path: Path
-    ) -> List[AIContribution]:
+    ) -> list[AIContribution]:
         """コンテンツからAI貢献を抽出"""
         contributions = []
         lines = content.split("\n")
@@ -179,7 +174,7 @@ class DocumentationSystem:
         return contributions
 
     def _determine_primary_contributor(
-        self, contributions: List[AIContribution]
+        self, contributions: list[AIContribution]
     ) -> AIContributor:
         """主要貢献者を決定"""
         if not contributions:
@@ -250,7 +245,7 @@ class DocumentationSystem:
 
         return "目的不明"
 
-    def _extract_dependencies(self, content: str) -> List[str]:
+    def _extract_dependencies(self, content: str) -> list[str]:
         """依存関係を抽出"""
         dependencies = []
 
@@ -267,7 +262,7 @@ class DocumentationSystem:
 
         return list(set(dependencies))  # 重複除去
 
-    def _extract_api_endpoints(self, content: str) -> List[str]:
+    def _extract_api_endpoints(self, content: str) -> list[str]:
         """APIエンドポイントを抽出"""
         endpoints = []
 
@@ -313,7 +308,7 @@ class DocumentationSystem:
 
         for contributor, contribs in contribls.items():
             header_lines.append(f"{contributor.value}:")
-            contribution_types = set(c.contribution_type for c in contribs)
+            contribution_types = {c.contribution_type for c in contribs}
             for contrib_type in contribution_types:
                 header_lines.append(f"  - {contrib_type.value}")
             header_lines.append("")
@@ -522,12 +517,12 @@ class DocumentationSystem:
 
         return "\n".join(guide_lines)
 
-    def scan_project_files(self, extensions: List[str] = None) -> None:
+    def scan_project_files(self, extensions: list[str] | None = None) -> None:
         """
         プロジェクト全体のファイルをスキャンしてドキュメント情報を収集
 
         Args:
-            extensions: スキャン対象の拡張子リスト（デフォルト: ['.py']）
+            extensions: スキャン対象の拡張子リスト(デフォルト: ['.py'])
         """
         if extensions is None:
             extensions = [".py"]
@@ -656,7 +651,7 @@ class DocumentationSystem:
 
         return "\n".join(report_lines)
 
-    def update_file_headers(self, dry_run: bool = True) -> List[Path]:
+    def update_file_headers(self, dry_run: bool = True) -> list[Path]:
         """
         プロジェクト内のファイルヘッダーを更新
 
@@ -668,7 +663,7 @@ class DocumentationSystem:
         """
         updated_files = []
 
-        for file_path_str, file_doc in self.file_docs.items():
+        for file_path_str, _file_doc in self.file_docs.items():
             file_path = Path(file_path_str)
 
             if not file_path.exists():
@@ -682,10 +677,7 @@ class DocumentationSystem:
                 if content.startswith('"""'):
                     # 既存のdocstringを見つけて置換
                     end_pos = content.find('"""', 3)
-                    if end_pos != -1:
-                        new_content = new_header + content[end_pos + 3 :]
-                    else:
-                        new_content = new_header + content
+                    new_content = new_header + content[end_pos + 3:] if end_pos != -1 else new_header + content
                 else:
                     # ヘッダーを先頭に追加
                     new_content = new_header + content
@@ -703,7 +695,6 @@ class DocumentationSystem:
 
         return updated_files
 
-
 # 使用例とテスト用の関数
 def main():
     """ドキュメントシステムのテスト実行"""
@@ -714,14 +705,13 @@ def main():
     output_dir = project_root / "docs" / "ai_integration"
     doc_system.generate_integration_documentation(output_dir)
 
-    # ファイルヘッダー更新（dry run）
+    # ファイルヘッダー更新(dry run)
     updated_files = doc_system.update_file_headers(dry_run=True)
 
     logger = logging.getLogger(__name__)
     update_msg = f"更新対象ファイル数: {len(updated_files)}"
     logger.info(update_msg)
     print(update_msg)  # ユーザーへの結果表示
-
 
 if __name__ == "__main__":
     main()

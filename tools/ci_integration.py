@@ -19,7 +19,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class CIIntegrator:
@@ -28,7 +28,7 @@ class CIIntegrator:
     with existing project workflows and build processes.
     """
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         self.project_root = project_root or Path(__file__).parent.parent
         self.ci_simulator_path = self.project_root / "tools" / "ci" / "simulator.py"
 
@@ -294,7 +294,7 @@ class CIIntegrator:
 
         return results
 
-    def generate_integration_report(self, output_path: Optional[Path] = None) -> Path:
+    def generate_integration_report(self, output_path: Path | None = None) -> Path:
         """
         Generate a comprehensive integration report.
 

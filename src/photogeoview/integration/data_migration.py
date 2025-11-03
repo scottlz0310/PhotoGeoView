@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .data_validation import DataValidator, ValidationResult
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -35,7 +35,6 @@ class MigrationStatus(Enum):
     FAILED = "failed"
     SKIPPED = "skipped"
 
-
 @dataclass
 class MigrationResult:
     """Result of a data migration operation"""
@@ -44,10 +43,9 @@ class MigrationResult:
     target_model: str
     status: MigrationStatus
     migrated_count: int
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    validation_results: List[ValidationResult] = field(default_factory=list)
-
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    validation_results: list[ValidationResult] = field(default_factory=list)
 
 class DataMigrationManager:
     """
@@ -59,8 +57,8 @@ class DataMigrationManager:
 
     def __init__(
         self,
-        data_dir: Path = None,
-        backup_dir: Path = None,
+        data_dir: Path | None = None,
+        backup_dir: Path | None = None,
         logger_system: LoggerSystem = None,
         validator: DataValidator = None,
     ):
@@ -82,7 +80,7 @@ class DataMigrationManager:
         )
 
         # Migration results
-        self.migration_results: List[MigrationResult] = []
+        self.migration_results: list[MigrationResult] = []
 
         # Create directories
         self.backup_dir.mkdir(parents=True, exist_ok=True)
@@ -92,7 +90,7 @@ class DataMigrationManager:
 
         self.logger_system.info("Data migration manager initialized")
 
-    def _setup_migration_mappings(self) -> Dict[str, Dict[str, Any]]:
+    def _setup_migration_mappings(self) -> dict[str, dict[str, Any]]:
         """Setup migration mappings for different data formats"""
         return {
             # CursorBLD data migration
@@ -195,7 +193,7 @@ class DataMigrationManager:
             },
         }
 
-    def migrate_all_data(self) -> Dict[str, List[MigrationResult]]:
+    def migrate_all_data(self) -> dict[str, list[MigrationResult]]:
         """
         Migrate all existing data to unified models
 
@@ -243,8 +241,8 @@ class DataMigrationManager:
             }
 
     def _migrate_ai_data(
-        self, ai_name: str, data_mappings: Dict[str, Any]
-    ) -> List[MigrationResult]:
+        self, ai_name: str, data_mappings: dict[str, Any]
+    ) -> list[MigrationResult]:
         """Migrate data for a specific AI implementation"""
         results = []
 
@@ -280,7 +278,7 @@ class DataMigrationManager:
         return results
 
     def _migrate_file_data(
-        self, ai_name: str, data_type: str, mapping_config: Dict[str, Any]
+        self, ai_name: str, data_type: str, mapping_config: dict[str, Any]
     ) -> MigrationResult:
         """Migrate data from JSON/file sources"""
         source_files = mapping_config["source_files"]
@@ -368,7 +366,7 @@ class DataMigrationManager:
         return result
 
     def _migrate_database_data(
-        self, ai_name: str, data_type: str, mapping_config: Dict[str, Any]
+        self, ai_name: str, data_type: str, mapping_config: dict[str, Any]
     ) -> MigrationResult:
         """Migrate data from SQLite database sources"""
         source_files = mapping_config["source_files"]
@@ -473,10 +471,10 @@ class DataMigrationManager:
 
     def _convert_object(
         self,
-        source_obj: Dict[str, Any],
-        field_mappings: Dict[str, str],
+        source_obj: dict[str, Any],
+        field_mappings: dict[str, str],
         target_model: str,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         """Convert source object to target model using field mappings"""
         try:
             converted_data = {}
@@ -507,8 +505,8 @@ class DataMigrationManager:
             return None
 
     def _create_object_from_db_row(
-        self, row_dict: Dict[str, Any], target_model: str
-    ) -> Optional[Any]:
+        self, row_dict: dict[str, Any], target_model: str
+    ) -> Any | None:
         """Create target model object from database row"""
         try:
             if target_model == "ImageMetadata":
@@ -526,7 +524,7 @@ class DataMigrationManager:
             )
             return None
 
-    def _create_image_metadata(self, data: Dict[str, Any]) -> Optional[ImageMetadata]:
+    def _create_image_metadata(self, data: dict[str, Any]) -> ImageMetadata | None:
         """Create ImageMetadata instance from data"""
         try:
             # Required fields with defaults
@@ -587,8 +585,8 @@ class DataMigrationManager:
             return None
 
     def _create_theme_configuration(
-        self, data: Dict[str, Any]
-    ) -> Optional[ThemeConfiguration]:
+        self, data: dict[str, Any]
+    ) -> ThemeConfiguration | None:
         """Create ThemeConfiguration instance from data"""
         try:
             return ThemeConfiguration(
@@ -610,8 +608,8 @@ class DataMigrationManager:
             return None
 
     def _create_application_state(
-        self, data: Dict[str, Any]
-    ) -> Optional[ApplicationState]:
+        self, data: dict[str, Any]
+    ) -> ApplicationState | None:
         """Create ApplicationState instance from data"""
         try:
             return ApplicationState(
@@ -744,7 +742,7 @@ class DataMigrationManager:
         return ValidationResult(is_valid=True)
 
     def _save_migrated_objects(
-        self, objects: List[Any], target_model: str, ai_name: str, data_type: str
+        self, objects: list[Any], target_model: str, ai_name: str, data_type: str
     ):
         """Save migrated objects to appropriate storage"""
         try:
@@ -801,7 +799,7 @@ class DataMigrationManager:
         return backup_file
 
     def _generate_migration_report(
-        self, migration_summary: Dict[str, List[MigrationResult]]
+        self, migration_summary: dict[str, list[MigrationResult]]
     ):
         """Generate detailed migration report"""
         report_file = self.data_dir / "data_migration_report.json"
@@ -869,7 +867,7 @@ class DataMigrationManager:
 
         self.logger_system.info(f"Migration report saved to {report_file}")
 
-    def get_migration_status(self) -> Dict[str, Any]:
+    def get_migration_status(self) -> dict[str, Any]:
         """Get current migration status"""
         return {
             "migration_results_count": len(self.migration_results),

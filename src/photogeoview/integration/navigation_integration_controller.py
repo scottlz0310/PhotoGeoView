@@ -12,9 +12,10 @@ Requirements: 2.1, 4.1, 4.2, 4.3, 4.4
 import asyncio
 import os
 import threading
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Set
 
 from .config_manager import ConfigManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -44,8 +45,8 @@ class NavigationIntegrationController:
         self,
         config_manager: ConfigManager,
         logger_system: LoggerSystem,
-        file_system_watcher: Optional[FileSystemWatcher] = None,
-        error_handler: Optional[IntegratedErrorHandler] = None,
+        file_system_watcher: FileSystemWatcher | None = None,
+        error_handler: IntegratedErrorHandler | None = None,
     ):
         """
         Initialize the navigation integration controller
@@ -67,19 +68,19 @@ class NavigationIntegrationController:
         )
 
         # Navigation state management
-        self.current_navigation_state: Optional[NavigationState] = None
-        self.navigation_history: List[Path] = []
+        self.current_navigation_state: NavigationState | None = None
+        self.navigation_history: list[Path] = []
         self.max_history_size = 50
 
         # Component registration system
         self.registered_components: Set[INavigationAware] = set()
-        self.component_registry: Dict[str, INavigationAware] = {}
-        self.navigation_managers: Dict[str, INavigationManager] = {}
+        self.component_registry: dict[str, INavigationAware] = {}
+        self.navigation_managers: dict[str, INavigationManager] = {}
 
         # Navigation event listeners
-        self.navigation_listeners: List[NavigationCallback] = []
-        self.path_change_listeners: List[PathChangeCallback] = []
-        self.error_listeners: List[Callable[[str, str], None]] = []
+        self.navigation_listeners: list[NavigationCallback] = []
+        self.path_change_listeners: list[PathChangeCallback] = []
+        self.error_listeners: list[Callable[[str, str], None]] = []
 
         # Thread safety
         self._lock = threading.RLock()
@@ -91,9 +92,9 @@ class NavigationIntegrationController:
         self.max_retry_attempts = 3
 
         # Performance tracking
-        self.navigation_times: List[float] = []
-        self.sync_operation_times: Dict[str, List[float]] = {}
-        self.path_validation_cache: Dict[str, bool] = {}
+        self.navigation_times: list[float] = []
+        self.sync_operation_times: dict[str, list[float]] = {}
+        self.path_validation_cache: dict[str, bool] = {}
 
         # Error handling and fallback
         self.fallback_path = Path.home()
@@ -257,7 +258,7 @@ class NavigationIntegrationController:
     # Component Registration
 
     def register_navigation_component(
-        self, component: INavigationAware, component_id: Optional[str] = None
+        self, component: INavigationAware, component_id: str | None = None
     ) -> bool:
         """
         Register a navigation-aware component
@@ -316,7 +317,7 @@ class NavigationIntegrationController:
             return False
 
     def unregister_navigation_component(
-        self, component: INavigationAware, component_id: Optional[str] = None
+        self, component: INavigationAware, component_id: str | None = None
     ) -> bool:
         """
         Unregister a navigation-aware component
@@ -440,7 +441,7 @@ class NavigationIntegrationController:
     # Navigation Coordination
 
     async def navigate_to_path(
-        self, path: Path, source_component: Optional[str] = None
+        self, path: Path, source_component: str | None = None
     ) -> bool:
         """
         Navigate to a specific path and synchronize across all components
@@ -565,7 +566,7 @@ class NavigationIntegrationController:
 
                 return result
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.logger.warning(f"Path validation timed out: {path}")
                 return False
 
@@ -600,7 +601,7 @@ class NavigationIntegrationController:
             self.logger.error(f"Failed to update file system watcher: {e}")
 
     async def _synchronize_navigation_state(
-        self, source_component: Optional[str] = None
+        self, source_component: str | None = None
     ) -> bool:
         """
         Synchronize navigation state across all registered components
@@ -655,7 +656,7 @@ class NavigationIntegrationController:
                     elif isinstance(result, Exception):
                         self.logger.error(f"Component synchronization failed: {result}")
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.logger.warning(
                     f"Navigation synchronization timed out after {self.sync_timeout}s"
                 )
@@ -697,7 +698,7 @@ class NavigationIntegrationController:
             )
             return False
 
-    def _get_component_id(self, component: INavigationAware) -> Optional[str]:
+    def _get_component_id(self, component: INavigationAware) -> str | None:
         """Get component ID from registry"""
         for component_id, registered_component in self.component_registry.items():
             if registered_component is component:
@@ -765,7 +766,7 @@ class NavigationIntegrationController:
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None,
+        old_path: Path | None = None,
     ) -> None:
         """Handle file system change events"""
         try:
@@ -808,7 +809,7 @@ class NavigationIntegrationController:
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None,
+        old_path: Path | None = None,
     ) -> None:
         """Handle path changes that affect navigation"""
         try:
@@ -863,7 +864,7 @@ class NavigationIntegrationController:
     # Error Handling
 
     async def _handle_navigation_error(
-        self, path: Path, error_message: str, source_component: Optional[str] = None
+        self, path: Path, error_message: str, source_component: str | None = None
     ) -> None:
         """Handle navigation errors and notify listeners"""
         try:
@@ -1029,7 +1030,7 @@ class NavigationIntegrationController:
 
     # Public API
 
-    def get_current_navigation_state(self) -> Optional[NavigationState]:
+    def get_current_navigation_state(self) -> NavigationState | None:
         """
         Get the current navigation state
 
@@ -1038,7 +1039,7 @@ class NavigationIntegrationController:
         """
         return self.current_navigation_state
 
-    def get_navigation_history(self) -> List[Path]:
+    def get_navigation_history(self) -> list[Path]:
         """
         Get navigation history
 
@@ -1047,7 +1048,7 @@ class NavigationIntegrationController:
         """
         return self.navigation_history.copy()
 
-    def get_registered_components(self) -> List[str]:
+    def get_registered_components(self) -> list[str]:
         """
         Get list of registered component IDs
 
@@ -1056,7 +1057,7 @@ class NavigationIntegrationController:
         """
         return list(self.component_registry.keys())
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """
         Get performance statistics
 

@@ -27,10 +27,11 @@ UI機能:
 Author: Kiro AI Integration System
 """
 
+import contextlib
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QEvent, QMutex, QObject, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QImageReader, QPainter, QPixmap
@@ -94,7 +95,7 @@ class ThumbnailItem(QLabel):
         self._update_thumbnail_style()
 
     def changeEvent(self, event):  # type: ignore[override]
-        """スタイル/パレット変更で再適用（無限ループ防止）"""
+        """スタイル/パレット変更で再適用(無限ループ防止)"""
         try:
             if event and event.type() in (
                 QEvent.Type.PaletteChange,
@@ -109,7 +110,7 @@ class ThumbnailItem(QLabel):
             super().changeEvent(event)
 
     def _update_thumbnail_style(self):
-        """テーマに基づいてスタイルを更新（無限ループ防止版）"""
+        """テーマに基づいてスタイルを更新(無限ループ防止版)"""
         try:
             # 現在のスタイルシートを取得
             current_style = self.styleSheet()
@@ -120,7 +121,7 @@ class ThumbnailItem(QLabel):
             border_color = "#007acc"
             fg_color = "#2c3e50"
 
-            # テーママネージャーから色を取得（利用可能な色キーのみ）
+            # テーママネージャーから色を取得(利用可能な色キーのみ)
             if self.theme_manager:
                 try:
                     # 利用可能な色キーのみを使用
@@ -157,7 +158,7 @@ class ThumbnailItem(QLabel):
                         fg_color = "#2c3e50"
 
                 except Exception:
-                    # エラー時はデフォルト色を使用（ログ出力は最小限）
+                    # エラー時はデフォルト色を使用(ログ出力は最小限)
                     pass
 
             new_style = f"""
@@ -193,9 +194,9 @@ class ThumbnailItem(QLabel):
             """)
 
     def _show_placeholder(self):
-        """Show placeholder while loading（最適化版）"""
+        """Show placeholder while loading(最適化版)"""
 
-        # テーマに追随したプレースホルダー（シンプル化）
+        # テーマに追随したプレースホルダー(シンプル化)
         bg = "#e9ecef"
         text_col = "#6c757d"
 
@@ -288,7 +289,7 @@ class ThumbnailItem(QLabel):
         self.setPixmap(error_pixmap)
         self.setText("Error")
 
-    def set_exif_info(self, exif_data: Dict[str, Any]):
+    def set_exif_info(self, exif_data: dict[str, Any]):
         """Set EXIF information for display"""
         if exif_data:
             # Create tooltip with EXIF info
@@ -323,7 +324,6 @@ class ThumbnailItem(QLabel):
             self.exif_info_requested.emit(self.image_path)
         super().mouseDoubleClickEvent(event)
 
-
 class ThumbnailLoader(QObject):
     """
     Asynchronous thumbnail loader with Kiro optimization
@@ -335,12 +335,12 @@ class ThumbnailLoader(QObject):
     def __init__(self, logger_system: LoggerSystem):
         super().__init__()
         self.logger_system = logger_system
-        self.cache: Dict[str, QPixmap] = {}
+        self.cache: dict[str, QPixmap] = {}
         self.cache_hits = 0
         self.cache_misses = 0
         self.recent_load_times = []
 
-    def load_thumbnails(self, image_paths: List[Path], thumbnail_size: int):
+    def load_thumbnails(self, image_paths: list[Path], thumbnail_size: int):
         """Load thumbnails for the given image paths (I/O thread) - デバッグ版
 
         - Uses QImageReader with setAutoTransform(True)
@@ -360,7 +360,7 @@ class ThumbnailLoader(QObject):
                 level="DEBUG",
             )
 
-            for i, image_path in enumerate(image_paths):
+            for _i, image_path in enumerate(image_paths):
                 item_start_time = time.time()
 
                 # Check cache first
@@ -438,7 +438,7 @@ class ThumbnailLoader(QObject):
                 level="ERROR",
             )
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         total_requests = self.cache_hits + self.cache_misses
         hit_rate = self.cache_hits / total_requests if total_requests > 0 else 0
@@ -463,7 +463,6 @@ class ThumbnailLoader(QObject):
         self.cache_hits = 0
         self.cache_misses = 0
 
-
 class OptimizedThumbnailGrid(QWidget):
     """
     Optimized thumbnail grid with fast loading and EXIF display
@@ -485,7 +484,7 @@ class OptimizedThumbnailGrid(QWidget):
         config_manager: ConfigManager,
         state_manager: StateManager,
         logger_system: LoggerSystem = None,
-        theme_manager: Optional[object] = None,
+        theme_manager: object | None = None,
     ):
         """
         Initialize optimized thumbnail grid
@@ -523,9 +522,9 @@ class OptimizedThumbnailGrid(QWidget):
         self.spacing = 10
 
         # Data storage
-        self.image_list: List[Path] = []
-        self.thumbnail_items: Dict[Path, ThumbnailItem] = {}
-        self.exif_cache: Dict[Path, Dict[str, Any]] = {}
+        self.image_list: list[Path] = []
+        self.thumbnail_items: dict[Path, ThumbnailItem] = {}
+        self.exif_cache: dict[Path, dict[str, Any]] = {}
 
         # Performance tracking
         self.load_start_time = None
@@ -539,7 +538,7 @@ class OptimizedThumbnailGrid(QWidget):
 
         # Threading - 初期化を最初に行う
         self.load_mutex = QMutex()
-        # サムネイル読み込み用のワーカー数を大幅に増加（I/O処理の並列化）
+        # サムネイル読み込み用のワーカー数を大幅に増加(I/O処理の並列化)
         self.thumbnail_executor = ThreadPoolExecutor(
             max_workers=8, thread_name_prefix="thumbnail"
         )
@@ -554,10 +553,10 @@ class OptimizedThumbnailGrid(QWidget):
         self._theme_updating = False
 
         # UI components
-        self.scroll_area: Optional[QScrollArea] = None
-        self.grid_widget: Optional[QWidget] = None
-        self.grid_layout: Optional[QGridLayout] = None
-        self.controls_widget: Optional[QWidget] = None
+        self.scroll_area: QScrollArea | None = None
+        self.grid_widget: QWidget | None = None
+        self.grid_layout: QGridLayout | None = None
+        self.controls_widget: QWidget | None = None
 
         # Thumbnail loader
         self.thumbnail_loader = ThumbnailLoader(self.logger_system)
@@ -640,18 +639,14 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Controls
             self.controls_widget = self._create_controls()
-            try:
+            with contextlib.suppress(Exception):
                 self.controls_widget.setObjectName("thumbnailControls")
-            except Exception:
-                pass
             layout.addWidget(self.controls_widget)
 
             # Scroll area for thumbnails
             self.scroll_area = QScrollArea()
-            try:
+            with contextlib.suppress(Exception):
                 self.scroll_area.setObjectName("thumbnailScrollArea")
-            except Exception:
-                pass
             self.scroll_area.setWidgetResizable(True)
             self.scroll_area.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAsNeeded
@@ -662,10 +657,8 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Grid widget
             self.grid_widget = QWidget()
-            try:
+            with contextlib.suppress(Exception):
                 self.grid_widget.setObjectName("thumbnailGridContainer")
-            except Exception:
-                pass
             self.grid_layout = QGridLayout(self.grid_widget)
             self.grid_layout.setSpacing(self.spacing)
             self.grid_layout.setAlignment(
@@ -744,7 +737,7 @@ class OptimizedThumbnailGrid(QWidget):
 
         return controls
 
-    def set_image_list(self, image_list: List[Path]):
+    def set_image_list(self, image_list: list[Path]):
         """Set the list of images to display"""
         try:
             # 基本的な設定
@@ -866,7 +859,7 @@ class OptimizedThumbnailGrid(QWidget):
         try:
             if self.image_list:
                 # 段階的な読み込みでUI応答性を向上
-                # 最初に表示可能な範囲（画面に表示される分）を優先読み込み
+                # 最初に表示可能な範囲(画面に表示される分)を優先読み込み
                 visible_count = min(32, len(self.image_list))
                 preload = self.image_list[:visible_count]
 
@@ -994,7 +987,7 @@ class OptimizedThumbnailGrid(QWidget):
             for i in range(0, len(remaining_images), batch_size):
                 batch = remaining_images[i : i + batch_size]
 
-                # 少し遅延を入れて読み込み（UI応答性を保つため）
+                # 少し遅延を入れて読み込み(UI応答性を保つため)
                 QTimer.singleShot(i * 100, lambda b=batch: self._load_batch_async(b))
 
         except Exception as e:
@@ -1005,7 +998,7 @@ class OptimizedThumbnailGrid(QWidget):
                 AIComponent.CURSOR,
             )
 
-    def _load_batch_async(self, image_batch: List[Path]):
+    def _load_batch_async(self, image_batch: list[Path]):
         """Load a batch of thumbnails asynchronously"""
         try:
             if image_batch:
@@ -1233,7 +1226,7 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Helpful message
             empty_message = QLabel(
-                "このフォルダには対応する画像ファイル（JPG、PNG、GIF、BMP、TIFF、WEBP）がありません。\n別のフォルダを選択してください。"
+                "このフォルダには対応する画像ファイル(JPG、PNG、GIF、BMP、TIFF、WEBP)がありません。\n別のフォルダを選択してください。"
             )
             empty_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty_message.setWordWrap(True)

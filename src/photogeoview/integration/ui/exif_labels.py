@@ -7,7 +7,7 @@ allowing labels to inherit theme styling and support multiple languages.
 Author: Kiro AI Integration System
 """
 
-from typing import Any, Dict
+from typing import Any
 
 # Default English labels
 DEFAULT_LABELS = {
@@ -143,7 +143,6 @@ JAPANESE_LABELS = {
     },
 }
 
-
 class EXIFLabelManager:
     """
     Manages EXIF panel labels with theme-aware styling
@@ -175,7 +174,7 @@ class EXIFLabelManager:
         except (KeyError, AttributeError):
             return f"{section}.{key}"
 
-    def get_section_labels(self, section: str) -> Dict[str, str]:
+    def get_section_labels(self, section: str) -> dict[str, str]:
         """
         Get all labels for a section
 
@@ -201,7 +200,7 @@ class EXIFLabelManager:
         """Get list of available languages"""
         return ["en", "ja"]
 
-    def export_labels_for_theme(self) -> Dict[str, Any]:
+    def export_labels_for_theme(self) -> dict[str, Any]:
         """
         Export labels in a format suitable for theme configuration
 

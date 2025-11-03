@@ -4,8 +4,6 @@ ThemeManager フォールバック実装
 qt_theme_managerライブラリが利用できない場合の代替実装
 """
 
-from typing import Dict, List, Optional
-
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
@@ -41,7 +39,7 @@ class ThemeManagerFallback(QObject):
             },
         }
 
-    def get_available_themes(self) -> List[str]:
+    def get_available_themes(self) -> list[str]:
         """利用可能なテーマ一覧を取得"""
         return list(self.themes.keys())
 
@@ -62,7 +60,7 @@ class ThemeManagerFallback(QObject):
         """テーマを適用"""
         return self.set_theme(theme_name)
 
-    def get_theme_info(self, theme_name: str) -> Optional[Dict]:
+    def get_theme_info(self, theme_name: str) -> Dict | None:
         """テーマ情報を取得"""
         return self.themes.get(theme_name)
 
@@ -192,7 +190,6 @@ class ThemeManagerFallback(QObject):
             color: #cccccc;
         }
         """
-
 
 # qt_theme_managerからのインポートを試行し、失敗した場合はフォールバックを使用
 try:

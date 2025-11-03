@@ -13,7 +13,7 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .logging_system import LoggerSystem
 from .performance_optimizer import PerformanceOptimizer
@@ -23,14 +23,14 @@ class PerformanceMetrics:
     """Container for performance metrics data"""
 
     def __init__(self):
-        self.theme_switch_times: List[float] = []
-        self.breadcrumb_render_times: List[float] = []
-        self.cache_hit_rates: Dict[str, float] = {}
-        self.memory_usage: List[Tuple[datetime, int]] = []
-        self.error_rates: Dict[str, float] = {}
-        self.operation_counts: Dict[str, int] = {}
+        self.theme_switch_times: list[float] = []
+        self.breadcrumb_render_times: list[float] = []
+        self.cache_hit_rates: dict[str, float] = {}
+        self.memory_usage: list[tuple[datetime, int]] = []
+        self.error_rates: dict[str, float] = {}
+        self.operation_counts: dict[str, int] = {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary for serialization"""
         return {
             "theme_switch_times": self.theme_switch_times,
@@ -43,7 +43,6 @@ class PerformanceMetrics:
             "operation_counts": self.operation_counts,
             "timestamp": datetime.now().isoformat(),
         }
-
 
 class PerformanceDashboard:
     """Performance monitoring dashboard for theme and navigation operations"""
@@ -61,10 +60,10 @@ class PerformanceDashboard:
 
         # Metrics storage
         self.current_metrics = PerformanceMetrics()
-        self.metrics_history: List[PerformanceMetrics] = []
+        self.metrics_history: list[PerformanceMetrics] = []
 
         # Threading
-        self._monitoring_thread: Optional[threading.Thread] = None
+        self._monitoring_thread: threading.Thread | None = None
         self._stop_monitoring = threading.Event()
         self._metrics_lock = threading.RLock()
 
@@ -78,7 +77,7 @@ class PerformanceDashboard:
         }
 
         # Alert callbacks
-        self.alert_callbacks: List[callable] = []
+        self.alert_callbacks: list[callable] = []
 
     def start_monitoring(self) -> None:
         """Start performance monitoring"""
@@ -317,12 +316,12 @@ class PerformanceDashboard:
 
     # Public API methods
 
-    def get_current_metrics(self) -> Dict[str, Any]:
+    def get_current_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
         with self._metrics_lock:
             return self.current_metrics.to_dict()
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get performance metrics summary"""
         try:
             with self._metrics_lock:

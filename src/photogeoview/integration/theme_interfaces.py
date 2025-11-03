@@ -9,8 +9,9 @@ Requirements: 5.1, 5.2, 5.3
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 from .theme_models import ThemeConfiguration, ThemeInfo
 
@@ -24,7 +25,7 @@ class IThemeProvider(ABC):
     """
 
     @abstractmethod
-    def get_available_themes(self) -> List[ThemeInfo]:
+    def get_available_themes(self) -> list[ThemeInfo]:
         """
         Get list of available themes
 
@@ -34,7 +35,7 @@ class IThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def load_theme(self, theme_name: str) -> Optional[ThemeConfiguration]:
+    def load_theme(self, theme_name: str) -> ThemeConfiguration | None:
         """
         Load a specific theme configuration
 
@@ -86,7 +87,7 @@ class IThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def import_theme(self, file_path: Path) -> Optional[ThemeConfiguration]:
+    def import_theme(self, file_path: Path) -> ThemeConfiguration | None:
         """
         Import a theme from file
 
@@ -112,7 +113,6 @@ class IThemeProvider(ABC):
         """
         pass
 
-
 class IThemeManager(ABC):
     """
     Abstract interface for theme management
@@ -122,7 +122,7 @@ class IThemeManager(ABC):
     """
 
     @abstractmethod
-    def get_current_theme(self) -> Optional[ThemeConfiguration]:
+    def get_current_theme(self) -> ThemeConfiguration | None:
         """
         Get the currently active theme
 
@@ -232,7 +232,6 @@ class IThemeManager(ABC):
         """
         pass
 
-
 class IThemeAware(Protocol):
     """
     Protocol for theme-aware components
@@ -250,7 +249,7 @@ class IThemeAware(Protocol):
         """
         ...
 
-    def get_theme_properties(self) -> List[str]:
+    def get_theme_properties(self) -> list[str]:
         """
         Get list of theme properties used by this component
 
@@ -258,7 +257,6 @@ class IThemeAware(Protocol):
             List of property paths used by the component
         """
         ...
-
 
 class IThemeValidator(ABC):
     """
@@ -269,7 +267,7 @@ class IThemeValidator(ABC):
     """
 
     @abstractmethod
-    def validate_theme_structure(self, theme: ThemeConfiguration) -> List[str]:
+    def validate_theme_structure(self, theme: ThemeConfiguration) -> list[str]:
         """
         Validate theme structure and required fields
 
@@ -282,7 +280,7 @@ class IThemeValidator(ABC):
         pass
 
     @abstractmethod
-    def validate_color_scheme(self, theme: ThemeConfiguration) -> List[str]:
+    def validate_color_scheme(self, theme: ThemeConfiguration) -> list[str]:
         """
         Validate theme color scheme
 
@@ -295,7 +293,7 @@ class IThemeValidator(ABC):
         pass
 
     @abstractmethod
-    def validate_fonts(self, theme: ThemeConfiguration) -> List[str]:
+    def validate_fonts(self, theme: ThemeConfiguration) -> list[str]:
         """
         Validate theme font configuration
 
@@ -308,7 +306,7 @@ class IThemeValidator(ABC):
         pass
 
     @abstractmethod
-    def validate_accessibility(self, theme: ThemeConfiguration) -> List[str]:
+    def validate_accessibility(self, theme: ThemeConfiguration) -> list[str]:
         """
         Validate theme accessibility compliance
 
@@ -321,7 +319,7 @@ class IThemeValidator(ABC):
         pass
 
     @abstractmethod
-    def validate_compatibility(self, theme: ThemeConfiguration) -> List[str]:
+    def validate_compatibility(self, theme: ThemeConfiguration) -> list[str]:
         """
         Validate theme compatibility with current system
 
@@ -333,7 +331,6 @@ class IThemeValidator(ABC):
         """
         pass
 
-
 class IThemeStorage(ABC):
     """
     Abstract interface for theme storage
@@ -343,7 +340,7 @@ class IThemeStorage(ABC):
     """
 
     @abstractmethod
-    def load_theme_config(self, theme_name: str) -> Optional[ThemeConfiguration]:
+    def load_theme_config(self, theme_name: str) -> ThemeConfiguration | None:
         """
         Load theme configuration from storage
 
@@ -382,7 +379,7 @@ class IThemeStorage(ABC):
         pass
 
     @abstractmethod
-    def list_available_themes(self) -> List[str]:
+    def list_available_themes(self) -> list[str]:
         """
         List all available theme names in storage
 
@@ -405,7 +402,7 @@ class IThemeStorage(ABC):
         pass
 
     @abstractmethod
-    def get_theme_metadata(self, theme_name: str) -> Optional[Dict[str, Any]]:
+    def get_theme_metadata(self, theme_name: str) -> dict[str, Any] | None:
         """
         Get theme metadata without loading full configuration
 
@@ -442,7 +439,6 @@ class IThemeStorage(ABC):
             True if restored successfully, False otherwise
         """
         pass
-
 
 class IThemeRenderer(ABC):
     """
@@ -481,7 +477,7 @@ class IThemeRenderer(ABC):
     @abstractmethod
     def render_component_styles(
         self, theme: ThemeConfiguration, component_type: str
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Render styles for a specific component type
 
@@ -495,7 +491,7 @@ class IThemeRenderer(ABC):
         pass
 
     @abstractmethod
-    def get_supported_formats(self) -> List[str]:
+    def get_supported_formats(self) -> list[str]:
         """
         Get list of supported rendering formats
 
@@ -507,7 +503,7 @@ class IThemeRenderer(ABC):
     @abstractmethod
     def validate_rendering(
         self, theme: ThemeConfiguration, format_type: str
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Validate that theme can be rendered in specified format
 
@@ -520,7 +516,6 @@ class IThemeRenderer(ABC):
         """
         pass
 
-
 class IThemeCache(ABC):
     """
     Abstract interface for theme caching
@@ -530,7 +525,7 @@ class IThemeCache(ABC):
     """
 
     @abstractmethod
-    def get_cached_theme(self, theme_name: str, cache_key: str) -> Optional[Any]:
+    def get_cached_theme(self, theme_name: str, cache_key: str) -> Any | None:
         """
         Get cached theme data
 
@@ -545,7 +540,7 @@ class IThemeCache(ABC):
 
     @abstractmethod
     def cache_theme(
-        self, theme_name: str, cache_key: str, data: Any, ttl: Optional[int] = None
+        self, theme_name: str, cache_key: str, data: Any, ttl: int | None = None
     ) -> bool:
         """
         Cache theme data
@@ -585,7 +580,7 @@ class IThemeCache(ABC):
         pass
 
     @abstractmethod
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """
         Get cache statistics
 
@@ -593,7 +588,6 @@ class IThemeCache(ABC):
             Dictionary with cache statistics
         """
         pass
-
 
 # Type aliases for convenience
 ThemeChangeCallback = Callable[[str, str], None]  # (old_theme, new_theme) -> None

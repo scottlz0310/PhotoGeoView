@@ -19,7 +19,7 @@ import tarfile
 import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class DeploymentPackageCreator:
@@ -309,7 +309,7 @@ if __name__ == "__main__":
     main()
 '''
 
-    def create_binary_package(self) -> Optional[Path]:
+    def create_binary_package(self) -> Path | None:
         """バイナリパッケージを作成（PyInstaller使用）"""
         print("バイナリパッケージを作成中...")
 

@@ -124,7 +124,6 @@ class ColorPickerWidget(QWidget):
         """Get the current color"""
         return self.current_color
 
-
 class FontPickerWidget(QWidget):
     """Font picker widget with preview"""
 
@@ -272,7 +271,6 @@ class FontPickerWidget(QWidget):
         """Get the current font"""
         return self.current_font
 
-
 class ThemePreviewWidget(QWidget):
     """Widget for previewing theme changes in real-time"""
 
@@ -356,7 +354,6 @@ class ThemePreviewWidget(QWidget):
         """
 
         self.preview_frame.setStyleSheet(stylesheet)
-
 
 class ThemeEditorDialog(QWidget):
     """Main theme editor dialog for creating and editing custom themes"""
@@ -779,7 +776,6 @@ class ThemeEditorDialog(QWidget):
         """Save theme with a new name"""
         name, ok = QLineEdit().getText(self, "Save Theme As", "Theme name:")
         if ok and name:
-            old_name = self.current_theme.name
             self.current_theme.name = name
             self.current_theme.display_name = name.replace("_", " ").title()
 
@@ -896,7 +892,6 @@ class ThemeEditorDialog(QWidget):
                 event.ignore()
         else:
             event.accept()
-
 
 class ThemeImportDialog(QWidget):
     """Dialog for importing custom themes with validation"""

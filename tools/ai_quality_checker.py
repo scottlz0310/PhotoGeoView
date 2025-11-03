@@ -18,7 +18,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 class AIComponent(Enum):
@@ -439,7 +439,7 @@ class AIQualityChecker:
         )
 
     def generate_report(
-        self, report: QualityReport, output_path: Optional[Path] = None
+        self, report: QualityReport, output_path: Path | None = None
     ) -> str:
         """品質レポートを生成"""
         report_lines = [

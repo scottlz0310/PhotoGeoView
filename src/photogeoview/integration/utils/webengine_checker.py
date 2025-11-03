@@ -6,15 +6,12 @@ PyQtWebEngineの利用可能性をチェックし、適切な初期化を行う�
 Author: Kiro AI Integration System
 """
 
-from typing import Optional, Tuple
-
-
-def check_webengine_availability() -> Tuple[bool, str]:
+def check_webengine_availability() -> tuple[bool, str]:
     """
     PyQtWebEngineの利用可能性をチェック
 
     Returns:
-        Tuple[bool, str]: (利用可能かどうか, エラーメッセージ)
+        tuple[bool, str]: (利用可能かどうか, エラーメッセージ)
     """
     try:
         # 基本的なインポートチェック
@@ -22,7 +19,7 @@ def check_webengine_availability() -> Tuple[bool, str]:
         from PySide6.QtWebEngineWidgets import QWebEngineView
 
         # プロファイルの作成テスト
-        profile = QWebEngineProfile.defaultProfile()
+        QWebEngineProfile.defaultProfile()
 
         return True, "PyQtWebEngine is available"
 
@@ -31,13 +28,12 @@ def check_webengine_availability() -> Tuple[bool, str]:
     except Exception as e:
         return False, f"PyQtWebEngine initialization error: {e}"
 
-
-def initialize_webengine_safe() -> Tuple[bool, str]:
+def initialize_webengine_safe() -> tuple[bool, str]:
     """
     安全なPyQtWebEngine初期化
 
     Returns:
-        Tuple[bool, str]: (初期化成功かどうか, メッセージ)
+        tuple[bool, str]: (初期化成功かどうか, メッセージ)
     """
     try:
         from PySide6.QtWebEngineCore import QWebEngineProfile
@@ -56,13 +52,12 @@ def initialize_webengine_safe() -> Tuple[bool, str]:
     except Exception as e:
         return False, f"PyQtWebEngine initialization failed: {e}"
 
-
-def create_webengine_view() -> Tuple[Optional[object], str]:
+def create_webengine_view() -> tuple[object | None, str]:
     """
     WebEngineViewを作成
 
     Returns:
-        Tuple[Optional[object], str]: (WebEngineViewオブジェクト, メッセージ)
+        tuple[Optional[object], str]: (WebEngineViewオブジェクト, メッセージ)
     """
     try:
         from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -72,7 +67,6 @@ def create_webengine_view() -> Tuple[Optional[object], str]:
 
     except Exception as e:
         return None, f"WebEngineView creation failed: {e}"
-
 
 def get_webengine_status() -> dict:
     """

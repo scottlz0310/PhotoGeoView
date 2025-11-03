@@ -35,7 +35,6 @@ class BreadcrumbSegment(QPushButton):
             }
         """)
 
-
 class BreadcrumbSeparator(QLabel):
     """ブレッドクラム区切り文字"""
 
@@ -48,7 +47,6 @@ class BreadcrumbSeparator(QLabel):
                 font-weight: normal;
             }
         """)
-
 
 class BreadcrumbWidgetFallback(QWidget):
     """
@@ -181,7 +179,6 @@ class BreadcrumbWidgetFallback(QWidget):
         for separator in self.separators:
             separator.deleteLater()
         self.separators.clear()
-
 
 # breadcrumb_addressbarからのインポートを試行し、失敗した場合はフォールバックを使用
 try:

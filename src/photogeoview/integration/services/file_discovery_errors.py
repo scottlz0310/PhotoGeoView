@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class FileDiscoveryErrorLevel(Enum):
@@ -21,23 +20,22 @@ class FileDiscoveryErrorLevel(Enum):
     ERROR = "error"  # エラー - 機能が利用不可
     CRITICAL = "critical"  # 致命的 - アプリケーション停止が必要
 
-
 class FileDiscoveryError(Exception):
     """ファイル検出エラーの基底クラス"""
 
     def __init__(
         self,
         message: str,
-        error_code: str = None,
+        error_code: str | None = None,
         level: FileDiscoveryErrorLevel = FileDiscoveryErrorLevel.ERROR,
-        file_path: Optional[Path] = None,
-        details: Optional[Dict] = None,
+        file_path: Path | None = None,
+        details: Dict | None = None,
     ):
         """
         FileDiscoveryErrorの初期化
 
         Args:
-            message: エラーメッセージ（日本語）
+            message: エラーメッセージ(日本語)
             error_code: エラーコード
             level: エラーレベル
             file_path: 関連するファイルパス
@@ -51,11 +49,10 @@ class FileDiscoveryError(Exception):
         self.details = details or {}
         self.timestamp = datetime.now()
 
-
 class FolderAccessError(FileDiscoveryError):
     """フォルダアクセスエラー"""
 
-    def __init__(self, folder_path: Path, reason: str = None):
+    def __init__(self, folder_path: Path, reason: str | None = None):
         error_code = "FOLDER_ACCESS_ERROR"
         message = f"フォルダにアクセスできません: {folder_path}"
         if reason:
@@ -68,7 +65,6 @@ class FolderAccessError(FileDiscoveryError):
             file_path=folder_path,
             details={"reason": reason},
         )
-
 
 class FolderNotFoundError(FileDiscoveryError):
     """フォルダ不存在エラー"""
@@ -83,7 +79,6 @@ class FolderNotFoundError(FileDiscoveryError):
             level=FileDiscoveryErrorLevel.ERROR,
             file_path=folder_path,
         )
-
 
 class PermissionDeniedError(FileDiscoveryError):
     """権限不足エラー"""
@@ -100,7 +95,6 @@ class PermissionDeniedError(FileDiscoveryError):
             details={"operation": operation},
         )
 
-
 class FileValidationError(FileDiscoveryError):
     """ファイルバリデーションエラー"""
 
@@ -116,11 +110,10 @@ class FileValidationError(FileDiscoveryError):
             details={"validation_reason": reason},
         )
 
-
 class CorruptedFileError(FileDiscoveryError):
     """破損ファイルエラー"""
 
-    def __init__(self, file_path: Path, details: str = None):
+    def __init__(self, file_path: Path, details: str | None = None):
         error_code = "CORRUPTED_FILE"
         message = f"破損したファイルが検出されました: {file_path.name}"
         if details:
@@ -134,11 +127,10 @@ class CorruptedFileError(FileDiscoveryError):
             details={"corruption_details": details},
         )
 
-
 class UnsupportedFileFormatError(FileDiscoveryError):
     """未対応ファイル形式エラー"""
 
-    def __init__(self, file_path: Path, supported_formats: List[str]):
+    def __init__(self, file_path: Path, supported_formats: list[str]):
         error_code = "UNSUPPORTED_FORMAT"
         message = (
             f"未対応のファイル形式です: {file_path.name} (拡張子: {file_path.suffix})"
@@ -151,7 +143,6 @@ class UnsupportedFileFormatError(FileDiscoveryError):
             file_path=file_path,
             details={"supported_formats": supported_formats},
         )
-
 
 class ScanTimeoutError(FileDiscoveryError):
     """スキャンタイムアウトエラー"""
@@ -168,7 +159,6 @@ class ScanTimeoutError(FileDiscoveryError):
             details={"timeout_seconds": timeout_seconds},
         )
 
-
 class MemoryLimitExceededError(FileDiscoveryError):
     """メモリ制限超過エラー"""
 
@@ -182,7 +172,6 @@ class MemoryLimitExceededError(FileDiscoveryError):
             level=FileDiscoveryErrorLevel.CRITICAL,
             details={"current_usage_mb": current_usage_mb, "limit_mb": limit_mb},
         )
-
 
 class TooManyFilesError(FileDiscoveryError):
     """ファイル数過多エラー"""
@@ -198,7 +187,6 @@ class TooManyFilesError(FileDiscoveryError):
             file_path=folder_path,
             details={"file_count": file_count, "limit": limit},
         )
-
 
 @dataclass
 class FileDiscoveryErrorMessages:
@@ -278,7 +266,7 @@ class FileDiscoveryErrorMessages:
             return template
 
     @classmethod
-    def get_recovery_suggestions(cls, error_code: str) -> List[str]:
+    def get_recovery_suggestions(cls, error_code: str) -> list[str]:
         """
         エラーコードに基づいて回復提案を取得
 
@@ -286,7 +274,7 @@ class FileDiscoveryErrorMessages:
             error_code: エラーコード
 
         Returns:
-            回復提案のリスト（日本語）
+            回復提案のリスト(日本語)
         """
 
         suggestions_map = {
@@ -348,7 +336,6 @@ class FileDiscoveryErrorMessages:
             ],
         )
 
-
 class FileDiscoveryErrorHandler:
     """FileDiscoveryService専用エラーハンドラー"""
 
@@ -360,11 +347,11 @@ class FileDiscoveryErrorHandler:
             logger: ログシステムインスタンス
         """
         self.logger = logger
-        self.error_counts: Dict[str, int] = {}
-        self.recent_errors: List[FileDiscoveryError] = []
+        self.error_counts: dict[str, int] = {}
+        self.recent_errors: list[FileDiscoveryError] = []
         self.max_recent_errors = 50
 
-    def handle_error(self, error: FileDiscoveryError) -> Dict[str, any]:
+    def handle_error(self, error: FileDiscoveryError) -> dict[str, any]:
         """
         FileDiscoveryErrorを処理する
 
@@ -423,7 +410,7 @@ class FileDiscoveryErrorHandler:
         elif error.level == FileDiscoveryErrorLevel.WARNING:
             self.logger.warning(log_message, extra=log_extra)
 
-    def get_error_statistics(self) -> Dict[str, any]:
+    def get_error_statistics(self) -> dict[str, any]:
         """エラー統計情報を取得"""
 
         return {

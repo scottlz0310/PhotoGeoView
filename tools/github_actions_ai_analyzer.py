@@ -11,7 +11,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # ログ設定
 logging.basicConfig(
@@ -148,7 +148,7 @@ class GitHubActionsAnalyzer:
 
     def _generate_recommendation(
         self, check_name: str, status: str, message: str
-    ) -> Optional[str]:
+    ) -> str | None:
         """チェック結果に基づく改善提案を生成"""
         recommendations = {
             "テストチェック": {

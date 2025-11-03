@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class PathType(Enum):
@@ -25,7 +25,6 @@ class PathType(Enum):
     REMOVABLE = "removable"
     VIRTUAL = "virtual"
 
-
 class SegmentState(Enum):
     """Breadcrumb segment state enumeration"""
 
@@ -35,12 +34,10 @@ class SegmentState(Enum):
     LOADING = "loading"
     ERROR = "error"
 
-
 class NavigationError(Exception):
     """Navigation-related error"""
 
     pass
-
 
 @dataclass
 class BreadcrumbSegment:
@@ -62,7 +59,7 @@ class BreadcrumbSegment:
     is_accessible: bool = True
 
     # Visual information
-    icon: Optional[str] = None
+    icon: str | None = None
     tooltip: str = ""
 
     # Metadata
@@ -71,7 +68,7 @@ class BreadcrumbSegment:
     is_drive: bool = False
 
     # Performance data
-    last_accessed: Optional[datetime] = None
+    last_accessed: datetime | None = None
     access_count: int = 0
 
     def __post_init__(self):
@@ -141,7 +138,7 @@ class BreadcrumbSegment:
         self._validate_accessibility()
         self.icon = self._get_default_icon()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert segment to dictionary"""
         return {
             "name": self.name,
@@ -157,7 +154,6 @@ class BreadcrumbSegment:
             "is_drive": self.is_drive,
             "access_count": self.access_count,
         }
-
 
 @dataclass
 class PathInfo:
@@ -175,17 +171,17 @@ class PathInfo:
     is_removable: bool = False
 
     # System information
-    drive_letter: Optional[str] = None
-    mount_point: Optional[str] = None
-    file_system: Optional[str] = None
+    drive_letter: str | None = None
+    mount_point: str | None = None
+    file_system: str | None = None
 
     # Capacity information
-    total_space: Optional[int] = None
-    free_space: Optional[int] = None
-    used_space: Optional[int] = None
+    total_space: int | None = None
+    free_space: int | None = None
+    used_space: int | None = None
 
     # Metadata
-    last_checked: Optional[datetime] = None
+    last_checked: datetime | None = None
     check_count: int = 0
 
     def __post_init__(self):
@@ -255,12 +251,11 @@ class PathInfo:
         self._analyze_path()
 
     @property
-    def usage_percentage(self) -> Optional[float]:
+    def usage_percentage(self) -> float | None:
         """Get disk usage percentage"""
         if self.total_space and self.used_space:
             return (self.used_space / self.total_space) * 100
         return None
-
 
 @dataclass
 class NavigationState:
@@ -273,13 +268,13 @@ class NavigationState:
 
     # Current navigation state
     current_path: Path
-    breadcrumb_segments: List[BreadcrumbSegment] = field(default_factory=list)
+    breadcrumb_segments: list[BreadcrumbSegment] = field(default_factory=list)
 
     # Path information
-    path_info: Optional[PathInfo] = None
+    path_info: PathInfo | None = None
 
     # Navigation history
-    history: List[Path] = field(default_factory=list)
+    history: list[Path] = field(default_factory=list)
     history_index: int = -1
     max_history_size: int = 50
 
@@ -289,7 +284,7 @@ class NavigationState:
     error_message: str = ""
 
     # Performance tracking
-    last_update: Optional[datetime] = None
+    last_update: datetime | None = None
     update_count: int = 0
     segment_generation_time: float = 0.0
 
@@ -308,7 +303,7 @@ class NavigationState:
 
         self.last_update = datetime.now()
 
-    def generate_segments(self) -> List[BreadcrumbSegment]:
+    def generate_segments(self) -> list[BreadcrumbSegment]:
         """
         Generate breadcrumb segments from current path
 
@@ -543,14 +538,14 @@ class NavigationState:
             if parent.exists():
                 self.navigate_to_path(parent)
 
-    def get_segment_by_path(self, path: Path) -> Optional[BreadcrumbSegment]:
+    def get_segment_by_path(self, path: Path) -> BreadcrumbSegment | None:
         """Get segment by path"""
         for segment in self.breadcrumb_segments:
             if segment.path == path:
                 return segment
         return None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert navigation state to dictionary"""
         return {
             "current_path": str(self.current_path),
@@ -565,7 +560,6 @@ class NavigationState:
             "segment_generation_time": self.segment_generation_time,
         }
 
-
 @dataclass
 class NavigationEvent:
     """
@@ -575,15 +569,15 @@ class NavigationEvent:
     """
 
     event_type: str  # navigate, segment_click, back, forward, up, refresh
-    source_path: Optional[Path] = None
-    target_path: Optional[Path] = None
-    segment_index: Optional[int] = None
+    source_path: Path | None = None
+    target_path: Path | None = None
+    segment_index: int | None = None
     timestamp: datetime = field(default_factory=datetime.now)
     success: bool = True
     error_message: str = ""
     duration_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert event to dictionary"""
         return {
             "event_type": self.event_type,

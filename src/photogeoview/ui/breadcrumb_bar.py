@@ -8,11 +8,13 @@ Author: Kiro AI Integration System
 Requirements: 2.1, 2.2, 2.3, 2.4
 """
 
+import contextlib
 import os
 import platform
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
@@ -54,9 +56,9 @@ class BreadcrumbAddressBar(QObject):
         self,
         file_system_watcher: FileSystemWatcher,
         logger_system: LoggerSystem,
-        config_manager: Optional[ConfigManager] = None,
-        notification_system: Optional[UserNotificationSystem] = None,
-        parent: Optional[QWidget] = None,
+        config_manager: ConfigManager | None = None,
+        notification_system: UserNotificationSystem | None = None,
+        parent: QWidget | None = None,
     ):
         """
         Initialize the breadcrumb address bar
@@ -100,7 +102,7 @@ class BreadcrumbAddressBar(QObject):
 
         # Navigation state management
         self.current_state = NavigationState(current_path=Path.home())
-        self.navigation_listeners: List[Callable[[NavigationEvent], None]] = []
+        self.navigation_listeners: list[Callable[[NavigationEvent], None]] = []
 
         # Configuration settings
         self.max_visible_segments = 10
@@ -313,7 +315,7 @@ class BreadcrumbAddressBar(QObject):
             if obj == self.breadcrumb_widget and event.type() == QEvent.Type.KeyPress:
                 key_event: QKeyEvent = event
                 key = key_event.key()
-                modifiers = key_event.modifiers()
+                key_event.modifiers()
 
                 # Handle custom keyboard shortcuts
                 if key == Qt.Key.Key_Return or key == Qt.Key.Key_Enter:
@@ -436,7 +438,7 @@ class BreadcrumbAddressBar(QObject):
         except Exception as e:
             self.logger.error(f"Failed to set focused segment index: {e}")
 
-    def get_keyboard_shortcuts_info(self) -> Dict[str, str]:
+    def get_keyboard_shortcuts_info(self) -> dict[str, str]:
         """
         Get information about available keyboard shortcuts
 
@@ -559,7 +561,7 @@ class BreadcrumbAddressBar(QObject):
             # Apply simple truncation if too many segments
             if len(segments) > self.max_visible_segments:
                 # Keep first 2, last 3, and add ellipsis
-                truncated = segments[:2] + ["..."] + segments[-3:]
+                truncated = [*segments[:2], "...", *segments[-3:]]
                 self.current_state.breadcrumb_segments = truncated
                 self.logger.debug(
                     f"Applied simple truncation: {len(segments)} -> {len(truncated)} segments"
@@ -570,7 +572,7 @@ class BreadcrumbAddressBar(QObject):
 
     # Core breadcrumb functionality
 
-    def get_widget(self) -> Optional[QWidget]:
+    def get_widget(self) -> QWidget | None:
         """
         Get the breadcrumb widget for UI integration
 
@@ -661,19 +663,15 @@ class BreadcrumbAddressBar(QObject):
                 return self._navigate_to_fallback_path(path, "navigation_state_error")
 
             # Update breadcrumb widget with error handling
-            widget_update_success = False
             if self.breadcrumb_widget:
                 try:
                     if hasattr(self.breadcrumb_widget, "setPath"):
                         self.breadcrumb_widget.setPath(str(path))
-                        widget_update_success = True
                     else:
                         self.logger.warning("Breadcrumb widget has no setPath method")
-                        widget_update_success = True  # Continue without widget update
                 except Exception as e:
                     self.logger.error(f"Failed to update breadcrumb widget: {e}")
                     # Continue anyway - navigation state is updated
-                    widget_update_success = True
 
             # Apply truncation with error handling and optimization
             try:
@@ -732,7 +730,7 @@ class BreadcrumbAddressBar(QObject):
 
             return self._navigate_to_fallback_path(path, "critical_path_error")
 
-    def _validate_path_comprehensive(self, path: Path) -> Dict[str, Any]:
+    def _validate_path_comprehensive(self, path: Path) -> dict[str, Any]:
         """
         Comprehensive path validation with detailed error information and caching
 
@@ -780,13 +778,12 @@ class BreadcrumbAddressBar(QObject):
                 }
 
             # Check if it's a network path and if accessible
-            if self._is_network_path(path):
-                if not self._is_network_accessible(path):
-                    return {
-                        "valid": False,
-                        "error_type": "network_inaccessible",
-                        "error_message": f"Network path is not accessible: {path}",
-                    }
+            if self._is_network_path(path) and not self._is_network_accessible(path):
+                return {
+                    "valid": False,
+                    "error_type": "network_inaccessible",
+                    "error_message": f"Network path is not accessible: {path}",
+                }
 
             result = {"valid": True, "error_type": None, "error_message": None}
 
@@ -861,10 +858,7 @@ class BreadcrumbAddressBar(QObject):
                     pass
 
             # Unix/Linux network mounts (common patterns)
-            if path_str.startswith("/mnt/") or path_str.startswith("/media/"):
-                return True
-
-            return False
+            return bool(path_str.startswith("/mnt/") or path_str.startswith("/media/"))
 
         except Exception as e:
             self.logger.warning(f"Failed to determine if path is network: {e}")
@@ -941,10 +935,8 @@ class BreadcrumbAddressBar(QObject):
                 fallback_candidates.append(Path.home())
 
                 # Try current working directory
-                try:
+                with contextlib.suppress(OSError):
                     fallback_candidates.append(Path.cwd())
-                except OSError:
-                    pass
 
                 # Try root directory as last resort
                 if platform.system() == "Windows":
@@ -1076,10 +1068,7 @@ class BreadcrumbAddressBar(QObject):
                 return False
 
             # Check if path is a directory
-            if not path.is_dir():
-                return False
-
-            return True
+            return path.is_dir()
 
         except (OSError, PermissionError):
             return False
@@ -1164,9 +1153,9 @@ class BreadcrumbAddressBar(QObject):
 
     def _update_widget_with_truncation(
         self,
-        start_segments: List[BreadcrumbSegment],
-        middle_segments: List[BreadcrumbSegment],
-        end_segments: List[BreadcrumbSegment],
+        start_segments: list[BreadcrumbSegment],
+        middle_segments: list[BreadcrumbSegment],
+        end_segments: list[BreadcrumbSegment],
     ) -> None:
         """Update breadcrumb widget with truncated segments"""
         if not self.breadcrumb_widget:
@@ -1250,7 +1239,7 @@ class BreadcrumbAddressBar(QObject):
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None,
+        old_path: Path | None = None,
     ) -> None:
         """Handle file system change events"""
         try:
@@ -1353,7 +1342,7 @@ class BreadcrumbAddressBar(QObject):
         """
         return self.current_state.current_path
 
-    def get_breadcrumb_segments(self) -> List[BreadcrumbSegment]:
+    def get_breadcrumb_segments(self) -> list[BreadcrumbSegment]:
         """
         Get current breadcrumb segments
 
@@ -1446,7 +1435,7 @@ class BreadcrumbAddressBar(QObject):
         except Exception as e:
             self.logger.error(f"Failed to handle navigation change event: {e}")
 
-    def get_supported_navigation_events(self) -> List[str]:
+    def get_supported_navigation_events(self) -> list[str]:
         """
         Get list of navigation event types supported by this component
 
@@ -1513,7 +1502,7 @@ class BreadcrumbAddressBar(QObject):
 
     # Utility methods
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """
         Get performance statistics
 
@@ -1550,9 +1539,8 @@ class BreadcrumbAddressBar(QObject):
             self.navigation_listeners.clear()
 
             # Cleanup breadcrumb widget
-            if self.breadcrumb_widget:
-                if hasattr(self.breadcrumb_widget, "cleanup"):
-                    self.breadcrumb_widget.cleanup()
+            if self.breadcrumb_widget and hasattr(self.breadcrumb_widget, "cleanup"):
+                self.breadcrumb_widget.cleanup()
 
             self.logger.info("BreadcrumbAddressBar cleanup completed")
 
@@ -1696,7 +1684,7 @@ class BreadcrumbAddressBar(QObject):
             self.logger.error(f"Failed to handle path access error: {e}")
             return False
 
-    def validate_path_accessibility(self, path: Path) -> Dict[str, Any]:
+    def validate_path_accessibility(self, path: Path) -> dict[str, Any]:
         """
         Validate path accessibility with detailed error information
 
@@ -1717,7 +1705,7 @@ class BreadcrumbAddressBar(QObject):
                 "error_message": f"Failed to validate path: {e}",
             }
 
-    def get_error_recovery_options(self, error_type: str) -> List[Dict[str, Any]]:
+    def get_error_recovery_options(self, error_type: str) -> list[dict[str, Any]]:
         """
         Get available error recovery options based on error type
 
@@ -1812,7 +1800,7 @@ class BreadcrumbAddressBar(QObject):
             return []
 
     def execute_recovery_action(
-        self, action: str, context: Optional[Dict[str, Any]] = None
+        self, action: str, context: dict[str, Any] | None = None
     ) -> bool:
         """
         Execute a recovery action

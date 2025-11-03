@@ -2,13 +2,12 @@
 Image Preview Panel - 画像プレビューパネル
 
 選択された画像を表示するプレビューパネル。
-全画面表示機能とマウス操作（ズーム・パン）機能を含む。
+全画面表示機能とマウス操作(ズーム・パン)機能を含む。
 
 Author: Kiro AI Integration System
 """
 
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QMouseEvent, QPainter, QPixmap, QWheelEvent
@@ -40,12 +39,12 @@ class ImageViewerWidget(QWidget):
 
     zoom_changed = Signal(float)
 
-    def __init__(self, parent: Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
         # 画像関連
-        self.original_pixmap: Optional[QPixmap] = None
-        self.display_pixmap: Optional[QPixmap] = None
+        self.original_pixmap: QPixmap | None = None
+        self.display_pixmap: QPixmap | None = None
 
         # ズーム・パン関連
         self.zoom_factor = 1.0
@@ -113,7 +112,7 @@ class ImageViewerWidget(QWidget):
         painter.drawPixmap(image_rect, self.display_pixmap)
 
     def wheelEvent(self, event: QWheelEvent):
-        """マウスホイールイベント（ズーム）"""
+        """マウスホイールイベント(ズーム)"""
         delta = event.angleDelta().y()
         zoom_delta = 0.1 if delta > 0 else -0.1
 
@@ -144,7 +143,7 @@ class ImageViewerWidget(QWidget):
                 parent_panel = parent_panel.parent()
 
     def mousePressEvent(self, event: QMouseEvent):
-        """マウスプレスイベント（パン開始）"""
+        """マウスプレスイベント(パン開始)"""
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_panning = True
             self.last_mouse_pos = event.pos()
@@ -164,7 +163,7 @@ class ImageViewerWidget(QWidget):
                 parent_panel = parent_panel.parent()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
-        """マウスリリースイベント（パン終了）"""
+        """マウスリリースイベント(パン終了)"""
         if event.button() == Qt.MouseButton.LeftButton:
             self.is_panning = False
             self.setCursor(Qt.CursorShape.ArrowCursor)
@@ -181,14 +180,14 @@ class ImageViewerWidget(QWidget):
                 parent_panel = parent_panel.parent()
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        """マウスムーブイベント（パン）"""
+        """マウスムーブイベント(パン)"""
         if self.is_panning:
             delta = event.pos() - self.last_mouse_pos
             self.pan_offset += delta
             self.last_mouse_pos = event.pos()
             self.update()
 
-            # パン操作中でも親にフォーカスを維持（重要！）
+            # パン操作中でも親にフォーカスを維持(重要！)
             parent_panel = self.parent()
             while parent_panel:
                 if hasattr(parent_panel, "is_fullscreen_mode") and hasattr(
@@ -205,7 +204,7 @@ class ImageViewerWidget(QWidget):
         if event.key() == Qt.Key.Key_Escape:
             # ESCキーは親のImagePreviewPanelで処理
             parent_panel = self.parent()
-            # ImagePreviewPanelを探して上へ遡る（_exit_fullscreenメソッドを持つ親を探す）
+            # ImagePreviewPanelを探して上へ遡る(_exit_fullscreenメソッドを持つ親を探す)
             while parent_panel:
                 if hasattr(parent_panel, "_exit_fullscreen") and hasattr(
                     parent_panel, "is_fullscreen_mode"
@@ -220,7 +219,6 @@ class ImageViewerWidget(QWidget):
         # その他のキーイベントは親クラスに委譲
         super().keyPressEvent(event)
 
-
 class ImagePreviewPanel(QWidget):
     """
     画像プレビューパネル
@@ -228,7 +226,7 @@ class ImagePreviewPanel(QWidget):
     機能:
     - 選択された画像の表示
     - 全画面表示機能
-    - マウス操作（ズーム・パン）
+    - マウス操作(ズーム・パン)
     - 画像情報の表示
     """
 
@@ -251,7 +249,7 @@ class ImagePreviewPanel(QWidget):
         self.error_handler = IntegratedErrorHandler(logger_system)
 
         # 現在の画像パス
-        self.current_image_path: Optional[Path] = None
+        self.current_image_path: Path | None = None
 
         # ズーム関連
         self.zoom_factor = 1.0
@@ -273,7 +271,7 @@ class ImagePreviewPanel(QWidget):
             layout.setContentsMargins(5, 5, 5, 5)
             layout.setSpacing(5)
 
-            # タイトルバー（全画面ボタン付き）
+            # タイトルバー(全画面ボタン付き)
             title_layout = QHBoxLayout()
 
             title_label = QLabel("🖼️ 画像プレビュー")
@@ -464,7 +462,7 @@ class ImagePreviewPanel(QWidget):
             # ローディング状態を表示
             self._show_placeholder("画像を読み込み中...")
 
-            # 遅延読み込み（UI応答性向上のため）
+            # 遅延読み込み(UI応答性向上のため)
             QTimer.singleShot(100, self._delayed_display_image)
 
         except Exception as e:
@@ -632,7 +630,7 @@ class ImagePreviewPanel(QWidget):
         try:
             self.is_fullscreen_mode = True
 
-            # 他のUI要素を非表示（全画面ボタンは残す）
+            # 他のUI要素を非表示(全画面ボタンは残す)
             self._hide_other_ui_elements()
 
             # 画像ビューアーの元の親とレイアウト情報を保存
@@ -642,7 +640,7 @@ class ImagePreviewPanel(QWidget):
             main_layout = self.layout()
             if main_layout:
                 self._original_layout_index = main_layout.indexOf(self.image_viewer)
-                # レイアウトから一時的に削除（親を変更する前に）
+                # レイアウトから一時的に削除(親を変更する前に)
                 main_layout.removeWidget(self.image_viewer)
 
             # 全画面ボタンの元のレイアウト情報も保存
@@ -651,7 +649,7 @@ class ImagePreviewPanel(QWidget):
                 self._original_button_style = self.fullscreen_button.styleSheet()
                 self._original_button_flags = self.fullscreen_button.windowFlags()
 
-                # title_layoutを探す（メインレイアウトの最初のアイテム）
+                # title_layoutを探す(メインレイアウトの最初のアイテム)
                 if main_layout and main_layout.count() > 0:
                     title_layout_item = main_layout.itemAt(0)
                     if title_layout_item and hasattr(title_layout_item, "layout"):
@@ -671,12 +669,12 @@ class ImagePreviewPanel(QWidget):
             self._original_focus_policy = self.image_viewer.focusPolicy()
             self.image_viewer.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-            # 全画面ボタンも親ウィンドウに配置（画像の上に表示）
+            # 全画面ボタンも親ウィンドウに配置(画像の上に表示)
             if hasattr(self, "fullscreen_button"):
                 self.fullscreen_button.setParent(parent_window)
                 self.fullscreen_button.setText("⛶ 戻る")
 
-                # 全画面時のボタンスタイルを強化（必ず見えるように）
+                # 全画面時のボタンスタイルを強化(必ず見えるように)
                 self.fullscreen_button.setStyleSheet("""
                     QPushButton {
                         background-color: rgba(52, 73, 94, 0.8);
@@ -723,7 +721,7 @@ class ImagePreviewPanel(QWidget):
             # 画像ビューアーを親ウィンドウの中央に配置
             self.image_viewer.move(0, 0)
 
-            # 全画面ボタンを右上角に配置（遅延処理で確実に配置）
+            # 全画面ボタンを右上角に配置(遅延処理で確実に配置)
             if hasattr(self, "fullscreen_button"):
                 # 即座に基本位置を設定
                 self.fullscreen_button.move(parent_window.width() - 110, 10)
@@ -744,7 +742,7 @@ class ImagePreviewPanel(QWidget):
                 300, lambda: self._position_fullscreen_button(parent_window)
             )
 
-            # フォーカスを確実に設定（キーイベントを受信するため）
+            # フォーカスを確実に設定(キーイベントを受信するため)
             self.setFocus(Qt.FocusReason.OtherFocusReason)
 
             # ログ出力
@@ -781,7 +779,7 @@ class ImagePreviewPanel(QWidget):
                     )
                     delattr(self, "_original_layout_index")
                 else:
-                    # フォールバック：レイアウトの最後に追加
+                    # フォールバック:レイアウトの最後に追加
                     if main_layout:
                         main_layout.addWidget(self.image_viewer)
 
@@ -846,7 +844,7 @@ class ImagePreviewPanel(QWidget):
             # 遅延処理でフィット処理を実行
             QTimer.singleShot(200, self._fit_to_screen)
 
-            # 遅延処理でレイアウト更新も実行（確実に全画面ボタンを表示）
+            # 遅延処理でレイアウト更新も実行(確実に全画面ボタンを表示)
             QTimer.singleShot(300, self._ensure_ui_visibility)
 
             # ログ出力
@@ -878,7 +876,7 @@ class ImagePreviewPanel(QWidget):
             width_ratio = window_size.width() / image_size.width()
             height_ratio = window_size.height() / image_size.height()
 
-            # 小さい方の比率を使用（画像全体が表示されるように）
+            # 小さい方の比率を使用(画像全体が表示されるように)
             fit_zoom = min(width_ratio, height_ratio)
 
             # 最小ズーム率を下回らないように
@@ -909,7 +907,7 @@ class ImagePreviewPanel(QWidget):
             )
 
     def _hide_other_ui_elements(self):
-        """他のUI要素を非表示にする（安全な方法）"""
+        """他のUI要素を非表示にする(安全な方法)"""
         try:
             # 親ウィンドウを取得
             parent_window = self.window()
@@ -986,7 +984,7 @@ class ImagePreviewPanel(QWidget):
             )
 
     def _show_other_ui_elements(self):
-        """他のUI要素を再表示する（安全な方法）"""
+        """他のUI要素を再表示する(安全な方法)"""
         try:
             # 非表示にしたウィジェットを再表示
             if hasattr(self, "_hidden_widgets"):
@@ -1028,7 +1026,7 @@ class ImagePreviewPanel(QWidget):
                 # 親ウィンドウのサイズを取得
                 parent_size = parent_window.size()
 
-                # 右上角に配置（マージン10px）
+                # 右上角に配置(マージン10px)
                 x = parent_size.width() - button_size.width() - 10
                 y = 10
 
@@ -1058,7 +1056,7 @@ class ImagePreviewPanel(QWidget):
             )
 
     def _ensure_ui_visibility(self):
-        """UI要素の表示を確実にする（遅延処理用）"""
+        """UI要素の表示を確実にする(遅延処理用)"""
         try:
             # レイアウトの強制更新
             main_layout = self.layout()
@@ -1109,7 +1107,7 @@ class ImagePreviewPanel(QWidget):
             if self.is_fullscreen_mode:
                 # 全画面表示中の場合は通常表示に戻る
                 self._exit_fullscreen()
-            # 通常表示中のESCキーは何もしない（適切なUI慣例に従う）
+            # 通常表示中のESCキーは何もしない(適切なUI慣例に従う)
         elif event.key() == Qt.Key.Key_F:
             # Fキーで画面フィット
             self._fit_to_screen()
@@ -1120,7 +1118,7 @@ class ImagePreviewPanel(QWidget):
             # その他のキーイベントは親クラスに委譲
             super().keyPressEvent(event)
 
-    def get_current_image_path(self) -> Optional[Path]:
+    def get_current_image_path(self) -> Path | None:
         """現在の画像パスを取得"""
         return self.current_image_path
 

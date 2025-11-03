@@ -10,7 +10,7 @@
 Author: Kiro AI Integration System
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction
@@ -36,8 +36,8 @@ class ThemePreviewWidget(QWidget):
     def __init__(
         self,
         theme_name: str,
-        theme_data: Dict[str, Any],
-        parent: Optional[QWidget] = None,
+        theme_data: dict[str, Any],
+        parent: QWidget | None = None,
     ):
         super().__init__(parent)
         self.theme_name = theme_name
@@ -124,19 +124,18 @@ class ThemePreviewWidget(QWidget):
         }}
         """
 
-
 class ThemeSelectionDialog(QDialog):
     """洗練されたテーマ選択ダイアログ"""
 
     theme_selected = Signal(str)  # 選択されたテーマ名
-    theme_applied = Signal(list)  # 適用されたテーマ名リスト（複数選択対応）
+    theme_applied = Signal(list)  # 適用されたテーマ名リスト(複数選択対応)
 
-    def __init__(self, theme_manager: Any, parent: Optional[QWidget] = None):
+    def __init__(self, theme_manager: Any, parent: QWidget | None = None):
         super().__init__(parent)
         self.theme_manager = theme_manager
-        self.selected_themes: List[str] = []  # 複数選択対応
-        self.preview_widgets: Dict[str, ThemePreviewWidget] = {}
-        self.original_theme: Optional[str] = None  # 元のテーマを保存
+        self.selected_themes: list[str] = []  # 複数選択対応
+        self.preview_widgets: dict[str, ThemePreviewWidget] = {}
+        self.original_theme: str | None = None  # 元のテーマを保存
         self.setup_ui()
         self.load_saved_selections()
 
@@ -162,7 +161,7 @@ class ThemeSelectionDialog(QDialog):
 
         # 説明
         description_label = QLabel(
-            "テーマをクリックして選択してください（複数選択可能）。選択したテーマは適用後にトグル切り替えできます。"
+            "テーマをクリックして選択してください(複数選択可能)。選択したテーマは適用後にトグル切り替えできます。"
         )
         description_label.setStyleSheet("color: gray; margin-bottom: 10px;")
         layout.addWidget(description_label)
@@ -251,7 +250,7 @@ class ThemeSelectionDialog(QDialog):
                 col = 0
                 row += 1
 
-    def _get_theme_data(self, theme_name: str) -> Dict[str, Any]:
+    def _get_theme_data(self, theme_name: str) -> dict[str, Any]:
         """テーマデータの取得"""
         try:
             # SimpleThemeManagerからテーマ情報を取得
@@ -282,7 +281,7 @@ class ThemeSelectionDialog(QDialog):
             },
         }
 
-    def _extract_colors_from_theme(self, theme_name: str) -> Dict[str, str]:
+    def _extract_colors_from_theme(self, theme_name: str) -> dict[str, str]:
         """テーマから色情報を抽出"""
         try:
             # テーママネージャーのプレビュー色取得機能を使用
@@ -326,7 +325,7 @@ class ThemeSelectionDialog(QDialog):
         parent_layout.addLayout(button_layout)
 
     def on_theme_clicked(self, theme_name: str):
-        """テーマクリック時の処理（トグル選択）"""
+        """テーマクリック時の処理(トグル選択)"""
         current_theme = self.theme_manager.get_current_theme()
 
         # 現在のテーマは選択解除できない
@@ -379,7 +378,7 @@ class ThemeSelectionDialog(QDialog):
         """最初の選択テーマをプレビュー"""
         if self.selected_themes:
             try:
-                # 元のテーマを保存（初回のみ）
+                # 元のテーマを保存(初回のみ)
                 if self.original_theme is None:
                     self.original_theme = self.theme_manager.get_current_theme()
 
@@ -402,10 +401,10 @@ class ThemeSelectionDialog(QDialog):
             self.accept()
 
     def select_current_theme(self):
-        """現在のテーマを選択状態にする（選択解除不可）"""
+        """現在のテーマを選択状態にする(選択解除不可)"""
         current_theme = self.theme_manager.get_current_theme()
         if current_theme:
-            # 現在のテーマを選択リストに追加（既に存在する場合は追加しない）
+            # 現在のテーマを選択リストに追加(既に存在する場合は追加しない)
             if current_theme not in self.selected_themes:
                 self.selected_themes.append(current_theme)
 
@@ -425,7 +424,6 @@ class ThemeSelectionDialog(QDialog):
             if self.selected_themes:
                 self.preview_first_selected_theme()
 
-
 class SelectableThemeFrame(QFrame):
     """選択可能なテーマフレーム"""
 
@@ -437,7 +435,7 @@ class SelectableThemeFrame(QFrame):
         theme_name: str,
         display_name: str,
         is_current: bool = False,
-        parent: Optional[QWidget] = None,
+        parent: QWidget | None = None,
     ):
         super().__init__(parent)
         self.preview_widget = preview_widget
@@ -479,7 +477,7 @@ class SelectableThemeFrame(QFrame):
     def update_selection_style(self):
         """選択状態に応じたスタイル更新"""
         if self.is_current:
-            # 現在のテーマ（選択解除不可）
+            # 現在のテーマ(選択解除不可)
             self.setStyleSheet("""
                 QFrame {
                     border: 3px solid #28a745;
@@ -539,13 +537,12 @@ class SelectableThemeFrame(QFrame):
             if not self.is_current:
                 self.theme_clicked.emit(self.theme_name)
 
-
 class ThemeToggleButton(QToolButton):
-    """テーマ切り替えトグルボタン（選択テーマのみ）"""
+    """テーマ切り替えトグルボタン(選択テーマのみ)"""
 
     theme_changed = Signal(str)  # 新しいテーマ名
 
-    def __init__(self, theme_manager, parent: Optional[QWidget] = None):
+    def __init__(self, theme_manager, parent: QWidget | None = None):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.current_theme_index = 0
@@ -557,7 +554,7 @@ class ThemeToggleButton(QToolButton):
         # 初期状態で現在のテーマを表示
         self.update_button_text()
 
-    def set_selected_themes(self, themes: List[str]):
+    def set_selected_themes(self, themes: list[str]):
         """選択されたテーマリストを設定"""
         self.selected_themes = themes
         self.load_themes()  # テーマリストを再読み込み
@@ -601,10 +598,7 @@ class ThemeToggleButton(QToolButton):
         """利用可能なテーマの読み込み"""
         try:
             # 選択されたテーマがある場合はそれのみ、なければ全テーマ
-            if self.selected_themes:
-                theme_names = self.selected_themes
-            else:
-                theme_names = self.theme_manager.get_available_themes()
+            theme_names = self.selected_themes or self.theme_manager.get_available_themes()
 
             self.available_themes = []
 
@@ -714,13 +708,12 @@ class ThemeToggleButton(QToolButton):
             prev_index = (self.current_theme_index - 1) % len(self.available_themes)
             self.on_theme_selected(prev_index)
 
-
 class AdvancedThemeSelector(QWidget):
     """高度なテーマ選択コンポーネント"""
 
     theme_applied = Signal(str)  # 適用されたテーマ名
 
-    def __init__(self, theme_manager, parent: Optional[QWidget] = None):
+    def __init__(self, theme_manager, parent: QWidget | None = None):
         super().__init__(parent)
         self.theme_manager = theme_manager
         self.setup_ui()

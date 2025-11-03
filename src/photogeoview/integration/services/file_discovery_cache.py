@@ -6,15 +6,15 @@ mtimeベースのキャッシュキー生成により、ファイル変更を自
 LRUアルゴリズムによる効率的なメモリ使用を実現します。
 
 主な機能:
-- ファイル検出結果の高速キャッシュ（mtimeベース）
+- ファイル検出結果の高速キャッシュ(mtimeベース)
 - バリデーション結果の永続化キャッシュ
 - フォルダスキャン結果の一括キャッシュ
 - LRUアルゴリズムによる自動メモリ管理
 - 詳細なキャッシュヒット率統計
 
 技術仕様:
-- スレッドセーフなキャッシュ操作（RLock使用）
-- 自動期限切れ検出（ファイルmtime比較）
+- スレッドセーフなキャッシュ操作(RLock使用)
+- 自動期限切れ検出(ファイルmtime比較)
 - 設定可能なキャッシュサイズ制限
 - メモリ使用量の継続監視
 - 統合ログシステムによる詳細な動作記録
@@ -34,7 +34,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..error_handling import ErrorCategory, IntegratedErrorHandler
 from ..logging_system import LoggerSystem
@@ -50,8 +50,8 @@ class FileDiscoveryResult:
     file_size: int
     modified_time: float
     discovery_time: datetime
-    validation_time: Optional[float] = None
-    error_message: Optional[str] = None
+    validation_time: float | None = None
+    error_message: str | None = None
     cache_key: str = field(init=False)
 
     def __post_init__(self):
@@ -71,14 +71,13 @@ class FileDiscoveryResult:
         except (OSError, FileNotFoundError):
             return True
 
-
 @dataclass
 class FolderScanCache:
     """フォルダスキャン結果のキャッシュ"""
 
     folder_path: Path
     scan_time: datetime
-    file_results: List[FileDiscoveryResult]
+    file_results: list[FileDiscoveryResult]
     total_files_scanned: int
     scan_duration: float
     cache_key: str = field(init=False)
@@ -108,7 +107,6 @@ class FolderScanCache:
         except (OSError, FileNotFoundError, ValueError):
             return True
 
-
 @dataclass
 class CacheMetrics:
     """キャッシュメトリクス"""
@@ -125,7 +123,7 @@ class CacheMetrics:
         total = self.hits + self.misses
         self.hit_rate = self.hits / total if total > 0 else 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式で返す"""
         return {
             "hits": self.hits,
@@ -135,7 +133,6 @@ class CacheMetrics:
             "memory_usage_mb": self.memory_usage_bytes / 1024 / 1024,
             "hit_rate": self.hit_rate,
         }
-
 
 class FileDiscoveryCache:
     """
@@ -153,7 +150,7 @@ class FileDiscoveryCache:
         max_file_entries: int = 2000,
         max_folder_entries: int = 100,
         max_memory_mb: float = 50.0,
-        logger_system: Optional[LoggerSystem] = None,
+        logger_system: LoggerSystem | None = None,
     ):
         """
         FileDiscoveryCacheの初期化
@@ -161,7 +158,7 @@ class FileDiscoveryCache:
         Args:
             max_file_entries: 最大ファイルエントリ数
             max_folder_entries: 最大フォルダエントリ数
-            max_memory_mb: 最大メモリ使用量（MB）
+            max_memory_mb: 最大メモリ使用量(MB)
             logger_system: ログシステム
         """
 
@@ -173,7 +170,7 @@ class FileDiscoveryCache:
         self.logger_system = logger_system or LoggerSystem()
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
-        # キャッシュストレージ（LRU順序付き辞書）
+        # キャッシュストレージ(LRU順序付き辞書)
         self._file_cache: OrderedDict[str, FileDiscoveryResult] = OrderedDict()
         self._folder_cache: OrderedDict[str, FolderScanCache] = OrderedDict()
         self._validation_cache: OrderedDict[str, bool] = OrderedDict()
@@ -204,8 +201,8 @@ class FileDiscoveryCache:
         self,
         file_path: Path,
         is_valid: bool,
-        validation_time: Optional[float] = None,
-        error_message: Optional[str] = None,
+        validation_time: float | None = None,
+        error_message: str | None = None,
     ) -> bool:
         """
         ファイル検出結果をキャッシュに保存する
@@ -214,9 +211,9 @@ class FileDiscoveryCache:
         後続の同一ファイルアクセス時の高速化を図ります。
 
         処理内容:
-        1. ファイル情報（サイズ、mtime）の取得
+        1. ファイル情報(サイズ、mtime)の取得
         2. FileDiscoveryResultオブジェクトの生成
-        3. 既存エントリの削除（重複防止）
+        3. 既存エントリの削除(重複防止)
         4. メモリ制限チェックと必要に応じた古いエントリ削除
         5. 新しいエントリの追加とLRU順序の更新
         6. メトリクス情報の更新
@@ -224,8 +221,8 @@ class FileDiscoveryCache:
         Args:
             file_path (Path): ファイルパス
             is_valid (bool): バリデーション結果
-            validation_time (Optional[float]): バリデーション時間（秒）
-            error_message (Optional[str]): エラーメッセージ（エラー時のみ）
+            validation_time (Optional[float]): バリデーション時間(秒)
+            error_message (Optional[str]): エラーメッセージ(エラー時のみ)
 
         Returns:
             bool: キャッシュ成功時True、失敗時False
@@ -301,7 +298,7 @@ class FileDiscoveryCache:
             )
             return False
 
-    def get_cached_file_result(self, file_path: Path) -> Optional[FileDiscoveryResult]:
+    def get_cached_file_result(self, file_path: Path) -> FileDiscoveryResult | None:
         """
         キャッシュされたファイル結果を取得
 
@@ -342,7 +339,7 @@ class FileDiscoveryCache:
                         )
                         return None
 
-                    # LRU更新（最近使用したものを末尾に移動）
+                    # LRU更新(最近使用したものを末尾に移動)
                     self._file_cache.move_to_end(cache_key)
 
                     # メトリクス更新
@@ -383,7 +380,7 @@ class FileDiscoveryCache:
     def cache_folder_scan(
         self,
         folder_path: Path,
-        file_results: List[FileDiscoveryResult],
+        file_results: list[FileDiscoveryResult],
         total_files_scanned: int,
         scan_duration: float,
     ) -> bool:
@@ -448,7 +445,7 @@ class FileDiscoveryCache:
             )
             return False
 
-    def get_cached_folder_scan(self, folder_path: Path) -> Optional[FolderScanCache]:
+    def get_cached_folder_scan(self, folder_path: Path) -> FolderScanCache | None:
         """キャッシュされたフォルダスキャン結果を取得"""
         try:
             with self._lock:
@@ -532,7 +529,7 @@ class FileDiscoveryCache:
 
         try:
             with self._lock:
-                # バリデーション用キャッシュキーを生成（ファイルサイズ+mtime基準）
+                # バリデーション用キャッシュキーを生成(ファイルサイズ+mtime基準)
                 try:
                     file_stat = file_path.stat()
                     cache_key = f"valid_{file_path.stem}_{file_stat.st_size}_{int(file_stat.st_mtime)}"
@@ -575,7 +572,7 @@ class FileDiscoveryCache:
             )
             return False
 
-    def get_cached_validation_result(self, file_path: Path) -> Optional[bool]:
+    def get_cached_validation_result(self, file_path: Path) -> bool | None:
         """
         キャッシュされたバリデーション結果を取得
 
@@ -649,8 +646,8 @@ class FileDiscoveryCache:
             if not self._file_cache:
                 break
 
-            # 最も古いエントリを削除（FIFO）
-            oldest_key, oldest_entry = self._file_cache.popitem(last=False)
+            # 最も古いエントリを削除(FIFO)
+            _oldest_key, oldest_entry = self._file_cache.popitem(last=False)
             self.file_metrics.evictions += 1
 
             self.logger_system.log_ai_operation(
@@ -667,8 +664,8 @@ class FileDiscoveryCache:
             if not self._folder_cache:
                 break
 
-            # 最も古いエントリを削除（FIFO）
-            oldest_key, oldest_entry = self._folder_cache.popitem(last=False)
+            # 最も古いエントリを削除(FIFO)
+            _oldest_key, oldest_entry = self._folder_cache.popitem(last=False)
             self.folder_metrics.evictions += 1
 
             self.logger_system.log_ai_operation(
@@ -688,8 +685,8 @@ class FileDiscoveryCache:
             if not self._validation_cache:
                 break
 
-            # 最も古いエントリを削除（FIFO）
-            oldest_key, oldest_value = self._validation_cache.popitem(last=False)
+            # 最も古いエントリを削除(FIFO)
+            _oldest_key, _oldest_value = self._validation_cache.popitem(last=False)
             self.validation_metrics.evictions += 1
 
     def _update_memory_usage(self):
@@ -781,12 +778,12 @@ class FileDiscoveryCache:
                 AIComponent.KIRO,
             )
 
-    def clear_cache(self, cache_type: Optional[str] = None):
+    def clear_cache(self, cache_type: str | None = None):
         """
         キャッシュをクリア
 
         Args:
-            cache_type: クリアするキャッシュタイプ（'file', 'folder', 'validation'）
+            cache_type: クリアするキャッシュタイプ('file', 'folder', 'validation')
                        Noneの場合は全てクリア
         """
 
@@ -818,7 +815,7 @@ class FileDiscoveryCache:
                 AIComponent.KIRO,
             )
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """
         キャッシュ統計情報を取得
 
@@ -964,7 +961,7 @@ class FileDiscoveryCache:
 
     def enable_debug_cache_logging(self):
         """
-        キャッシュデバッグログを有効にする（トラブルシューティング用）
+        キャッシュデバッグログを有効にする(トラブルシューティング用)
         """
 
         self._debug_cache_logging = True
@@ -976,7 +973,7 @@ class FileDiscoveryCache:
             level="DEBUG",
         )
 
-    def get_cache_health_status(self) -> Dict[str, Any]:
+    def get_cache_health_status(self) -> dict[str, Any]:
         """
         キャッシュの健全性状態を取得する
 

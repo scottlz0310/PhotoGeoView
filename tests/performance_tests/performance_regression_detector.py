@@ -14,11 +14,12 @@ import json
 import statistics
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List
 
 # プロジェクトルートをパスに追加
 project_root = Path(__file__).parent.parent.parent
@@ -57,7 +58,7 @@ class PerformanceBenchmark:
     cpu_usage: float
     ai_component: str
     success: bool
-    error_message: Optional[str] = None
+    error_message: str | None = None
     timestamp: datetime = None
 
     def __post_init__(self):
@@ -287,7 +288,7 @@ class PerformanceRegressionDetector:
 
         self._save_baseline(self.baseline_data)
 
-    def generate_report(self, output_path: Optional[Path] = None) -> str:
+    def generate_report(self, output_path: Path | None = None) -> str:
         """パフォーマンス回帰レポートを生成"""
         report_lines = [
             "# PhotoGeoView パフォーマンス回帰レポート",

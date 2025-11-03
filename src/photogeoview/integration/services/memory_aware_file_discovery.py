@@ -34,7 +34,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import psutil
 
@@ -64,7 +64,6 @@ class MemoryStats:
         """危険なメモリ使用量かどうか"""
         return self.usage_percentage > 90.0
 
-
 class MemoryAwareFileDiscovery:
     """
     メモリ管理機能付きファイル検出
@@ -75,20 +74,20 @@ class MemoryAwareFileDiscovery:
 
     def __init__(
         self,
-        file_discovery_service: Optional[FileDiscoveryService] = None,
+        file_discovery_service: FileDiscoveryService | None = None,
         max_memory_mb: int = 256,
         warning_threshold: float = 0.75,
         critical_threshold: float = 0.90,
-        logger_system: Optional[LoggerSystem] = None,
+        logger_system: LoggerSystem | None = None,
     ):
         """
         MemoryAwareFileDiscoveryの初期化
 
         Args:
             file_discovery_service: ファイル検出サービス
-            max_memory_mb: 最大メモリ使用量（MB）
-            warning_threshold: 警告閾値（0.0-1.0）
-            critical_threshold: 危険閾値（0.0-1.0）
+            max_memory_mb: 最大メモリ使用量(MB)
+            warning_threshold: 警告閾値(0.0-1.0)
+            critical_threshold: 危険閾値(0.0-1.0)
             logger_system: ログシステム
         """
         self.file_discovery_service = file_discovery_service or FileDiscoveryService()
@@ -98,8 +97,8 @@ class MemoryAwareFileDiscovery:
         self.logger_system = logger_system or LoggerSystem()
 
         # メモリ監視用の変数
-        self._memory_stats_history: List[MemoryStats] = []
-        self._cache_data: Dict[str, Any] = {}
+        self._memory_stats_history: list[MemoryStats] = []
+        self._cache_data: dict[str, Any] = {}
         self._last_cleanup_time = datetime.now()
         self._cleanup_count = 0
 
@@ -124,7 +123,7 @@ class MemoryAwareFileDiscovery:
             level="INFO",
         )
 
-    def discover_images_with_memory_management(self, folder_path: Path) -> List[Path]:
+    def discover_images_with_memory_management(self, folder_path: Path) -> list[Path]:
         """
         メモリ管理機能付きで画像ファイルを検出する
 
@@ -133,22 +132,22 @@ class MemoryAwareFileDiscovery:
 
         処理フロー:
         1. 開始前のメモリ状態測定と危険レベルチェック
-        2. キャッシュからの結果確認（メモリ効率化）
+        2. キャッシュからの結果確認(メモリ効率化)
         3. FileDiscoveryServiceによるファイル検出実行
         4. 検出中の継続的なメモリ監視
         5. 閾値超過時の自動クリーンアップ実行
-        6. 結果のキャッシュ保存（メモリ余裕時のみ）
+        6. 結果のキャッシュ保存(メモリ余裕時のみ)
         7. 詳細なパフォーマンス統計の記録
 
         Args:
             folder_path (Path): 検索対象のフォルダパス
 
         Returns:
-            List[Path]: 検出された画像ファイルのリスト
+            list[Path]: 検出された画像ファイルのリスト
 
         Note:
-            - 危険レベル（90%以上）のメモリ使用時は事前クリーンアップを実行
-            - 警告レベル（75%以上）でログ警告を出力
+            - 危険レベル(90%以上)のメモリ使用時は事前クリーンアップを実行
+            - 警告レベル(75%以上)でログ警告を出力
             - キャッシュヒット時は高速に結果を返却
             - メモリ不足時は自動的にキャッシュをクリア
             - 詳細なメモリ使用量変化がログに記録される
@@ -157,7 +156,7 @@ class MemoryAwareFileDiscovery:
 
         with self.logger_system.operation_context(
             AIComponent.KIRO, "memory_aware_discovery"
-        ) as ctx:
+        ):
             # 開始前のメモリ状態をチェック
             initial_memory = self._get_current_memory_stats()
             self._log_memory_status("discovery_start", initial_memory)
@@ -216,7 +215,7 @@ class MemoryAwareFileDiscovery:
                     )
                     self._perform_memory_cleanup()
 
-                # 結果をキャッシュに保存（メモリに余裕がある場合のみ）
+                # 結果をキャッシュに保存(メモリに余裕がある場合のみ)
                 if current_memory.usage_percentage < self.warning_threshold * 100:
                     self._store_in_cache(cache_key, discovered_files)
 
@@ -373,15 +372,15 @@ class MemoryAwareFileDiscovery:
             # ファイルアクセスエラーの場合はパスのみを使用
             return str(folder_path)
 
-    def _get_from_cache(self, cache_key: str) -> Optional[List[Path]]:
+    def _get_from_cache(self, cache_key: str) -> list[Path] | None:
         """キャッシュからデータを取得する"""
         return self._cache_data.get(cache_key)
 
-    def _store_in_cache(self, cache_key: str, data: List[Path]):
+    def _store_in_cache(self, cache_key: str, data: list[Path]):
         """データをキャッシュに保存する"""
         # キャッシュサイズ制限
         if len(self._cache_data) >= 50:  # 最大50エントリ
-            # 最も古いエントリを削除（LRU的な動作）
+            # 最も古いエントリを削除(LRU的な動作)
             oldest_key = next(iter(self._cache_data))
             del self._cache_data[oldest_key]
 
@@ -420,7 +419,7 @@ class MemoryAwareFileDiscovery:
             current_avg * (total_discoveries - 1) + memory_stats.current_usage_mb
         ) / total_discoveries
 
-    def get_memory_status(self) -> Dict[str, Any]:
+    def get_memory_status(self) -> dict[str, Any]:
         """現在のメモリ状態と統計情報を取得する"""
         current_memory = self._get_current_memory_stats()
 
@@ -452,7 +451,7 @@ class MemoryAwareFileDiscovery:
 
         return status
 
-    def force_memory_cleanup(self) -> Dict[str, Any]:
+    def force_memory_cleanup(self) -> dict[str, Any]:
         """強制的にメモリクリーンアップを実行する"""
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
@@ -588,7 +587,7 @@ class MemoryAwareFileDiscovery:
 
     def enable_debug_memory_logging(self):
         """
-        メモリデバッグログを有効にする（トラブルシューティング用）
+        メモリデバッグログを有効にする(トラブルシューティング用)
         """
 
         self._debug_memory_logging = True

@@ -9,7 +9,8 @@ Requirements: 5.1, 5.2, 5.3
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Protocol
+from collections.abc import Callable
+from typing import Any, Protocol
 
 from .navigation_interfaces import INavigationAware
 from .navigation_models import NavigationEvent, NavigationState
@@ -26,7 +27,7 @@ class IThemeNavigationIntegration(ABC):
     """
 
     @abstractmethod
-    def get_current_theme(self) -> Optional[ThemeConfiguration]:
+    def get_current_theme(self) -> ThemeConfiguration | None:
         """
         Get the currently active theme
 
@@ -87,7 +88,7 @@ class IThemeNavigationIntegration(ABC):
         pass
 
     @abstractmethod
-    def get_themed_navigation_styles(self) -> Dict[str, str]:
+    def get_themed_navigation_styles(self) -> dict[str, str]:
         """
         Get navigation-specific styles from current theme
 
@@ -97,7 +98,7 @@ class IThemeNavigationIntegration(ABC):
         pass
 
     @abstractmethod
-    def update_navigation_theme_properties(self, properties: Dict[str, Any]) -> bool:
+    def update_navigation_theme_properties(self, properties: dict[str, Any]) -> bool:
         """
         Update theme properties specific to navigation components
 
@@ -108,7 +109,6 @@ class IThemeNavigationIntegration(ABC):
             True if updated successfully, False otherwise
         """
         pass
-
 
 class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
     """
@@ -148,7 +148,7 @@ class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
         """
         ...
 
-    def get_integration_requirements(self) -> Dict[str, List[str]]:
+    def get_integration_requirements(self) -> dict[str, list[str]]:
         """
         Get integration requirements for this component
 
@@ -157,7 +157,6 @@ class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
             lists of required properties/events
         """
         ...
-
 
 class IBreadcrumbThemeProvider(ABC):
     """
@@ -168,7 +167,7 @@ class IBreadcrumbThemeProvider(ABC):
     """
 
     @abstractmethod
-    def get_breadcrumb_colors(self, theme: ThemeConfiguration) -> Dict[str, str]:
+    def get_breadcrumb_colors(self, theme: ThemeConfiguration) -> dict[str, str]:
         """
         Get breadcrumb-specific colors from theme
 
@@ -181,7 +180,7 @@ class IBreadcrumbThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def get_breadcrumb_fonts(self, theme: ThemeConfiguration) -> Dict[str, str]:
+    def get_breadcrumb_fonts(self, theme: ThemeConfiguration) -> dict[str, str]:
         """
         Get breadcrumb-specific fonts from theme
 
@@ -194,7 +193,7 @@ class IBreadcrumbThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def get_breadcrumb_spacing(self, theme: ThemeConfiguration) -> Dict[str, int]:
+    def get_breadcrumb_spacing(self, theme: ThemeConfiguration) -> dict[str, int]:
         """
         Get breadcrumb-specific spacing from theme
 
@@ -207,7 +206,7 @@ class IBreadcrumbThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def get_breadcrumb_icons(self, theme: ThemeConfiguration) -> Dict[str, str]:
+    def get_breadcrumb_icons(self, theme: ThemeConfiguration) -> dict[str, str]:
         """
         Get breadcrumb-specific icons from theme
 
@@ -222,7 +221,7 @@ class IBreadcrumbThemeProvider(ABC):
     @abstractmethod
     def get_segment_styles(
         self, theme: ThemeConfiguration, segment_state: str
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Get styles for breadcrumb segments based on state
 
@@ -236,7 +235,7 @@ class IBreadcrumbThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def get_separator_styles(self, theme: ThemeConfiguration) -> Dict[str, str]:
+    def get_separator_styles(self, theme: ThemeConfiguration) -> dict[str, str]:
         """
         Get styles for breadcrumb separators
 
@@ -247,7 +246,6 @@ class IBreadcrumbThemeProvider(ABC):
             Dictionary of separator style properties
         """
         pass
-
 
 class INavigationThemeRenderer(ABC):
     """
@@ -299,7 +297,7 @@ class INavigationThemeRenderer(ABC):
         pass
 
     @abstractmethod
-    def get_theme_dependent_properties(self) -> List[str]:
+    def get_theme_dependent_properties(self) -> list[str]:
         """
         Get list of properties that depend on theme
 
@@ -309,7 +307,7 @@ class INavigationThemeRenderer(ABC):
         pass
 
     @abstractmethod
-    def validate_theme_compatibility(self, theme: ThemeConfiguration) -> List[str]:
+    def validate_theme_compatibility(self, theme: ThemeConfiguration) -> list[str]:
         """
         Validate theme compatibility with navigation rendering
 
@@ -320,7 +318,6 @@ class INavigationThemeRenderer(ABC):
             List of compatibility issues (empty if compatible)
         """
         pass
-
 
 class IIntegratedEventManager(ABC):
     """
@@ -358,7 +355,7 @@ class IIntegratedEventManager(ABC):
 
     @abstractmethod
     def emit_theme_navigation_event(
-        self, event_type: str, data: Dict[str, Any]
+        self, event_type: str, data: dict[str, Any]
     ) -> None:
         """
         Emit an integrated theme/navigation event
@@ -370,7 +367,7 @@ class IIntegratedEventManager(ABC):
         pass
 
     @abstractmethod
-    def get_event_history(self) -> List[Dict[str, Any]]:
+    def get_event_history(self) -> list[dict[str, Any]]:
         """
         Get history of integrated events
 
@@ -384,7 +381,6 @@ class IIntegratedEventManager(ABC):
         """Clear integrated event history"""
         pass
 
-
 class IConfigurationIntegration(ABC):
     """
     Abstract interface for integrated configuration management
@@ -394,7 +390,7 @@ class IConfigurationIntegration(ABC):
     """
 
     @abstractmethod
-    def get_integration_config(self) -> Dict[str, Any]:
+    def get_integration_config(self) -> dict[str, Any]:
         """
         Get integrated configuration settings
 
@@ -404,7 +400,7 @@ class IConfigurationIntegration(ABC):
         pass
 
     @abstractmethod
-    def set_integration_config(self, config: Dict[str, Any]) -> bool:
+    def set_integration_config(self, config: dict[str, Any]) -> bool:
         """
         Set integrated configuration settings
 
@@ -417,7 +413,7 @@ class IConfigurationIntegration(ABC):
         pass
 
     @abstractmethod
-    def get_theme_navigation_preferences(self) -> Dict[str, Any]:
+    def get_theme_navigation_preferences(self) -> dict[str, Any]:
         """
         Get user preferences for theme/navigation integration
 
@@ -427,7 +423,7 @@ class IConfigurationIntegration(ABC):
         pass
 
     @abstractmethod
-    def set_theme_navigation_preferences(self, preferences: Dict[str, Any]) -> bool:
+    def set_theme_navigation_preferences(self, preferences: dict[str, Any]) -> bool:
         """
         Set user preferences for theme/navigation integration
 
@@ -440,7 +436,7 @@ class IConfigurationIntegration(ABC):
         pass
 
     @abstractmethod
-    def validate_integration_config(self, config: Dict[str, Any]) -> List[str]:
+    def validate_integration_config(self, config: dict[str, Any]) -> list[str]:
         """
         Validate integration configuration
 
@@ -461,7 +457,6 @@ class IConfigurationIntegration(ABC):
             True if reset successfully, False otherwise
         """
         pass
-
 
 class IPerformanceIntegration(ABC):
     """
@@ -492,7 +487,7 @@ class IPerformanceIntegration(ABC):
         pass
 
     @abstractmethod
-    def get_integration_metrics(self) -> Dict[str, Any]:
+    def get_integration_metrics(self) -> dict[str, Any]:
         """
         Get performance metrics for integration operations
 
@@ -503,7 +498,7 @@ class IPerformanceIntegration(ABC):
 
     @abstractmethod
     def log_integration_operation(
-        self, operation: str, duration: float, details: Dict[str, Any]
+        self, operation: str, duration: float, details: dict[str, Any]
     ) -> None:
         """
         Log performance data for an integration operation
@@ -516,7 +511,7 @@ class IPerformanceIntegration(ABC):
         pass
 
     @abstractmethod
-    def get_performance_recommendations(self) -> List[str]:
+    def get_performance_recommendations(self) -> list[str]:
         """
         Get performance optimization recommendations
 
@@ -535,11 +530,10 @@ class IPerformanceIntegration(ABC):
         """
         pass
 
-
 # Type aliases for convenience
 IntegratedEventCallback = Callable[
-    [str, Dict[str, Any]], None
+    [str, dict[str, Any]], None
 ]  # (event_type, data) -> None
-ThemeNavigationConfig = Dict[str, Any]  # Configuration dictionary
-IntegrationMetrics = Dict[str, Any]  # Performance metrics dictionary
-StyleProperties = Dict[str, str]  # Style property dictionary
+ThemeNavigationConfig = dict[str, Any]  # Configuration dictionary
+IntegrationMetrics = dict[str, Any]  # Performance metrics dictionary
+StyleProperties = dict[str, str]  # Style property dictionary

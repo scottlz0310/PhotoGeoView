@@ -11,10 +11,9 @@ Author: Kiro AI Integration System
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # Import new theme and navigation interfaces
-
 
 class IImageProcessor(ABC):
     """
@@ -23,7 +22,7 @@ class IImageProcessor(ABC):
     """
 
     @abstractmethod
-    def load_image(self, path: Path) -> Optional[Any]:
+    def load_image(self, path: Path) -> Any | None:
         """
         Load an image from the specified path
 
@@ -36,7 +35,7 @@ class IImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def generate_thumbnail(self, image: Any, size: Tuple[int, int]) -> Optional[Any]:
+    def generate_thumbnail(self, image: Any, size: tuple[int, int]) -> Any | None:
         """
         Generate a thumbnail from the given image
 
@@ -50,7 +49,7 @@ class IImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def extract_exif(self, path: Path) -> Dict[str, Any]:
+    def extract_exif(self, path: Path) -> dict[str, Any]:
         """
         Extract EXIF metadata from image file
 
@@ -63,7 +62,7 @@ class IImageProcessor(ABC):
         pass
 
     @abstractmethod
-    def get_supported_formats(self) -> List[str]:
+    def get_supported_formats(self) -> list[str]:
         """
         Get list of supported image formats
 
@@ -85,7 +84,6 @@ class IImageProcessor(ABC):
         """
         pass
 
-
 class IThemeManager(ABC):
     """
     Unified interface for theme management
@@ -93,7 +91,7 @@ class IThemeManager(ABC):
     """
 
     @abstractmethod
-    def get_available_themes(self) -> List[str]:
+    def get_available_themes(self) -> list[str]:
         """
         Get list of available theme names
 
@@ -116,7 +114,7 @@ class IThemeManager(ABC):
         pass
 
     @abstractmethod
-    def get_theme_config(self, theme_name: str) -> Dict[str, Any]:
+    def get_theme_config(self, theme_name: str) -> dict[str, Any]:
         """
         Get configuration for the specified theme
 
@@ -139,7 +137,7 @@ class IThemeManager(ABC):
         pass
 
     @abstractmethod
-    def create_custom_theme(self, name: str, config: Dict[str, Any]) -> bool:
+    def create_custom_theme(self, name: str, config: dict[str, Any]) -> bool:
         """
         Create a new custom theme
 
@@ -153,7 +151,7 @@ class IThemeManager(ABC):
         pass
 
     @abstractmethod
-    def validate_theme_config(self, config: Dict[str, Any]) -> bool:
+    def validate_theme_config(self, config: dict[str, Any]) -> bool:
         """
         Validate theme configuration
 
@@ -165,7 +163,6 @@ class IThemeManager(ABC):
         """
         pass
 
-
 class IMapProvider(ABC):
     """
     Unified interface for map functionality
@@ -173,7 +170,7 @@ class IMapProvider(ABC):
     """
 
     @abstractmethod
-    def create_map(self, center: Tuple[float, float], zoom: int = 10) -> Any:
+    def create_map(self, center: tuple[float, float], zoom: int = 10) -> Any:
         """
         Create a new map centered at the specified coordinates
 
@@ -213,7 +210,7 @@ class IMapProvider(ABC):
         pass
 
     @abstractmethod
-    def set_map_bounds(self, map_obj: Any, bounds: List[Tuple[float, float]]) -> None:
+    def set_map_bounds(self, map_obj: Any, bounds: list[tuple[float, float]]) -> None:
         """
         Set map bounds to fit all specified coordinates
 
@@ -228,7 +225,7 @@ class IMapProvider(ABC):
         self,
         map_obj: Any,
         image_path: Path,
-        bounds: Tuple[Tuple[float, float], Tuple[float, float]],
+        bounds: tuple[tuple[float, float], tuple[float, float]],
     ) -> None:
         """
         Add an image overlay to the map
@@ -241,7 +238,7 @@ class IMapProvider(ABC):
         pass
 
     @abstractmethod
-    def get_map_center(self, map_obj: Any) -> Tuple[float, float]:
+    def get_map_center(self, map_obj: Any) -> tuple[float, float]:
         """
         Get current center coordinates of the map
 
@@ -266,7 +263,6 @@ class IMapProvider(ABC):
             True if coordinates are valid, False otherwise
         """
         pass
-
 
 class IConfigManager(ABC):
     """
@@ -303,7 +299,7 @@ class IConfigManager(ABC):
         pass
 
     @abstractmethod
-    def get_ai_config(self, ai_name: str) -> Dict[str, Any]:
+    def get_ai_config(self, ai_name: str) -> dict[str, Any]:
         """
         Get configuration section for specific AI implementation
 
@@ -345,7 +341,6 @@ class IConfigManager(ABC):
         """
         pass
 
-
 class IPerformanceMonitor(ABC):
     """
     Unified interface for performance monitoring
@@ -363,7 +358,7 @@ class IPerformanceMonitor(ABC):
         pass
 
     @abstractmethod
-    def get_memory_usage(self) -> Dict[str, float]:
+    def get_memory_usage(self) -> dict[str, float]:
         """
         Get current memory usage statistics
 
@@ -373,7 +368,7 @@ class IPerformanceMonitor(ABC):
         pass
 
     @abstractmethod
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """
         Get comprehensive performance metrics
 
@@ -394,7 +389,7 @@ class IPerformanceMonitor(ABC):
         pass
 
     @abstractmethod
-    def get_ai_component_status(self) -> Dict[str, str]:
+    def get_ai_component_status(self) -> dict[str, str]:
         """
         Get status of all AI components
 
@@ -402,7 +397,6 @@ class IPerformanceMonitor(ABC):
             Dictionary mapping AI component names to status strings
         """
         pass
-
 
 # Note: Additional interfaces for theme and navigation integration are available in:
 # - theme_interfaces.py: Theme management interfaces (IThemeProvider, IThemeValidator, etc.)

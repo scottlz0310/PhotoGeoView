@@ -12,11 +12,12 @@ Author: Kiro AI Integration System
 import logging
 import sys
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from .models import AIComponent
 
@@ -34,7 +35,6 @@ class ErrorCategory(Enum):
     PERFORMANCE_ERROR = "performance"  # Performance-related errors
     STATE_ERROR = "state"  # State management errors
 
-
 class ErrorSeverity(Enum):
     """Error severity levels"""
 
@@ -42,7 +42,6 @@ class ErrorSeverity(Enum):
     ERROR = "error"  # Feature unavailable but app can continue
     WARNING = "warning"  # Potential issue, degraded functionality
     INFO = "info"  # Informational message
-
 
 @dataclass
 class ErrorContext:
@@ -52,7 +51,7 @@ class ErrorContext:
     error_id: str
     category: ErrorCategory
     severity: ErrorSeverity
-    ai_component: Optional[AIComponent] = None
+    ai_component: AIComponent | None = None
 
     # Error details
     message: str = ""
@@ -61,16 +60,16 @@ class ErrorContext:
 
     # Context information
     operation: str = ""
-    file_path: Optional[Path] = None
+    file_path: Path | None = None
     user_action: str = ""
 
     # System state
     timestamp: datetime = None
     stack_trace: str = ""
-    system_info: Dict[str, Any] = None
+    system_info: dict[str, Any] = None
 
     # Recovery information
-    recovery_suggestions: List[str] = None
+    recovery_suggestions: list[str] = None
     retry_possible: bool = False
     fallback_available: bool = False
 
@@ -81,7 +80,6 @@ class ErrorContext:
             self.recovery_suggestions = []
         if self.system_info is None:
             self.system_info = {}
-
 
 class IntegratedErrorHandler:
     """
@@ -97,7 +95,7 @@ class IntegratedErrorHandler:
             logger: Logger instance for error logging
         """
         self.logger = logger
-        self.error_strategies: Dict[ErrorCategory, Callable] = {
+        self.error_strategies: dict[ErrorCategory, Callable] = {
             ErrorCategory.UI_ERROR: self._handle_ui_error,
             ErrorCategory.CORE_ERROR: self._handle_core_error,
             ErrorCategory.INTEGRATION_ERROR: self._handle_integration_error,
@@ -109,20 +107,20 @@ class IntegratedErrorHandler:
         }
 
         # Error statistics
-        self.error_counts: Dict[ErrorCategory, int] = dict.fromkeys(ErrorCategory, 0)
-        self.recent_errors: List[ErrorContext] = []
+        self.error_counts: dict[ErrorCategory, int] = dict.fromkeys(ErrorCategory, 0)
+        self.recent_errors: list[ErrorContext] = []
         self.max_recent_errors = 100
 
         # Recovery strategies
-        self.recovery_handlers: Dict[str, Callable] = {}
-        self.fallback_handlers: Dict[str, Callable] = {}
+        self.recovery_handlers: dict[str, Callable] = {}
+        self.fallback_handlers: dict[str, Callable] = {}
 
     def handle_error(
         self,
         error: Exception,
         category: ErrorCategory,
-        context: Dict[str, Any] = None,
-        ai_component: Optional[AIComponent] = None,
+        context: dict[str, Any] | None = None,
+        ai_component: AIComponent | None = None,
     ) -> ErrorContext:
         """
         Handle an error with unified error management
@@ -164,8 +162,8 @@ class IntegratedErrorHandler:
         self,
         error: Exception,
         category: ErrorCategory,
-        context: Dict[str, Any] = None,
-        ai_component: Optional[AIComponent] = None,
+        context: dict[str, Any] | None = None,
+        ai_component: AIComponent | None = None,
     ) -> ErrorContext:
         """Create comprehensive error context"""
 
@@ -250,7 +248,7 @@ class IntegratedErrorHandler:
         self,
         error: Exception,
         category: ErrorCategory,
-        ai_component: Optional[AIComponent],
+        ai_component: AIComponent | None,
     ) -> str:
         """Generate user-friendly error message"""
 
@@ -275,7 +273,7 @@ class IntegratedErrorHandler:
 
     def _get_recovery_suggestions(
         self, error: Exception, category: ErrorCategory
-    ) -> List[str]:
+    ) -> list[str]:
         """Get recovery suggestions based on error type and category"""
 
         suggestions = []
@@ -507,7 +505,7 @@ class IntegratedErrorHandler:
 
     # Utility methods
 
-    def get_error_statistics(self) -> Dict[str, Any]:
+    def get_error_statistics(self) -> dict[str, Any]:
         """Get error statistics"""
 
         return {

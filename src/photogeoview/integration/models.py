@@ -25,14 +25,12 @@ class ProcessingStatus(Enum):
     FAILED = "failed"
     CACHED = "cached"
 
-
 class AIComponent(Enum):
     """AI component enumeration"""
 
     COPILOT = "copilot"
     CURSOR = "cursor"
     KIRO = "kiro"
-
 
 @dataclass
 class ImageMetadata:
@@ -133,7 +131,6 @@ class ImageMetadata:
             return (self.width * self.height) / 1_000_000
         return None
 
-
 @dataclass
 class ThemeConfiguration:
     """
@@ -216,7 +213,6 @@ class ThemeConfiguration:
         )
         total_features = len(self.accessibility_features)
         return enabled_features / total_features if total_features > 0 else 0.0
-
 
 @dataclass
 class ApplicationState:
@@ -319,7 +315,6 @@ class ApplicationState:
             if times
         }
 
-
 @dataclass
 class CacheEntry:
     """
@@ -347,7 +342,6 @@ class CacheEntry:
         """Mark cache entry as accessed"""
         self.last_accessed = datetime.now()
         self.access_count += 1
-
 
 @dataclass
 class PerformanceMetrics:

@@ -14,7 +14,7 @@ import threading
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from .config_migration import ConfigMigrationManager
 from .error_handling import ErrorCategory, IntegratedErrorHandler
@@ -36,7 +36,7 @@ class ConfigManager(IConfigManager):
 
     def __init__(
         self,
-        config_dir: Path = None,
+        config_dir: Path | None = None,
         logger_system: LoggerSystem = None,
         error_handler: IntegratedErrorHandler = None,
     ):
@@ -54,9 +54,9 @@ class ConfigManager(IConfigManager):
         self.error_handler = error_handler or IntegratedErrorHandler(self.logger_system)
 
         # Configuration storage
-        self.config_data: Dict[str, Any] = {}
-        self.default_config: Dict[str, Any] = {}
-        self.ai_configs: Dict[AIComponent, Dict[str, Any]] = {}
+        self.config_data: dict[str, Any] = {}
+        self.default_config: dict[str, Any] = {}
+        self.ai_configs: dict[AIComponent, dict[str, Any]] = {}
 
         # Application state management
         self.application_state: ApplicationState = ApplicationState()
@@ -75,11 +75,11 @@ class ConfigManager(IConfigManager):
         self._lock = threading.RLock()
 
         # Change tracking
-        self.change_listeners: List[callable] = []
-        self.last_modified: Dict[str, datetime] = {}
+        self.change_listeners: list[callable] = []
+        self.last_modified: dict[str, datetime] = {}
 
         # Validation schemas
-        self.validation_schemas: Dict[str, Dict[str, Any]] = {}
+        self.validation_schemas: dict[str, dict[str, Any]] = {}
 
         # Migration manager
         self.migration_manager = ConfigMigrationManager(
@@ -232,7 +232,7 @@ class ConfigManager(IConfigManager):
                     ai_component
                 )
 
-    def _get_default_ai_config(self, ai_component: AIComponent) -> Dict[str, Any]:
+    def _get_default_ai_config(self, ai_component: AIComponent) -> dict[str, Any]:
         """Get default configuration for specific AI component"""
 
         if ai_component == AIComponent.COPILOT:
@@ -362,7 +362,7 @@ class ConfigManager(IConfigManager):
 
             # Main config and user config are already merged in their load methods
 
-    def _deep_merge(self, target: Dict[str, Any], source: Dict[str, Any]):
+    def _deep_merge(self, target: dict[str, Any], source: dict[str, Any]):
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
@@ -502,7 +502,7 @@ class ConfigManager(IConfigManager):
                 )
                 return False
 
-    def get_ai_config(self, ai_name: str) -> Dict[str, Any]:
+    def get_ai_config(self, ai_name: str) -> dict[str, Any]:
         """
         Get configuration section for specific AI implementation
 
@@ -519,7 +519,7 @@ class ConfigManager(IConfigManager):
         except ValueError:
             return {}
 
-    def set_ai_config(self, ai_name: str, config: Dict[str, Any]) -> bool:
+    def set_ai_config(self, ai_name: str, config: dict[str, Any]) -> bool:
         """
         Set configuration for specific AI implementation
 
@@ -566,7 +566,7 @@ class ConfigManager(IConfigManager):
             )
             return False
 
-    def update_ai_config(self, ai_name: str, updates: Dict[str, Any]) -> bool:
+    def update_ai_config(self, ai_name: str, updates: dict[str, Any]) -> bool:
         """
         Update specific settings in AI configuration
 
@@ -917,7 +917,7 @@ class ConfigManager(IConfigManager):
             )
             return False
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Get a summary of the current configuration"""
 
         return {
@@ -936,7 +936,7 @@ class ConfigManager(IConfigManager):
             },
         }
 
-    def _count_settings(self, config: Dict[str, Any]) -> int:
+    def _count_settings(self, config: dict[str, Any]) -> int:
         """Recursively count settings in a configuration dictionary"""
 
         count = 0
@@ -949,7 +949,7 @@ class ConfigManager(IConfigManager):
 
     # Configuration migration methods
 
-    def migrate_existing_configurations(self) -> Dict[str, Any]:
+    def migrate_existing_configurations(self) -> dict[str, Any]:
         """
         Migrate existing configuration files to unified system
 
@@ -986,7 +986,7 @@ class ConfigManager(IConfigManager):
             )
             return {"status": "failed", "error": str(e)}
 
-    def rollback_migration(self, migration_timestamp: str = None) -> bool:
+    def rollback_migration(self, migration_timestamp: str | None = None) -> bool:
         """
         Rollback configuration migration
 
@@ -1021,7 +1021,7 @@ class ConfigManager(IConfigManager):
             )
             return False
 
-    def validate_configuration(self) -> Dict[str, Any]:
+    def validate_configuration(self) -> dict[str, Any]:
         """
         Validate current configuration
 
@@ -1041,7 +1041,7 @@ class ConfigManager(IConfigManager):
             )
             return {"status": "error", "error": str(e)}
 
-    def get_migration_status(self) -> Dict[str, Any]:
+    def get_migration_status(self) -> dict[str, Any]:
         """Get current migration status"""
 
         try:
@@ -1080,11 +1080,7 @@ class ConfigManager(IConfigManager):
                 "user_preferences.json",
             ]
 
-            for filename in legacy_files:
-                if (self.config_dir / filename).exists():
-                    return True
-
-            return False
+            return any((self.config_dir / filename).exists() for filename in legacy_files)
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1378,7 +1374,7 @@ class ConfigManager(IConfigManager):
             self.application_state = ApplicationState()
             return False
 
-    def get_state_summary(self) -> Dict[str, Any]:
+    def get_state_summary(self) -> dict[str, Any]:
         """Get summary of current application state"""
         return {
             "current_folder": (

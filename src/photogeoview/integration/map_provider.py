@@ -9,7 +9,7 @@ Author: Kiro AI Integration System
 """
 
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import folium
 
@@ -45,7 +45,7 @@ class FoliumMapProvider(IMapProvider):
         self.default_zoom = self.config_manager.get_setting("core.map_zoom_default", 10)
         self.tile_layer = "OpenStreetMap"  # デフォルトタイルレイヤー
 
-    def create_map(self, center: Tuple[float, float], zoom: int = 10) -> Any:
+    def create_map(self, center: tuple[float, float], zoom: int = 10) -> Any:
         """
         Create a new folium map centered at the specified coordinates
 
@@ -173,7 +173,7 @@ class FoliumMapProvider(IMapProvider):
             )
             return ""
 
-    def set_map_bounds(self, map_obj: Any, bounds: List[Tuple[float, float]]) -> None:
+    def set_map_bounds(self, map_obj: Any, bounds: list[tuple[float, float]]) -> None:
         """
         Set folium map bounds to fit all specified coordinates
 
@@ -214,7 +214,7 @@ class FoliumMapProvider(IMapProvider):
         self,
         map_obj: Any,
         image_path: Path,
-        bounds: Tuple[Tuple[float, float], Tuple[float, float]],
+        bounds: tuple[tuple[float, float], tuple[float, float]],
     ) -> None:
         """
         Add an image overlay to the folium map
@@ -268,7 +268,7 @@ class FoliumMapProvider(IMapProvider):
                 AIComponent.COPILOT,
             )
 
-    def get_map_center(self, map_obj: Any) -> Tuple[float, float]:
+    def get_map_center(self, map_obj: Any) -> tuple[float, float]:
         """
         Get current center coordinates of the folium map
 
@@ -315,17 +315,14 @@ class FoliumMapProvider(IMapProvider):
                 return False
 
             # 経度の範囲: -180 から 180
-            if not (-180 <= lon <= 180):
-                return False
-
-            return True
+            return -180 <= lon <= 180
 
         except (TypeError, ValueError):
             return False
 
     def create_map_with_marker(
-        self, lat: float, lon: float, popup: str = "", zoom: int = None
-    ) -> Optional[str]:
+        self, lat: float, lon: float, popup: str = "", zoom: int | None = None
+    ) -> str | None:
         """
         Create a map with a marker and return HTML
 

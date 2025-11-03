@@ -10,7 +10,6 @@ Author: Kiro AI Integration System
 
 import sys
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
@@ -86,7 +85,6 @@ except ImportError:
             def set_current_path(self, path):
                 return False
 
-
 class IntegratedMainWindow(QMainWindow):
     """
     Integrated main window combining CursorBLD UI excellence with Kiro optimization
@@ -127,10 +125,10 @@ class IntegratedMainWindow(QMainWindow):
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
         # UI components
-        self.theme_manager: Optional[IntegratedThemeManager] = None
-        self.theme_manager_widget: Optional[IntegratedThemeManager] = None
-        self.breadcrumb_bar: Optional[BreadcrumbAddressBar] = None
-        self.thumbnail_grid: Optional[SimpleThumbnailGrid] = None
+        self.theme_manager: IntegratedThemeManager | None = None
+        self.theme_manager_widget: IntegratedThemeManager | None = None
+        self.breadcrumb_bar: BreadcrumbAddressBar | None = None
+        self.thumbnail_grid: SimpleThumbnailGrid | None = None
         # self.folder_navigator: Optional[EnhancedFolderNavigator] = None  # Removed: Using breadcrumb navigation instead
 
         # Services
@@ -139,16 +137,16 @@ class IntegratedMainWindow(QMainWindow):
         )
 
         # Layout components
-        self.central_widget: Optional[QWidget] = None
-        self.main_splitter: Optional[QSplitter] = None
-        self.left_panel: Optional[QWidget] = None
-        self.right_panel: Optional[QWidget] = None
+        self.central_widget: QWidget | None = None
+        self.main_splitter: QSplitter | None = None
+        self.left_panel: QWidget | None = None
+        self.right_panel: QWidget | None = None
 
         # Status and monitoring
-        self.status_bar: Optional[QStatusBar] = None
-        self.progress_bar: Optional[QProgressBar] = None
-        self.performance_timer: Optional[QTimer] = None
-        self.memory_monitor: Optional[QTimer] = None
+        self.status_bar: QStatusBar | None = None
+        self.progress_bar: QProgressBar | None = None
+        self.performance_timer: QTimer | None = None
+        self.memory_monitor: QTimer | None = None
 
         # Performance tracking
         self.last_performance_check = None
@@ -438,11 +436,11 @@ class IntegratedMainWindow(QMainWindow):
         # スプリッターの初期サイズ設定 (ブレッドクラム:サムネイル:EXIF = 1:5:4)
         self.left_panel_splitter.setSizes([50, 500, 400])
 
-        # 各エリアの伸縮設定（3つのウィジェット）
+        # 各エリアの伸縮設定(3つのウィジェット)
         self.left_panel_splitter.setStretchFactor(0, 0)  # ブレッドクラム: 固定
         self.left_panel_splitter.setStretchFactor(
             1, 1
-        )  # サムネイルグリッド: 伸縮可能（メイン）
+        )  # サムネイルグリッド: 伸縮可能(メイン)
         self.left_panel_splitter.setStretchFactor(2, 1)  # EXIFパネル: 伸縮可能
 
         # 左パネルスプリッターをメインスプリッターに追加
@@ -1056,9 +1054,8 @@ class IntegratedMainWindow(QMainWindow):
             self.theme_changed.emit(new_theme)
 
             # EXIFパネルへテーマ再適用
-            if hasattr(self, "exif_panel") and self.exif_panel:
-                if hasattr(self.exif_panel, "apply_theme"):
-                    self.exif_panel.apply_theme()
+            if hasattr(self, "exif_panel") and self.exif_panel and hasattr(self.exif_panel, "apply_theme"):
+                self.exif_panel.apply_theme()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -1960,7 +1957,7 @@ class IntegratedMainWindow(QMainWindow):
             perf_summary = self.state_manager.get_performance_summary()
 
             if perf_summary.get("status") != "no_data":
-                avg_memory = perf_summary.get("average_memory_mb", 0)
+                perf_summary.get("average_memory_mb", 0)
                 avg_cpu = perf_summary.get("average_cpu_percent", 0)
 
                 # Update style by threshold and show CPU text consistently
@@ -2087,7 +2084,7 @@ class IntegratedMainWindow(QMainWindow):
         self.progress_bar.setValue(0)
         self.progress_bar.setVisible(True)
 
-    def update_progress(self, value: int, message: str = None):
+    def update_progress(self, value: int, message: str | None = None):
         """Update progress bar value"""
 
         self.progress_bar.setValue(value)
@@ -2100,12 +2097,12 @@ class IntegratedMainWindow(QMainWindow):
         self.progress_bar.setVisible(False)
         self.status_bar.showMessage("Ready")
 
-    def get_current_folder(self) -> Optional[Path]:
+    def get_current_folder(self) -> Path | None:
         """Get currently selected folder"""
 
         return self.state_manager.get_state_value("current_folder")
 
-    def get_selected_image(self) -> Optional[Path]:
+    def get_selected_image(self) -> Path | None:
         """Get currently selected image"""
 
         return self.state_manager.get_state_value("selected_image")

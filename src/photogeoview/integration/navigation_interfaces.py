@@ -9,8 +9,9 @@ Requirements: 5.1, 5.2, 5.3
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple, Union
+from typing import Any, Protocol, Union
 
 from .navigation_models import (
     BreadcrumbSegment,
@@ -29,7 +30,7 @@ class INavigationProvider(ABC):
     """
 
     @abstractmethod
-    def resolve_path(self, path: Union[str, Path]) -> Optional[Path]:
+    def resolve_path(self, path: Union[str, Path]) -> Path | None:
         """
         Resolve a path to its canonical form
 
@@ -55,7 +56,7 @@ class INavigationProvider(ABC):
         pass
 
     @abstractmethod
-    def get_path_info(self, path: Path) -> Optional[PathInfo]:
+    def get_path_info(self, path: Path) -> PathInfo | None:
         """
         Get detailed information about a path
 
@@ -68,7 +69,7 @@ class INavigationProvider(ABC):
         pass
 
     @abstractmethod
-    def get_parent_path(self, path: Path) -> Optional[Path]:
+    def get_parent_path(self, path: Path) -> Path | None:
         """
         Get the parent path of the given path
 
@@ -81,7 +82,7 @@ class INavigationProvider(ABC):
         pass
 
     @abstractmethod
-    def list_child_paths(self, path: Path) -> List[Path]:
+    def list_child_paths(self, path: Path) -> list[Path]:
         """
         List child paths (directories) under the given path
 
@@ -119,7 +120,6 @@ class INavigationProvider(ABC):
             True if watching stopped successfully, False otherwise
         """
         pass
-
 
 class INavigationManager(ABC):
     """
@@ -236,7 +236,7 @@ class INavigationManager(ABC):
         pass
 
     @abstractmethod
-    def get_navigation_history(self) -> List[Path]:
+    def get_navigation_history(self) -> list[Path]:
         """
         Get navigation history
 
@@ -254,7 +254,6 @@ class INavigationManager(ABC):
             True if history cleared successfully, False otherwise
         """
         pass
-
 
 class IBreadcrumbRenderer(ABC):
     """
@@ -323,8 +322,8 @@ class IBreadcrumbRenderer(ABC):
 
     @abstractmethod
     def get_segment_at_position(
-        self, position: Tuple[int, int]
-    ) -> Optional[BreadcrumbSegment]:
+        self, position: tuple[int, int]
+    ) -> BreadcrumbSegment | None:
         """
         Get the segment at a specific screen position
 
@@ -335,7 +334,6 @@ class IBreadcrumbRenderer(ABC):
             Segment at position or None if no segment found
         """
         pass
-
 
 class INavigationAware(Protocol):
     """
@@ -354,7 +352,7 @@ class INavigationAware(Protocol):
         """
         ...
 
-    def get_supported_navigation_events(self) -> List[str]:
+    def get_supported_navigation_events(self) -> list[str]:
         """
         Get list of navigation event types supported by this component
 
@@ -362,7 +360,6 @@ class INavigationAware(Protocol):
             List of event type names
         """
         ...
-
 
 class IPathValidator(ABC):
     """
@@ -412,7 +409,7 @@ class IPathValidator(ABC):
         pass
 
     @abstractmethod
-    def get_validation_errors(self, path: Path) -> List[str]:
+    def get_validation_errors(self, path: Path) -> list[str]:
         """
         Get detailed validation errors for a path
 
@@ -425,7 +422,7 @@ class IPathValidator(ABC):
         pass
 
     @abstractmethod
-    def sanitize_path(self, path: Union[str, Path]) -> Optional[Path]:
+    def sanitize_path(self, path: Union[str, Path]) -> Path | None:
         """
         Sanitize and normalize a path
 
@@ -436,7 +433,6 @@ class IPathValidator(ABC):
             Sanitized path or None if path cannot be sanitized
         """
         pass
-
 
 class IFileSystemWatcher(ABC):
     """
@@ -520,7 +516,7 @@ class IFileSystemWatcher(ABC):
         pass
 
     @abstractmethod
-    def get_watched_paths(self) -> List[Path]:
+    def get_watched_paths(self) -> list[Path]:
         """
         Get list of currently watched paths
 
@@ -542,7 +538,6 @@ class IFileSystemWatcher(ABC):
         """
         pass
 
-
 class INavigationHistory(ABC):
     """
     Abstract interface for navigation history management
@@ -562,7 +557,7 @@ class INavigationHistory(ABC):
         pass
 
     @abstractmethod
-    def get_history(self) -> List[Path]:
+    def get_history(self) -> list[Path]:
         """
         Get complete navigation history
 
@@ -572,7 +567,7 @@ class INavigationHistory(ABC):
         pass
 
     @abstractmethod
-    def get_back_history(self) -> List[Path]:
+    def get_back_history(self) -> list[Path]:
         """
         Get backward navigation history
 
@@ -582,7 +577,7 @@ class INavigationHistory(ABC):
         pass
 
     @abstractmethod
-    def get_forward_history(self) -> List[Path]:
+    def get_forward_history(self) -> list[Path]:
         """
         Get forward navigation history
 
@@ -612,7 +607,7 @@ class INavigationHistory(ABC):
         pass
 
     @abstractmethod
-    def go_back(self) -> Optional[Path]:
+    def go_back(self) -> Path | None:
         """
         Get the previous path in history
 
@@ -622,7 +617,7 @@ class INavigationHistory(ABC):
         pass
 
     @abstractmethod
-    def go_forward(self) -> Optional[Path]:
+    def go_forward(self) -> Path | None:
         """
         Get the next path in history
 
@@ -672,7 +667,6 @@ class INavigationHistory(ABC):
         """
         pass
 
-
 class INavigationCache(ABC):
     """
     Abstract interface for navigation caching
@@ -682,7 +676,7 @@ class INavigationCache(ABC):
     """
 
     @abstractmethod
-    def get_cached_path_info(self, path: Path) -> Optional[PathInfo]:
+    def get_cached_path_info(self, path: Path) -> PathInfo | None:
         """
         Get cached path information
 
@@ -696,7 +690,7 @@ class INavigationCache(ABC):
 
     @abstractmethod
     def cache_path_info(
-        self, path: Path, info: PathInfo, ttl: Optional[int] = None
+        self, path: Path, info: PathInfo, ttl: int | None = None
     ) -> bool:
         """
         Cache path information
@@ -735,7 +729,7 @@ class INavigationCache(ABC):
         pass
 
     @abstractmethod
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """
         Get cache statistics
 
@@ -745,7 +739,7 @@ class INavigationCache(ABC):
         pass
 
     @abstractmethod
-    def preload_path_info(self, paths: List[Path]) -> int:
+    def preload_path_info(self, paths: list[Path]) -> int:
         """
         Preload path information for multiple paths
 
@@ -757,7 +751,6 @@ class INavigationCache(ABC):
         """
         pass
 
-
 # Type aliases for convenience
 NavigationCallback = Callable[[NavigationEvent], None]  # Navigation event callback
 PathChangeCallback = Callable[
@@ -766,5 +759,5 @@ PathChangeCallback = Callable[
 FileSystemEventCallback = Callable[
     [Path, str, str], None
 ]  # FS event callback (path, event_type, details)
-PositionTuple = Tuple[int, int]  # Screen position (x, y)
+PositionTuple = tuple[int, int]  # Screen position (x, y)
 TruncationMode = str  # Truncation mode ("smart", "middle", "end", "none")

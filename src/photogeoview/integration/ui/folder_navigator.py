@@ -19,7 +19,7 @@ CursorBLDの直感的なフォルダナビゲーションとKiroの最適化を�
 - アクセシビリティ対応とキーボードナビゲーション
 
 UI構成:
-- ナビゲーションコントロール（戻る、進む、上へ、ホーム）
+- ナビゲーションコントロール(戻る、進む、上へ、ホーム)
 - アドレスバーによる直接パス入力
 - 履歴ドロップダウンとブックマーク機能
 - フォルダツリービューによる階層表示
@@ -28,7 +28,7 @@ Author: Kiro AI Integration System
 """
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 from PySide6.QtCore import QModelIndex, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
@@ -95,9 +95,9 @@ class EnhancedFolderNavigator(QWidget):
         self.error_handler = IntegratedErrorHandler(self.logger_system)
 
         # Navigation state
-        self.current_folder: Optional[Path] = None
-        self.folder_history: List[Path] = []
-        self.bookmarks: List[Path] = []
+        self.current_folder: Path | None = None
+        self.folder_history: list[Path] = []
+        self.bookmarks: list[Path] = []
         self.max_history = 20
 
         # File discovery service for image detection
@@ -114,10 +114,10 @@ class EnhancedFolderNavigator(QWidget):
         self.file_system_watcher.add_change_listener(self._on_file_system_change)
 
         # UI components
-        self.address_bar: Optional[QLineEdit] = None
-        self.folder_tree: Optional[QTreeView] = None
-        self.file_system_model: Optional[QFileSystemModel] = None
-        self.history_combo: Optional[QComboBox] = None
+        self.address_bar: QLineEdit | None = None
+        self.folder_tree: QTreeView | None = None
+        self.file_system_model: QFileSystemModel | None = None
+        self.history_combo: QComboBox | None = None
 
         # Performance optimization
         self.update_timer = QTimer()
@@ -316,7 +316,7 @@ class EnhancedFolderNavigator(QWidget):
 
     # File discovery methods
 
-    def _discover_images_in_folder(self, folder_path: Path) -> List[Path]:
+    def _discover_images_in_folder(self, folder_path: Path) -> list[Path]:
         """
         指定されたフォルダ内の画像ファイルを検出する
 
@@ -333,7 +333,7 @@ class EnhancedFolderNavigator(QWidget):
             folder_path (Path): 検索対象のフォルダパス
 
         Returns:
-            List[Path]: 検出された画像ファイルのパスリスト
+            list[Path]: 検出された画像ファイルのパスリスト
 
         Note:
             - 対応形式: .jpg, .jpeg, .png, .gif, .bmp, .tiff, .webp
@@ -387,7 +387,7 @@ class EnhancedFolderNavigator(QWidget):
             )
             return []
 
-    def _clear_previous_folder_data(self, previous_folder: Optional[Path]):
+    def _clear_previous_folder_data(self, previous_folder: Path | None):
         """
         前のフォルダのデータをクリアする
 
@@ -477,7 +477,7 @@ class EnhancedFolderNavigator(QWidget):
                 level="ERROR",
             )
 
-            # ユーザーにエラーメッセージを表示（アクセシビリティ対応）
+            # ユーザーにエラーメッセージを表示(アクセシビリティ対応)
             msg_box = QMessageBox(self)
             msg_box.setIcon(QMessageBox.Icon.Warning)
             msg_box.setWindowTitle(user_message)
@@ -502,7 +502,7 @@ class EnhancedFolderNavigator(QWidget):
             # エラー発生をシグナルで通知
             self.navigation_error.emit(error_type.lower(), error_message)
 
-            # エラー統計を更新（将来の改善のため）
+            # エラー統計を更新(将来の改善のため)
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
                 "error_statistics",
@@ -511,7 +511,7 @@ class EnhancedFolderNavigator(QWidget):
             )
 
         except Exception as handling_error:
-            # エラーハンドリング中のエラー（メタエラー）
+            # エラーハンドリング中のエラー(メタエラー)
             self.error_handler.handle_error(
                 handling_error,
                 ErrorCategory.UI_ERROR,
@@ -526,7 +526,7 @@ class EnhancedFolderNavigator(QWidget):
 
     def _show_no_images_status(self, folder_path: Path):
         """
-        画像ファイルが見つからない場合のステータス表示（ダイアログではなくステータスバー）
+        画像ファイルが見つからない場合のステータス表示(ダイアログではなくステータスバー)
         """
         try:
             folder_name = folder_path.name if folder_path else "選択されたフォルダ"
@@ -542,7 +542,7 @@ class EnhancedFolderNavigator(QWidget):
                 level="INFO",
             )
 
-            # ステータス表示シグナルを発行（メインウィンドウのステータスバーに表示）
+            # ステータス表示シグナルを発行(メインウィンドウのステータスバーに表示)
             self.status_message.emit(status_message, 5000)  # 5秒間表示
 
             # 統計情報を更新
@@ -592,7 +592,7 @@ class EnhancedFolderNavigator(QWidget):
                     level="WARNING",
                 )
 
-                # ユーザーに通知（オプション）
+                # ユーザーに通知(オプション)
                 self._show_monitoring_fallback_message()
 
         except Exception as e:
@@ -611,19 +611,19 @@ class EnhancedFolderNavigator(QWidget):
         self,
         file_path: Path,
         change_type: FileChangeType,
-        old_path: Optional[Path] = None,
+        old_path: Path | None = None,
     ):
         """
         ファイルシステム変更イベントのハンドラー
 
         Args:
             file_path: 変更されたファイルのパス
-            change_type: 変更タイプ（作成、削除、変更、移動）
-            old_path: 移動前のパス（移動の場合のみ）
+            change_type: 変更タイプ(作成、削除、変更、移動)
+            old_path: 移動前のパス(移動の場合のみ)
         """
         try:
             # 現在のフォルダ内の変更のみ処理
-            if not self.current_folder or not file_path.parent == self.current_folder:
+            if not self.current_folder or file_path.parent != self.current_folder:
                 return
 
             self.logger_system.log_ai_operation(
@@ -676,7 +676,7 @@ class EnhancedFolderNavigator(QWidget):
                     level="INFO",
                 )
 
-                # フォルダの再スキャンをトリガー（効率的な更新のため）
+                # フォルダの再スキャンをトリガー(効率的な更新のため)
                 self._trigger_folder_refresh()
 
         except Exception as e:
@@ -699,7 +699,7 @@ class EnhancedFolderNavigator(QWidget):
             file_path: 削除されたファイルのパス
         """
         try:
-            # 画像ファイルかどうかチェック（拡張子ベース）
+            # 画像ファイルかどうかチェック(拡張子ベース)
             if self._is_supported_image_file(file_path):
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
@@ -741,7 +741,7 @@ class EnhancedFolderNavigator(QWidget):
                 )
 
                 # 変更されたファイルのサムネイル更新をトリガー
-                # （サムネイルグリッドに直接通知する場合）
+                # (サムネイルグリッドに直接通知する場合)
                 # self.image_file_modified.emit(file_path)
 
         except Exception as e:
@@ -756,7 +756,7 @@ class EnhancedFolderNavigator(QWidget):
                 AIComponent.CURSOR,
             )
 
-    def _handle_file_moved(self, new_path: Path, old_path: Optional[Path]):
+    def _handle_file_moved(self, new_path: Path, old_path: Path | None):
         """
         ファイル移動イベントの処理
 
@@ -821,19 +821,19 @@ class EnhancedFolderNavigator(QWidget):
 
     def _trigger_folder_refresh(self):
         """
-        フォルダの再スキャンをトリガーする（効率的な更新）
+        フォルダの再スキャンをトリガーする(効率的な更新)
         """
         try:
             if not self.current_folder:
                 return
 
-            # 短い遅延後にフォルダを再スキャン（連続する変更をまとめて処理）
+            # 短い遅延後にフォルダを再スキャン(連続する変更をまとめて処理)
             if not hasattr(self, "_refresh_timer"):
                 self._refresh_timer = QTimer()
                 self._refresh_timer.setSingleShot(True)
                 self._refresh_timer.timeout.connect(self._perform_folder_refresh)
 
-            # タイマーをリセット（連続する変更を効率的に処理）
+            # タイマーをリセット(連続する変更を効率的に処理)
             self._refresh_timer.stop()
             self._refresh_timer.start(500)  # 500ms後に実行
 
@@ -876,7 +876,7 @@ class EnhancedFolderNavigator(QWidget):
             # 新しい画像リストを取得
             discovered_images = self._discover_images_in_folder(self.current_folder)
 
-            # フォルダ変更シグナルを発行（サムネイルグリッドが更新される）
+            # フォルダ変更シグナルを発行(サムネイルグリッドが更新される)
             self.folder_changed.emit(self.current_folder)
 
             self.logger_system.log_ai_operation(
@@ -912,7 +912,7 @@ class EnhancedFolderNavigator(QWidget):
                 "自動監視機能を有効にするには、watchdogライブラリをインストールしてください。"
             )
 
-            # 情報メッセージとして表示（アクセシビリティ対応）
+            # 情報メッセージとして表示(アクセシビリティ対応)
             msg_box = QMessageBox(self)
             msg_box.setIcon(QMessageBox.Icon.Information)
             msg_box.setWindowTitle("ファイル監視機能について")
@@ -934,7 +934,7 @@ class EnhancedFolderNavigator(QWidget):
             )
             details_button.setAccessibleDescription("ファイル監視機能の詳細情報を表示")
 
-            result = msg_box.exec()
+            msg_box.exec()
 
             # 詳細情報が要求された場合
             if msg_box.clickedButton() == details_button:
@@ -1011,7 +1011,7 @@ class EnhancedFolderNavigator(QWidget):
 
     def stop_monitoring(self):
         """
-        ファイルシステム監視を停止する（クリーンアップ用）
+        ファイルシステム監視を停止する(クリーンアップ用)
         """
         try:
             if self.file_system_watcher.is_watching:
@@ -1121,15 +1121,15 @@ class EnhancedFolderNavigator(QWidget):
                 AIComponent.CURSOR,
             )
 
-    def get_current_folder(self) -> Optional[Path]:
+    def get_current_folder(self) -> Path | None:
         """Get the current folder"""
         return self.current_folder
 
-    def get_folder_history(self) -> List[Path]:
+    def get_folder_history(self) -> list[Path]:
         """Get folder history"""
         return self.folder_history.copy()
 
-    def get_bookmarks(self) -> List[Path]:
+    def get_bookmarks(self) -> list[Path]:
         """Get bookmarks"""
         return self.bookmarks.copy()
 
