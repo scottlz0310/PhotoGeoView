@@ -31,13 +31,13 @@ dependencies = [
     "Pillow>=10.4.0",
     
     # EXIF処理（ExifReadは開発停滞、将来的にpiexifへ移行予定）
-    "ExifRead>=3.3.2",
+    "ExifRead>=3.0.0",
     
     # 地図表示
     "folium>=0.18.0",
     
     # システム情報
-    "psutil>=6.1.0",
+    "psutil>=6.0.0",
     
     # カスタムコンポーネント
     "qt-theme-manager>=0.2.4",
@@ -50,33 +50,39 @@ Repository = "https://github.com/scottlz0310/PhotoGeoView.git"
 Issues = "https://github.com/scottlz0310/PhotoGeoView/issues"
 
 [dependency-groups]
-dev = [
-    # テスティング
+# テスト関連
+test = [
     "pytest>=8.3.0",
     "pytest-cov>=6.0.0",
     "pytest-qt>=4.4.0",
     "pytest-xdist>=3.6.0",
     "pytest-benchmark>=5.0.0",
     "pytest-asyncio>=0.24.0",
-    
-    # リンティング・フォーマット
+]
+
+# コード品質
+lint = [
     "ruff>=0.8.0",
-    
-    # 型チェック
     "mypy>=1.13.0",
-    
-    # セキュリティ
+]
+
+# セキュリティ
+security = [
     "bandit[toml]>=1.8.0",
     "safety>=3.2.0",
 ]
+
+# 開発用（すべて含む）
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "security"},
+]
+
+# CI用
 ci = [
-    # CI用（devから必要なものを選択）
-    "pytest>=8.3.0",
-    "pytest-cov>=6.0.0",
-    "pytest-qt>=4.4.0",
-    "pytest-xdist>=3.6.0",
-    "ruff>=0.8.0",
-    "mypy>=1.13.0",
+    {include-group = "test"},
+    {include-group = "lint"},
     "toml>=0.10.0",
     "tomlkit>=0.13.0",
     "watchdog>=6.0.0",
