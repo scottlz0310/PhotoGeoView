@@ -1,12 +1,13 @@
 # PhotoGeoView AI Integration Makefile
 # Provides convenient commands for CI operations
 
-.PHONY: help install ci ci-quick ci-full test lint format security performance clean setup-hooks
+.PHONY: help install build ci ci-quick ci-full test lint format security performance clean setup-hooks
 
 help:
 	@echo "PhotoGeoView AI Integration - Available Commands:"
 	@echo ""
-	@echo "  install      - Install project dependencies"
+	@echo "  install      - Install project dependencies (uv)"
+	@echo "  build        - Build distribution packages (hatchling)"
 	@echo "  ci           - Run standard CI checks"
 	@echo "  ci-quick     - Run quick CI checks (code quality + unit tests)"
 	@echo "  ci-full      - Run comprehensive CI checks"
@@ -20,7 +21,10 @@ help:
 	@echo ""
 
 install:
-	python -m pip install -e .[ci]
+	uv sync --all-groups
+
+build:
+	uv build
 
 ci:
 	python -m tools.ci.simulator run code_quality test_runner --format both
@@ -67,9 +71,8 @@ pre-commit: ci-quick
 pre-push: ci-full
 	@echo "Pre-push checks completed"
 
-# Build with CI
-build: ci
-	python -m build
+# Build packages (already defined above - no CI dependency)
+# build: defined earlier in the file
 
 # Deploy with full CI
 deploy: ci-full

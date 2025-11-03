@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "photogeoview"
@@ -87,6 +87,19 @@ photogeoview = "src.main:main"
 ci-simulator = "tools.ci.simulator:main"
 pgv-ci = "tools.ci.simulator:main"
 photogeoview-ci = "tools.ci.simulator:main"
+
+# Hatchling build settings
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
 
 # Ruff設定
 [tool.ruff]
