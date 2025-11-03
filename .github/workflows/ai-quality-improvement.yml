@@ -70,7 +70,7 @@ jobs:
         python tools/github_actions_ai_analyzer_enhanced.py
 
     - name: 解析結果をアップロード
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: ai-analysis-results
@@ -91,7 +91,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: 解析結果をダウンロード
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: ai-analysis-results
         path: ./analysis-results
@@ -176,7 +176,7 @@ jobs:
       uses: actions/checkout@v5
 
     - name: 解析結果をダウンロード
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: ai-analysis-results
         path: ./analysis-results
@@ -212,7 +212,7 @@ jobs:
         EOF
 
     - name: 品質レポートをアップロード
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: quality-reports
         path: quality-reports/
