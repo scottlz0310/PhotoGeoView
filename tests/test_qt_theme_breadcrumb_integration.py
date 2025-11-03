@@ -26,7 +26,7 @@ from src.integration.services.file_system_watcher import FileSystemWatcher
 from src.integration.theme_integration_controller import ThemeIntegrationController
 from src.integration.theme_models import ThemeConfiguration
 from src.ui.breadcrumb_bar import BreadcrumbAddressBar
-from src.ui.theme_manager import ThemeManagerWidget
+from src.integration.ui.theme_manager import IntegratedThemeManager
 
 
 class TestQtThemeBreadcrumbIntegration:
@@ -110,7 +110,7 @@ class TestQtThemeBreadcrumbIntegration:
     @pytest.fixture
     def theme_manager_widget(self, mock_config_manager, mock_logger_system):
         """Create theme manager widget"""
-        return ThemeManagerWidget(
+        return IntegratedThemeManager(
             config_manager=mock_config_manager, logger_system=mock_logger_system
         )
 
