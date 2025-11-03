@@ -21,8 +21,8 @@ import psutil
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.logging_system import LoggerSystem
-from integration.performance_monitor import KiroPerformanceMonitor
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.performance_monitor import KiroPerformanceMonitor
 
 
 @dataclass

@@ -89,14 +89,14 @@ ci = [
 ]
 
 [project.scripts]
-photogeoview = "src.main:main"
+photogeoview = "photogeoview.__main__:main"
 ci-simulator = "tools.ci.simulator:main"
 pgv-ci = "tools.ci.simulator:main"
 photogeoview-ci = "tools.ci.simulator:main"
 
 # Hatchling build settings
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/photogeoview"]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -191,7 +191,7 @@ addopts = [
     "-ra",
     "--strict-markers",
     "--strict-config",
-    "--cov=src",
+    "--cov=src/photogeoview",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",

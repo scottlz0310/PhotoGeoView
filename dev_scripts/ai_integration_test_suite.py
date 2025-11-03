@@ -22,10 +22,10 @@ from typing import Any, Dict, List, Optional
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.error_handling import IntegratedErrorHandler
-from integration.logging_system import LoggerSystem
-from integration.performance_monitor import KiroPerformanceMonitor
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.error_handling import IntegratedErrorHandler
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.performance_monitor import KiroPerformanceMonitor
 
 
 @dataclass

@@ -12,8 +12,8 @@ from pathlib import Path
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from integration.logging_system import LoggerSystem
-from integration.services.file_discovery_service import FileDiscoveryService
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.services.file_discovery_service import FileDiscoveryService
 
 
 def test_logging_integration():

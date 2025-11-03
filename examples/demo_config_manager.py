@@ -13,7 +13,7 @@ from pathlib import Path
 # Add src to path for imports - adjusted for examples folder
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
+from photogeoview.integration.config_manager import ConfigManager
 
 
 def main():

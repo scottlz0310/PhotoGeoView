@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from integration.logging_system import LoggerSystem
-from integration.services.file_discovery_cache import FileDiscoveryCache
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.services.file_discovery_cache import FileDiscoveryCache
 
 
 class TestValidationCacheAdvanced(unittest.TestCase):

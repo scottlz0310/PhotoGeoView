@@ -19,16 +19,16 @@ from unittest.mock import Mock
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.logging_system import LoggerSystem
-from integration.models import AIComponent, ApplicationState
-from integration.performance_monitor import (
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.models import AIComponent, ApplicationState
+from photogeoview.integration.performance_monitor import (
     KiroPerformanceMonitor,
     PerformanceAlert,
     ResourceThresholds,
 )
-from integration.state_manager import StateChangeEvent, StateManager
-from integration.unified_cache import CacheStats, LRUCache, UnifiedCacheSystem
+from photogeoview.integration.state_manager import StateChangeEvent, StateManager
+from photogeoview.integration.unified_cache import CacheStats, LRUCache, UnifiedCacheSystem
 
 
 class TestKiroPerformanceMonitor(unittest.TestCase):

@@ -21,10 +21,10 @@ from unittest.mock import MagicMock, Mock, patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.image_processor import CS4CodingImageProcessor
-from integration.logging_system import LoggerSystem
-from integration.models import AIComponent, ImageMetadata, ProcessingStatus
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.image_processor import CS4CodingImageProcessor
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.models import AIComponent, ImageMetadata, ProcessingStatus
 
 
 class TestCS4CodingImageProcessor(unittest.TestCase):

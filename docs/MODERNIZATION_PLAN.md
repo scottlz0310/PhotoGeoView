@@ -55,6 +55,75 @@ folium>=0.14.0             # 古い（最新は0.18.x）
 
 ## 📝 実施履歴
 
+### ✅ Phase 1完了 (2025-11-03)
+**プロジェクト構造の再編**
+
+実施内容:
+
+#### 1.1 モダンなパッケージ構造への移行 ✅
+**ディレクトリ構造変更**:
+```
+変更前:
+src/
+├── core/
+├── integration/
+└── ui/
+
+変更後:
+src/
+└── photogeoview/
+    ├── __init__.py       # パッケージメタデータ
+    ├── __main__.py       # python -m photogeoview
+    ├── core/
+    ├── integration/
+    └── ui/
+```
+
+#### 1.2 インポートパスの統一 ✅
+**すべてのインポートを更新**:
+- `from integration.xxx` → `from photogeoview.integration.xxx`
+- `from core.xxx` → `from photogeoview.core.xxx`
+- `from ui.xxx` → `from photogeoview.ui.xxx`
+
+影響範囲:
+- `src/` 配下の全Pythonファイル
+- `tests/` 配下のテストファイル
+- `dev_scripts/` 配下のスクリプト
+- `main.py` エントリーポイント
+
+#### 1.3 pyproject.toml更新 ✅
+```toml
+[project.scripts]
+photogeoview = "photogeoview.__main__:main"  # 変更
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/photogeoview"]  # 変更
+
+[tool.pytest.ini_options]
+addopts = ["--cov=src/photogeoview"]  # 変更
+```
+
+#### 1.4 実行方法の改善 ✅
+**新しい実行方法**:
+```bash
+# モジュールとして実行
+python -m photogeoview
+
+# uvで実行
+uv run photogeoview
+
+# インストール後
+photogeoview
+```
+
+効果:
+- ✅ 標準的なPythonパッケージ構造に準拠
+- ✅ `python -m photogeoview` で実行可能
+- ✅ インポートパスが明確化
+- ✅ ビルド成果物が適切にパッケージング
+
+---
+
 ### ✅ Phase 5完了 (2025-11-03)
 **開発ツールチェーンの強化**
 

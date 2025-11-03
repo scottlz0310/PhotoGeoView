@@ -17,12 +17,12 @@ from pathlib import Path
 # Add src to path - adjusted for examples folder
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.logging_system import LoggerSystem
-from integration.models import AIComponent
-from integration.performance_monitor import KiroPerformanceMonitor
-from integration.state_manager import StateManager
-from integration.unified_cache import UnifiedCacheSystem
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.models import AIComponent
+from photogeoview.integration.performance_monitor import KiroPerformanceMonitor
+from photogeoview.integration.state_manager import StateManager
+from photogeoview.integration.unified_cache import UnifiedCacheSystem
 
 
 async def main():

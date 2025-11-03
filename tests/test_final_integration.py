@@ -19,12 +19,12 @@ from PySide6.QtWidgets import QApplication
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.error_handling import IntegratedErrorHandler
-from integration.logging_system import LoggerSystem
-from integration.models import AIComponent
-from integration.state_manager import StateManager
-from integration.ui.main_window import IntegratedMainWindow
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.error_handling import IntegratedErrorHandler
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.models import AIComponent
+from photogeoview.integration.state_manager import StateManager
+from photogeoview.integration.ui.main_window import IntegratedMainWindow
 
 
 class TestFinalIntegration:

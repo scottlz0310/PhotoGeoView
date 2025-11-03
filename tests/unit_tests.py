@@ -16,12 +16,12 @@ from unittest.mock import patch
 
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.error_handling import ErrorCategory, IntegratedErrorHandler
-from integration.logging_system import LoggerSystem
-from integration.performance_monitor import KiroPerformanceMonitor
-from integration.state_manager import StateManager
-from integration.unified_cache import UnifiedCacheSystem
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.error_handling import ErrorCategory, IntegratedErrorHandler
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.performance_monitor import KiroPerformanceMonitor
+from photogeoview.integration.state_manager import StateManager
+from photogeoview.integration.unified_cache import UnifiedCacheSystem
 
 
 class TestConfigManager(unittest.TestCase):

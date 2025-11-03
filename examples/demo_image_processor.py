@@ -17,9 +17,9 @@ from pathlib import Path
 # Add src to path - adjusted for examples folder
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.image_processor import CS4CodingImageProcessor
-from integration.logging_system import LoggerSystem
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.image_processor import CS4CodingImageProcessor
+from photogeoview.integration.logging_system import LoggerSystem
 
 
 def main():

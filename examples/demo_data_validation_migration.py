@@ -16,11 +16,11 @@ from pathlib import Path
 # Add src to path for imports - adjusted for examples folder
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from integration.data_migration import DataMigrationManager, MigrationStatus
-from integration.data_validation import DataValidator
-from integration.error_handling import IntegratedErrorHandler
-from integration.logging_system import LoggerSystem
-from integration.models import (
+from photogeoview.integration.data_migration import DataMigrationManager, MigrationStatus
+from photogeoview.integration.data_validation import DataValidator
+from photogeoview.integration.error_handling import IntegratedErrorHandler
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.models import (
     AIComponent,
     ApplicationState,
     ImageMetadata,

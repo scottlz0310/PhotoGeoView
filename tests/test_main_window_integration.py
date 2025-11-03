@@ -19,10 +19,10 @@ from PySide6.QtWidgets import QApplication
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from integration.config_manager import ConfigManager
-from integration.logging_system import LoggerSystem
-from integration.state_manager import StateManager
-from integration.ui.main_window import IntegratedMainWindow
+from photogeoview.integration.config_manager import ConfigManager
+from photogeoview.integration.logging_system import LoggerSystem
+from photogeoview.integration.state_manager import StateManager
+from photogeoview.integration.ui.main_window import IntegratedMainWindow
 
 
 class TestMainWindowIntegration(unittest.TestCase):

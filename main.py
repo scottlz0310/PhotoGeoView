@@ -103,11 +103,11 @@ def main():
         # アプリケーションコントローラーをインポート・起動
         from PySide6.QtWidgets import QApplication
 
-        from src.integration.config_manager import ConfigManager
-        from src.integration.controllers import AppController
-        from src.integration.logging_system import LoggerSystem
-        from src.integration.state_manager import StateManager
-        from src.integration.ui.main_window import IntegratedMainWindow
+        from photogeoview.integration.config_manager import ConfigManager
+        from photogeoview.integration.controllers import AppController
+        from photogeoview.integration.logging_system import LoggerSystem
+        from photogeoview.integration.state_manager import StateManager
+        from photogeoview.integration.ui.main_window import IntegratedMainWindow
 
         logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ def main():
 
         # PySide6 WebEngine早期初期化（QApplication初期化後）
         try:
-            from src.integration.utils.webengine_checker import (
+            from photogeoview.integration.utils.webengine_checker import (
                 get_webengine_status,
                 initialize_webengine_safe,
             )
