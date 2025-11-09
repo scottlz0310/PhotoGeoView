@@ -106,13 +106,6 @@ ehthumbs.db
 archive/
 config_backup/
 
-# Lock files
-*.lock
-uv.lock
-
-# Dependencies
-requirements.txt
-
 # Demo data
 demo_data/
 
