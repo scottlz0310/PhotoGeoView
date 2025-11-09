@@ -82,9 +82,7 @@ class ConfigManager(IConfigManager):
         self.validation_schemas: dict[str, dict[str, Any]] = {}
 
         # Migration manager
-        self.migration_manager = ConfigMigrationManager(
-            config_dir=self.config_dir, logger_system=self.logger_system
-        )
+        self.migration_manager = ConfigMigrationManager(config_dir=self.config_dir, logger_system=self.logger_system)
 
         # Initialize
         self._initialize()
@@ -120,8 +118,7 @@ class ConfigManager(IConfigManager):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_initialization",
-                f"Configuration system initialized with "
-                f"{len(self.config_data)} settings",
+                f"Configuration system initialized with " f"{len(self.config_data)} settings",
             )
 
         except Exception as e:
@@ -212,9 +209,7 @@ class ConfigManager(IConfigManager):
                         )
                 else:
                     # Create default AI config
-                    self.ai_configs[ai_component] = self._get_default_ai_config(
-                        ai_component
-                    )
+                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
                     self._save_ai_config(ai_component)
 
             except Exception as e:
@@ -228,9 +223,7 @@ class ConfigManager(IConfigManager):
                     ai_component,
                 )
                 # Use default config on error
-                self.ai_configs[ai_component] = self._get_default_ai_config(
-                    ai_component
-                )
+                self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
 
     def _get_default_ai_config(self, ai_component: AIComponent) -> dict[str, Any]:
         """Get default configuration for specific AI component"""
@@ -294,9 +287,7 @@ class ConfigManager(IConfigManager):
                     main_config = json.load(f)
 
                     # Update last modified time
-                    self.last_modified["main"] = datetime.fromtimestamp(
-                        self.main_config_file.stat().st_mtime
-                    )
+                    self.last_modified["main"] = datetime.fromtimestamp(self.main_config_file.stat().st_mtime)
 
                     # Merge with defaults
                     self._deep_merge(self.config_data, main_config)
@@ -327,9 +318,7 @@ class ConfigManager(IConfigManager):
                     user_config = json.load(f)
 
                     # Update last modified time
-                    self.last_modified["user"] = datetime.fromtimestamp(
-                        self.user_config_file.stat().st_mtime
-                    )
+                    self.last_modified["user"] = datetime.fromtimestamp(self.user_config_file.stat().st_mtime)
 
                     # Apply user overrides
                     self._deep_merge(self.config_data, user_config)
@@ -366,11 +355,7 @@ class ConfigManager(IConfigManager):
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
-            if (
-                key in target
-                and isinstance(target[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
                 self._deep_merge(target[key], value)
             else:
                 target[key] = value
@@ -582,9 +567,7 @@ class ConfigManager(IConfigManager):
 
             with self._lock:
                 if ai_component not in self.ai_configs:
-                    self.ai_configs[ai_component] = self._get_default_ai_config(
-                        ai_component
-                    )
+                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
 
                 # Deep merge updates into existing config
                 self._deep_merge(self.ai_configs[ai_component], updates)
@@ -701,10 +684,7 @@ class ConfigManager(IConfigManager):
         try:
             with self._lock:
                 # Backup current config
-                backup_file = (
-                    self.config_dir
-                    / f"config_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-                )
+                backup_file = self.config_dir / f"config_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
                 with open(backup_file, "w", encoding="utf-8") as f:
                     json.dump(self.config_data, f, indent=2, default=str)
 
@@ -713,9 +693,7 @@ class ConfigManager(IConfigManager):
 
                 # Reset AI configs
                 for ai_component in self.ai_configs:
-                    self.ai_configs[ai_component] = self._get_default_ai_config(
-                        ai_component
-                    )
+                    self.ai_configs[ai_component] = self._get_default_ai_config(ai_component)
 
                 # Save the reset configuration
                 self.save_config()
@@ -743,11 +721,7 @@ class ConfigManager(IConfigManager):
         """Save main configuration file"""
 
         # Extract main config (exclude AI-specific sections)
-        main_config = {
-            key: value
-            for key, value in self.config_data.items()
-            if not key.startswith("ai_")
-        }
+        main_config = {key: value for key, value in self.config_data.items() if not key.startswith("ai_")}
 
         with open(self.main_config_file, "w", encoding="utf-8") as f:
             json.dump(main_config, f, indent=2, default=str)
@@ -840,9 +814,7 @@ class ConfigManager(IConfigManager):
             }
 
             if include_ai_configs:
-                export_data["ai_configs"] = {
-                    ai.value: config for ai, config in self.ai_configs.items()
-                }
+                export_data["ai_configs"] = {ai.value: config for ai, config in self.ai_configs.items()}
 
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(export_data, f, indent=2, default=str)
@@ -922,17 +894,12 @@ class ConfigManager(IConfigManager):
 
         return {
             "total_settings": self._count_settings(self.config_data),
-            "ai_configs": {
-                ai.value: self._count_settings(config)
-                for ai, config in self.ai_configs.items()
-            },
+            "ai_configs": {ai.value: self._count_settings(config) for ai, config in self.ai_configs.items()},
             "last_modified": dict(self.last_modified),
             "config_files": {
                 "main": self.main_config_file.exists(),
                 "user": self.user_config_file.exists(),
-                "ai_configs": {
-                    ai.value: file.exists() for ai, file in self.ai_config_files.items()
-                },
+                "ai_configs": {ai.value: file.exists() for ai, file in self.ai_config_files.items()},
             },
         }
 
@@ -1188,10 +1155,7 @@ class ConfigManager(IConfigManager):
         try:
             with self._lock:
                 # Backup current state
-                backup_file = (
-                    self.config_dir
-                    / f"state_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-                )
+                backup_file = self.config_dir / f"state_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
                 self._save_application_state_to_file(backup_file)
 
                 # Reset to default state
@@ -1203,8 +1167,7 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_reset",
-                    f"Application state reset to defaults "
-                    f"(backup saved: {backup_file})",
+                    f"Application state reset to defaults " f"(backup saved: {backup_file})",
                 )
 
                 return True
@@ -1228,28 +1191,19 @@ class ConfigManager(IConfigManager):
             # Convert ApplicationState to dictionary
             state_dict = {
                 "current_folder": (
-                    str(self.application_state.current_folder)
-                    if self.application_state.current_folder
-                    else None
+                    str(self.application_state.current_folder) if self.application_state.current_folder else None
                 ),
                 "selected_image": (
-                    str(self.application_state.selected_image)
-                    if self.application_state.selected_image
-                    else None
+                    str(self.application_state.selected_image) if self.application_state.selected_image else None
                 ),
-                "loaded_images": [
-                    str(path) for path in self.application_state.loaded_images
-                ],
+                "loaded_images": [str(path) for path in self.application_state.loaded_images],
                 "current_theme": self.application_state.current_theme,
                 "thumbnail_size": self.application_state.thumbnail_size,
-                "folder_history": [
-                    str(path) for path in self.application_state.folder_history
-                ],
+                "folder_history": [str(path) for path in self.application_state.folder_history],
                 "ui_layout": self.application_state.ui_layout,
                 "window_geometry": self.application_state.window_geometry,
                 "splitter_states": {
-                    k: v.hex() if isinstance(v, bytes) else v
-                    for k, v in self.application_state.splitter_states.items()
+                    k: v.hex() if isinstance(v, bytes) else v for k, v in self.application_state.splitter_states.items()
                 },
                 "map_center": self.application_state.map_center,
                 "map_zoom": self.application_state.map_zoom,
@@ -1269,8 +1223,7 @@ class ConfigManager(IConfigManager):
                 "recent_errors": self.application_state.recent_errors,
                 "error_count": self.application_state.error_count,
                 "memory_usage_history": [
-                    (dt.isoformat(), usage)
-                    for dt, usage in self.application_state.memory_usage_history
+                    (dt.isoformat(), usage) for dt, usage in self.application_state.memory_usage_history
                 ],
                 "operation_times": self.application_state.operation_times,
             }
@@ -1297,39 +1250,19 @@ class ConfigManager(IConfigManager):
 
             # Convert dictionary back to ApplicationState
             self.application_state = ApplicationState(
-                current_folder=(
-                    Path(state_dict["current_folder"])
-                    if state_dict.get("current_folder")
-                    else None
-                ),
-                selected_image=(
-                    Path(state_dict["selected_image"])
-                    if state_dict.get("selected_image")
-                    else None
-                ),
-                loaded_images=[
-                    Path(path) for path in state_dict.get("loaded_images", [])
-                ],
+                current_folder=(Path(state_dict["current_folder"]) if state_dict.get("current_folder") else None),
+                selected_image=(Path(state_dict["selected_image"]) if state_dict.get("selected_image") else None),
+                loaded_images=[Path(path) for path in state_dict.get("loaded_images", [])],
                 current_theme=state_dict.get("current_theme", "default"),
                 thumbnail_size=state_dict.get("thumbnail_size", 150),
-                folder_history=[
-                    Path(path) for path in state_dict.get("folder_history", [])
-                ],
+                folder_history=[Path(path) for path in state_dict.get("folder_history", [])],
                 ui_layout=state_dict.get("ui_layout", {}),
-                window_geometry=(
-                    tuple(state_dict["window_geometry"])
-                    if state_dict.get("window_geometry")
-                    else None
-                ),
+                window_geometry=(tuple(state_dict["window_geometry"]) if state_dict.get("window_geometry") else None),
                 splitter_states={
                     k: bytes.fromhex(v) if isinstance(v, str) else v
                     for k, v in state_dict.get("splitter_states", {}).items()
                 },
-                map_center=(
-                    tuple(state_dict["map_center"])
-                    if state_dict.get("map_center")
-                    else None
-                ),
+                map_center=(tuple(state_dict["map_center"]) if state_dict.get("map_center") else None),
                 map_zoom=state_dict.get("map_zoom", 10),
                 exif_display_mode=state_dict.get("exif_display_mode", "detailed"),
                 image_sort_mode=state_dict.get("image_sort_mode", "name"),
@@ -1343,19 +1276,14 @@ class ConfigManager(IConfigManager):
                     "ai_component_status",
                     {"copilot": "active", "cursor": "active", "kiro": "active"},
                 ),
-                session_start=datetime.fromisoformat(
-                    state_dict.get("session_start", datetime.now().isoformat())
-                ),
-                last_activity=datetime.fromisoformat(
-                    state_dict.get("last_activity", datetime.now().isoformat())
-                ),
+                session_start=datetime.fromisoformat(state_dict.get("session_start", datetime.now().isoformat())),
+                last_activity=datetime.fromisoformat(state_dict.get("last_activity", datetime.now().isoformat())),
                 images_processed=state_dict.get("images_processed", 0),
                 operations_performed=state_dict.get("operations_performed", []),
                 recent_errors=state_dict.get("recent_errors", []),
                 error_count=state_dict.get("error_count", 0),
                 memory_usage_history=[
-                    (datetime.fromisoformat(dt), usage)
-                    for dt, usage in state_dict.get("memory_usage_history", [])
+                    (datetime.fromisoformat(dt), usage) for dt, usage in state_dict.get("memory_usage_history", [])
                 ],
                 operation_times=state_dict.get("operation_times", {}),
             )
@@ -1378,14 +1306,10 @@ class ConfigManager(IConfigManager):
         """Get summary of current application state"""
         return {
             "current_folder": (
-                str(self.application_state.current_folder)
-                if self.application_state.current_folder
-                else None
+                str(self.application_state.current_folder) if self.application_state.current_folder else None
             ),
             "selected_image": (
-                str(self.application_state.selected_image)
-                if self.application_state.selected_image
-                else None
+                str(self.application_state.selected_image) if self.application_state.selected_image else None
             ),
             "loaded_images_count": len(self.application_state.loaded_images),
             "current_theme": self.application_state.current_theme,

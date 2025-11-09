@@ -143,6 +143,7 @@ JAPANESE_LABELS = {
     },
 }
 
+
 class EXIFLabelManager:
     """
     Manages EXIF panel labels with theme-aware styling

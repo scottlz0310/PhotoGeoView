@@ -97,7 +97,7 @@ class PerformanceRegressionDetector:
 
     def _load_baseline(self) -> Dict[str, Any]:
         """ベースラインデータを読み込み"""
-        if self.bne_file.exists():
+        if self.baseline_file.exists():
             try:
                 with open(self.baseline_file, encoding="utf-8") as f:
                     return json.load(f)
@@ -208,27 +208,19 @@ class PerformanceRegressionDetector:
         if baseline_time == 0 or current_time == float("inf"):
             regression_percentage = float("inf")
         else:
-            regression_percentage = (
-                (current_time - baseline_time) / baseline_time
-            ) * 100
+            regression_percentage = ((current_time - baseline_time) / baseline_time) * 100
 
         # 回帰レベルを判定
         severity = PerformanceLevel.EXCELLENT
         is_regression = False
 
-        if (
-            regression_percentage
-            > self.regression_thresholds[PerformanceLevel.CRITICAL]
-        ):
+        if regression_percentage > self.regression_thresholds[PerformanceLevel.CRITICAL]:
             severity = PerformanceLevel.CRITICAL
             is_regression = True
         elif regression_percentage > self.regression_thresholds[PerformanceLevel.POOR]:
             severity = PerformanceLevel.POOR
             is_regression = True
-        elif (
-            regression_percentage
-            > self.regression_thresholds[PerformanceLevel.ACCEPTABLE]
-        ):
+        elif regression_percentage > self.regression_thresholds[PerformanceLevel.ACCEPTABLE]:
             severity = PerformanceLevel.ACCEPTABLE
             is_regression = True
         elif regression_percentage > self.regression_thresholds[PerformanceLevel.GOOD]:
@@ -236,9 +228,7 @@ class PerformanceRegressionDetector:
             is_regression = True
 
         # 推奨事項を生成
-        recommendation = self._generate_recommendation(
-            severity, regression_percentage, benchmark
-        )
+        recommendation = self._generate_recommendation(severity, regression_percentage, benchmark)
 
         return RegressionResult(
             test_name=benchmark.test_name,
@@ -267,9 +257,7 @@ class PerformanceRegressionDetector:
             return f"わずかなパフォーマンス劣化 ({regression_percentage:.1f}%) - 許容範囲内です"
         else:
             if regression_percentage < 0:
-                return (
-                    f"パフォーマンス改善 ({abs(regression_percentage):.1f}%) - 良好です"
-                )
+                return f"パフォーマンス改善 ({abs(regression_percentage):.1f}%) - 良好です"
             else:
                 return "パフォーマンス維持 - 良好です"
 
@@ -323,11 +311,7 @@ class PerformanceRegressionDetector:
 
             if regression_result.is_regression:
                 regressions.append(regression_result)
-                status_icon = (
-                    "🔴"
-                    if regression_result.severity == PerformanceLevel.CRITICAL
-                    else "🟡"
-                )
+                status_icon = "🔴" if regression_result.severity == PerformanceLevel.CRITICAL else "🟡"
             elif regression_result.regression_percentage < -5:  # 5%以上の改善
                 improvements.append(regression_result)
                 status_icon = "🟢"
@@ -358,9 +342,7 @@ class PerformanceRegressionDetector:
         if regressions:
             report_lines.extend(["## 🔴 パフォーマンス回帰", ""])
 
-            for regression in sorted(
-                regressions, key=lambda x: x.regression_percentage, reverse=True
-            ):
+            for regression in sorted(regressions, key=lambda x: x.regression_percentage, reverse=True):
                 report_lines.extend(
                     [
                         f"### {regression.test_name}",
@@ -375,9 +357,7 @@ class PerformanceRegressionDetector:
         if improvements:
             report_lines.extend(["## 🟢 パフォーマンス改善", ""])
 
-            for improvement in sorted(
-                improvements, key=lambda x: x.regression_percentage
-            ):
+            for improvement in sorted(improvements, key=lambda x: x.regression_percentage):
                 report_lines.extend(
                     [
                         f"### {improvement.test_name}",
@@ -450,9 +430,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="パフォーマンス回帰検出")
-    parser.add_argument(
-        "--update-baseline", action="store_true", help="ベースラインを更新"
-    )
+    parser.add_argument("--update-baseline", action="store_true", help="ベースラインを更新")
     parser.add_argument("--output", "-o", type=Path, help="レポート出力パス")
     parser.add_argument("--iterations", "-i", type=int, default=5, help="測定回数")
 
@@ -463,17 +441,11 @@ def main():
     print("パフォーマンステストを実行中...")
 
     # サンプルテストを実行
-    detector.measure_performance(
-        "image_processing", sample_image_processing_test, "copilot", args.iterations
-    )
+    detector.measure_performance("image_processing", sample_image_processing_test, "copilot", args.iterations)
 
-    detector.measure_performance(
-        "ui_rendering", sample_ui_rendering_test, "cursor", args.iterations
-    )
+    detector.measure_performance("ui_rendering", sample_ui_rendering_test, "cursor", args.iterations)
 
-    detector.measure_performance(
-        "integration_processing", sample_integration_test, "kiro", args.iterations
-    )
+    detector.measure_performance("integration_processing", sample_integration_test, "kiro", args.iterations)
 
     # レポート生成
     report = detector.generate_report(args.output)
@@ -497,9 +469,7 @@ def main():
     if regressions:
         print(f"\n⚠️  {len(regressions)}件のパフォーマンス回帰が検出されました")
         for regression in regressions:
-            print(
-                f"  - {regression.test_name}: {regression.regression_percentage:.1f}%劣化"
-            )
+            print(f"  - {regression.test_name}: {regression.regression_percentage:.1f}%劣化")
         sys.exit(1)
     else:
         print("\n✅ パフォーマンス回帰は検出されませんでした")

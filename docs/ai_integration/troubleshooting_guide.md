@@ -1,6 +1,6 @@
 # PhotoGeoView トラブルシューティングガイド
 
-生成日時: 2025年07月26日 10:59:48
+生成日時: 2025年11月09日 20:50:39
 
 ## AI コンポーネント別問題解決
 
@@ -9,8 +9,11 @@
 **対象モジュール**: コア機能、EXIF解析、地図表示
 
 **関連ファイル**:
+- `__main__.py`: PhotoGeoView CLI エントリーポイント
+- `image_processor.py`: CS4Coding ImageProcessor with Kiro Integration
+- `map_provider.py`: Map Provider - 地図表示プロバイダー
 - `image_loader.py`: 目的不明
-- `image_processor.py`: CS4Coding ImageProcessor with Kiro Integration 
+- `exif_labels.py`: EXIF Panel Labels Configuration
 
 #### よくある問題:
 1. **EXIF情報が正しく読み取れない**
@@ -26,11 +29,11 @@
 **対象モジュール**: UI/UX、テーマシステム、サムネイル表示
 
 **関連ファイル**:
-- `interfaces.py`: Core Interfaces for AI Integration 
-- `__init__.py`: AI Integration Module for PhotoGeoView 
-- `error_handling.py`: Unified Error Handling System for AI Integration 
-- `models.py`: Unified Data Models for AI Integration 
-- `logging_system.py`: Unified Logging System for AI Integration 
+- `__init__.py`: PhotoGeoView - AI統合写真地理情報ビューア
+- `theme_manager_fallback.py`: ThemeManager フォールバック実装
+- `theme_editor.py`: Theme Editor Interface Components
+- `theme_selector.py`: 洗練されたテーマ選択UIコンポーネント
+- `breadcrumb_fallback.py`: BreadcrumbWidget フォールバック実装
 
 #### よくある問題:
 1. **テーマが正しく適用されない**
@@ -46,11 +49,11 @@
 **対象モジュール**: 統合制御、パフォーマンス監視、キャッシュシステム
 
 **関連ファイル**:
-- `doc_templates.py`: AI統合ドキュメントテンプレートシステム 
-- `data_validation.py`: Data Validation System for AI Integration 
-- `controllers.py`: Central Application Controller for AI Integration 
-- `performance_optimizer.py`: Performance Optimizer for AI Integration 
-- `state_manager.py`: Unified State Manager for AI Integration 
+- `breadcrumb_bar.py`: Breadcrumb Address Bar Wrapper Component
+- `theme_interfaces.py`: Theme Integration Interfaces
+- `theme_navigation_integration.py`: Theme and Navigation Integration Interfaces
+- `performance_monitor.py`: Kiro Performance Monitor
+- `theme_integration_controller.py`: Theme Integration Controller
 
 #### よくある問題:
 1. **統合コンポーネント間の通信エラー**

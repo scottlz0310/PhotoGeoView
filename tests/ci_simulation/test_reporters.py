@@ -184,18 +184,9 @@ class TestMarkdownReporter:
         summary = reporter._generate_summary_section(sample_simulation_result)
 
         assert "## Summary" in summary
-        assert (
-            f"**Overall Status:** {sample_simulation_result.overall_status.value.upper()}"
-            in summary
-        )
-        assert (
-            f"**Total Duration:** {sample_simulation_result.total_duration:.2f}s"
-            in summary
-        )
-        assert (
-            f"**Python Versions:** {', '.join(sample_simulation_result.python_versions_tested)}"
-            in summary
-        )
+        assert f"**Overall Status:** {sample_simulation_result.overall_status.value.upper()}" in summary
+        assert f"**Total Duration:** {sample_simulation_result.total_duration:.2f}s" in summary
+        assert f"**Python Versions:** {', '.join(sample_simulation_result.python_versions_tested)}" in summary
 
     def test_generate_check_results_section(self, sample_simulation_result):
         """Test generating check results section."""
@@ -312,9 +303,7 @@ class TestJSONReporter:
     def test_serialize_check_results(self, sample_simulation_result):
         """Test check results serialization."""
         reporter = JSONReporter()
-        serialized = reporter._serialize_check_results(
-            sample_simulation_result.check_results
-        )
+        serialized = reporter._serialize_check_results(sample_simulation_result.check_results)
 
         assert isinstance(serialized, dict)
         assert "test_check" in serialized
@@ -367,9 +356,7 @@ class TestHistoryTracker:
 
         assert loaded_result.overall_status == sample_simulation_result.overall_status
         assert loaded_result.total_duration == sample_simulation_result.total_duration
-        assert len(loaded_result.check_results) == len(
-            sample_simulation_result.check_results
-        )
+        assert len(loaded_result.check_results) == len(sample_simulation_result.check_results)
 
     def test_get_recent_results(self, sample_simulation_result, temp_dir):
         """Test getting recent simulation results."""
@@ -577,13 +564,9 @@ class TestReporterIntegration:
         report_paths = {}
 
         for format_name, reporter in reporters.items():
-            output_path = os.path.join(
-                temp_dir, f"test_report{reporter.file_extension}"
-            )
+            output_path = os.path.join(temp_dir, f"test_report{reporter.file_extension}")
 
-            result_path = reporter.generate_report(
-                sample_simulation_result, output_path
-            )
+            result_path = reporter.generate_report(sample_simulation_result, output_path)
             report_paths[format_name] = result_path
 
             assert os.path.exists(result_path)
@@ -600,10 +583,7 @@ class TestReporterIntegration:
             json_content = json.load(f)
 
         assert "# CI Simulation Report" in md_content
-        assert (
-            json_content["overall_status"]
-            == sample_simulation_result.overall_status.value
-        )
+        assert json_content["overall_status"] == sample_simulation_result.overall_status.value
 
     def test_history_tracking_with_reports(self, sample_simulation_result, temp_dir):
         """Test history tracking integration with report generation."""
@@ -642,9 +622,7 @@ class TestReporterIntegration:
         with pytest.raises((OSError, IOError)):
             reporter.generate_report(sample_simulation_result, invalid_path)
 
-    def test_history_tracker_concurrent_access(
-        self, sample_simulation_result, temp_dir
-    ):
+    def test_history_tracker_concurrent_access(self, sample_simulation_result, temp_dir):
         """Test history tracker with concurrent access simulation."""
         history_dir = os.path.join(temp_dir, "concurrent_history")
 

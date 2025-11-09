@@ -255,9 +255,7 @@ class TestConfigurationIntegration:
         config_manager.load_config()
 
         # Test getting checker-specific configuration
-        black_config = config_manager.get_checker_specific_config(
-            "code_quality", "black"
-        )
+        black_config = config_manager.get_checker_specific_config("code_quality", "black")
         assert black_config["enabled"] is True
         assert black_config["line_length"] == 100
 
@@ -266,9 +264,7 @@ class TestConfigurationIntegration:
         assert safety_config["ignore"] == ["12345"]
 
         # Test non-existent checker configuration
-        nonexistent_config = config_manager.get_checker_specific_config(
-            "nonexistent", "tool"
-        )
+        nonexistent_config = config_manager.get_checker_specific_config("nonexistent", "tool")
         assert nonexistent_config == {}
 
     def test_configuration_update_and_save(self, config_files_setup):
@@ -288,9 +284,7 @@ class TestConfigurationIntegration:
         new_manager = ConfigManager(str(config_path))
         new_config = new_manager.load_config()
 
-        updated_black_config = new_manager.get_checker_specific_config(
-            "code_quality", "black"
-        )
+        updated_black_config = new_manager.get_checker_specific_config("code_quality", "black")
         assert updated_black_config["line_length"] == 120
 
     def test_configuration_inheritance_and_merging(self, config_files_setup):
@@ -450,10 +444,7 @@ class TestConfigurationPersistence:
         # Verify migration preserved data
         assert json_config["timeout"] == yaml_config["timeout"]
         assert json_config["python_versions"] == yaml_config["python_versions"]
-        assert (
-            json_config["checkers"]["code_quality"]["enabled"]
-            == yaml_config["checkers"]["code_quality"]["enabled"]
-        )
+        assert json_config["checkers"]["code_quality"]["enabled"] == yaml_config["checkers"]["code_quality"]["enabled"]
 
     def test_concurrent_configuration_access(self, config_files_setup):
         """Test concurrent access to configuration files."""

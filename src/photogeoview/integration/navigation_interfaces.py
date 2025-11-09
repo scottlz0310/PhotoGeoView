@@ -121,6 +121,7 @@ class INavigationProvider(ABC):
         """
         pass
 
+
 class INavigationManager(ABC):
     """
     Abstract interface for navigation management
@@ -206,9 +207,7 @@ class INavigationManager(ABC):
         pass
 
     @abstractmethod
-    def add_navigation_listener(
-        self, callback: Callable[[NavigationEvent], None]
-    ) -> bool:
+    def add_navigation_listener(self, callback: Callable[[NavigationEvent], None]) -> bool:
         """
         Add a navigation event listener
 
@@ -221,9 +220,7 @@ class INavigationManager(ABC):
         pass
 
     @abstractmethod
-    def remove_navigation_listener(
-        self, callback: Callable[[NavigationEvent], None]
-    ) -> bool:
+    def remove_navigation_listener(self, callback: Callable[[NavigationEvent], None]) -> bool:
         """
         Remove a navigation event listener
 
@@ -254,6 +251,7 @@ class INavigationManager(ABC):
             True if history cleared successfully, False otherwise
         """
         pass
+
 
 class IBreadcrumbRenderer(ABC):
     """
@@ -321,9 +319,7 @@ class IBreadcrumbRenderer(ABC):
         pass
 
     @abstractmethod
-    def get_segment_at_position(
-        self, position: tuple[int, int]
-    ) -> BreadcrumbSegment | None:
+    def get_segment_at_position(self, position: tuple[int, int]) -> BreadcrumbSegment | None:
         """
         Get the segment at a specific screen position
 
@@ -334,6 +330,7 @@ class IBreadcrumbRenderer(ABC):
             Segment at position or None if no segment found
         """
         pass
+
 
 class INavigationAware(Protocol):
     """
@@ -360,6 +357,7 @@ class INavigationAware(Protocol):
             List of event type names
         """
         ...
+
 
 class IPathValidator(ABC):
     """
@@ -433,6 +431,7 @@ class IPathValidator(ABC):
             Sanitized path or None if path cannot be sanitized
         """
         pass
+
 
 class IFileSystemWatcher(ABC):
     """
@@ -537,6 +536,7 @@ class IFileSystemWatcher(ABC):
             True if path is being watched, False otherwise
         """
         pass
+
 
 class INavigationHistory(ABC):
     """
@@ -667,6 +667,7 @@ class INavigationHistory(ABC):
         """
         pass
 
+
 class INavigationCache(ABC):
     """
     Abstract interface for navigation caching
@@ -689,9 +690,7 @@ class INavigationCache(ABC):
         pass
 
     @abstractmethod
-    def cache_path_info(
-        self, path: Path, info: PathInfo, ttl: int | None = None
-    ) -> bool:
+    def cache_path_info(self, path: Path, info: PathInfo, ttl: int | None = None) -> bool:
         """
         Cache path information
 
@@ -751,13 +750,10 @@ class INavigationCache(ABC):
         """
         pass
 
+
 # Type aliases for convenience
 NavigationCallback = Callable[[NavigationEvent], None]  # Navigation event callback
-PathChangeCallback = Callable[
-    [Path, str], None
-]  # Path change callback (path, event_type)
-FileSystemEventCallback = Callable[
-    [Path, str, str], None
-]  # FS event callback (path, event_type, details)
+PathChangeCallback = Callable[[Path, str], None]  # Path change callback (path, event_type)
+FileSystemEventCallback = Callable[[Path, str, str], None]  # FS event callback (path, event_type, details)
 PositionTuple = tuple[int, int]  # Screen position (x, y)
 TruncationMode = str  # Truncation mode ("smart", "middle", "end", "none")

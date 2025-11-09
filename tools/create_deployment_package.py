@@ -46,9 +46,7 @@ class DeploymentPackageCreator:
                 return {
                     "name": project_info.get("name", "photogeoview"),
                     "version": project_info.get("version", "1.0.0"),
-                    "description": project_info.get(
-                        "description", "AI統合写真地理情報ビューア"
-                    ),
+                    "description": project_info.get("description", "AI統合写真地理情報ビューア"),
                     "authors": project_info.get("authors", []),
                     "dependencies": project_info.get("dependencies", []),
                 }
@@ -104,9 +102,7 @@ class DeploymentPackageCreator:
                     quality_data = json.load(f)
 
                 quality_score = quality_data.get("overall_score", 0)
-                critical_issues = quality_data.get("issues_by_severity", {}).get(
-                    "critical", 0
-                )
+                critical_issues = quality_data.get("issues_by_severity", {}).get("critical", 0)
 
                 print(f"品質スコア: {quality_score}/100")
                 print(f"重大な問題: {critical_issues}件")
@@ -505,9 +501,7 @@ if __name__ == "__main__":
                         with open(latest_report, encoding="utf-8") as f:
                             ci_data = json.load(f)
 
-                        print(
-                            f"CI Summary: {ci_data.get('summary', 'No summary available')}"
-                        )
+                        print(f"CI Summary: {ci_data.get('summary', 'No summary available')}")
 
                         # Check for critical issues
                         overall_status = ci_data.get("overall_status", "UNKNOWN")
@@ -517,29 +511,21 @@ if __name__ == "__main__":
                             # Show failed checks
                             check_results = ci_data.get("check_results", {})
                             failed_checks = [
-                                name
-                                for name, result in check_results.items()
-                                if result.get("status") == "FAILURE"
+                                name for name, result in check_results.items() if result.get("status") == "FAILURE"
                             ]
                             if failed_checks:
                                 print(f"Failed checks: {', '.join(failed_checks)}")
 
                                 # Show specific errors for failed checks
-                                for check_name in failed_checks[
-                                    :3
-                                ]:  # Show details for first 3 failed checks
+                                for check_name in failed_checks[:3]:  # Show details for first 3 failed checks
                                     check_result = check_results[check_name]
                                     errors = check_result.get("errors", [])
                                     if errors:
                                         print(f"\n{check_name} errors:")
-                                        for error in errors[
-                                            :2
-                                        ]:  # Show first 2 errors per check
+                                        for error in errors[:2]:  # Show first 2 errors per check
                                             print(f"  - {error}")
                                         if len(errors) > 2:
-                                            print(
-                                                f"  - ... and {len(errors) - 2} more errors"
-                                            )
+                                            print(f"  - ... and {len(errors) - 2} more errors")
 
                             return False
                         elif overall_status == "WARNING":
@@ -548,21 +534,15 @@ if __name__ == "__main__":
                             # Show warning details
                             check_results = ci_data.get("check_results", {})
                             warning_checks = [
-                                name
-                                for name, result in check_results.items()
-                                if result.get("status") == "WARNING"
+                                name for name, result in check_results.items() if result.get("status") == "WARNING"
                             ]
                             if warning_checks:
-                                print(
-                                    f"Checks with warnings: {', '.join(warning_checks)}"
-                                )
+                                print(f"Checks with warnings: {', '.join(warning_checks)}")
 
                         # Show performance metrics if available
                         python_versions = ci_data.get("python_versions_tested", [])
                         if python_versions:
-                            print(
-                                f"Tested Python versions: {', '.join(python_versions)}"
-                            )
+                            print(f"Tested Python versions: {', '.join(python_versions)}")
 
                         duration = ci_data.get("total_duration", 0)
                         print(f"CI simulation duration: {duration:.2f} seconds")
@@ -588,9 +568,7 @@ if __name__ == "__main__":
             print(f"❌ CI simulation error: {e}")
             return False
 
-    def create_deployment_package(
-        self, skip_tests: bool = False, skip_quality: bool = False
-    ) -> bool:
+    def create_deployment_package(self, skip_tests: bool = False, skip_quality: bool = False) -> bool:
         """デプロイメントパッケージを作成"""
         print("=" * 60)
         print("PhotoGeoView AI統合デプロイメントパッケージ作成")
@@ -657,9 +635,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="AI統合デプロイメントパッケージ作成")
     parser.add_argument("--skip-tests", action="store_true", help="テストをスキップ")
-    parser.add_argument(
-        "--skip-quality", action="store_true", help="品質チェックをスキップ"
-    )
+    parser.add_argument("--skip-quality", action="store_true", help="品質チェックをスキップ")
     parser.add_argument("--project-root", type=Path, help="プロジェクトルートパス")
 
     args = parser.parse_args()
@@ -667,9 +643,7 @@ def main():
     project_root = args.project_root or Path(__file__).parent.parent
     creator = DeploymentPackageCreator(project_root)
 
-    success = creator.create_deployment_package(
-        skip_tests=args.skip_tests, skip_quality=args.skip_quality
-    )
+    success = creator.create_deployment_package(skip_tests=args.skip_tests, skip_quality=args.skip_quality)
 
     sys.exit(0 if success else 1)
 

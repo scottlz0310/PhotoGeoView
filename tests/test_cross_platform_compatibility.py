@@ -96,15 +96,11 @@ class TestCrossPlatformCompatibility:
         return config_values.get(key, default)
 
     @pytest.mark.parametrize("platform_name", ["Windows", "Linux", "Darwin"])
-    def test_platform_specific_path_handling(
-        self, platform_name, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_platform_specific_path_handling(self, platform_name, temp_directory, mock_config_manager, logger_system):
         """Test platform-specific path handling in breadcrumb"""
         with patch("platform.system", return_value=platform_name):
             # Create file system watcher
-            file_system_watcher = FileSystemWatcher(
-                logger_system=logger_system, enable_monitoring=True
-            )
+            file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
             # Create breadcrumb bar
             breadcrumb_bar = BreadcrumbAddressBar(
@@ -138,9 +134,7 @@ class TestCrossPlatformCompatibility:
                 assert len(segments) > 0
 
     @pytest.mark.parametrize("platform_name", ["Windows", "Linux", "Darwin"])
-    def test_platform_specific_theme_application(
-        self, platform_name, mock_config_manager, logger_system
-    ):
+    def test_platform_specific_theme_application(self, platform_name, mock_config_manager, logger_system):
         """Test platform-specific theme application"""
         with patch("platform.system", return_value=platform_name):
             # Create theme controller
@@ -163,9 +157,7 @@ class TestCrossPlatformCompatibility:
             mock_theme_manager = Mock()
             mock_theme_manager.apply_theme = Mock(return_value=True)
             mock_theme_manager.get_current_theme = Mock(return_value=theme_config)
-            theme_controller.register_theme_manager(
-                "platform_manager", mock_theme_manager
-            )
+            theme_controller.register_theme_manager("platform_manager", mock_theme_manager)
 
             # Apply theme
             import asyncio
@@ -176,17 +168,13 @@ class TestCrossPlatformCompatibility:
             assert result is True
             assert theme_controller.current_theme.name == theme_name
 
-    def test_windows_specific_features(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_windows_specific_features(self, temp_directory, mock_config_manager, logger_system):
         """Test Windows-specific features and compatibility"""
         if platform.system() != "Windows":
             pytest.skip("Windows-specific test")
 
         # Test Windows path handling
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -195,11 +183,7 @@ class TestCrossPlatformCompatibility:
         )
 
         # Test Windows drive letters
-        drives = [
-            Path(f"{drive}:\\")
-            for drive in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            if Path(f"{drive}:\\").exists()
-        ]
+        drives = [Path(f"{drive}:\\") for drive in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if Path(f"{drive}:\\").exists()]
 
         if drives:
             test_drive = drives[0]
@@ -211,17 +195,13 @@ class TestCrossPlatformCompatibility:
             assert len(segments) > 0
             assert str(test_drive) in str(segments[0].path)
 
-    def test_macos_specific_features(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_macos_specific_features(self, temp_directory, mock_config_manager, logger_system):
         """Test macOS-specific features and compatibility"""
         if platform.system() != "Darwin":
             pytest.skip("macOS-specific test")
 
         # Test macOS path handling
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -246,17 +226,13 @@ class TestCrossPlatformCompatibility:
                 assert breadcrumb_bar.current_state.current_path == test_path
                 break
 
-    def test_linux_specific_features(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_linux_specific_features(self, temp_directory, mock_config_manager, logger_system):
         """Test Linux-specific features and compatibility"""
         if platform.system() != "Linux":
             pytest.skip("Linux-specific test")
 
         # Test Linux path handling
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -276,13 +252,9 @@ class TestCrossPlatformCompatibility:
                 assert breadcrumb_bar.current_state.current_path == test_path
                 break
 
-    def test_file_system_case_sensitivity(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_file_system_case_sensitivity(self, temp_directory, mock_config_manager, logger_system):
         """Test file system case sensitivity handling across platforms"""
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -316,13 +288,9 @@ class TestCrossPlatformCompatibility:
             result2 = breadcrumb_bar.set_current_path(upper_dir)
             # Result may vary depending on implementation
 
-    def test_unicode_path_handling(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_unicode_path_handling(self, temp_directory, mock_config_manager, logger_system):
         """Test Unicode path handling across platforms"""
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -357,13 +325,9 @@ class TestCrossPlatformCompatibility:
                 # Some platforms may not support certain Unicode characters
                 continue
 
-    def test_long_path_handling(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_long_path_handling(self, temp_directory, mock_config_manager, logger_system):
         """Test long path handling across platforms"""
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -377,10 +341,7 @@ class TestCrossPlatformCompatibility:
 
         try:
             for i in range(max_depth):
-                current_path = (
-                    current_path
-                    / f"level_{i:02d}_very_long_directory_name_to_test_path_limits"
-                )
+                current_path = current_path / f"level_{i:02d}_very_long_directory_name_to_test_path_limits"
                 current_path.mkdir()
 
             # Test navigation to long path
@@ -403,13 +364,9 @@ class TestCrossPlatformCompatibility:
             # Path too long for platform
             pytest.skip("Platform doesn't support long paths")
 
-    def test_special_characters_in_paths(
-        self, temp_directory, mock_config_manager, logger_system
-    ):
+    def test_special_characters_in_paths(self, temp_directory, mock_config_manager, logger_system):
         """Test handling of special characters in paths"""
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -455,9 +412,7 @@ class TestCrossPlatformCompatibility:
         if platform.system() != "Windows":
             pytest.skip("Network path test is Windows-specific")
 
-        file_system_watcher = FileSystemWatcher(
-            logger_system=logger_system, enable_monitoring=True
-        )
+        file_system_watcher = FileSystemWatcher(logger_system=logger_system, enable_monitoring=True)
 
         breadcrumb_bar = BreadcrumbAddressBar(
             file_system_watcher=file_system_watcher,
@@ -482,9 +437,7 @@ class TestCrossPlatformCompatibility:
         current_platform = platform.system()
 
         # Create theme controller
-        theme_controller = ThemeIntegrationController(
-            config_manager=mock_config_manager, logger_system=logger_system
-        )
+        theme_controller = ThemeIntegrationController(config_manager=mock_config_manager, logger_system=logger_system)
 
         # Test platform-specific configuration loading
         platform_config = theme_controller._load_platform_specific_config()
@@ -495,9 +448,7 @@ class TestCrossPlatformCompatibility:
         # Verify platform-specific settings
         if current_platform == "Windows":
             # Windows-specific settings
-            assert (
-                "windows" in str(platform_config).lower() or len(platform_config) >= 0
-            )
+            assert "windows" in str(platform_config).lower() or len(platform_config) >= 0
         elif current_platform == "Darwin":
             # macOS-specific settings
             assert (
@@ -509,13 +460,9 @@ class TestCrossPlatformCompatibility:
             # Linux-specific settings
             assert "linux" in str(platform_config).lower() or len(platform_config) >= 0
 
-    def test_cross_platform_theme_compatibility(
-        self, mock_config_manager, logger_system
-    ):
+    def test_cross_platform_theme_compatibility(self, mock_config_manager, logger_system):
         """Test theme compatibility across platforms"""
-        theme_controller = ThemeIntegrationController(
-            config_manager=mock_config_manager, logger_system=logger_system
-        )
+        theme_controller = ThemeIntegrationController(config_manager=mock_config_manager, logger_system=logger_system)
 
         # Create cross-platform theme
         cross_platform_theme = ThemeConfiguration(
@@ -528,9 +475,7 @@ class TestCrossPlatformCompatibility:
         )
 
         # Test theme validation for current platform
-        is_compatible = theme_controller._validate_theme_compatibility(
-            cross_platform_theme
-        )
+        is_compatible = theme_controller._validate_theme_compatibility(cross_platform_theme)
         assert is_compatible is True
 
         # Test platform-specific theme features

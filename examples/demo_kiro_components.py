@@ -40,19 +40,13 @@ def main():
     # Initialize Kiro components
     print("\n2. Initializing Kiro components...")
 
-    performance_monitor = KiroPerformanceMonitor(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    performance_monitor = KiroPerformanceMonitor(config_manager=config_manager, logger_system=logger_system)
     print("   ✓ PerformanceMonitor initialized")
 
-    cache_system = UnifiedCacheSystem(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    cache_system = UnifiedCacheSystem(config_manager=config_manager, logger_system=logger_system)
     print("   ✓ UnifiedCacheSystem initialized")
 
-    state_manager = StateManager(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    state_manager = StateManager(config_manager=config_manager, logger_system=logger_system)
     print("   ✓ StateManager initialized")
 
     # Test PerformanceMonitor
@@ -110,9 +104,7 @@ def main():
     cache_stats = cache_system.get_cache_stats()
     print("   ✓ Cache statistics:")
     for cache_type, stats in cache_stats.items():
-        print(
-            f"     - {cache_type}: {stats['entry_count']} entries, {stats['hit_rate']:.1%} hit rate"
-        )
+        print(f"     - {cache_type}: {stats['entry_count']} entries, {stats['hit_rate']:.1%} hit rate")
 
     # Get cache summary
     cache_summary = cache_system.get_cache_summary()
@@ -134,9 +126,7 @@ def main():
     print(f"   ✓ State values: theme={theme}, size={thumb_size}, mode={perf_mode}")
 
     # Test bulk update
-    state_manager.update_state(
-        current_theme="blue", thumbnail_size=250, image_sort_mode="date"
-    )
+    state_manager.update_state(current_theme="blue", thumbnail_size=250, image_sort_mode="date")
     print("   ✓ Bulk state update completed")
 
     # Test state validation
@@ -188,9 +178,7 @@ def main():
 
         time.sleep(0.1)  # Small delay
 
-    print(
-        f"   ✓ Integration test completed: {len(state_changes)} state changes recorded"
-    )
+    print(f"   ✓ Integration test completed: {len(state_changes)} state changes recorded")
 
     # Test performance monitoring with cache operations
     print("\n7. Testing performance monitoring with cache operations...")
@@ -209,9 +197,7 @@ def main():
         if retrieved:
             cache_operations += 1
 
-    print(
-        f"   ✓ Performance test completed: {cache_operations} successful cache operations"
-    )
+    print(f"   ✓ Performance test completed: {cache_operations} successful cache operations")
 
     # Show final statistics
     print("\n8. Final Statistics:")

@@ -227,9 +227,7 @@ class TestCheckOrchestrator:
         orchestrator = CheckOrchestrator(sample_config)
 
         checker1 = MockChecker(sample_config, "base", "base", dependencies=[])
-        checker2 = MockChecker(
-            sample_config, "dependent", "dependent", dependencies=["base"]
-        )
+        checker2 = MockChecker(sample_config, "dependent", "dependent", dependencies=["base"])
 
         orchestrator.register_checker("base", checker1)
         orchestrator.register_checker("dependent", checker2)
@@ -253,12 +251,8 @@ class TestCheckOrchestrator:
         """Test executing checks when one fails."""
         orchestrator = CheckOrchestrator(sample_config)
 
-        checker1 = MockChecker(
-            sample_config, "success", "success", status=CheckStatus.SUCCESS
-        )
-        checker2 = MockChecker(
-            sample_config, "failure", "failure", status=CheckStatus.FAILURE
-        )
+        checker1 = MockChecker(sample_config, "success", "success", status=CheckStatus.SUCCESS)
+        checker2 = MockChecker(sample_config, "failure", "failure", status=CheckStatus.FAILURE)
 
         orchestrator.register_checker("success", checker1)
         orchestrator.register_checker("failure", checker2)
@@ -294,9 +288,7 @@ class TestCheckOrchestrator:
         """Test executing checks with unavailable checker."""
         orchestrator = CheckOrchestrator(sample_config)
 
-        unavailable_checker = MockChecker(
-            sample_config, "unavailable", "unavailable", available=False
-        )
+        unavailable_checker = MockChecker(sample_config, "unavailable", "unavailable", available=False)
         orchestrator.register_checker("unavailable", unavailable_checker)
 
         task = CheckTask("unavailable_task", "unavailable")
@@ -461,9 +453,7 @@ class TestErrorHandler:
         handler = ErrorHandler()
 
         def recovery_strategy(error):
-            return CheckResult(
-                "recovered", CheckStatus.WARNING, 0.0, output="Recovered from error"
-            )
+            return CheckResult("recovered", CheckStatus.WARNING, 0.0, output="Recovered from error")
 
         handler.register_recovery_strategy(CheckerError, recovery_strategy)
 
@@ -563,9 +553,7 @@ class TestErrorRecoverySystem:
         recovery_system.retry_delay = 0.1  # Speed up test
 
         # Create a checker that always fails
-        checker = MockChecker(
-            sample_config, "failing_checker", "test", status=CheckStatus.FAILURE
-        )
+        checker = MockChecker(sample_config, "failing_checker", "test", status=CheckStatus.FAILURE)
 
         task = CheckTask("failing_task", "test")
         result = recovery_system.execute_with_retry(task, checker)
@@ -635,9 +623,7 @@ class TestIntegratedErrorHandling:
         orchestrator.error_handler = error_handler
 
         # Create a failing checker
-        failing_checker = MockChecker(
-            sample_config, "failing", "failing", status=CheckStatus.FAILURE
-        )
+        failing_checker = MockChecker(sample_config, "failing", "failing", status=CheckStatus.FAILURE)
         orchestrator.register_checker("failing", failing_checker)
 
         task = CheckTask("failing_task", "failing")
@@ -689,9 +675,7 @@ class TestIntegratedErrorHandling:
 
         # Create various types of checkers
         success_checker = MockChecker(sample_config, "success", "success")
-        failing_checker = MockChecker(
-            sample_config, "failing", "failing", status=CheckStatus.FAILURE
-        )
+        failing_checker = MockChecker(sample_config, "failing", "failing", status=CheckStatus.FAILURE)
 
         # Flaky checker that succeeds on second attempt
         flaky_checker = MockChecker(sample_config, "flaky", "flaky")

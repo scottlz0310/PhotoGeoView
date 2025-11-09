@@ -36,20 +36,17 @@ class PerformanceMetrics:
             "theme_switch_times": self.theme_switch_times,
             "breadcrumb_render_times": self.breadcrumb_render_times,
             "cache_hit_rates": self.cache_hit_rates,
-            "memory_usage": [
-                (ts.isoformat(), usage) for ts, usage in self.memory_usage
-            ],
+            "memory_usage": [(ts.isoformat(), usage) for ts, usage in self.memory_usage],
             "error_rates": self.error_rates,
             "operation_counts": self.operation_counts,
             "timestamp": datetime.now().isoformat(),
         }
 
+
 class PerformanceDashboard:
     """Performance monitoring dashboard for theme and navigation operations"""
 
-    def __init__(
-        self, performance_optimizer: PerformanceOptimizer, logger_system: LoggerSystem
-    ):
+    def __init__(self, performance_optimizer: PerformanceOptimizer, logger_system: LoggerSystem):
         self.performance_optimizer = performance_optimizer
         self.logger = logger_system.get_logger(__name__)
 
@@ -136,16 +133,12 @@ class PerformanceDashboard:
                 if "theme_switch" in optimizer_metrics:
                     theme_stats = optimizer_metrics["theme_switch"]
                     if theme_stats.get("count", 0) > 0:
-                        self.current_metrics.theme_switch_times.append(
-                            theme_stats["recent_avg"]
-                        )
+                        self.current_metrics.theme_switch_times.append(theme_stats["recent_avg"])
 
                 if "breadcrumb_render" in optimizer_metrics:
                     breadcrumb_stats = optimizer_metrics["breadcrumb_render"]
                     if breadcrumb_stats.get("count", 0) > 0:
-                        self.current_metrics.breadcrumb_render_times.append(
-                            breadcrumb_stats["recent_avg"]
-                        )
+                        self.current_metrics.breadcrumb_render_times.append(breadcrumb_stats["recent_avg"])
 
                 # Calculate cache hit rates
                 self._calculate_cache_hit_rates()
@@ -159,13 +152,11 @@ class PerformanceDashboard:
                 # Limit metrics history
                 max_points = 100
                 if len(self.current_metrics.theme_switch_times) > max_points:
-                    self.current_metrics.theme_switch_times = (
-                        self.current_metrics.theme_switch_times[-max_points:]
-                    )
+                    self.current_metrics.theme_switch_times = self.current_metrics.theme_switch_times[-max_points:]
                 if len(self.current_metrics.breadcrumb_render_times) > max_points:
-                    self.current_metrics.breadcrumb_render_times = (
-                        self.current_metrics.breadcrumb_render_times[-max_points:]
-                    )
+                    self.current_metrics.breadcrumb_render_times = self.current_metrics.breadcrumb_render_times[
+                        -max_points:
+                    ]
 
         except Exception as e:
             self.logger.error(f"Failed to collect metrics: {e}")
@@ -183,13 +174,9 @@ class PerformanceDashboard:
             # Calculate hit rates (simplified - would need actual hit/miss counters)
             for cache_name, size in cache_stats.items():
                 # Estimate hit rate based on cache utilization
-                max_size = getattr(
-                    self.performance_optimizer, cache_name.replace("_cache", "_cache")
-                ).max_size
+                max_size = getattr(self.performance_optimizer, cache_name.replace("_cache", "_cache")).max_size
                 utilization = size / max_size if max_size > 0 else 0
-                estimated_hit_rate = min(
-                    0.95, 0.5 + (utilization * 0.4)
-                )  # Rough estimation
+                estimated_hit_rate = min(0.95, 0.5 + (utilization * 0.4))  # Rough estimation
                 self.current_metrics.cache_hit_rates[cache_name] = estimated_hit_rate
 
         except Exception as e:
@@ -209,9 +196,7 @@ class PerformanceDashboard:
 
             # Limit memory usage history
             if len(self.current_metrics.memory_usage) > 100:
-                self.current_metrics.memory_usage = self.current_metrics.memory_usage[
-                    -100:
-                ]
+                self.current_metrics.memory_usage = self.current_metrics.memory_usage[-100:]
 
         except ImportError:
             # psutil not available, skip memory monitoring
@@ -226,28 +211,24 @@ class PerformanceDashboard:
 
             # Check theme switch times
             if self.current_metrics.theme_switch_times:
-                avg_theme_time = sum(
-                    self.current_metrics.theme_switch_times[-10:]
-                ) / min(10, len(self.current_metrics.theme_switch_times))
+                avg_theme_time = sum(self.current_metrics.theme_switch_times[-10:]) / min(
+                    10, len(self.current_metrics.theme_switch_times)
+                )
                 if avg_theme_time > self.thresholds["theme_switch_max_time"]:
                     alerts.append(f"Theme switch time too high: {avg_theme_time:.3f}s")
 
             # Check breadcrumb render times
             if self.current_metrics.breadcrumb_render_times:
-                avg_breadcrumb_time = sum(
-                    self.current_metrics.breadcrumb_render_times[-10:]
-                ) / min(10, len(self.current_metrics.breadcrumb_render_times))
+                avg_breadcrumb_time = sum(self.current_metrics.breadcrumb_render_times[-10:]) / min(
+                    10, len(self.current_metrics.breadcrumb_render_times)
+                )
                 if avg_breadcrumb_time > self.thresholds["breadcrumb_render_max_time"]:
-                    alerts.append(
-                        f"Breadcrumb render time too high: {avg_breadcrumb_time:.3f}s"
-                    )
+                    alerts.append(f"Breadcrumb render time too high: {avg_breadcrumb_time:.3f}s")
 
             # Check cache hit rates
             for cache_name, hit_rate in self.current_metrics.cache_hit_rates.items():
                 if hit_rate < self.thresholds["cache_hit_rate_min"]:
-                    alerts.append(
-                        f"Low cache hit rate for {cache_name}: {hit_rate:.2%}"
-                    )
+                    alerts.append(f"Low cache hit rate for {cache_name}: {hit_rate:.2%}")
 
             # Check memory usage
             if self.current_metrics.memory_usage:
@@ -283,9 +264,7 @@ class PerformanceDashboard:
             with self._metrics_lock:
                 # Keep only recent metrics history
                 if len(self.metrics_history) > self.metrics_history_limit:
-                    self.metrics_history = self.metrics_history[
-                        -self.metrics_history_limit :
-                    ]
+                    self.metrics_history = self.metrics_history[-self.metrics_history_limit :]
 
                 # Archive current metrics periodically
                 if (
@@ -294,20 +273,12 @@ class PerformanceDashboard:
                 ):
                     # Create snapshot of current metrics
                     snapshot = PerformanceMetrics()
-                    snapshot.theme_switch_times = (
-                        self.current_metrics.theme_switch_times[-10:]
-                    )  # Keep recent data
-                    snapshot.breadcrumb_render_times = (
-                        self.current_metrics.breadcrumb_render_times[-10:]
-                    )
-                    snapshot.cache_hit_rates = (
-                        self.current_metrics.cache_hit_rates.copy()
-                    )
+                    snapshot.theme_switch_times = self.current_metrics.theme_switch_times[-10:]  # Keep recent data
+                    snapshot.breadcrumb_render_times = self.current_metrics.breadcrumb_render_times[-10:]
+                    snapshot.cache_hit_rates = self.current_metrics.cache_hit_rates.copy()
                     snapshot.memory_usage = self.current_metrics.memory_usage[-10:]
                     snapshot.error_rates = self.current_metrics.error_rates.copy()
-                    snapshot.operation_counts = (
-                        self.current_metrics.operation_counts.copy()
-                    )
+                    snapshot.operation_counts = self.current_metrics.operation_counts.copy()
 
                     self.metrics_history.append(snapshot)
 
@@ -327,11 +298,8 @@ class PerformanceDashboard:
             with self._metrics_lock:
                 summary = {
                     "monitoring_active": self.is_monitoring,
-                    "monitoring_duration": time.time()
-                    - getattr(self, "_start_time", time.time()),
-                    "total_operations": sum(
-                        self.current_metrics.operation_counts.values()
-                    ),
+                    "monitoring_duration": time.time() - getattr(self, "_start_time", time.time()),
+                    "total_operations": sum(self.current_metrics.operation_counts.values()),
                     "performance_summary": {},
                 }
 
@@ -354,20 +322,15 @@ class PerformanceDashboard:
                         "avg_time": sum(breadcrumb_times) / len(breadcrumb_times),
                         "min_time": min(breadcrumb_times),
                         "max_time": max(breadcrumb_times),
-                        "recent_avg": sum(breadcrumb_times[-5:])
-                        / min(5, len(breadcrumb_times)),
+                        "recent_avg": sum(breadcrumb_times[-5:]) / min(5, len(breadcrumb_times)),
                     }
 
                 # Cache performance summary
-                summary["performance_summary"]["cache_performance"] = (
-                    self.current_metrics.cache_hit_rates
-                )
+                summary["performance_summary"]["cache_performance"] = self.current_metrics.cache_hit_rates
 
                 # Memory usage summary
                 if self.current_metrics.memory_usage:
-                    memory_values = [
-                        usage for _, usage in self.current_metrics.memory_usage
-                    ]
+                    memory_values = [usage for _, usage in self.current_metrics.memory_usage]
                     summary["performance_summary"]["memory_usage"] = {
                         "current_mb": memory_values[-1] if memory_values else 0,
                         "avg_mb": sum(memory_values) / len(memory_values),
@@ -387,9 +350,7 @@ class PerformanceDashboard:
                 export_data = {
                     "export_timestamp": datetime.now().isoformat(),
                     "current_metrics": self.current_metrics.to_dict(),
-                    "metrics_history": [
-                        metrics.to_dict() for metrics in self.metrics_history
-                    ],
+                    "metrics_history": [metrics.to_dict() for metrics in self.metrics_history],
                     "thresholds": self.thresholds,
                     "summary": self.get_metrics_summary(),
                 }

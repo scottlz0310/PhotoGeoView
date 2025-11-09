@@ -77,9 +77,7 @@ class CIIntegrator:
                         "status": "WARNING",
                         "message": "CI simulator not found in pyproject.toml scripts",
                     }
-                    results["recommendations"].append(
-                        "Add CI simulator to pyproject.toml scripts"
-                    )
+                    results["recommendations"].append("Add CI simulator to pyproject.toml scripts")
 
             except Exception as e:
                 results["checks"]["pyproject_integration"] = {
@@ -110,9 +108,7 @@ class CIIntegrator:
                         "status": "WARNING",
                         "message": "CI simulator not found in Makefile",
                     }
-                    results["recommendations"].append(
-                        "Add CI simulator targets to Makefile"
-                    )
+                    results["recommendations"].append("Add CI simulator targets to Makefile")
 
             except Exception as e:
                 results["checks"]["makefile_integration"] = {
@@ -198,9 +194,7 @@ class CIIntegrator:
                 results["overall_status"] = "FAILURE"
 
         # Set overall status based on failures
-        failure_count = sum(
-            1 for check in results["checks"].values() if check["status"] == "FAILURE"
-        )
+        failure_count = sum(1 for check in results["checks"].values() if check["status"] == "FAILURE")
         if failure_count > 0:
             results["overall_status"] = "FAILURE"
         elif any(check["status"] == "WARNING" for check in results["checks"].values()):
@@ -356,9 +350,7 @@ class CIIntegrator:
             f.write("```bash\n")
             f.write("make ci-quick\n")
             f.write("# or\n")
-            f.write(
-                "python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast\n"
-            )
+            f.write("python -m tools.ci.simulator run --checks code_quality test_runner --fail-fast\n")
             f.write("```\n\n")
 
             f.write("### Build with CI\n")
@@ -385,9 +377,7 @@ class CIIntegrator:
         Returns:
             True if update was successful
         """
-        workflow_path = (
-            self.project_root / ".github" / "workflows" / "ai-integration-ci.yml"
-        )
+        workflow_path = self.project_root / ".github" / "workflows" / "ai-integration-ci.yml"
 
         if not workflow_path.exists():
             print("GitHub Actions workflow not found")

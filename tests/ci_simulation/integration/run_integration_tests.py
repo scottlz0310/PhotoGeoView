@@ -32,17 +32,13 @@ def check_dependencies():
             missing_tools.append(tool)
 
     if missing_tools:
-        print(
-            f"⚠️  Warning: Missing tools for full integration testing: {', '.join(missing_tools)}"
-        )
+        print(f"⚠️  Warning: Missing tools for full integration testing: {', '.join(missing_tools)}")
         print("Some integration tests may be skipped.")
 
     return len(missing_tools) == 0
 
 
-def run_integration_tests(
-    test_pattern=None, verbose=False, coverage=False, parallel=False, include_slow=False
-):
+def run_integration_tests(test_pattern=None, verbose=False, coverage=False, parallel=False, include_slow=False):
     """
     Run integration tests with specified options.
 
@@ -200,21 +196,13 @@ Examples:
 
     parser.add_argument("-k", "--pattern", help="Pattern to match test files/functions")
 
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose output"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 
-    parser.add_argument(
-        "-c", "--coverage", action="store_true", help="Enable coverage reporting"
-    )
+    parser.add_argument("-c", "--coverage", action="store_true", help="Enable coverage reporting")
 
-    parser.add_argument(
-        "-p", "--parallel", action="store_true", help="Run tests in parallel"
-    )
+    parser.add_argument("-p", "--parallel", action="store_true", help="Run tests in parallel")
 
-    parser.add_argument(
-        "--include-slow", action="store_true", help="Include slow integration tests"
-    )
+    parser.add_argument("--include-slow", action="store_true", help="Include slow integration tests")
 
     parser.add_argument(
         "--suite",
@@ -233,13 +221,9 @@ Examples:
         help="Run specific integration test suite",
     )
 
-    parser.add_argument(
-        "--check-deps", action="store_true", help="Check dependencies and exit"
-    )
+    parser.add_argument("--check-deps", action="store_true", help="Check dependencies and exit")
 
-    parser.add_argument(
-        "--setup-only", action="store_true", help="Set up test environment and exit"
-    )
+    parser.add_argument("--setup-only", action="store_true", help="Set up test environment and exit")
 
     args = parser.parse_args()
 

@@ -28,6 +28,7 @@ class QtThemeManagerProtocol(Protocol):
     def get_available_themes(self) -> dict[str, Any]: ...
     def set_theme(self, theme_name: str) -> bool: ...
 
+
 class IntegratedThemeManager(QObject):
     """
     Integrated theme manager combining CursorBLD's theme system with Kiro enhancements
@@ -153,20 +154,16 @@ class IntegratedThemeManager(QObject):
                 else:
                     self.qt_themes_available = ["default", "dark", "light"]
                     self.logger_system.warning(
-                        "Qt-Theme-Manager initialized but "
-                        "get_available_themes method not found"
+                        "Qt-Theme-Manager initialized but " "get_available_themes method not found"
                     )
 
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
                     "qt_theme_manager_init",
-                    f"Qt-Theme-Manager initialized with "
-                    f"{len(self.qt_themes_available)} themes",
+                    f"Qt-Theme-Manager initialized with " f"{len(self.qt_themes_available)} themes",
                 )
             except ImportError:
-                self.logger_system.warning(
-                    "Qt-Theme-Manager not available, using fallback themes"
-                )
+                self.logger_system.warning("Qt-Theme-Manager not available, using fallback themes")
                 self.qt_theme_manager = None
                 self.qt_themes_available = ["default", "dark", "light"]
 
@@ -233,28 +230,18 @@ class IntegratedThemeManager(QObject):
                 },
             ]
 
-            self.logger_system.info(
-                f"Processing {len(builtin_themes)} built-in themes..."
-            )
+            self.logger_system.info(f"Processing {len(builtin_themes)} built-in themes...")
 
             for theme_info in builtin_themes:
                 try:
                     theme_config = self._create_builtin_theme_config(theme_info)
                     self.themes[theme_config.name] = theme_config
-                    self.logger_system.info(
-                        f"Created theme: {theme_config.name} ({theme_config.display_name})"
-                    )
+                    self.logger_system.info(f"Created theme: {theme_config.name} ({theme_config.display_name})")
                 except Exception as e:
-                    self.logger_system.error(
-                        f"Failed to create theme {theme_info['name']}: {e}"
-                    )
+                    self.logger_system.error(f"Failed to create theme {theme_info['name']}: {e}")
 
-            self.logger_system.info(
-                f"Successfully loaded {len(self.themes)} built-in themes"
-            )
-            self.logger_system.info(
-                f"Available theme names: {list(self.themes.keys())}"
-            )
+            self.logger_system.info(f"Successfully loaded {len(self.themes)} built-in themes")
+            self.logger_system.info(f"Available theme names: {list(self.themes.keys())}")
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -270,9 +257,7 @@ class IntegratedThemeManager(QObject):
                 AIComponent.CURSOR,
             )
 
-    def _create_builtin_theme_config(
-        self, theme_info: dict[str, Any]
-    ) -> ThemeConfiguration:
+    def _create_builtin_theme_config(self, theme_info: dict[str, Any]) -> ThemeConfiguration:
         """Create theme configuration from theme info"""
         base_colors = self._get_base_colors(theme_info["base"])
 
@@ -374,9 +359,7 @@ class IntegratedThemeManager(QObject):
         """Load custom theme configurations"""
 
         try:
-            self.logger_system.info(
-                f"Loading custom themes from: {self.custom_theme_dir}"
-            )
+            self.logger_system.info(f"Loading custom themes from: {self.custom_theme_dir}")
 
             for theme_file in self.custom_theme_dir.glob("*.json"):
                 try:
@@ -389,13 +372,9 @@ class IntegratedThemeManager(QObject):
 
                     # テーマファイルが配列形式の場合の処理
                     if isinstance(theme_data, list):
-                        self.logger_system.info(
-                            f"Processing {len(theme_data)} themes from array"
-                        )
+                        self.logger_system.info(f"Processing {len(theme_data)} themes from array")
                         for theme_item in theme_data:
-                            if isinstance(
-                                theme_item, dict
-                            ) and self._validate_theme_config(theme_item):
+                            if isinstance(theme_item, dict) and self._validate_theme_config(theme_item):
                                 theme_config = ThemeConfiguration(**theme_item)
                                 self.themes[theme_config.name] = theme_config
 
@@ -418,9 +397,7 @@ class IntegratedThemeManager(QObject):
                             )
 
                 except Exception as e:
-                    self.logger_system.warning(
-                        f"Failed to load custom theme {theme_file}: {e}"
-                    )
+                    self.logger_system.warning(f"Failed to load custom theme {theme_file}: {e}")
 
             self.logger_system.info(f"Total themes loaded: {len(self.themes)}")
             self.logger_system.info(f"Available themes: {list(self.themes.keys())}")
@@ -441,23 +418,13 @@ class IntegratedThemeManager(QObject):
     def _load_accessibility_settings(self):
         """Load accessibility settings"""
         try:
-            self.accessibility_enabled = self.config_manager.get_setting(
-                "ui.accessibility_enabled", True
-            )
-            self.high_contrast_mode = self.config_manager.get_setting(
-                "ui.high_contrast_mode", False
-            )
-            self.large_fonts_mode = self.config_manager.get_setting(
-                "ui.large_fonts_mode", False
-            )
+            self.accessibility_enabled = self.config_manager.get_setting("ui.accessibility_enabled", True)
+            self.high_contrast_mode = self.config_manager.get_setting("ui.high_contrast_mode", False)
+            self.large_fonts_mode = self.config_manager.get_setting("ui.large_fonts_mode", False)
 
             # Performance settings
-            self.animation_enabled = self.config_manager.get_setting(
-                "ui.animation_enabled", True
-            )
-            self.transparency_enabled = self.config_manager.get_setting(
-                "ui.transparency_enabled", True
-            )
+            self.animation_enabled = self.config_manager.get_setting("ui.animation_enabled", True)
+            self.transparency_enabled = self.config_manager.get_setting("ui.transparency_enabled", True)
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -472,9 +439,7 @@ class IntegratedThemeManager(QObject):
     def get_available_themes(self) -> list[str]:
         """Get list of available theme names"""
         themes_list = list(self.themes.keys())
-        self.logger_system.info(
-            f"get_available_themes called, returning {len(themes_list)} themes: {themes_list}"
-        )
+        self.logger_system.info(f"get_available_themes called, returning {len(themes_list)} themes: {themes_list}")
         return themes_list
 
     def debug_theme_status(self):
@@ -486,15 +451,11 @@ class IntegratedThemeManager(QObject):
             self.logger_system.info(f"Available themes: {list(self.themes.keys())}")
 
             for theme_name, theme_config in self.themes.items():
-                self.logger_system.info(
-                    f"  - {theme_name}: {theme_config.display_name}"
-                )
+                self.logger_system.info(f"  - {theme_name}: {theme_config.display_name}")
                 if hasattr(theme_config, "color_scheme"):
                     self.logger_system.info(f"    Colors: {theme_config.color_scheme}")
                 if hasattr(theme_config, "style_sheet"):
-                    self.logger_system.info(
-                        f"    Style sheet length: {len(theme_config.style_sheet)}"
-                    )
+                    self.logger_system.info(f"    Style sheet length: {len(theme_config.style_sheet)}")
 
             self.logger_system.info("=== End Theme Manager Debug Status ===")
 
@@ -515,35 +476,27 @@ class IntegratedThemeManager(QObject):
                 return False
 
             theme = self.themes[theme_name]
-            self.logger_system.info(
-                f"Found theme configuration: {theme.name} - {theme.display_name}"
-            )
+            self.logger_system.info(f"Found theme configuration: {theme.name} - {theme.display_name}")
 
             # Apply Qt theme (CursorBLD integration)
             success = self._apply_qt_theme(theme)
 
             if success:
-                self.logger_system.info(
-                    "Qt theme applied successfully, applying additional features..."
-                )
+                self.logger_system.info("Qt theme applied successfully, applying additional features...")
 
                 # Apply accessibility features (Kiro enhancement)
                 try:
                     self._apply_accessibility_features(theme)
                     self.logger_system.info("Accessibility features applied")
                 except Exception as e:
-                    self.logger_system.warning(
-                        f"Failed to apply accessibility features: {e}"
-                    )
+                    self.logger_system.warning(f"Failed to apply accessibility features: {e}")
 
                 # Apply performance settings (Kiro enhancement)
                 try:
                     self._apply_performance_settings(theme)
                     self.logger_system.info("Performance settings applied")
                 except Exception as e:
-                    self.logger_system.warning(
-                        f"Failed to apply performance settings: {e}"
-                    )
+                    self.logger_system.warning(f"Failed to apply performance settings: {e}")
 
                 # Update current theme
                 old_theme = self.current_theme
@@ -554,9 +507,7 @@ class IntegratedThemeManager(QObject):
                     self.config_manager.set_setting("ui.theme", theme_name)
                     self.logger_system.info("Theme configuration saved")
                 except Exception as e:
-                    self.logger_system.warning(
-                        f"Failed to save theme configuration: {e}"
-                    )
+                    self.logger_system.warning(f"Failed to save theme configuration: {e}")
 
                 # Update state
                 try:
@@ -581,9 +532,7 @@ class IntegratedThemeManager(QObject):
                     f"Theme applied successfully: {theme_name}",
                 )
 
-                self.logger_system.info(
-                    f"Theme application completed successfully: {theme_name}"
-                )
+                self.logger_system.info(f"Theme application completed successfully: {theme_name}")
                 return True
             else:
                 self.logger_system.error(f"Failed to apply Qt theme: {theme_name}")
@@ -736,36 +685,22 @@ class IntegratedThemeManager(QObject):
             success = True
 
             # 1. Qt-Theme-Managerのテーマを適用
-            if (
-                self.qt_theme_manager
-                and hasattr(theme, "qt_theme_name")
-                and theme.qt_theme_name
-            ):
+            if self.qt_theme_manager and hasattr(theme, "qt_theme_name") and theme.qt_theme_name:
                 if hasattr(self.qt_theme_manager, "set_theme"):
                     qt_success = self.qt_theme_manager.set_theme(theme.qt_theme_name)
                     if qt_success:
-                        self.logger_system.info(
-                            f"Qt-Theme-Manager theme applied: {theme.qt_theme_name}"
-                        )
+                        self.logger_system.info(f"Qt-Theme-Manager theme applied: {theme.qt_theme_name}")
                     else:
-                        self.logger_system.warning(
-                            f"Failed to apply Qt theme: {theme.qt_theme_name}"
-                        )
+                        self.logger_system.warning(f"Failed to apply Qt theme: {theme.qt_theme_name}")
                     success = qt_success and success
                 else:
-                    self.logger_system.warning(
-                        "Qt-Theme-Manager set_theme method not found"
-                    )
+                    self.logger_system.warning("Qt-Theme-Manager set_theme method not found")
             else:
-                self.logger_system.info(
-                    "Qt-Theme-Manager not available or no qt_theme_name specified"
-                )
+                self.logger_system.info("Qt-Theme-Manager not available or no qt_theme_name specified")
 
             # 2. カスタムスタイルシートを適用
             if hasattr(theme, "style_sheet") and theme.style_sheet:
-                self.logger_system.info(
-                    f"Applying custom stylesheet: {len(theme.style_sheet)} characters"
-                )
+                self.logger_system.info(f"Applying custom stylesheet: {len(theme.style_sheet)} characters")
                 style_success = self._apply_style_sheet(theme.style_sheet)
                 success = style_success and success
             else:
@@ -773,19 +708,13 @@ class IntegratedThemeManager(QObject):
 
             # 3. カラースキームを適用(最も重要)
             if hasattr(theme, "color_scheme") and theme.color_scheme:
-                self.logger_system.info(
-                    f"Applying color scheme: {list(theme.color_scheme.keys())}"
-                )
+                self.logger_system.info(f"Applying color scheme: {list(theme.color_scheme.keys())}")
                 color_success = self._apply_color_scheme(theme.color_scheme)
                 success = color_success and success
             else:
-                self.logger_system.warning(
-                    "No color scheme provided, generating from theme name"
-                )
+                self.logger_system.warning("No color scheme provided, generating from theme name")
                 # テーマ名からカラースキームを生成
-                generated_scheme = self._generate_color_scheme_from_theme_name(
-                    theme.name
-                )
+                generated_scheme = self._generate_color_scheme_from_theme_name(theme.name)
                 color_success = self._apply_color_scheme(generated_scheme)
                 success = color_success and success
 
@@ -807,9 +736,7 @@ class IntegratedThemeManager(QObject):
         """テーマ名からカラースキームを生成"""
         try:
             # ダークテーマの判定
-            is_dark = any(
-                keyword in theme_name.lower() for keyword in ["dark", "night", "black"]
-            )
+            is_dark = any(keyword in theme_name.lower() for keyword in ["dark", "night", "black"])
 
             if is_dark:
                 return {
@@ -858,24 +785,17 @@ class IntegratedThemeManager(QObject):
             # メインウィンドウにスタイルシートを適用
             if self.main_window:
                 self.main_window.setStyleSheet(style_sheet)
-                self.logger_system.info(
-                    f"Style sheet applied to main window: {len(style_sheet)} characters"
-                )
+                self.logger_system.info(f"Style sheet applied to main window: {len(style_sheet)} characters")
                 return True
             else:
                 # メインウィンドウが設定されていない場合、QApplicationに適用
                 app = QApplication.instance()
                 if app and hasattr(app, "setStyleSheet"):
                     app.setStyleSheet(style_sheet)
-                    self.logger_system.info(
-                        f"Style sheet applied to QApplication: "
-                        f"{len(style_sheet)} characters"
-                    )
+                    self.logger_system.info(f"Style sheet applied to QApplication: " f"{len(style_sheet)} characters")
                     return True
                 else:
-                    self.logger_system.warning(
-                        "No QApplication instance found for style sheet application"
-                    )
+                    self.logger_system.warning("No QApplication instance found for style sheet application")
                     return False
 
         except Exception as e:
@@ -886,9 +806,7 @@ class IntegratedThemeManager(QObject):
         """カラースキームをUIコンポーネントに適用(改善版)"""
         try:
             if not color_scheme:
-                self.logger_system.warning(
-                    "Color scheme is empty, generating default styles"
-                )
+                self.logger_system.warning("Color scheme is empty, generating default styles")
                 # デフォルトのカラースキームを使用
                 color_scheme = self._get_default_color_scheme()
 
@@ -923,9 +841,7 @@ class IntegratedThemeManager(QObject):
             # 2. ボタンスタイル
             if "primary" in color_scheme:
                 primary_color = color_scheme["primary"]
-                hover_color = color_scheme.get(
-                    "hover", self._darken_color(primary_color)
-                )
+                hover_color = color_scheme.get("hover", self._darken_color(primary_color))
                 button_text_color = color_scheme.get("button_text", "#ffffff")
 
                 button_style = f"""
@@ -987,9 +903,7 @@ class IntegratedThemeManager(QObject):
             if "background" in color_scheme and "foreground" in color_scheme:
                 bg_color = color_scheme["background"]
                 fg_color = color_scheme["foreground"]
-                selected_color = color_scheme.get(
-                    "selected", color_scheme.get("primary", "#0078d4")
-                )
+                selected_color = color_scheme.get("selected", color_scheme.get("primary", "#0078d4"))
 
                 menu_style = f"""
                 QMenuBar {{
@@ -1063,14 +977,10 @@ class IntegratedThemeManager(QObject):
             # 生成されたスタイルシートを結合して適用
             if stylesheet_parts:
                 combined_stylesheet = "\n".join(stylesheet_parts)
-                self.logger_system.info(
-                    f"Generated stylesheet length: {len(combined_stylesheet)} characters"
-                )
+                self.logger_system.info(f"Generated stylesheet length: {len(combined_stylesheet)} characters")
 
                 # デバッグ用:生成されたスタイルシートをログに出力
-                self.logger_system.debug(
-                    f"Generated stylesheet:\n{combined_stylesheet[:500]}..."
-                )
+                self.logger_system.debug(f"Generated stylesheet:\n{combined_stylesheet[:500]}...")
 
                 success = self._apply_style_sheet(combined_stylesheet)
                 if success:
@@ -1079,9 +989,7 @@ class IntegratedThemeManager(QObject):
                     self.logger_system.error("Failed to apply generated stylesheet")
                 return success
             else:
-                self.logger_system.warning(
-                    "No stylesheet parts generated from color scheme"
-                )
+                self.logger_system.warning("No stylesheet parts generated from color scheme")
                 return False
 
         except Exception as e:
@@ -1153,12 +1061,8 @@ class IntegratedThemeManager(QObject):
             self.animation_enabled = settings.get("animation_enabled", True)
             self.transparency_enabled = settings.get("transparency_enabled", True)
 
-            self.config_manager.set_setting(
-                "ui.animation_enabled", self.animation_enabled
-            )
-            self.config_manager.set_setting(
-                "ui.transparency_enabled", self.transparency_enabled
-            )
+            self.config_manager.set_setting("ui.animation_enabled", self.animation_enabled)
+            self.config_manager.set_setting("ui.transparency_enabled", self.transparency_enabled)
 
         except Exception as e:
             self.logger_system.warning(f"Failed to apply performance settings: {e}")

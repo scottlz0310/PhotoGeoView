@@ -55,15 +55,11 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         """基本的な非同期画像検出のテスト"""
         # モックの設定
         self.mock_image_processor.validate_image.return_value = True
-        self.mock_image_processor.load_image.return_value = (
-            Mock()
-        )  # 有効な画像オブジェクト
+        self.mock_image_processor.load_image.return_value = Mock()  # 有効な画像オブジェクト
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(
-                self.temp_dir
-            ):
+            async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
                 discovered_files.append(image_path)
 
             # 結果の検証
@@ -116,9 +112,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(
-                invalid_folder
-            ):
+            async for image_path in self.file_discovery.discover_images_async(invalid_folder):
                 discovered_files.append(image_path)
 
             # 無効なフォルダでは何も発見されない
@@ -133,9 +127,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(
-                self.temp_dir
-            ):
+            async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
                 discovered_files.append(image_path)
 
             # バリデーション失敗により何も発見されない
@@ -156,9 +148,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
 
         async def run_test():
             discovered_files = []
-            async for image_path in self.file_discovery.discover_images_async(
-                self.temp_dir
-            ):
+            async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
                 discovered_files.append(image_path)
 
             # 偶数インデックスのファイルのみ発見される（5個）
@@ -237,9 +227,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
         test_file = self.test_files[0]
 
         # バリデーション時に例外が発生する設定
-        self.mock_image_processor.validate_image.side_effect = Exception(
-            "Test exception"
-        )
+        self.mock_image_processor.validate_image.side_effect = Exception("Test exception")
 
         async def run_test():
             is_valid = await self.file_discovery._validate_image_file_async(test_file)
@@ -263,9 +251,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
             discovered_files = []
             batch_size = 3
 
-            async for image_path in self.file_discovery.discover_images_async(
-                self.temp_dir, batch_size=batch_size
-            ):
+            async for image_path in self.file_discovery.discover_images_async(self.temp_dir, batch_size=batch_size):
                 discovered_files.append(image_path)
 
             # バッチサイズに関係なく全ファイルが発見される
@@ -290,9 +276,7 @@ class TestAsyncFileDiscovery(unittest.TestCase):
             try:
                 # タスクを作成
                 async def discovery_task():
-                    async for image_path in self.file_discovery.discover_images_async(
-                        self.temp_dir
-                    ):
+                    async for image_path in self.file_discovery.discover_images_async(self.temp_dir):
                         discovered_files.append(image_path)
 
                 # 短時間でタイムアウト

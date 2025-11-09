@@ -77,27 +77,17 @@ def run_tests(test_pattern=None, verbose=False, coverage=False, parallel=False):
 def main():
     """Main entry point for the test runner."""
 
-    parser = argparse.ArgumentParser(
-        description="Run unit tests for CI simulation tool"
-    )
+    parser = argparse.ArgumentParser(description="Run unit tests for CI simulation tool")
 
     parser.add_argument("-k", "--pattern", help="Pattern to match test files/functions")
 
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose output"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 
-    parser.add_argument(
-        "-c", "--coverage", action="store_true", help="Enable coverage reporting"
-    )
+    parser.add_argument("-c", "--coverage", action="store_true", help="Enable coverage reporting")
 
-    parser.add_argument(
-        "-p", "--parallel", action="store_true", help="Run tests in parallel"
-    )
+    parser.add_argument("-p", "--parallel", action="store_true", help="Run tests in parallel")
 
-    parser.add_argument(
-        "--integration", action="store_true", help="Include integration tests"
-    )
+    parser.add_argument("--integration", action="store_true", help="Include integration tests")
 
     parser.add_argument(
         "--component",

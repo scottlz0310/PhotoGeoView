@@ -67,9 +67,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Verify main window is created
             self.assertIsNotNone(main_window)
@@ -94,9 +92,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test theme manager widget exists
             self.assertIsNotNone(main_window.theme_manager_widget)
@@ -119,9 +115,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test breadcrumb bar exists
             self.assertIsNotNone(main_window.breadcrumb_bar)
@@ -150,9 +144,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test that folder navigator and breadcrumb bar are connected
             self.assertIsNotNone(main_window.folder_navigator)
@@ -178,9 +170,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test component registration method exists
             self.assertTrue(hasattr(main_window, "_register_theme_aware_components"))
@@ -201,15 +191,11 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test that theme manager widget has shortcuts setup
             if main_window.theme_manager_widget:
-                shortcuts_info = (
-                    main_window.theme_manager_widget.get_keyboard_shortcuts_info()
-                )
+                shortcuts_info = main_window.theme_manager_widget.get_keyboard_shortcuts_info()
                 self.assertIsInstance(shortcuts_info, dict)
                 self.assertIn("Ctrl+T", shortcuts_info)
                 self.assertIn("Ctrl+Shift+T", shortcuts_info)
@@ -224,9 +210,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test theme error handling
             main_window._on_theme_error("test_theme", "Test error message")
@@ -247,9 +231,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test that left panel splitter exists
             self.assertIsNotNone(main_window.left_panel_splitter)
@@ -271,9 +253,7 @@ class TestMainWindowIntegration(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test state restoration method
             main_window._restore_left_panel_splitter_state()
@@ -326,9 +306,7 @@ class TestMainWindowComponentCommunication(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Mock theme-aware components
             mock_component = Mock()
@@ -352,9 +330,7 @@ class TestMainWindowComponentCommunication(unittest.TestCase):
             return_value=self.file_watcher_mock,
         ):
             # Create main window
-            main_window = IntegratedMainWindow(
-                self.config_manager, self.state_manager, self.logger_system
-            )
+            main_window = IntegratedMainWindow(self.config_manager, self.state_manager, self.logger_system)
 
             # Test navigation synchronization
             test_path = Path.home()

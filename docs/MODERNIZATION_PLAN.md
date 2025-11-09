@@ -1,6 +1,6 @@
 # PhotoGeoView モダン化計画
 
-**作成日**: 2025年11月3日  
+**作成日**: 2025年11月3日
 **現状分析と将来へのロードマップ**
 
 ---
@@ -176,7 +176,7 @@ photogeoview
 - `src/integration/models.py` (396行) - 完全モダン化
   - `Optional[X]` → `X | None`
   - `List[X]` → `list[X]`
-  - `Dict[K, V]` → `dict[K, V]`  
+  - `Dict[K, V]` → `dict[K, V]`
   - `Tuple[X, Y]` → `tuple[X, Y]`
   - Python 3.10+の組み込み型を活用
   - 関数戻り値型アノテーションを追加
@@ -188,7 +188,7 @@ photogeoview
   - Before: `x = dict.get(key); if x: ...`
   - After: `if x := dict.get(key): ...`
   - コード行数削減、可読性向上
-  
+
 - **f-string debugging** の導入:
   - `src/integration/logging_system.py` - 適用
   - Before: `f"Operation: {operation}"`
@@ -218,7 +218,7 @@ photogeoview
    - `uv sync --all-groups` 成功
    - pytest実行確認
 
-方針: 
+方針:
 - **上限指定なし**: uv.lockで再現性を保証、柔軟性を維持
 - **グループ分離**: 必要な依存関係のみインストール可能
 

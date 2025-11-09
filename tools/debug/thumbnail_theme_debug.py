@@ -56,13 +56,7 @@ def main() -> int:
     images = []
     for d in sample_dirs:
         if d.exists():
-            images.extend(
-                [
-                    p
-                    for p in d.iterdir()
-                    if p.suffix.lower() in {".jpg", ".jpeg", ".png"}
-                ]
-            )
+            images.extend([p for p in d.iterdir() if p.suffix.lower() in {".jpg", ".jpeg", ".png"}])
         if len(images) >= 8:
             break
     grid.set_image_list(images[:8])

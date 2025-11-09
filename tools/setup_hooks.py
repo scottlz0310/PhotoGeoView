@@ -232,9 +232,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="PhotoGeoView Git Hooks Setup")
-    parser.add_argument(
-        "action", choices=["setup", "remove", "status"], help="実行するアクション"
-    )
+    parser.add_argument("action", choices=["setup", "remove", "status"], help="実行するアクション")
 
     args = parser.parse_args()
 

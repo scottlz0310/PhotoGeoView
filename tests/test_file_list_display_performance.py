@@ -120,9 +120,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         import platform
 
         if platform.system() == "Windows":
-            self.skipTest(
-                "Windows環境ではファイルリスト表示パフォーマンステストをスキップ"
-            )
+            self.skipTest("Windows環境ではファイルリスト表示パフォーマンステストをスキップ")
 
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
@@ -136,9 +134,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         self.memory_monitor = MemoryMonitor()
 
         # コンポーネントの初期化
-        self.file_discovery_service = FileDiscoveryService(
-            logger_system=self.logger_system, enable_cache=True
-        )
+        self.file_discovery_service = FileDiscoveryService(logger_system=self.logger_system, enable_cache=True)
 
         # パフォーマンステスト結果の記録用
         self.performance_results = []
@@ -159,9 +155,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
-    def _create_large_image_dataset(
-        self, count: int, folder_name: str = "large_dataset"
-    ) -> Path:
+    def _create_large_image_dataset(self, count: int, folder_name: str = "large_dataset") -> Path:
         """大量の画像ファイルを作成"""
         dataset_dir = self.test_dir / folder_name
         dataset_dir.mkdir(exist_ok=True)
@@ -209,9 +203,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             print(f"\n--- {file_count}個のファイルでのテスト ---")
 
             # データセット作成
-            dataset_dir = self._create_large_image_dataset(
-                file_count, f"dataset_{file_count}"
-            )
+            dataset_dir = self._create_large_image_dataset(file_count, f"dataset_{file_count}")
 
             # メモリ監視開始
             self.memory_monitor.start_monitoring()
@@ -222,9 +214,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
             try:
                 # 画像検出実行
-                discovered_images = self.file_discovery_service.discover_images(
-                    dataset_dir
-                )
+                discovered_images = self.file_discovery_service.discover_images(dataset_dir)
 
                 # 測定終了
                 duration = time.time() - start_time
@@ -234,24 +224,15 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
                 memory_stats = self.memory_monitor.stop_monitoring()
 
                 # 結果の検証
-                self.assertIsInstance(
-                    discovered_images, list, "戻り値はリスト型である必要があります"
-                )
-                self.assertGreater(
-                    len(discovered_images), 0, "画像ファイルが検出される必要があります"
-                )
+                self.assertIsInstance(discovered_images, list, "戻り値はリスト型である必要があります")
+                self.assertGreater(len(discovered_images), 0, "画像ファイルが検出される必要があります")
 
                 # パフォーマンス指標の計算
-                files_per_second = (
-                    len(discovered_images) / duration if duration > 0 else 0
-                )
+                files_per_second = len(discovered_images) / duration if duration > 0 else 0
 
                 # キャッシュ統計の取得
                 cache_stats = {}
-                if (
-                    hasattr(self.file_discovery_service, "cache")
-                    and self.file_discovery_service.cache
-                ):
+                if hasattr(self.file_discovery_service, "cache") and self.file_discovery_service.cache:
                     cache_stats = self.file_discovery_service.cache.get_cache_stats()
 
                 # パフォーマンス結果の記録
@@ -288,17 +269,11 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
                 print(f"   検出画像数: {len(discovered_images)}個")
                 print(f"   処理時間: {duration:.3f}秒")
                 print(f"   処理速度: {files_per_second:.1f}ファイル/秒")
-                print(
-                    f"   平均メモリ使用量: {memory_stats.get('average_memory_mb', 0):.1f}MB"
-                )
-                print(
-                    f"   ピークメモリ使用量: {memory_stats.get('peak_memory_mb', 0):.1f}MB"
-                )
+                print(f"   平均メモリ使用量: {memory_stats.get('average_memory_mb', 0):.1f}MB")
+                print(f"   ピークメモリ使用量: {memory_stats.get('peak_memory_mb', 0):.1f}MB")
                 print(f"   CPU使用率: {cpu_usage:.1f}%")
                 if cache_stats:
-                    print(
-                        f"   キャッシュヒット率: {cache_stats.get('hit_rate', 0):.1%}"
-                    )
+                    print(f"   キャッシュヒット率: {cache_stats.get('hit_rate', 0):.1%}")
 
             except Exception as e:
                 # メモリ監視停止
@@ -317,9 +292,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
         # 大量ファイルでのメモリ使用量テスト
         file_count = 1500
-        dataset_dir = self._create_large_image_dataset(
-            file_count, "memory_test_dataset"
-        )
+        dataset_dir = self._create_large_image_dataset(file_count, "memory_test_dataset")
 
         # 初期メモリ使用量
         initial_memory = psutil.Process().memory_info().rss / 1024 / 1024
@@ -338,9 +311,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
                 iteration_start = time.time()
 
                 # 画像検出実行
-                discovered_images = self.file_discovery_service.discover_images(
-                    dataset_dir
-                )
+                discovered_images = self.file_discovery_service.discover_images(dataset_dir)
 
                 # 現在のメモリ使用量を記録
                 current_memory = psutil.Process().memory_info().rss / 1024 / 1024
@@ -429,9 +400,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             print(f"\n--- {scenario_name}データセット ({file_count}個) ---")
 
             # データセット作成
-            dataset_dir = self._create_large_image_dataset(
-                file_count, f"response_test_{file_count}"
-            )
+            dataset_dir = self._create_large_image_dataset(file_count, f"response_test_{file_count}")
 
             # 複数回測定して平均を取る
             measurements = []
@@ -439,24 +408,17 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
             for i in range(iterations):
                 # キャッシュクリア（公平な測定のため）
-                if (
-                    hasattr(self.file_discovery_service, "cache")
-                    and self.file_discovery_service.cache
-                ):
+                if hasattr(self.file_discovery_service, "cache") and self.file_discovery_service.cache:
                     self.file_discovery_service.cache.clear_cache()
 
                 # 応答時間測定
                 start_time = time.time()
-                discovered_images = self.file_discovery_service.discover_images(
-                    dataset_dir
-                )
+                discovered_images = self.file_discovery_service.discover_images(dataset_dir)
                 response_time = time.time() - start_time
 
                 measurements.append(response_time)
 
-                print(
-                    f"     測定 {i + 1}/{iterations}: {response_time:.3f}秒 ({len(discovered_images)}個検出)"
-                )
+                print(f"     測定 {i + 1}/{iterations}: {response_time:.3f}秒 ({len(discovered_images)}個検出)")
 
             # 統計計算
             avg_response_time = sum(measurements) / len(measurements)
@@ -473,13 +435,9 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             )
 
             # 応答時間の一貫性確認（標準偏差）
-            variance = sum((t - avg_response_time) ** 2 for t in measurements) / len(
-                measurements
-            )
+            variance = sum((t - avg_response_time) ** 2 for t in measurements) / len(measurements)
             std_deviation = variance**0.5
-            coefficient_of_variation = (
-                std_deviation / avg_response_time if avg_response_time > 0 else 0
-            )
+            coefficient_of_variation = std_deviation / avg_response_time if avg_response_time > 0 else 0
 
             # 変動係数が30%以内であることを確認（一貫性）
             max_acceptable_cv = 0.3
@@ -518,17 +476,14 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             memory_usage_mb=psutil.Process().memory_info().rss / 1024 / 1024,
             peak_memory_mb=0,  # この測定では追跡しない
             cpu_usage_percent=self._measure_cpu_usage(0.5),
-            files_per_second=sum(r["files_per_second"] for r in response_time_results)
-            / len(response_time_results),
+            files_per_second=sum(r["files_per_second"] for r in response_time_results) / len(response_time_results),
         )
 
         self.performance_results.append(overall_performance)
 
         print("\n✅ 応答時間測定テスト成功")
         print(f"   テストシナリオ数: {len(test_scenarios)}個")
-        print(
-            f"   総ファイル数: {sum(r['file_count'] for r in response_time_results)}個"
-        )
+        print(f"   総ファイル数: {sum(r['file_count'] for r in response_time_results)}個")
         print(f"   平均処理速度: {overall_performance.files_per_second:.1f}ファイル/秒")
 
     def test_04_concurrent_processing_performance(self):
@@ -546,9 +501,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         # 複数のデータセットを作成
         datasets = []
         for i in range(folder_count):
-            dataset_dir = self._create_large_image_dataset(
-                files_per_folder, f"concurrent_dataset_{i}"
-            )
+            dataset_dir = self._create_large_image_dataset(files_per_folder, f"concurrent_dataset_{i}")
             datasets.append(dataset_dir)
 
         # メモリ監視開始
@@ -572,10 +525,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             # ThreadPoolExecutorを使用した並行処理
             with ThreadPoolExecutor(max_workers=folder_count) as executor:
                 # 全フォルダの処理を並行実行
-                future_to_folder = {
-                    executor.submit(process_folder, folder): folder
-                    for folder in datasets
-                }
+                future_to_folder = {executor.submit(process_folder, folder): folder for folder in datasets}
 
                 concurrent_results = []
                 for future in as_completed(future_to_folder):
@@ -664,9 +614,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
         # キャッシュ無効での測定
         print("\n--- キャッシュ無効での測定 ---")
-        no_cache_service = FileDiscoveryService(
-            logger_system=self.logger_system, enable_cache=False
-        )
+        no_cache_service = FileDiscoveryService(logger_system=self.logger_system, enable_cache=False)
 
         no_cache_times = []
         for i in range(3):
@@ -674,26 +622,20 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             discovered_images_no_cache = no_cache_service.discover_images(dataset_dir)
             no_cache_duration = time.time() - start_time
             no_cache_times.append(no_cache_duration)
-            print(
-                f"   測定 {i + 1}: {no_cache_duration:.3f}秒 ({len(discovered_images_no_cache)}個)"
-            )
+            print(f"   測定 {i + 1}: {no_cache_duration:.3f}秒 ({len(discovered_images_no_cache)}個)")
 
         avg_no_cache_time = sum(no_cache_times) / len(no_cache_times)
 
         # キャッシュ有効での測定
         print("\n--- キャッシュ有効での測定 ---")
-        cache_service = FileDiscoveryService(
-            logger_system=self.logger_system, enable_cache=True
-        )
+        cache_service = FileDiscoveryService(logger_system=self.logger_system, enable_cache=True)
 
         # 初回実行（キャッシュ構築）
         print("   初回実行（キャッシュ構築）:")
         start_time = time.time()
         discovered_images_cache_first = cache_service.discover_images(dataset_dir)
         cache_first_duration = time.time() - start_time
-        print(
-            f"     {cache_first_duration:.3f}秒 ({len(discovered_images_cache_first)}個)"
-        )
+        print(f"     {cache_first_duration:.3f}秒 ({len(discovered_images_cache_first)}個)")
 
         # キャッシュヒット測定
         print("   キャッシュヒット測定:")
@@ -703,21 +645,15 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             discovered_images_cache = cache_service.discover_images(dataset_dir)
             cache_hit_duration = time.time() - start_time
             cache_hit_times.append(cache_hit_duration)
-            print(
-                f"     測定 {i + 1}: {cache_hit_duration:.3f}秒 ({len(discovered_images_cache)}個)"
-            )
+            print(f"     測定 {i + 1}: {cache_hit_duration:.3f}秒 ({len(discovered_images_cache)}個)")
 
         avg_cache_hit_time = sum(cache_hit_times) / len(cache_hit_times)
 
         # キャッシュ統計の取得
-        cache_stats = (
-            cache_service.cache.get_cache_stats() if cache_service.cache else {}
-        )
+        cache_stats = cache_service.cache.get_cache_stats() if cache_service.cache else {}
 
         # パフォーマンス改善の確認
-        cache_speedup = (
-            avg_no_cache_time / avg_cache_hit_time if avg_cache_hit_time > 0 else 0
-        )
+        cache_speedup = avg_no_cache_time / avg_cache_hit_time if avg_cache_hit_time > 0 else 0
         min_acceptable_speedup = 2.0  # 最低2倍の高速化
 
         self.assertGreater(
@@ -771,15 +707,11 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
         # 大量ファイルでメモリ制限テスト
         file_count = 1500
-        dataset_dir = self._create_large_image_dataset(
-            file_count, "memory_aware_dataset"
-        )
+        dataset_dir = self._create_large_image_dataset(file_count, "memory_aware_dataset")
 
         # メモリ制限付きファイル検出サービス
         memory_limit_mb = 100  # 100MBの制限
-        memory_aware_service = MemoryAwareFileDiscovery(
-            logger_system=self.logger_system, max_memory_mb=memory_limit_mb
-        )
+        memory_aware_service = MemoryAwareFileDiscovery(logger_system=self.logger_system, max_memory_mb=memory_limit_mb)
 
         # メモリ監視開始
         self.memory_monitor.start_monitoring()
@@ -796,12 +728,8 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             memory_stats = self.memory_monitor.stop_monitoring()
 
             # 結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "戻り値はリスト型である必要があります"
-            )
-            self.assertGreater(
-                len(discovered_images), 0, "画像ファイルが検出される必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "戻り値はリスト型である必要があります")
+            self.assertGreater(len(discovered_images), 0, "画像ファイルが検出される必要があります")
 
             # メモリ制限の遵守確認
             peak_memory = memory_stats.get("peak_memory_mb", 0)
@@ -809,14 +737,10 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
 
             # メモリ制限が厳密に守られているかは環境依存のため、警告レベルでチェック
             if peak_memory > memory_limit_with_tolerance:
-                print(
-                    f"   ⚠️  メモリ制限を超過: {peak_memory:.1f}MB > {memory_limit_with_tolerance:.1f}MB"
-                )
+                print(f"   ⚠️  メモリ制限を超過: {peak_memory:.1f}MB > {memory_limit_with_tolerance:.1f}MB")
 
             # メモリ効率の確認
-            memory_per_file = (
-                peak_memory / len(discovered_images) if discovered_images else 0
-            )
+            memory_per_file = peak_memory / len(discovered_images) if discovered_images else 0
             max_acceptable_memory_per_file = 0.5  # ファイル1個あたり0.5MB以内
 
             self.assertLess(
@@ -843,9 +767,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
             print(f"   検出画像数: {len(discovered_images)}個")
             print(f"   メモリ制限: {memory_limit_mb}MB")
             print(f"   ピークメモリ使用量: {peak_memory:.1f}MB")
-            print(
-                f"   平均メモリ使用量: {memory_stats.get('average_memory_mb', 0):.1f}MB"
-            )
+            print(f"   平均メモリ使用量: {memory_stats.get('average_memory_mb', 0):.1f}MB")
             print(f"   ファイルあたりメモリ: {memory_per_file:.3f}MB")
             print(f"   処理時間: {duration:.3f}秒")
             print(f"   処理速度: {len(discovered_images) / duration:.1f}ファイル/秒")
@@ -864,12 +786,8 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
         total_files_processed = sum(r.file_count for r in self.performance_results)
         total_duration = sum(r.duration for r in self.performance_results)
 
-        avg_files_per_second = (
-            sum(r.files_per_second for r in self.performance_results) / total_tests
-        )
-        avg_memory_usage = (
-            sum(r.memory_usage_mb for r in self.performance_results) / total_tests
-        )
+        avg_files_per_second = sum(r.files_per_second for r in self.performance_results) / total_tests
+        avg_memory_usage = sum(r.memory_usage_mb for r in self.performance_results) / total_tests
         peak_memory_overall = max(r.peak_memory_mb for r in self.performance_results)
 
         # パフォーマンス基準の評価
@@ -885,9 +803,7 @@ class FileListDisplayPerformanceTest(unittest.TestCase):
                 grade = "D"
             performance_grades.append(grade)
 
-        grade_distribution = {
-            grade: performance_grades.count(grade) for grade in "ABCD"
-        }
+        grade_distribution = {grade: performance_grades.count(grade) for grade in "ABCD"}
 
         report = {
             "test_suite": "FileListDisplayPerformanceTest",
@@ -979,13 +895,9 @@ def run_performance_tests():
         print(f"総テスト数: {report['summary']['total_tests']}")
         print(f"総処理ファイル数: {report['summary']['total_files_processed']:,}個")
         print(f"総実行時間: {report['summary']['total_duration']:.3f}秒")
-        print(
-            f"平均処理速度: {report['summary']['average_files_per_second']:.1f}ファイル/秒"
-        )
+        print(f"平均処理速度: {report['summary']['average_files_per_second']:.1f}ファイル/秒")
         print(f"平均メモリ使用量: {report['summary']['average_memory_usage_mb']:.1f}MB")
-        print(
-            f"ピークメモリ使用量: {report['summary']['peak_memory_overall_mb']:.1f}MB"
-        )
+        print(f"ピークメモリ使用量: {report['summary']['peak_memory_overall_mb']:.1f}MB")
 
         print("\nパフォーマンス評価分布:")
         for grade, count in report["summary"]["performance_grade_distribution"].items():

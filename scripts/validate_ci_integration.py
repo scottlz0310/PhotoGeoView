@@ -317,10 +317,7 @@ class CIIntegrationValidator:
                 with open(workflow_path, encoding="utf-8") as f:
                     content = f.read()
 
-                if (
-                    "tools.ci.simulator" not in content
-                    and workflow == "ci-simulator.yml"
-                ):
+                if "tools.ci.simulator" not in content and workflow == "ci-simulator.yml":
                     print(f"⚠️ {workflow} doesn't reference CI simulator")
 
             except Exception as e:
@@ -395,9 +392,7 @@ class CIIntegrationValidator:
                         print("❌ Invalid CI report format")
                         return False
 
-                    print(
-                        f"✅ Integration test passed (Status: {report_data['overall_status']})"
-                    )
+                    print(f"✅ Integration test passed (Status: {report_data['overall_status']})")
                     return True
                 except json.JSONDecodeError:
                     print("❌ Invalid JSON report format")

@@ -207,12 +207,8 @@ def demonstrate_data_validation():
     )
 
     result = validator.validate_image_metadata(valid_metadata)
-    print(
-        f"   Valid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}"
-    )
-    print(
-        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
-    )
+    print(f"   Valid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}")
+    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
 
     # Create invalid ImageMetadata
     invalid_metadata = ImageMetadata(
@@ -226,12 +222,8 @@ def demonstrate_data_validation():
     )
 
     result = validator.validate_image_metadata(invalid_metadata)
-    print(
-        f"   Invalid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}"
-    )
-    print(
-        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
-    )
+    print(f"   Invalid metadata validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}")
+    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
 
     if result.errors:
         print("   Error details:")
@@ -261,9 +253,7 @@ def demonstrate_data_validation():
 
     result = validator.validate_theme_configuration(valid_theme)
     print(f"   Valid theme validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}")
-    print(
-        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
-    )
+    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
 
     # Create invalid theme
     invalid_theme = ThemeConfiguration(
@@ -276,12 +266,8 @@ def demonstrate_data_validation():
     )
 
     result = validator.validate_theme_configuration(invalid_theme)
-    print(
-        f"   Invalid theme validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}"
-    )
-    print(
-        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
-    )
+    print(f"   Invalid theme validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}")
+    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
 
     print("\n3. Validating ApplicationState...")
 
@@ -299,9 +285,7 @@ def demonstrate_data_validation():
 
     result = validator.validate_application_state(valid_state)
     print(f"   Valid state validation: {'✓ PASSED' if result.is_valid else '✗ FAILED'}")
-    print(
-        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
-    )
+    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
 
     # Create invalid application state
     invalid_state = ApplicationState(
@@ -313,12 +297,8 @@ def demonstrate_data_validation():
     )
 
     result = validator.validate_application_state(invalid_state)
-    print(
-        f"   Invalid state validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}"
-    )
-    print(
-        f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})"
-    )
+    print(f"   Invalid state validation: {'✓ PASSED' if result.is_valid else '✗ FAILED (Expected)'}")
+    print(f"   Issues found: {result.total_issues} (Errors: {len(result.errors)}, Warnings: {len(result.warnings)})")
 
     print("\n4. Validating Multiple Models...")
 
@@ -387,9 +367,7 @@ def demonstrate_data_migration():
         total_errors += error_count
 
         print(f"     Operations: {len(results)} total")
-        print(
-            f"     Status: {successful} successful, {partial} partial, {failed} failed, {skipped} skipped"
-        )
+        print(f"     Status: {successful} successful, {partial} partial, {failed} failed, {skipped} skipped")
         print(f"     Objects migrated: {migrated_count}")
         print(f"     Errors: {error_count}")
 
@@ -418,13 +396,7 @@ def demonstrate_data_migration():
     print(f"   Total objects migrated: {total_migrated}")
     print(f"   Total errors: {total_errors}")
 
-    overall_status = (
-        "SUCCESS"
-        if total_errors == 0
-        else "PARTIAL"
-        if total_migrated > 0
-        else "FAILED"
-    )
+    overall_status = "SUCCESS" if total_errors == 0 else "PARTIAL" if total_migrated > 0 else "FAILED"
     print(f"   Overall status: {overall_status}")
 
     # Check for migration report
@@ -522,9 +494,7 @@ def demonstrate_integration():
                                 obj_data.get("created_date", datetime.now().isoformat())
                             ),
                             modified_date=datetime.fromisoformat(
-                                obj_data.get(
-                                    "modified_date", datetime.now().isoformat()
-                                )
+                                obj_data.get("modified_date", datetime.now().isoformat())
                             ),
                             **{
                                 k: v
@@ -545,13 +515,9 @@ def demonstrate_integration():
                     elif model_type == "ApplicationState":
                         obj_data_copy = obj_data.copy()
                         if obj_data_copy.get("current_folder"):
-                            obj_data_copy["current_folder"] = Path(
-                                obj_data_copy["current_folder"]
-                            )
+                            obj_data_copy["current_folder"] = Path(obj_data_copy["current_folder"])
                         if obj_data_copy.get("selected_image"):
-                            obj_data_copy["selected_image"] = Path(
-                                obj_data_copy["selected_image"]
-                            )
+                            obj_data_copy["selected_image"] = Path(obj_data_copy["selected_image"])
                         obj = ApplicationState(**obj_data_copy)
                         result = validator.validate_application_state(obj)
 
@@ -562,9 +528,7 @@ def demonstrate_integration():
 
                     if i < 3:  # Show details for first 3 objects
                         status = "✓ VALID" if result.is_valid else "⚠ ISSUES"
-                        print(
-                            f"     Object {i + 1}: {status} ({result.total_issues} issues)"
-                        )
+                        print(f"     Object {i + 1}: {status} ({result.total_issues} issues)")
 
                 except Exception as e:
                     print(f"     Object {i + 1}: ✗ ERROR - {e!s}")
@@ -576,9 +540,7 @@ def demonstrate_integration():
             total_valid += file_valid
             total_issues += file_issues
 
-            print(
-                f"   File summary: {file_valid}/{sample_size} valid objects, {file_issues} total issues"
-            )
+            print(f"   File summary: {file_valid}/{sample_size} valid objects, {file_issues} total issues")
 
         except Exception as e:
             print(f"   Error processing {migrated_file.name}: {e}")

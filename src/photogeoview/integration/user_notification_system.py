@@ -39,6 +39,7 @@ class NotificationType(Enum):
     CRITICAL = "critical"
     SUCCESS = "success"
 
+
 class NotificationPriority(Enum):
     """Priority levels for notifications"""
 
@@ -47,15 +48,15 @@ class NotificationPriority(Enum):
     HIGH = 3
     URGENT = 4
 
+
 class NotificationAction:
     """Represents an action that can be taken from a notification"""
 
-    def __init__(
-        self, text: str, callback: Callable[[], None], is_primary: bool = False
-    ):
+    def __init__(self, text: str, callback: Callable[[], None], is_primary: bool = False):
         self.text = text
         self.callback = callback
         self.is_primary = is_primary
+
 
 class UserNotification:
     """Represents a user notification"""
@@ -84,6 +85,7 @@ class UserNotification:
         self.shown_at: datetime | None = None
         self.dismissed_at: datetime | None = None
         self.is_dismissed = False
+
 
 class UserNotificationSystem(QObject):
     """
@@ -143,18 +145,10 @@ class UserNotificationSystem(QObject):
     def _load_configuration(self) -> None:
         """Load notification system configuration"""
         try:
-            self.notifications_enabled = self.config_manager.get_setting(
-                "notifications.enabled", True
-            )
-            self.show_system_tray = self.config_manager.get_setting(
-                "notifications.system_tray", True
-            )
-            self.auto_dismiss_duration = self.config_manager.get_setting(
-                "notifications.auto_dismiss_duration", 5
-            )
-            self.max_concurrent_notifications = self.config_manager.get_setting(
-                "notifications.max_concurrent", 3
-            )
+            self.notifications_enabled = self.config_manager.get_setting("notifications.enabled", True)
+            self.show_system_tray = self.config_manager.get_setting("notifications.system_tray", True)
+            self.auto_dismiss_duration = self.config_manager.get_setting("notifications.auto_dismiss_duration", 5)
+            self.max_concurrent_notifications = self.config_manager.get_setting("notifications.max_concurrent", 3)
 
             self.logger.debug("Notification configuration loaded")
 
@@ -285,9 +279,7 @@ class UserNotificationSystem(QObject):
                     if action.is_primary:
                         button.setDefault(True)
                     button.clicked.connect(
-                        lambda checked, a=action: self._handle_notification_action(
-                            notification.id, a
-                        )
+                        lambda checked, a=action: self._handle_notification_action(notification.id, a)
                     )
                     button_layout.addWidget(button)
             else:
@@ -336,9 +328,7 @@ class UserNotificationSystem(QObject):
             # Add custom actions or default OK
             if notification.actions:
                 for action in notification.actions:
-                    button = msg_box.addButton(
-                        action.text, QMessageBox.ButtonRole.ActionRole
-                    )
+                    button = msg_box.addButton(action.text, QMessageBox.ButtonRole.ActionRole)
                     if action.is_primary:
                         msg_box.setDefaultButton(button)
             else:
@@ -380,9 +370,7 @@ class UserNotificationSystem(QObject):
         except Exception as e:
             self.logger.error(f"Failed to show system tray notification: {e}")
 
-    def _handle_notification_action(
-        self, notification_id: str, action: NotificationAction
-    ) -> None:
+    def _handle_notification_action(self, notification_id: str, action: NotificationAction) -> None:
         """Handle notification action"""
         try:
             # Execute action callback
@@ -424,9 +412,7 @@ class UserNotificationSystem(QObject):
 
             # Limit history size
             if len(self.notification_history) > self.max_history_size:
-                self.notification_history = self.notification_history[
-                    -self.max_history_size :
-                ]
+                self.notification_history = self.notification_history[-self.max_history_size :]
 
             # Close dialog if exists
             if notification_id in self.notification_dialogs:
@@ -462,8 +448,7 @@ class UserNotificationSystem(QObject):
             for notification_id, notification in self.active_notifications.items():
                 if notification.duration and (
                     notification.shown_at
-                    and (current_time - notification.shown_at).total_seconds()
-                    > notification.duration
+                    and (current_time - notification.shown_at).total_seconds() > notification.duration
                 ):
                     expired_ids.append(notification_id)
 
@@ -578,9 +563,7 @@ class UserNotificationSystem(QObject):
 
     # Theme-specific error notifications
 
-    def show_theme_error(
-        self, theme_name: str, error_message: str, fallback_applied: bool = False
-    ) -> str:
+    def show_theme_error(self, theme_name: str, error_message: str, fallback_applied: bool = False) -> str:
         """Show theme-related error notification"""
         title = "Theme Error"
         message = f"Failed to apply theme '{theme_name}': {error_message}"
@@ -628,11 +611,7 @@ class UserNotificationSystem(QObject):
 
         actions = []
         if not fallback_path:
-            actions.append(
-                NotificationAction(
-                    "Go to Home", lambda: self._navigate_to_home(), is_primary=True
-                )
-            )
+            actions.append(NotificationAction("Go to Home", lambda: self._navigate_to_home(), is_primary=True))
 
         return self.show_error(
             title=title,

@@ -34,7 +34,7 @@ PhotoGeoViewプロジェクトのPhase 1モダン化が完了しました。Pyth
 
 ### 4. テスト環境の改善
 - **pytest-asyncio追加**: 非同期テストのネイティブサポート
-- **設定最適化**: 
+- **設定最適化**:
   - `asyncio`マーカーの追加
   - `ci_simulation`テストの除外（対象モジュール削除済み）
   - `test_qt_theme_breadcrumb_integration.py`の一時除外（修正が必要）

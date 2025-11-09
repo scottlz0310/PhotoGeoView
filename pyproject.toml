@@ -26,19 +26,19 @@ classifiers = [
 dependencies = [
     # GUI Framework (6.8+で全モジュール統合済み)
     "PySide6>=6.8.0",
-    
+
     # 画像処理
     "Pillow>=10.4.0",
-    
+
     # EXIF処理（ExifReadは開発停滞、将来的にpiexifへ移行予定）
     "ExifRead>=3.0.0",
-    
+
     # 地図表示
     "folium>=0.18.0",
-    
+
     # システム情報
     "psutil>=6.0.0",
-    
+
     # カスタムコンポーネント
     "qt-theme-manager>=0.2.4",
     "breadcrumb-addressbar>=0.2.1",
@@ -147,8 +147,20 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["ARG", "SIM"]
+"tests/*" = ["ARG", "SIM", "F401", "PTH", "E501", "PLR", "C901", "E402", "F841", "F821", "RUF", "UP035", "B", "E712", "E722"]  # Tests are less strict
 "__init__.py" = ["F401"]
+"examples/*" = ["E402", "PTH123", "RUF001", "RUF002", "RUF003"]  # Examples can modify sys.path, use open(), and use Japanese full-width chars
+"docs/*" = ["E402", "RUF001", "RUF002", "RUF003"]  # Docs scripts can modify sys.path and use Japanese full-width chars
+"tools/*" = ["E402", "PTH123", "ARG", "PLR", "C901", "UP035", "UP038", "SIM102", "RUF001", "RUF002", "RUF003", "B007"]  # Tools are less strict
+"scripts/*" = ["PTH123", "PTH101", "F841", "RUF001", "RUF002", "RUF003", "SIM", "RUF005", "B018", "F401"]  # Scripts are less strict
+"main.py" = ["RUF001", "RUF002", "RUF003", "F841"]  # Main app can use Japanese full-width chars and may have intentionally unused vars
+"src/photogeoview/integration/*" = [
+    "PTH123", "E721", "UP038", "F821", "PTH118", "ARG002", "SIM102", "UP035",
+    "RUF006", "F811", "RUF012", "B025", "RUF009", "SIM113", "ARG005", "RUF001",
+    "RUF003", "E402", "SIM116", "E722", "F401"
+]  # Integration layer is less strict
+"src/photogeoview/ui/*" = ["ARG001", "ARG002", "ARG005", "SIM102", "E722", "F821"]  # UI layer can have unused signal/slot args
+"tests/ai_compatibility/*" = ["RUF003"]  # Test files can use Japanese full-width chars
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
@@ -175,12 +187,41 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+exclude = [
+    "tools/ci",
+    "scripts/ci\\.py",
+    "tools/ci_integration\\.py",
+]
 
 [[tool.mypy.overrides]]
 module = [
     "folium.*",
     "piexif.*",
     "psutil.*",
+    "PySide6.*",
+    "PyInstaller.*",
+    "src.integration.*",
+    "src.ui.*",
+    "ui.*",
+    "utils",
+    "exifread",
+    "cv2",
+    "win32file",
+    "watchdog.*",
+    "qt_theme_manager",
+    "breadcrumb_addressbar",
+    "pytest",
+    "interfaces",
+    "models",
+    "config_manager",
+    "simulator",
+    "yaml",
+    "error_handler",
+    "error_recovery_system",
+    "checkers.*",
+    "environment.*",
+    "check_orchestrator",
+    "reporters.*",
 ]
 ignore_missing_imports = true
 

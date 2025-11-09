@@ -49,9 +49,7 @@ class ThemeSelectorDemo(QMainWindow):
         # システムコンポーネントの初期化
         self.logger_system = LoggerSystem()
         self.config_manager = ConfigManager(logger_system=self.logger_system)
-        self.theme_manager = SimpleThemeManager(
-            config_manager=self.config_manager, logger_system=self.logger_system
-        )
+        self.theme_manager = SimpleThemeManager(config_manager=self.config_manager, logger_system=self.logger_system)
 
         # 選択されたテーマの管理
         self.selected_themes = []
@@ -71,9 +69,7 @@ class ThemeSelectorDemo(QMainWindow):
 
         # タイトル
         title_label = QLabel("🎨 テーマ選択UI デモ")
-        title_label.setStyleSheet(
-            "font-size: 24px; font-weight: bold; margin-bottom: 10px;"
-        )
+        title_label.setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 10px;")
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title_label)
 
@@ -82,9 +78,7 @@ class ThemeSelectorDemo(QMainWindow):
             "新しいテーマ選択UIの機能をテストできます。\n"
             "下のボタンでテーマ選択ダイアログを開き、プレビュー機能をお試しください。"
         )
-        description_label.setStyleSheet(
-            "font-size: 14px; color: gray; margin-bottom: 20px;"
-        )
+        description_label.setStyleSheet("font-size: 14px; color: gray; margin-bottom: 20px;")
         description_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(description_label)
 
@@ -150,21 +144,15 @@ class ThemeSelectorDemo(QMainWindow):
     def toggle_theme(self):
         """選択されたテーマを循環切り替え"""
         if not self.selected_themes:
-            self.log_message(
-                "選択されたテーマがありません。テーマ設定でテーマを選択してください。"
-            )
+            self.log_message("選択されたテーマがありません。テーマ設定でテーマを選択してください。")
             return
 
         if len(self.selected_themes) == 1:
-            self.log_message(
-                f"選択されたテーマは1つだけです: {self.selected_themes[0]}"
-            )
+            self.log_message(f"選択されたテーマは1つだけです: {self.selected_themes[0]}")
             return
 
         # 次のテーマに切り替え
-        self.current_theme_index = (self.current_theme_index + 1) % len(
-            self.selected_themes
-        )
+        self.current_theme_index = (self.current_theme_index + 1) % len(self.selected_themes)
         next_theme = self.selected_themes[self.current_theme_index]
 
         self.log_message(f"テーマを切り替え: {next_theme}")

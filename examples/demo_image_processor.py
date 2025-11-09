@@ -32,15 +32,11 @@ def main():
     config_manager = ConfigManager()
     logger_system = LoggerSystem()
 
-    processor = CS4CodingImageProcessor(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    processor = CS4CodingImageProcessor(config_manager=config_manager, logger_system=logger_system)
 
     print("   ✓ ImageProcessor initialized")
     print(f"   ✓ Supported formats: {len(processor.get_supported_formats())}")
-    print(
-        f"   ✓ Libraries available: {processor.get_performance_stats()['libraries_available']}"
-    )
+    print(f"   ✓ Libraries available: {processor.get_performance_stats()['libraries_available']}")
 
     # Test coordinate validation
     print("\n2. Testing GPS coordinate validation...")
@@ -98,9 +94,7 @@ def main():
 
     # Test cache functionality
     print("\n8. Testing cache functionality...")
-    print(
-        f"   ✓ Initial cache sizes - Images: {stats['image_cache_size']}, Metadata: {stats['metadata_cache_size']}"
-    )
+    print(f"   ✓ Initial cache sizes - Images: {stats['image_cache_size']}, Metadata: {stats['metadata_cache_size']}")
 
     processor.clear_cache()
     stats_after_clear = processor.get_performance_stats()

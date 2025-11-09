@@ -60,11 +60,7 @@ class TestMemoryAwareFileDiscovery(unittest.TestCase):
         self.mock_file_discovery.discover_images.return_value = self.test_files
 
         # ファイル検出を実行
-        discovered_files = (
-            self.memory_aware_discovery.discover_images_with_memory_management(
-                self.temp_dir
-            )
-        )
+        discovered_files = self.memory_aware_discovery.discover_images_with_memory_management(self.temp_dir)
 
         # 結果の検証
         self.assertEqual(len(discovered_files), 5)
@@ -81,21 +77,13 @@ class TestMemoryAwareFileDiscovery(unittest.TestCase):
         self.mock_file_discovery.discover_images.return_value = self.test_files
 
         # 最初の検出（キャッシュミス）
-        discovered_files1 = (
-            self.memory_aware_discovery.discover_images_with_memory_management(
-                self.temp_dir
-            )
-        )
+        discovered_files1 = self.memory_aware_discovery.discover_images_with_memory_management(self.temp_dir)
         self.assertEqual(len(discovered_files1), 5)
         self.assertEqual(self.memory_aware_discovery._stats["cache_misses"], 1)
         self.assertEqual(self.memory_aware_discovery._stats["cache_hits"], 0)
 
         # 2回目の検出（キャッシュヒット）
-        discovered_files2 = (
-            self.memory_aware_discovery.discover_images_with_memory_management(
-                self.temp_dir
-            )
-        )
+        discovered_files2 = self.memory_aware_discovery.discover_images_with_memory_management(self.temp_dir)
         self.assertEqual(len(discovered_files2), 5)
         self.assertEqual(self.memory_aware_discovery._stats["cache_misses"], 1)
         self.assertEqual(self.memory_aware_discovery._stats["cache_hits"], 1)
@@ -176,9 +164,7 @@ class TestMemoryAwareFileDiscovery(unittest.TestCase):
 
         # メモリ統計履歴を追加
         for i in range(150):  # 制限を超える数
-            self.memory_aware_discovery._memory_stats_history.append(
-                MemoryStats(100.0, 200.0, 500.0, 50.0, 10.0)
-            )
+            self.memory_aware_discovery._memory_stats_history.append(MemoryStats(100.0, 200.0, 500.0, 50.0, 10.0))
 
         initial_cache_size = len(self.memory_aware_discovery._cache_data)
         initial_history_size = len(self.memory_aware_discovery._memory_stats_history)
@@ -188,9 +174,7 @@ class TestMemoryAwareFileDiscovery(unittest.TestCase):
 
         # 結果の検証
         self.assertEqual(len(self.memory_aware_discovery._cache_data), 0)
-        self.assertLess(
-            len(self.memory_aware_discovery._memory_stats_history), initial_history_size
-        )
+        self.assertLess(len(self.memory_aware_discovery._memory_stats_history), initial_history_size)
         self.assertEqual(self.memory_aware_discovery._stats["memory_cleanups"], 1)
 
     def test_cache_key_generation(self):
@@ -209,9 +193,7 @@ class TestMemoryAwareFileDiscovery(unittest.TestCase):
         # キャッシュ制限を超えるデータを追加
         for i in range(55):  # 制限(50)を超える数
             cache_key = f"test_key_{i}"
-            self.memory_aware_discovery._store_in_cache(
-                cache_key, [Path(f"file_{i}.jpg")]
-            )
+            self.memory_aware_discovery._store_in_cache(cache_key, [Path(f"file_{i}.jpg")])
 
         # キャッシュサイズが制限内に収まっている
         self.assertLessEqual(len(self.memory_aware_discovery._cache_data), 50)
@@ -265,9 +247,7 @@ class TestMemoryAwareFileDiscovery(unittest.TestCase):
         """クリーンアップのテスト"""
         # データを追加
         self.memory_aware_discovery._cache_data = {"test": [Path("file.jpg")]}
-        self.memory_aware_discovery._memory_stats_history = [
-            MemoryStats(100.0, 200.0, 500.0, 50.0, 10.0)
-        ]
+        self.memory_aware_discovery._memory_stats_history = [MemoryStats(100.0, 200.0, 500.0, 50.0, 10.0)]
 
         # クリーンアップを実行
         self.memory_aware_discovery.cleanup()

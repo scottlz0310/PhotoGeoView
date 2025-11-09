@@ -120,9 +120,7 @@ class TestCodeQualityChecker:
     def test_run_flake8_with_violations(self, mock_run, sample_config):
         """Test flake8 check with style violations."""
         mock_run.return_value.returncode = 1
-        mock_run.return_value.stdout = (
-            "./test.py:1:1: E302 expected 2 blank lines, found 1"
-        )
+        mock_run.return_value.stdout = "./test.py:1:1: E302 expected 2 blank lines, found 1"
         mock_run.return_value.stderr = ""
 
         checker = CodeQualityChecker(sample_config)
@@ -224,9 +222,7 @@ class TestSecurityScanner:
     def test_run_safety_check_success(self, mock_run, sample_config):
         """Test successful safety vulnerability check."""
         mock_run.return_value.returncode = 0
-        mock_run.return_value.stdout = (
-            "All good! No known security vulnerabilities found."
-        )
+        mock_run.return_value.stdout = "All good! No known security vulnerabilities found."
         mock_run.return_value.stderr = ""
 
         scanner = SecurityScanner(sample_config)
@@ -240,9 +236,7 @@ class TestSecurityScanner:
     def test_run_safety_check_with_vulnerabilities(self, mock_run, sample_config):
         """Test safety check with vulnerabilities found."""
         mock_run.return_value.returncode = 1
-        mock_run.return_value.stdout = (
-            "VULNERABILITY: django==1.0 has known security vulnerabilities"
-        )
+        mock_run.return_value.stdout = "VULNERABILITY: django==1.0 has known security vulnerabilities"
         mock_run.return_value.stderr = ""
 
         scanner = SecurityScanner(sample_config)
@@ -269,9 +263,7 @@ class TestSecurityScanner:
     def test_run_bandit_scan_with_issues(self, mock_run, sample_config):
         """Test bandit scan with security issues."""
         mock_run.return_value.returncode = 1
-        mock_run.return_value.stdout = (
-            "Issue: [B602:subprocess_popen_with_shell_equals_true]"
-        )
+        mock_run.return_value.stdout = "Issue: [B602:subprocess_popen_with_shell_equals_true]"
         mock_run.return_value.stderr = ""
 
         scanner = SecurityScanner(sample_config)
@@ -401,9 +393,7 @@ class TestPerformanceAnalyzer:
         regressions = analyzer.detect_performance_regression(threshold=30.0)
 
         # Should detect the critical regression but not the minor one
-        critical_regressions = [
-            r for r in regressions if r.test_name == "test_critical"
-        ]
+        critical_regressions = [r for r in regressions if r.test_name == "test_critical"]
         assert len(critical_regressions) > 0
 
     def test_save_baseline(self, sample_config, temp_dir):

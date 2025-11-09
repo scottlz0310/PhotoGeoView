@@ -83,9 +83,7 @@ class IntegratedLogger(ILogger):
         console_handler = logging.StreamHandler()
 
         # Formatter
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
         file_handler.setFormatter(formatter)
         console_handler.setFormatter(formatter)
@@ -112,9 +110,7 @@ class IntegratedLogger(ILogger):
         )
 
         # Component-specific formatter
-        formatter = logging.Formatter(
-            f"%(asctime)s - {component.upper()} - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter(f"%(asctime)s - {component.upper()} - %(levelname)s - %(message)s")
 
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -161,9 +157,7 @@ class IntegratedLogger(ILogger):
         else:
             return "main"
 
-    def _log_with_component(
-        self, level: int, message: str, extra: dict[str, Any] | None = None
-    ):
+    def _log_with_component(self, level: int, message: str, extra: dict[str, Any] | None = None):
         """Log message with appropriate component logger"""
         with self._lock:
             # Determine component
@@ -189,9 +183,7 @@ class IntegratedLogger(ILogger):
 
             # Also log to main logger for centralized view
             if component != "main":
-                self.main_logger.log(
-                    level, f"[{component.upper()}] {message}", extra=extra
-                )
+                self.main_logger.log(level, f"[{component.upper()}] {message}", extra=extra)
 
     def debug(self, message: str, extra: dict[str, Any] | None = None) -> None:
         """Log debug message"""
@@ -313,14 +305,8 @@ class IntegratedLogger(ILogger):
         with self._lock:
             return {
                 "error_counts": self.error_counts.copy(),
-                "total_errors": sum(
-                    count for key, count in self.error_counts.items() if "error" in key
-                ),
-                "total_critical": sum(
-                    count
-                    for key, count in self.error_counts.items()
-                    if "critical" in key
-                ),
+                "total_errors": sum(count for key, count in self.error_counts.items() if "error" in key),
+                "total_critical": sum(count for key, count in self.error_counts.items() if "critical" in key),
             }
 
     def set_log_level(self, level: int):
@@ -361,9 +347,8 @@ class IntegratedLogger(ILogger):
         for handler in self.performance_logger.handlers:
             handler.close()
 
-def create_integrated_logger(
-    log_dir: Path = Path("logs"), log_level: int = logging.INFO
-) -> IntegratedLogger:
+
+def create_integrated_logger(log_dir: Path = Path("logs"), log_level: int = logging.INFO) -> IntegratedLogger:
     """
     Factory function to create integrated logger
 

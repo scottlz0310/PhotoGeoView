@@ -230,10 +230,7 @@ class FoliumMapProvider(IMapProvider):
 
             # 境界座標を検証
             (south, west), (north, east) = bounds
-            if not all(
-                self.validate_coordinates(lat, lon)
-                for lat, lon in [(south, west), (north, east)]
-            ):
+            if not all(self.validate_coordinates(lat, lon) for lat, lon in [(south, west), (north, east)]):
                 self.logger_system.log_warning(
                     "無効な境界座標でオーバーレイをスキップ",
                     {"bounds": bounds},
@@ -320,9 +317,7 @@ class FoliumMapProvider(IMapProvider):
         except (TypeError, ValueError):
             return False
 
-    def create_map_with_marker(
-        self, lat: float, lon: float, popup: str = "", zoom: int | None = None
-    ) -> str | None:
+    def create_map_with_marker(self, lat: float, lon: float, popup: str = "", zoom: int | None = None) -> str | None:
         """
         Create a map with a marker and return HTML
 

@@ -99,9 +99,7 @@ class TestBreadcrumbAddressBar:
         self.config_manager.get_setting.assert_called()
 
         # Verify logging
-        self.logger.info.assert_called_with(
-            "BreadcrumbAddressBar initialized successfully"
-        )
+        self.logger.info.assert_called_with("BreadcrumbAddressBar initialized successfully")
 
     def test_initialization_without_breadcrumb_library(self):
         """Test initialization when breadcrumb-addressbar library is not available"""
@@ -134,9 +132,7 @@ class TestBreadcrumbAddressBar:
             # Verify success
             assert result is True
             assert breadcrumb_bar.current_state.current_path == self.test_path
-            breadcrumb_bar.breadcrumb_widget.set_path.assert_called_with(
-                str(self.test_path)
-            )
+            breadcrumb_bar.breadcrumb_widget.set_path.assert_called_with(str(self.test_path))
 
     def test_set_current_path_invalid_path(self):
         """Test path setting with invalid path"""
@@ -264,9 +260,7 @@ class TestBreadcrumbAddressBar:
             breadcrumb_bar._apply_path_truncation()
 
             # Should not change segments in "none" mode
-            assert len(breadcrumb_bar.current_state.breadcrumb_segments) == len(
-                original_segments
-            )
+            assert len(breadcrumb_bar.current_state.breadcrumb_segments) == len(original_segments)
 
     def test_segment_click_handling(self):
         """Test breadcrumb segment click handling"""
@@ -288,9 +282,7 @@ class TestBreadcrumbAddressBar:
             breadcrumb_bar._on_breadcrumb_segment_clicked(segment_index)
 
             # Verify navigation occurred
-            expected_path = breadcrumb_bar.current_state.breadcrumb_segments[
-                segment_index
-            ].path
+            expected_path = breadcrumb_bar.current_state.breadcrumb_segments[segment_index].path
             assert breadcrumb_bar.current_state.current_path == expected_path
 
     def test_segment_click_invalid_index(self):
@@ -348,10 +340,7 @@ class TestBreadcrumbAddressBar:
                 result = breadcrumb_bar.navigate_up()
 
                 # Should fail or stay at root
-                assert (
-                    result is False
-                    or breadcrumb_bar.current_state.current_path == root_path
-                )
+                assert result is False or breadcrumb_bar.current_state.current_path == root_path
 
     def test_navigate_to_segment(self):
         """Test navigate to specific segment"""
@@ -370,9 +359,7 @@ class TestBreadcrumbAddressBar:
 
             # Verify navigation
             assert result is True
-            expected_path = breadcrumb_bar.current_state.breadcrumb_segments[
-                segment_index
-            ].path
+            expected_path = breadcrumb_bar.current_state.breadcrumb_segments[segment_index].path
             assert breadcrumb_bar.current_state.current_path == expected_path
 
     def test_file_system_change_handling(self):
@@ -395,9 +382,7 @@ class TestBreadcrumbAddressBar:
                 breadcrumb_bar._on_file_system_change(changed_path, "modified")
 
                 # Verify timer was set for delayed refresh
-                mock_timer.singleShot.assert_called_with(
-                    500, breadcrumb_bar._refresh_breadcrumb_state
-                )
+                mock_timer.singleShot.assert_called_with(500, breadcrumb_bar._refresh_breadcrumb_state)
 
     def test_file_system_change_unrelated_path(self):
         """Test file system change for unrelated path"""
@@ -432,30 +417,22 @@ class TestBreadcrumbAddressBar:
             # Test max visible segments
             breadcrumb_bar.set_max_visible_segments(15)
             assert breadcrumb_bar.max_visible_segments == 15
-            self.config_manager.set_setting.assert_called_with(
-                "ui.breadcrumb.max_segments", 15
-            )
+            self.config_manager.set_setting.assert_called_with("ui.breadcrumb.max_segments", 15)
 
             # Test truncation mode
             breadcrumb_bar.set_truncation_mode("middle")
             assert breadcrumb_bar.truncation_mode == "middle"
-            self.config_manager.set_setting.assert_called_with(
-                "ui.breadcrumb.truncation_mode", "middle"
-            )
+            self.config_manager.set_setting.assert_called_with("ui.breadcrumb.truncation_mode", "middle")
 
             # Test show icons
             breadcrumb_bar.set_show_icons(False)
             assert breadcrumb_bar.show_icons is False
-            self.config_manager.set_setting.assert_called_with(
-                "ui.breadcrumb.show_icons", False
-            )
+            self.config_manager.set_setting.assert_called_with("ui.breadcrumb.show_icons", False)
 
             # Test show tooltips
             breadcrumb_bar.set_show_tooltips(False)
             assert breadcrumb_bar.show_tooltips is False
-            self.config_manager.set_setting.assert_called_with(
-                "ui.breadcrumb.show_tooltips", False
-            )
+            self.config_manager.set_setting.assert_called_with("ui.breadcrumb.show_tooltips", False)
 
     def test_navigation_listener_management(self):
         """Test navigation listener add/remove functionality"""
@@ -497,9 +474,7 @@ class TestBreadcrumbAddressBar:
             breadcrumb_bar.add_navigation_listener(listener)
 
             # Create navigation event
-            event = NavigationEvent(
-                event_type="navigate", target_path=self.test_path, success=True
-            )
+            event = NavigationEvent(event_type="navigate", target_path=self.test_path, success=True)
 
             # Notify listeners
             breadcrumb_bar._notify_navigation_listeners(event)
@@ -521,9 +496,7 @@ class TestBreadcrumbAddressBar:
             breadcrumb_bar.add_navigation_listener(failing_listener)
 
             # Create navigation event
-            event = NavigationEvent(
-                event_type="navigate", target_path=self.test_path, success=True
-            )
+            event = NavigationEvent(event_type="navigate", target_path=self.test_path, success=True)
 
             # Notify listeners (should not raise exception)
             breadcrumb_bar._notify_navigation_listeners(event)
@@ -551,9 +524,7 @@ class TestBreadcrumbAddressBar:
             assert all(event in supported_events for event in expected_events)
 
             # Test on_navigation_changed
-            event = NavigationEvent(
-                event_type="navigate", target_path=self.test_path, success=True
-            )
+            event = NavigationEvent(event_type="navigate", target_path=self.test_path, success=True)
 
             # Mock breadcrumb widget
             breadcrumb_bar.breadcrumb_widget = Mock()
@@ -609,9 +580,7 @@ class TestBreadcrumbAddressBar:
             # Verify cleanup actions
             assert len(breadcrumb_bar.navigation_listeners) == 0
             breadcrumb_bar.breadcrumb_widget.cleanup.assert_called_once()
-            self.logger.info.assert_called_with(
-                "BreadcrumbAddressBar cleanup completed"
-            )
+            self.logger.info.assert_called_with("BreadcrumbAddressBar cleanup completed")
 
     def test_get_widget(self):
         """Test get_widget method"""
@@ -691,17 +660,11 @@ class TestBreadcrumbAddressBar:
             current_path = self.test_path / "level1" / "level2"
 
             # Test same path
-            assert (
-                breadcrumb_bar._path_affects_breadcrumb(current_path, current_path)
-                is True
-            )
+            assert breadcrumb_bar._path_affects_breadcrumb(current_path, current_path) is True
 
             # Test parent path
             parent_path = current_path.parent
-            assert (
-                breadcrumb_bar._path_affects_breadcrumb(parent_path, current_path)
-                is True
-            )
+            assert breadcrumb_bar._path_affects_breadcrumb(parent_path, current_path) is True
 
             # Test child path
             child_path = current_path / "child"
@@ -711,10 +674,7 @@ class TestBreadcrumbAddressBar:
 
             # Test unrelated path
             unrelated_path = Path("/some/other/path")
-            assert (
-                breadcrumb_bar._path_affects_breadcrumb(unrelated_path, current_path)
-                is False
-            )
+            assert breadcrumb_bar._path_affects_breadcrumb(unrelated_path, current_path) is False
 
 
 if __name__ == "__main__":

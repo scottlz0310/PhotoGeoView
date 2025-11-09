@@ -26,6 +26,7 @@ from .models import AIComponent, CacheEntry
 if TYPE_CHECKING:
     import weakref
 
+
 @dataclass
 class CacheStats:
     """Cache statistics data structure"""
@@ -41,6 +42,7 @@ class CacheStats:
         """Update hit rate calculation"""
         total = self.hits + self.misses
         self.hit_rate = self.hits / total if total > 0 else 0.0
+
 
 class LRUCache:
     """
@@ -121,9 +123,7 @@ class LRUCache:
                 value_size = self._calculate_size(value)
 
                 # Create cache entry
-                entry = CacheEntry(
-                    key=key, data=value, size_bytes=value_size, ttl_seconds=ttl_seconds
-                )
+                entry = CacheEntry(key=key, data=value, size_bytes=value_size, ttl_seconds=ttl_seconds)
 
                 # Remove existing entry if present
                 if key in self._cache:
@@ -175,10 +175,7 @@ class LRUCache:
         """Evict entries if cache limits would be exceeded"""
 
         # Check size limit
-        while (
-            len(self._cache) >= self.max_size
-            or self.stats.size_bytes + new_entry_size > self.max_memory_bytes
-        ):
+        while len(self._cache) >= self.max_size or self.stats.size_bytes + new_entry_size > self.max_memory_bytes:
             if not self._cache:
                 break
 
@@ -202,10 +199,7 @@ class LRUCache:
             elif isinstance(value, (list, tuple)):
                 return sum(self._calculate_size(item) for item in value)
             elif isinstance(value, dict):
-                return sum(
-                    self._calculate_size(k) + self._calculate_size(v)
-                    for k, v in value.items()
-                )
+                return sum(self._calculate_size(k) + self._calculate_size(v) for k, v in value.items())
             else:
                 return 1024  # Default estimate
 
@@ -219,6 +213,7 @@ class LRUCache:
         with self._lock:
             return list(self._cache.keys())
 
+
 class UnifiedCacheSystem:
     """
     Unified caching system for all AI components
@@ -230,9 +225,7 @@ class UnifiedCacheSystem:
     - Performance monitoring
     """
 
-    def __init__(
-        self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None
-    ):
+    def __init__(self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None):
         """
         Initialize unified cache system
 
@@ -326,9 +319,7 @@ class UnifiedCacheSystem:
 
     # Public cache interface
 
-    def get(
-        self, cache_type: str, key: str, component: AIComponent = AIComponent.KIRO
-    ) -> Any | None:
+    def get(self, cache_type: str, key: str, component: AIComponent = AIComponent.KIRO) -> Any | None:
         """
         Get item from specified cache
 
@@ -350,13 +341,9 @@ class UnifiedCacheSystem:
 
             # Log cache access
             if value is not None:
-                self.logger_system.log_ai_operation(
-                    component, "cache_hit", f"Cache hit: {cache_type}:{key}"
-                )
+                self.logger_system.log_ai_operation(component, "cache_hit", f"Cache hit: {cache_type}:{key}")
             else:
-                self.logger_system.log_ai_operation(
-                    component, "cache_miss", f"Cache miss: {cache_type}:{key}"
-                )
+                self.logger_system.log_ai_operation(component, "cache_miss", f"Cache miss: {cache_type}:{key}")
 
             return value
 
@@ -399,9 +386,7 @@ class UnifiedCacheSystem:
             success = cache.put(key, value, ttl_seconds)
 
             if success:
-                self.logger_system.log_ai_operation(
-                    component, "cache_put", f"Cached: {cache_type}:{key}"
-                )
+                self.logger_system.log_ai_operation(component, "cache_put", f"Cached: {cache_type}:{key}")
 
                 # Perform cleanup if needed
                 self._cleanup_if_needed()
@@ -417,9 +402,7 @@ class UnifiedCacheSystem:
             )
             return False
 
-    def remove(
-        self, cache_type: str, key: str, component: AIComponent = AIComponent.KIRO
-    ) -> bool:
+    def remove(self, cache_type: str, key: str, component: AIComponent = AIComponent.KIRO) -> bool:
         """
         Remove item from specified cache
 
@@ -480,9 +463,7 @@ class UnifiedCacheSystem:
 
                     self.weak_refs.clear()
 
-                    self.logger_system.log_ai_operation(
-                        AIComponent.KIRO, "cache_clear_all", "Cleared all caches"
-                    )
+                    self.logger_system.log_ai_operation(AIComponent.KIRO, "cache_clear_all", "Cleared all caches")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -504,9 +485,7 @@ class UnifiedCacheSystem:
         key = self._generate_image_key(image_path)
         return self.put("image", key, image_data, component=component)
 
-    def get_cached_image(
-        self, image_path: Path, component: AIComponent = AIComponent.COPILOT
-    ) -> Any | None:
+    def get_cached_image(self, image_path: Path, component: AIComponent = AIComponent.COPILOT) -> Any | None:
         """Get cached image data"""
         key = self._generate_image_key(image_path)
         return self.get("image", key, component=component)
@@ -542,9 +521,7 @@ class UnifiedCacheSystem:
         key = self._generate_metadata_key(image_path)
         return self.put("metadata", key, metadata, component=component)
 
-    def get_cached_metadata(
-        self, image_path: Path, component: AIComponent = AIComponent.COPILOT
-    ) -> Any | None:
+    def get_cached_metadata(self, image_path: Path, component: AIComponent = AIComponent.COPILOT) -> Any | None:
         """Get cached image metadata"""
         key = self._generate_metadata_key(image_path)
         return self.get("metadata", key, component=component)
@@ -558,9 +535,7 @@ class UnifiedCacheSystem:
     ) -> bool:
         """Cache map data"""
         key = self._generate_map_key(center, zoom)
-        return self.put(
-            "map", key, map_data, ttl_seconds=3600, component=component
-        )  # 1 hour TTL
+        return self.put("map", key, map_data, ttl_seconds=3600, component=component)  # 1 hour TTL
 
     def get_cached_map(
         self,
@@ -680,9 +655,7 @@ class UnifiedCacheSystem:
         """Get total memory usage across all caches in MB"""
 
         try:
-            total_bytes = sum(
-                cache.get_stats().size_bytes for cache in self.caches.values()
-            )
+            total_bytes = sum(cache.get_stats().size_bytes for cache in self.caches.values())
             return total_bytes / 1024 / 1024
         except Exception:
             return 0.0
@@ -698,11 +671,7 @@ class UnifiedCacheSystem:
             total_entries = sum(s["entry_count"] for s in stats.values())
             total_memory_mb = self.get_total_memory_usage()
 
-            overall_hit_rate = (
-                total_hits / (total_hits + total_misses)
-                if (total_hits + total_misses) > 0
-                else 0.0
-            )
+            overall_hit_rate = total_hits / (total_hits + total_misses) if (total_hits + total_misses) > 0 else 0.0
 
             return {
                 "cache_types": len(self.caches),
@@ -767,6 +736,4 @@ class UnifiedCacheSystem:
             )
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO, e, "unified_cache_shutdown", {}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "unified_cache_shutdown", {})

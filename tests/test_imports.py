@@ -77,17 +77,13 @@ class TestBasicImports(unittest.TestCase):
         required_dirs = ["src", "tests", "docs"]
         for dir_name in required_dirs:
             dir_path = project_root / dir_name
-            self.assertTrue(
-                dir_path.exists(), f"{dir_name}ディレクトリが存在する必要があります"
-            )
+            self.assertTrue(dir_path.exists(), f"{dir_name}ディレクトリが存在する必要があります")
 
         # 主要なファイルの存在確認
         required_files = ["main.py", "pyproject.toml", "README.md"]
         for file_name in required_files:
             file_path = project_root / file_name
-            self.assertTrue(
-                file_path.exists(), f"{file_name}ファイルが存在する必要があります"
-            )
+            self.assertTrue(file_path.exists(), f"{file_name}ファイルが存在する必要があります")
 
     def test_src_modules_import(self):
         """srcモジュールのインポート確認"""

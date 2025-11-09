@@ -45,6 +45,7 @@ try:
 except ImportError:
     CV2_AVAILABLE = False
 
+
 class CS4CodingImageProcessor(IImageProcessor):
     """
     CS4Coding ImageProcessor with Kiro optimization
@@ -56,9 +57,7 @@ class CS4CodingImageProcessor(IImageProcessor):
     - Unified error handling and logging
     """
 
-    def __init__(
-        self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None
-    ):
+    def __init__(self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None):
         """
         Initialize the CS4Coding ImageProcessor
 
@@ -204,9 +203,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             return image
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.COPILOT, e, "pil_image_load", {"file_path": str(path)}
-            )
+            self.logger_system.log_error(AIComponent.COPILOT, e, "pil_image_load", {"file_path": str(path)})
             return None
 
     def _load_with_cv2(self, path: Path) -> Any | None:
@@ -222,9 +219,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             return image
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.COPILOT, e, "cv2_image_load", {"file_path": str(path)}
-            )
+            self.logger_system.log_error(AIComponent.COPILOT, e, "cv2_image_load", {"file_path": str(path)})
             return None
 
     def generate_thumbnail(self, image: Any, size: tuple[int, int]) -> Any | None:
@@ -264,9 +259,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                     new_height = size[1]
                     new_width = int(size[1] * aspect_ratio)
 
-                thumbnail = cv2.resize(
-                    image, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4
-                )
+                thumbnail = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LANCZOS4)
 
             # Track performance
             processing_time = time.time() - start_time
@@ -392,9 +385,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                         exif_data.update(gps_data)
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.COPILOT, e, "exifread_extraction", {"file_path": str(path)}
-            )
+            self.logger_system.log_error(AIComponent.COPILOT, e, "exifread_extraction", {"file_path": str(path)})
 
         return exif_data
 
@@ -472,9 +463,7 @@ class CS4CodingImageProcessor(IImageProcessor):
 
         return parsed
 
-    def _extract_gps_from_exifread(
-        self, tags: dict[str, Any]
-    ) -> dict[str, Any] | None:
+    def _extract_gps_from_exifread(self, tags: dict[str, Any]) -> dict[str, Any] | None:
         """Extract GPS data from ExifRead tags (CS4Coding implementation)"""
 
         try:
@@ -504,9 +493,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                             {
                                 "GPS Latitude": lat_decimal,  # 数値として返す
                                 "GPS Longitude": lon_decimal,  # 数値として返す
-                                "GPS Coordinates": self._format_coordinates(
-                                    lat_decimal, lon_decimal
-                                ),
+                                "GPS Coordinates": self._format_coordinates(lat_decimal, lon_decimal),
                                 "gps_coordinates": (lat_decimal, lon_decimal),
                             }
                         )
@@ -536,9 +523,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                         for part in gps_time_tag:
                             time_parts.append(str(self._parse_rational(str(part))))
                         if len(time_parts) >= 3:
-                            gps_data["GPS Timestamp"] = (
-                                f"{time_parts[0]}:{time_parts[1]}:{time_parts[2]}"
-                            )
+                            gps_data["GPS Timestamp"] = f"{time_parts[0]}:{time_parts[1]}:{time_parts[2]}"
                 except (ValueError, TypeError):
                     pass
 
@@ -572,11 +557,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                     minutes = self._parse_rational(coord_parts[1])
                     seconds = self._parse_rational(coord_parts[2])
 
-                    if (
-                        degrees is not None
-                        and minutes is not None
-                        and seconds is not None
-                    ):
+                    if degrees is not None and minutes is not None and seconds is not None:
                         decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
 
                         ref_str = str(gps_ref).upper().strip()
@@ -631,9 +612,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                         exif_data.update(self._parse_pil_exif(exif_dict))
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.COPILOT, e, "pil_exif_extraction", {"file_path": str(path)}
-            )
+            self.logger_system.log_error(AIComponent.COPILOT, e, "pil_exif_extraction", {"file_path": str(path)})
 
         return exif_data
 
@@ -691,9 +670,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             return path.stat().st_size > 0
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.COPILOT, e, "image_validation", {"file_path": str(path)}
-            )
+            self.logger_system.log_error(AIComponent.COPILOT, e, "image_validation", {"file_path": str(path)})
             return False
 
     def validate_coordinates(self, lat: float, lon: float) -> bool:
@@ -715,9 +692,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             return {
                 "File Name": path.name,
                 "File Size": self._format_file_size(stat_info.st_size),
-                "Modified": datetime.fromtimestamp(stat_info.st_mtime).strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                ),
+                "Modified": datetime.fromtimestamp(stat_info.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
                 "Full Path": str(path.absolute()),
                 "Extension": path.suffix.lower(),
                 "Size Bytes": stat_info.st_size,
@@ -746,9 +721,7 @@ class CS4CodingImageProcessor(IImageProcessor):
         except Exception:
             return f"{size_bytes} B"
 
-    def _create_image_metadata(
-        self, path: Path, exif_data: dict[str, Any]
-    ) -> ImageMetadata:
+    def _create_image_metadata(self, path: Path, exif_data: dict[str, Any]) -> ImageMetadata:
         """Create ImageMetadata object from EXIF data"""
 
         try:
@@ -784,9 +757,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                 try:
                     focal_str = exif_data["Focal Length"]
                     if "mm" in focal_str:
-                        metadata.focal_length = float(
-                            focal_str.replace("mm", "").strip()
-                        )
+                        metadata.focal_length = float(focal_str.replace("mm", "").strip())
                 except (ValueError, AttributeError):
                     pass
 
@@ -808,9 +779,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             return metadata
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO, e, "metadata_creation", {"file_path": str(path)}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "metadata_creation", {"file_path": str(path)})
 
             # Return basic metadata on error
             return ImageMetadata(
@@ -855,9 +824,7 @@ class CS4CodingImageProcessor(IImageProcessor):
         if metadata.has_gps:
             result["GPS Latitude"] = f"{metadata.latitude:.6f}°"
             result["GPS Longitude"] = f"{metadata.longitude:.6f}°"
-            result["GPS Coordinates"] = self._format_coordinates(
-                metadata.latitude, metadata.longitude
-            )
+            result["GPS Coordinates"] = self._format_coordinates(metadata.latitude, metadata.longitude)
             result["gps_coordinates"] = (metadata.latitude, metadata.longitude)
 
         return result
@@ -872,9 +839,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             hit_rate = self.cache_hits / total_requests if total_requests > 0 else 0
 
             avg_processing_time = (
-                sum(self.processing_times) / len(self.processing_times)
-                if self.processing_times
-                else 0
+                sum(self.processing_times) / len(self.processing_times) if self.processing_times else 0
             )
 
             return {
@@ -902,9 +867,7 @@ class CS4CodingImageProcessor(IImageProcessor):
             self.cache_hits = 0
             self.cache_misses = 0
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, "cache_clear", "ImageProcessor caches cleared"
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, "cache_clear", "ImageProcessor caches cleared")
 
     async def process_image_async(self, path: Path) -> ImageMetadata | None:
         """
@@ -927,9 +890,7 @@ class CS4CodingImageProcessor(IImageProcessor):
                 return None
 
             # Extract EXIF data
-            exif_data = await loop.run_in_executor(
-                self.executor, self.extract_exif, path
-            )
+            exif_data = await loop.run_in_executor(self.executor, self.extract_exif, path)
 
             # Create metadata
             metadata = self._create_image_metadata(path, exif_data)
@@ -968,6 +929,4 @@ class CS4CodingImageProcessor(IImageProcessor):
             )
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO, e, "image_processor_shutdown", {}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "image_processor_shutdown", {})

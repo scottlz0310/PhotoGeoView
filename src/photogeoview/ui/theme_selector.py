@@ -124,6 +124,7 @@ class ThemePreviewWidget(QWidget):
         }}
         """
 
+
 class ThemeSelectionDialog(QDialog):
     """洗練されたテーマ選択ダイアログ"""
 
@@ -144,9 +145,7 @@ class ThemeSelectionDialog(QDialog):
         self.setWindowTitle("テーマ選択")
         self.setModal(True)
         self.resize(800, 600)
-        self.setWindowFlags(
-            self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint
-        )
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
 
         layout = QVBoxLayout(self)
         layout.setSpacing(16)
@@ -154,9 +153,7 @@ class ThemeSelectionDialog(QDialog):
 
         # タイトル
         title_label = QLabel("アプリケーションのテーマを選択してください")
-        title_label.setStyleSheet(
-            "font-size: 16px; font-weight: bold; margin-bottom: 10px;"
-        )
+        title_label.setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         layout.addWidget(title_label)
 
         # 説明
@@ -260,9 +257,7 @@ class ThemeSelectionDialog(QDialog):
                 return {
                     "display_name": theme_info.get("display_name", theme_name),
                     "description": theme_info.get("description", f"{theme_name} theme"),
-                    "type": "Built-in"
-                    if theme_name in ["default", "dark", "light"]
-                    else "Custom",
+                    "type": "Built-in" if theme_name in ["default", "dark", "light"] else "Custom",
                     "colors": self._extract_colors_from_theme(theme_name),
                 }
         except Exception:
@@ -358,9 +353,7 @@ class ThemeSelectionDialog(QDialog):
             self.selection_label.setText("選択されたテーマ: なし")
             self.selection_label.setStyleSheet("color: gray; font-style: italic;")
         else:
-            theme_names = [
-                self._get_theme_display_name(name) for name in self.selected_themes
-            ]
+            theme_names = [self._get_theme_display_name(name) for name in self.selected_themes]
             self.selection_label.setText(f"選択されたテーマ: {', '.join(theme_names)}")
             self.selection_label.setStyleSheet("color: #0078d4; font-weight: bold;")
 
@@ -368,9 +361,7 @@ class ThemeSelectionDialog(QDialog):
         """テーマの表示名を取得"""
         try:
             theme_info = self.theme_manager.get_theme_info(theme_name)
-            return (
-                theme_info.get("display_name", theme_name) if theme_info else theme_name
-            )
+            return theme_info.get("display_name", theme_name) if theme_info else theme_name
         except Exception:
             return theme_name
 
@@ -424,6 +415,7 @@ class ThemeSelectionDialog(QDialog):
             if self.selected_themes:
                 self.preview_first_selected_theme()
 
+
 class SelectableThemeFrame(QFrame):
     """選択可能なテーマフレーム"""
 
@@ -460,9 +452,7 @@ class SelectableThemeFrame(QFrame):
         if self.is_current:
             current_label = QLabel("現在のテーマ")
             current_label.setAlignment(Qt.AlignCenter)
-            current_label.setStyleSheet(
-                "color: green; font-size: 10px; font-weight: bold;"
-            )
+            current_label.setStyleSheet("color: green; font-size: 10px; font-weight: bold;")
             layout.addWidget(current_label)
 
         # クリックイベントの設定
@@ -536,6 +526,7 @@ class SelectableThemeFrame(QFrame):
             # 現在のテーマは選択解除できない
             if not self.is_current:
                 self.theme_clicked.emit(self.theme_name)
+
 
 class ThemeToggleButton(QToolButton):
     """テーマ切り替えトグルボタン(選択テーマのみ)"""
@@ -619,9 +610,7 @@ class ThemeToggleButton(QToolButton):
                         ThemeInfo(
                             name=theme_name,
                             display_name=theme_info.get("display_name", theme_name),
-                            description=theme_info.get(
-                                "description", f"{theme_name} theme"
-                            ),
+                            description=theme_info.get("description", f"{theme_name} theme"),
                         )
                     )
 
@@ -707,6 +696,7 @@ class ThemeToggleButton(QToolButton):
         if len(self.available_themes) > 1:
             prev_index = (self.current_theme_index - 1) % len(self.available_themes)
             self.on_theme_selected(prev_index)
+
 
 class AdvancedThemeSelector(QWidget):
     """高度なテーマ選択コンポーネント"""

@@ -83,6 +83,7 @@ class ResourceCache:
         """Get current cache size"""
         return len(self._cache)
 
+
 class LazyResourceLoader:
     """Lazy loading manager for theme resources"""
 
@@ -97,9 +98,7 @@ class LazyResourceLoader:
         """Check if resource is already loaded"""
         return resource_id in self._loaded_resources
 
-    async def load_resource(
-        self, resource_id: str, loader_func: callable, *args, **kwargs
-    ) -> Any:
+    async def load_resource(self, resource_id: str, loader_func: callable, *args, **kwargs) -> Any:
         """Load resource lazily with deduplication"""
         with self._lock:
             # Return immediately if already loaded
@@ -111,15 +110,11 @@ class LazyResourceLoader:
                 try:
                     return await self._loading_tasks[resource_id]
                 except Exception as e:
-                    self.logger.error(
-                        f"Failed to wait for loading task {resource_id}: {e}"
-                    )
+                    self.logger.error(f"Failed to wait for loading task {resource_id}: {e}")
                     return False
 
             # Start new loading task
-            task = asyncio.create_task(
-                self._load_resource_impl(resource_id, loader_func, *args, **kwargs)
-            )
+            task = asyncio.create_task(self._load_resource_impl(resource_id, loader_func, *args, **kwargs))
             self._loading_tasks[resource_id] = task
 
             try:
@@ -130,9 +125,7 @@ class LazyResourceLoader:
                 if resource_id in self._loading_tasks:
                     del self._loading_tasks[resource_id]
 
-    async def _load_resource_impl(
-        self, resource_id: str, loader_func: callable, *args, **kwargs
-    ) -> Any:
+    async def _load_resource_impl(self, resource_id: str, loader_func: callable, *args, **kwargs) -> Any:
         """Internal resource loading implementation"""
         try:
             start_time = time.time()
@@ -155,9 +148,7 @@ class LazyResourceLoader:
                         else:
                             callback(resource_id, result)
                     except Exception as e:
-                        self.logger.error(
-                            f"Resource callback failed for {resource_id}: {e}"
-                        )
+                        self.logger.error(f"Resource callback failed for {resource_id}: {e}")
 
                 # Clean up callbacks
                 del self._resource_callbacks[resource_id]
@@ -186,6 +177,7 @@ class LazyResourceLoader:
                 self._loading_tasks[resource_id].cancel()
                 del self._loading_tasks[resource_id]
 
+
 class PerformanceMonitor:
     """Performance monitoring for theme and navigation operations"""
 
@@ -202,15 +194,11 @@ class PerformanceMonitor:
         with self._lock:
             self._start_times[operation_id] = time.time()
 
-    def end_operation(
-        self, operation_id: str, operation_type: str = "general"
-    ) -> float:
+    def end_operation(self, operation_id: str, operation_type: str = "general") -> float:
         """End timing an operation and record the duration"""
         with self._lock:
             if operation_id not in self._start_times:
-                self.logger.warning(
-                    f"No start time found for operation: {operation_id}"
-                )
+                self.logger.warning(f"No start time found for operation: {operation_id}")
                 return 0.0
 
             duration = time.time() - self._start_times[operation_id]
@@ -224,9 +212,7 @@ class PerformanceMonitor:
 
             # Limit history size
             if len(self._metrics[operation_type]) > self.max_metric_history:
-                self._metrics[operation_type] = self._metrics[operation_type][
-                    -self.max_metric_history :
-                ]
+                self._metrics[operation_type] = self._metrics[operation_type][-self.max_metric_history :]
 
             # Update counter
             self._counters[operation_type] = self._counters.get(operation_type, 0) + 1
@@ -243,9 +229,7 @@ class PerformanceMonitor:
 
             # Limit history size
             if len(self._metrics[metric_name]) > self.max_metric_history:
-                self._metrics[metric_name] = self._metrics[metric_name][
-                    -self.max_metric_history :
-                ]
+                self._metrics[metric_name] = self._metrics[metric_name][-self.max_metric_history :]
 
     def increment_counter(self, counter_name: str, amount: int = 1) -> None:
         """Increment a counter"""
@@ -286,6 +270,7 @@ class PerformanceMonitor:
             self._metrics.clear()
             self._counters.clear()
             self._start_times.clear()
+
 
 class PerformanceOptimizer:
     """Main performance optimizer coordinating all optimization strategies"""
@@ -372,9 +357,7 @@ class PerformanceOptimizer:
                 ]:
                     if metric_name in metrics:
                         stats = metrics[metric_name]
-                        summary.append(
-                            f"{metric_name}: {stats['avg']:.3f}s avg ({stats['count']} ops)"
-                        )
+                        summary.append(f"{metric_name}: {stats['avg']:.3f}s avg ({stats['count']} ops)")
 
                 # Add cache stats
                 summary.append(
@@ -391,9 +374,7 @@ class PerformanceOptimizer:
 
     # Theme optimization methods
 
-    async def optimize_theme_loading(
-        self, theme_name: str, loader_func: callable
-    ) -> Any:
+    async def optimize_theme_loading(self, theme_name: str, loader_func: callable) -> Any:
         """Optimize theme loading with caching and lazy loading"""
         if not self.enable_lazy_loading:
             return await asyncio.to_thread(loader_func)
@@ -431,9 +412,7 @@ class PerformanceOptimizer:
         cache_key = f"path_{path!s}"
         return self.path_cache.get(cache_key)
 
-    async def optimize_breadcrumb_rendering(
-        self, path: Path, segments: list[Any]
-    ) -> list[Any]:
+    async def optimize_breadcrumb_rendering(self, path: Path, segments: list[Any]) -> list[Any]:
         """Optimize breadcrumb rendering for long paths"""
         if len(segments) <= 5:  # Short paths don't need optimization
             return segments

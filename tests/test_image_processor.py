@@ -106,28 +106,16 @@ class TestCS4CodingImageProcessor(unittest.TestCase):
         """Test GPS coordinate validation"""
 
         # Valid coordinates
-        self.assertTrue(
-            self.processor.validate_coordinates(40.7128, -74.0060)
-        )  # New York
-        self.assertTrue(
-            self.processor.validate_coordinates(0, 0)
-        )  # Equator/Prime Meridian
+        self.assertTrue(self.processor.validate_coordinates(40.7128, -74.0060))  # New York
+        self.assertTrue(self.processor.validate_coordinates(0, 0))  # Equator/Prime Meridian
         self.assertTrue(self.processor.validate_coordinates(90, 180))  # Extremes
         self.assertTrue(self.processor.validate_coordinates(-90, -180))  # Extremes
 
         # Invalid coordinates
-        self.assertFalse(
-            self.processor.validate_coordinates(91, 0)
-        )  # Latitude too high
-        self.assertFalse(
-            self.processor.validate_coordinates(-91, 0)
-        )  # Latitude too low
-        self.assertFalse(
-            self.processor.validate_coordinates(0, 181)
-        )  # Longitude too high
-        self.assertFalse(
-            self.processor.validate_coordinates(0, -181)
-        )  # Longitude too low
+        self.assertFalse(self.processor.validate_coordinates(91, 0))  # Latitude too high
+        self.assertFalse(self.processor.validate_coordinates(-91, 0))  # Latitude too low
+        self.assertFalse(self.processor.validate_coordinates(0, 181))  # Longitude too high
+        self.assertFalse(self.processor.validate_coordinates(0, -181))  # Longitude too low
 
     def test_format_coordinates(self):
         """Test GPS coordinate formatting"""
@@ -390,9 +378,7 @@ class TestImageProcessorIntegration(unittest.TestCase):
         self.config_manager = Mock(spec=ConfigManager)
         self.logger_system = LoggerSystem()
 
-        self.processor = CS4CodingImageProcessor(
-            config_manager=self.config_manager, logger_system=self.logger_system
-        )
+        self.processor = CS4CodingImageProcessor(config_manager=self.config_manager, logger_system=self.logger_system)
 
     def tearDown(self):
         """Clean up integration test environment"""

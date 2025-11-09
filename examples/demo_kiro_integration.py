@@ -36,19 +36,13 @@ async def main():
     logger_system = LoggerSystem()
 
     # Initialize performance monitor
-    performance_monitor = KiroPerformanceMonitor(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    performance_monitor = KiroPerformanceMonitor(config_manager=config_manager, logger_system=logger_system)
 
     # Initialize cache system
-    cache_system = UnifiedCacheSystem(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    cache_system = UnifiedCacheSystem(config_manager=config_manager, logger_system=logger_system)
 
     # Initialize state manager
-    state_manager = StateManager(
-        config_manager=config_manager, logger_system=logger_system
-    )
+    state_manager = StateManager(config_manager=config_manager, logger_system=logger_system)
 
     print("   ✓ PerformanceMonitor initialized")
     print("   ✓ UnifiedCacheSystem initialized")
@@ -70,9 +64,7 @@ async def main():
         test_key = f"test_{cache_type}_key"
         test_value = f"test_{cache_type}_data_" + "x" * 100  # Some data
 
-        success = cache_system.put(
-            cache_type, test_key, test_value, component=AIComponent.KIRO
-        )
+        success = cache_system.put(cache_type, test_key, test_value, component=AIComponent.KIRO)
         print(f"   ✓ Cached data in {cache_type}: {success}")
 
         # Get the data back
@@ -150,9 +142,7 @@ async def main():
 
     def state_change_listener(key, old_value, new_value):
         changes_received.append((key, old_value, new_value))
-        print(
-            f"   ✓ State change detected: {key} changed from {old_value} to {new_value}"
-        )
+        print(f"   ✓ State change detected: {key} changed from {old_value} to {new_value}")
 
     # Add listener
     state_manager.add_change_listener("current_theme", state_change_listener)
@@ -211,9 +201,7 @@ async def main():
 
     # Show stats after clearing
     stats_after = cache_system.get_stats()
-    print(
-        f"   Cache entries after clearing 'general': {stats_after['overall']['total_entries']}"
-    )
+    print(f"   Cache entries after clearing 'general': {stats_after['overall']['total_entries']}")
 
     # Test state persistence
     print("\n10. Testing State Persistence...")
@@ -254,17 +242,13 @@ async def main():
     print(f"   - Memory usage: {final_cache_stats['overall']['total_size_mb']:.2f} MB")
 
     print("\n   Performance Monitor:")
-    print(
-        f"   - System memory: {final_perf_metrics['memory']['process_rss_mb']:.1f} MB"
-    )
+    print(f"   - System memory: {final_perf_metrics['memory']['process_rss_mb']:.1f} MB")
     print(f"   - CPU usage: {final_perf_metrics['cpu']['process_percent']:.1f}%")
     print(f"   - AI components monitored: {len(final_perf_metrics['ai_components'])}")
 
     print("\n   State Manager:")
     print(f"   - Session duration: {final_state_summary['session_duration']:.1f}s")
-    print(
-        f"   - State changes tracked: {len(final_state_summary['performance_operations'])}"
-    )
+    print(f"   - State changes tracked: {len(final_state_summary['performance_operations'])}")
     print(f"   - Current theme: {final_state_summary['current_theme']}")
 
     # Shutdown components

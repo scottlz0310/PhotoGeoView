@@ -223,9 +223,7 @@ class TestCheckerFactory:
         class InvalidChecker:
             pass
 
-        with pytest.raises(
-            ValueError, match="Checker class must implement CheckerInterface"
-        ):
+        with pytest.raises(ValueError, match="Checker class must implement CheckerInterface"):
             CheckerFactory.register_checker("invalid", InvalidChecker)
 
     def test_create_checker(self, sample_config):
@@ -392,9 +390,7 @@ class TestInterfaceIntegration:
         # Cleanup
         checker.cleanup()
 
-    def test_multiple_interface_implementations(
-        self, sample_config, sample_simulation_result
-    ):
+    def test_multiple_interface_implementations(self, sample_config, sample_simulation_result):
         """Test using multiple interface implementations together."""
         # Create instances of different interfaces
         checker = ConcreteChecker(sample_config)

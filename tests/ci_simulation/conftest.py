@@ -129,9 +129,7 @@ def mock_checker():
 def sample_check_tasks():
     """Provide sample CheckTask objects for testing."""
     return [
-        CheckTask(
-            name="code_quality", check_type="code_quality", dependencies=[], priority=1
-        ),
+        CheckTask(name="code_quality", check_type="code_quality", dependencies=[], priority=1),
         CheckTask(
             name="security_scan",
             check_type="security",

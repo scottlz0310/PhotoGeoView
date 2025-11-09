@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List
 
 
 class AIContributor(Enum):
@@ -31,9 +30,9 @@ class FileAnalysis:
     file_path: Path
     primary_contributor: AIContributor
     purpose: str
-    ai_mentions: List[str]
-    imports: List[str]
-    functions: List[str]
+    ai_mentions: list[str]
+    imports: list[str]
+    functions: list[str]
 
 
 class StandaloneDocGenerator:
@@ -41,7 +40,7 @@ class StandaloneDocGenerator:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.file_analyses: List[FileAnalysis] = []
+        self.file_analyses: list[FileAnalysis] = []
 
         # AI識別パターン
         self.ai_patterns = {
@@ -149,7 +148,7 @@ class StandaloneDocGenerator:
 
         return "目的不明"
 
-    def _extract_imports(self, content: str) -> List[str]:
+    def _extract_imports(self, content: str) -> list[str]:
         """インポート文を抽出"""
         imports = []
         import_pattern = r"^(?:from\s+(\S+)\s+)?import\s+(.+)$"
@@ -164,7 +163,7 @@ class StandaloneDocGenerator:
 
         return list(set(imports))[:10]  # 重複除去、最大10個
 
-    def _extract_functions(self, content: str) -> List[str]:
+    def _extract_functions(self, content: str) -> list[str]:
         """関数・メソッドを抽出"""
         functions = []
         function_pattern = r"def\s+(\w+)\s*\("
@@ -273,14 +272,10 @@ class StandaloneDocGenerator:
 
         for analysis in self.file_analyses:
             contributor_stats[analysis.primary_contributor]["files"] += 1
-            contributor_stats[analysis.primary_contributor]["functions"] += len(
-                analysis.functions
-            )
+            contributor_stats[analysis.primary_contributor]["functions"] += len(analysis.functions)
 
         for contributor, stats in contributor_stats.items():
-            file_percentage = (
-                (stats["files"] / total_files * 100) if total_files > 0 else 0
-            )
+            file_percentage = (stats["files"] / total_files * 100) if total_files > 0 else 0
 
             report_lines.extend(
                 [
@@ -329,11 +324,7 @@ class StandaloneDocGenerator:
         ]
 
         # CS4Coding関連ファイルを抽出
-        copilot_files = [
-            a
-            for a in self.file_analyses
-            if a.primary_contributor == AIContributor.COPILOT
-        ]
+        copilot_files = [a for a in self.file_analyses if a.primary_contributor == AIContributor.COPILOT]
         if copilot_files:
             guide_lines.append("**関連ファイル**:")
             for analysis in copilot_files[:5]:
@@ -359,11 +350,7 @@ class StandaloneDocGenerator:
         )
 
         # Cursor関連ファイルを抽出
-        cursor_files = [
-            a
-            for a in self.file_analyses
-            if a.primary_contributor == AIContributor.CURSOR
-        ]
+        cursor_files = [a for a in self.file_analyses if a.primary_contributor == AIContributor.CURSOR]
         if cursor_files:
             guide_lines.append("**関連ファイル**:")
             for analysis in cursor_files[:5]:
@@ -389,9 +376,7 @@ class StandaloneDocGenerator:
         )
 
         # Kiro関連ファイルを抽出
-        kiro_files = [
-            a for a in self.file_analyses if a.primary_contributor == AIContributor.KIRO
-        ]
+        kiro_files = [a for a in self.file_analyses if a.primary_contributor == AIContributor.KIRO]
         if kiro_files:
             guide_lines.append("**関連ファイル**:")
             for analysis in kiro_files[:5]:
@@ -441,17 +426,13 @@ class StandaloneDocGenerator:
         # 貢献度レポート生成
         print("AI貢献度レポートを生成中...")
         contribution_report = self.generate_contribution_report()
-        (output_dir / "ai_contribution_report.md").write_text(
-            contribution_report, encoding="utf-8"
-        )
+        (output_dir / "ai_contribution_report.md").write_text(contribution_report, encoding="utf-8")
         print("✓ AI貢献度レポートを生成しました")
 
         # トラブルシューティングガイド生成
         print("トラブルシューティングガイドを生成中...")
         troubleshooting_guide = self.generate_troubleshooting_guide()
-        (output_dir / "troubleshooting_guide.md").write_text(
-            troubleshooting_guide, encoding="utf-8"
-        )
+        (output_dir / "troubleshooting_guide.md").write_text(troubleshooting_guide, encoding="utf-8")
         print("✓ トラブルシューティングガイドを生成しました")
 
         print(f"\n統合ドキュメントを生成しました: {output_dir}")

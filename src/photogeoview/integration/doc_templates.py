@@ -25,6 +25,7 @@ class DocumentTemplate:
     variables: list[str]
     description: str
 
+
 class DocumentTemplateManager:
     """ドキュメントテンプレート管理システム"""
 
@@ -232,11 +233,10 @@ AI貢献者情報:
             "description": template.description,
             "variables": template.variables,
             "template_preview": (
-                template.template[:200] + "..."
-                if len(template.template) > 200
-                else template.template
+                template.template[:200] + "..." if len(template.template) > 200 else template.template
             ),
         }
+
 
 class AIAttributionFormatter:
     """AI貢献度情報のフォーマッター"""
@@ -306,6 +306,7 @@ class AIAttributionFormatter:
 - **Cursor (CursorBLD)**: UI/UX設計、テーマシステム、サムネイル表示
 - **Kiro**: 統合・品質管理、パフォーマンス最適化、ドキュメント生成"""
 
+
 # 使用例
 def example_usage():
     """テンプレートシステムの使用例"""
@@ -319,12 +320,8 @@ def example_usage():
         "description": "テンプレートシステムの使用例を示すファイル",
         "primary_contributor": "Kiro",
         "contributor_details": formatter.format_ai_contributors_section(),
-        "dependencies_section": formatter.format_dependencies_section(
-            ["os", "sys", "pathlib"]
-        ),
-        "api_section": formatter.format_api_section(
-            ["main", "process_data", "generate_report"]
-        ),
+        "dependencies_section": formatter.format_dependencies_section(["os", "sys", "pathlib"]),
+        "api_section": formatter.format_api_section(["main", "process_data", "generate_report"]),
         "last_updated": datetime.now().strftime("%Y年%m月%d日"),
         "author": "Kiro AI統合システム",
     }
@@ -335,6 +332,7 @@ def example_usage():
     logger.info("ファイルヘッダーテンプレートを生成しました")
     print("生成されたファイルヘッダー:")
     print(header)
+
 
 if __name__ == "__main__":
     example_usage()

@@ -99,9 +99,7 @@ class TestComprehensiveAIIntegration:
                     pass
 
             # 統合設定の保存・読み込みテスト
-            if hasattr(config_manager, "save_config") and hasattr(
-                config_manager, "load_config"
-            ):
+            if hasattr(config_manager, "save_config") and hasattr(config_manager, "load_config"):
                 config_manager.save_config()
                 config_manager.load_config()
 
@@ -208,16 +206,12 @@ class TestComprehensiveAIIntegration:
             # AI操作ログテスト
             if hasattr(logging_system, "log_ai_operation"):
                 with patch.object(logging_system, "log_ai_operation") as mock_log:
-                    logging_system.log_ai_operation(
-                        "kiro", "test", "test_operation", "test message"
-                    )
+                    logging_system.log_ai_operation("kiro", "test", "test_operation", "test message")
                     mock_log.assert_called_once()
 
             # 統合イベントログテスト
             if hasattr(logging_system, "log_integration_event"):
-                with patch.object(
-                    logging_system, "log_integration_event"
-                ) as mock_event:
+                with patch.object(logging_system, "log_integration_event") as mock_event:
                     logging_system.log_integration_event("test event", ["kiro"], {})
                     mock_event.assert_called_once()
 
@@ -267,9 +261,7 @@ class TestComprehensiveAIIntegration:
                 test_error = Exception("統合テストエラー")
 
                 with patch.object(error_handler, "handle_error") as mock_handle:
-                    error_handler.handle_error(
-                        test_error, ErrorCategory.INTEGRATION_ERROR, {"test": "context"}
-                    )
+                    error_handler.handle_error(test_error, ErrorCategory.INTEGRATION_ERROR, {"test": "context"})
                     mock_handle.assert_called_once()
 
         except ImportError as e:
@@ -460,24 +452,16 @@ class TestRequirementValidation:
         # ドキュメントファイルの存在確認
         docs_dir = project_root / "docs" / "ai_integration"
 
-        assert docs_dir.exists(), (
-            "要件4.1: AI統合ドキュメントディレクトリが存在しません"
-        )
-        assert (docs_dir / "api_documentation.md").exists(), (
-            "要件4.1: APIドキュメントが存在しません"
-        )
-        assert (docs_dir / "ai_contribution_report.md").exists(), (
-            "要件4.1: AI貢献度レポートが存在しません"
-        )
+        assert docs_dir.exists(), "要件4.1: AI統合ドキュメントディレクトリが存在しません"
+        assert (docs_dir / "api_documentation.md").exists(), "要件4.1: APIドキュメントが存在しません"
+        assert (docs_dir / "ai_contribution_report.md").exists(), "要件4.1: AI貢献度レポートが存在しません"
 
     def test_requirement_5_1_quality_assurance(self):
         """要件5.1: 品質保証システムの検証"""
         # 品質保証ツールの存在確認
         tools_dir = project_root / "tools"
 
-        assert (tools_dir / "ai_quality_checker.py").exists(), (
-            "要件5.1: AI品質チェッカーが存在しません"
-        )
+        assert (tools_dir / "ai_quality_checker.py").exists(), "要件5.1: AI品質チェッカーが存在しません"
         # 実際のワークフローファイル名に修正
         github_workflows = project_root / ".github" / "workflows"
         ci_files = list(github_workflows.glob("*ci*.yml"))

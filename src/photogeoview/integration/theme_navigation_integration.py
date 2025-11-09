@@ -73,9 +73,7 @@ class IThemeNavigationIntegration(ABC):
         pass
 
     @abstractmethod
-    def unregister_integrated_component(
-        self, component: "IThemeNavigationAware"
-    ) -> bool:
+    def unregister_integrated_component(self, component: "IThemeNavigationAware") -> bool:
         """
         Unregister an integrated component
 
@@ -110,6 +108,7 @@ class IThemeNavigationIntegration(ABC):
         """
         pass
 
+
 class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
     """
     Protocol for components that are aware of both theme and navigation changes
@@ -136,9 +135,7 @@ class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
         """
         ...
 
-    def update_integrated_state(
-        self, theme: ThemeConfiguration, nav_state: NavigationState
-    ) -> None:
+    def update_integrated_state(self, theme: ThemeConfiguration, nav_state: NavigationState) -> None:
         """
         Update component state with both theme and navigation information
 
@@ -157,6 +154,7 @@ class IThemeNavigationAware(IThemeAware, INavigationAware, Protocol):
             lists of required properties/events
         """
         ...
+
 
 class IBreadcrumbThemeProvider(ABC):
     """
@@ -219,9 +217,7 @@ class IBreadcrumbThemeProvider(ABC):
         pass
 
     @abstractmethod
-    def get_segment_styles(
-        self, theme: ThemeConfiguration, segment_state: str
-    ) -> dict[str, str]:
+    def get_segment_styles(self, theme: ThemeConfiguration, segment_state: str) -> dict[str, str]:
         """
         Get styles for breadcrumb segments based on state
 
@@ -247,6 +243,7 @@ class IBreadcrumbThemeProvider(ABC):
         """
         pass
 
+
 class INavigationThemeRenderer(ABC):
     """
     Abstract interface for rendering navigation components with theme support
@@ -256,9 +253,7 @@ class INavigationThemeRenderer(ABC):
     """
 
     @abstractmethod
-    def render_themed_breadcrumb(
-        self, nav_state: NavigationState, theme: ThemeConfiguration
-    ) -> Any:
+    def render_themed_breadcrumb(self, nav_state: NavigationState, theme: ThemeConfiguration) -> Any:
         """
         Render breadcrumb navigation with theme styling
 
@@ -319,6 +314,7 @@ class INavigationThemeRenderer(ABC):
         """
         pass
 
+
 class IIntegratedEventManager(ABC):
     """
     Abstract interface for managing integrated theme and navigation events
@@ -354,9 +350,7 @@ class IIntegratedEventManager(ABC):
         pass
 
     @abstractmethod
-    def emit_theme_navigation_event(
-        self, event_type: str, data: dict[str, Any]
-    ) -> None:
+    def emit_theme_navigation_event(self, event_type: str, data: dict[str, Any]) -> None:
         """
         Emit an integrated theme/navigation event
 
@@ -380,6 +374,7 @@ class IIntegratedEventManager(ABC):
     def clear_event_history(self) -> None:
         """Clear integrated event history"""
         pass
+
 
 class IConfigurationIntegration(ABC):
     """
@@ -458,6 +453,7 @@ class IConfigurationIntegration(ABC):
         """
         pass
 
+
 class IPerformanceIntegration(ABC):
     """
     Abstract interface for integrated performance monitoring
@@ -497,9 +493,7 @@ class IPerformanceIntegration(ABC):
         pass
 
     @abstractmethod
-    def log_integration_operation(
-        self, operation: str, duration: float, details: dict[str, Any]
-    ) -> None:
+    def log_integration_operation(self, operation: str, duration: float, details: dict[str, Any]) -> None:
         """
         Log performance data for an integration operation
 
@@ -530,10 +524,9 @@ class IPerformanceIntegration(ABC):
         """
         pass
 
+
 # Type aliases for convenience
-IntegratedEventCallback = Callable[
-    [str, dict[str, Any]], None
-]  # (event_type, data) -> None
+IntegratedEventCallback = Callable[[str, dict[str, Any]], None]  # (event_type, data) -> None
 ThemeNavigationConfig = dict[str, Any]  # Configuration dictionary
 IntegrationMetrics = dict[str, Any]  # Performance metrics dictionary
 StyleProperties = dict[str, str]  # Style property dictionary

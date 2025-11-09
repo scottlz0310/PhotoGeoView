@@ -42,6 +42,7 @@ class UIIntegrationState:
     ui_responsive: bool = True
     last_integration_update: datetime | None = None
 
+
 class UIIntegrationController(QObject):
     """
     Controller for seamless UI integration between AI components
@@ -142,27 +143,19 @@ class UIIntegrationController(QObject):
 
             # Thumbnail grid connections
             self.thumbnail_grid.image_selected.connect(self._handle_image_selection)
-            self.thumbnail_grid.thumbnail_requested.connect(
-                self._handle_thumbnail_request
-            )
+            self.thumbnail_grid.thumbnail_requested.connect(self._handle_thumbnail_request)
 
             # Theme manager connections
-            self.theme_manager.theme_change_requested.connect(
-                self._handle_theme_change_request
-            )
+            self.theme_manager.theme_change_requested.connect(self._handle_theme_change_request)
             self.theme_manager.theme_applied.connect(self._handle_theme_applied)
 
             # Image processor connections
             self.image_processor.image_processed.connect(self._handle_image_processed)
             self.image_processor.exif_extracted.connect(self._handle_exif_extracted)
-            self.image_processor.thumbnail_generated.connect(
-                self._handle_thumbnail_generated
-            )
+            self.image_processor.thumbnail_generated.connect(self._handle_thumbnail_generated)
 
             # Performance monitor connections
-            self.performance_monitor.performance_alert.connect(
-                self._handle_performance_alert
-            )
+            self.performance_monitor.performance_alert.connect(self._handle_performance_alert)
 
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
@@ -246,10 +239,7 @@ class UIIntegrationController(QObject):
 
             if folder_path.exists() and folder_path.is_dir():
                 for file_path in folder_path.iterdir():
-                    if (
-                        file_path.is_file()
-                        and file_path.suffix.lower() in image_extensions
-                    ):
+                    if file_path.is_file() and file_path.suffix.lower() in image_extensions:
                         image_files.append(file_path)
 
             # Sort images
@@ -324,9 +314,7 @@ class UIIntegrationController(QObject):
                 self.image_processor.generate_thumbnail_async(
                     image_path,
                     (thumbnail_size, thumbnail_size),
-                    callback=lambda path, thumb: self._handle_thumbnail_generated(
-                        path, thumb
-                    ),
+                    callback=lambda path, thumb: self._handle_thumbnail_generated(path, thumb),
                 )
 
         except Exception as e:
@@ -350,9 +338,7 @@ class UIIntegrationController(QObject):
             # Load image metadata asynchronously
             self._load_image_metadata_async(image_path)
 
-            self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "image_selection", f"Image selected: {image_path}"
-            )
+            self.logger_system.log_ai_operation(AIComponent.CURSOR, "image_selection", f"Image selected: {image_path}")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -379,9 +365,7 @@ class UIIntegrationController(QObject):
 
             self.image_processor.extract_metadata_async(
                 image_path,
-                callback=lambda path, metadata: self._handle_metadata_extracted(
-                    path, metadata
-                ),
+                callback=lambda path, metadata: self._handle_metadata_extracted(path, metadata),
             )
 
         except Exception as e:
@@ -423,9 +407,7 @@ class UIIntegrationController(QObject):
                 AIComponent.COPILOT,
             )
 
-    def _prepare_map_async(
-        self, latitude: float, longitude: float, metadata: ImageMetadata
-    ):
+    def _prepare_map_async(self, latitude: float, longitude: float, metadata: ImageMetadata):
         """Prepare map data asynchronously"""
         try:
             with self.ui_mutex:
@@ -499,9 +481,7 @@ class UIIntegrationController(QObject):
             self.image_processor.generate_thumbnail_async(
                 image_path,
                 (thumbnail_size, thumbnail_size),
-                callback=lambda path, thumb: self._handle_thumbnail_generated(
-                    path, thumb
-                ),
+                callback=lambda path, thumb: self._handle_thumbnail_generated(path, thumb),
             )
 
         except Exception as e:
@@ -608,9 +588,7 @@ class UIIntegrationController(QObject):
 
             # Update cache status
             with self.ui_mutex:
-                self.integration_state.thumbnail_cache_status["theme_applied"] = (
-                    datetime.now()
-                )
+                self.integration_state.thumbnail_cache_status["theme_applied"] = datetime.now()
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -714,9 +692,7 @@ class UIIntegrationController(QObject):
                     and self.integration_state.exif_loading_active
                     and self.integration_state.map_rendering_active
                 ):
-                    self.ui_performance_alert.emit(
-                        "warning", "Multiple heavy operations running simultaneously"
-                    )
+                    self.ui_performance_alert.emit("warning", "Multiple heavy operations running simultaneously")
 
         except Exception as e:
             self.error_handler.handle_error(

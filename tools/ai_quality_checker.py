@@ -145,24 +145,16 @@ class AIQualityChecker:
 
         return max(scores.items(), key=lambda x: x[1])[0]
 
-    def check_function_length(
-        self, file_path: Path, tree: ast.AST, ai_component: AIComponent
-    ) -> None:
+    def check_function_length(self, file_path: Path, tree: ast.AST, ai_component: AIComponent) -> None:
         """関数の長さをチェック"""
         max_length = self.quality_standards[ai_component]["max_function_length"]
 
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                func_length = (
-                    node.end_lineno - node.lineno if hasattr(node, "end_lineno") else 0
-                )
+                func_length = node.end_lineno - node.lineno if hasattr(node, "end_lineno") else 0
 
                 if func_length > max_length:
-                    severity = (
-                        QualityLevel.POOR
-                        if func_length > max_length * 1.5
-                        else QualityLevel.ACCEPTABLE
-                    )
+                    severity = QualityLevel.POOR if func_length > max_length * 1.5 else QualityLevel.ACCEPTABLE
 
                     self.issues.append(
                         QualityIssue(
@@ -176,9 +168,7 @@ class AIQualityChecker:
                         )
                     )
 
-    def check_docstring_presence(
-        self, file_path: Path, tree: ast.AST, ai_component: AIComponent
-    ) -> None:
+    def check_docstring_presence(self, file_path: Path, tree: ast.AST, ai_component: AIComponent) -> None:
         """docstringの存在をチェック"""
         if not self.quality_standards[ai_component]["required_docstring"]:
             return
@@ -206,9 +196,7 @@ class AIQualityChecker:
                             )
                         )
 
-    def check_type_hints(
-        self, file_path: Path, tree: ast.AST, ai_component: AIComponent
-    ) -> None:
+    def check_type_hints(self, file_path: Path, tree: ast.AST, ai_component: AIComponent) -> None:
         """型ヒントの存在をチェック"""
         if not self.quality_standards[ai_component]["required_type_hints"]:
             return
@@ -245,27 +233,20 @@ class AIQualityChecker:
                             )
                         )
 
-    def check_error_handling(
-        self, file_path: Path, tree: ast.AST, ai_component: AIComponent
-    ) -> None:
+    def check_error_handling(self, file_path: Path, tree: ast.AST, ai_component: AIComponent) -> None:
         """エラーハンドリングをチェック"""
-        if not self.quality_standards[ai_component].get(
-            "error_handling_required", False
-        ):
+        if not self.quality_standards[ai_component].get("error_handling_required", False):
             return
 
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                has_try_except = any(
-                    isinstance(child, ast.Try) for child in ast.walk(node)
-                )
+                has_try_except = any(isinstance(child, ast.Try) for child in ast.walk(node))
 
                 # ファイル操作や外部API呼び出しがある場合はエラーハンドリングが必要
                 has_risky_operations = any(
                     isinstance(child, ast.Call)
                     and isinstance(child.func, ast.Attribute)
-                    and child.func.attr
-                    in ["open", "read", "write", "request", "get", "post"]
+                    and child.func.attr in ["open", "read", "write", "request", "get", "post"]
                     for child in ast.walk(node)
                 )
 
@@ -282,9 +263,7 @@ class AIQualityChecker:
                         )
                     )
 
-    def check_ui_consistency(
-        self, file_path: Path, content: str, ai_component: AIComponent
-    ) -> None:
+    def check_ui_consistency(self, file_path: Path, content: str, ai_component: AIComponent) -> None:
         """UI一貫性をチェック（Cursor専用）"""
         if ai_component != AIComponent.CURSOR:
             return
@@ -305,18 +284,14 @@ class AIQualityChecker:
                     )
                 )
 
-    def check_integration_quality(
-        self, file_path: Path, content: str, ai_component: AIComponent
-    ) -> None:
+    def check_integration_quality(self, file_path: Path, content: str, ai_component: AIComponent) -> None:
         """統合品質をチェック（Kiro専用）"""
         if ai_component != AIComponent.KIRO:
             return
 
         # ログ使用の確認
         if "print(" in content:
-            print_lines = [
-                i + 1 for i, line in enumerate(content.split("\n")) if "print(" in line
-            ]
+            print_lines = [i + 1 for i, line in enumerate(content.split("\n")) if "print(" in line]
             for line_num in print_lines:
                 self.issues.append(
                     QualityIssue(
@@ -438,9 +413,7 @@ class AIQualityChecker:
             overall_score=overall_score,
         )
 
-    def generate_report(
-        self, report: QualityReport, output_path: Path | None = None
-    ) -> str:
+    def generate_report(self, report: QualityReport, output_path: Path | None = None) -> str:
         """品質レポートを生成"""
         report_lines = [
             "# PhotoGeoView AI統合品質レポート",
@@ -470,9 +443,7 @@ class AIQualityChecker:
         if report.issues:
             report_lines.extend(["", "## 詳細問題一覧", ""])
 
-            for issue in sorted(
-                report.issues, key=lambda x: (x.severity.value, str(x.file_path))
-            ):
+            for issue in sorted(report.issues, key=lambda x: (x.severity.value, str(x.file_path))):
                 report_lines.extend(
                     [
                         f"### {issue.file_path.name}:{issue.line_number}",
@@ -521,12 +492,8 @@ def main():
             "total_files": report.total_files,
             "total_issues": report.total_issues,
             "overall_score": report.overall_score,
-            "issues_by_severity": {
-                k.value: v for k, v in report.issues_by_severity.items()
-            },
-            "issues_by_component": {
-                k.value: v for k, v in report.issues_by_component.items()
-            },
+            "issues_by_severity": {k.value: v for k, v in report.issues_by_severity.items()},
+            "issues_by_component": {k.value: v for k, v in report.issues_by_component.items()},
             "issues": [
                 {
                     "file_path": str(issue.file_path),
@@ -559,9 +526,7 @@ def main():
 
     # 重大な問題がある場合の終了処理
     if args.fail_on_critical and report.issues_by_severity[QualityLevel.CRITICAL] > 0:
-        print(
-            f"重大な問題が {report.issues_by_severity[QualityLevel.CRITICAL]} 件見つかりました"
-        )
+        print(f"重大な問題が {report.issues_by_severity[QualityLevel.CRITICAL]} 件見つかりました")
         sys.exit(1)
 
     sys.exit(0)

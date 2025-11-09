@@ -6,6 +6,7 @@ PyQtWebEngineの利用可能性をチェックし、適切な初期化を行う�
 Author: Kiro AI Integration System
 """
 
+
 def check_webengine_availability() -> tuple[bool, str]:
     """
     PyQtWebEngineの利用可能性をチェック
@@ -27,6 +28,7 @@ def check_webengine_availability() -> tuple[bool, str]:
         return False, f"PyQtWebEngine import error: {e}"
     except Exception as e:
         return False, f"PyQtWebEngine initialization error: {e}"
+
 
 def initialize_webengine_safe() -> tuple[bool, str]:
     """
@@ -52,6 +54,7 @@ def initialize_webengine_safe() -> tuple[bool, str]:
     except Exception as e:
         return False, f"PyQtWebEngine initialization failed: {e}"
 
+
 def create_webengine_view() -> tuple[object | None, str]:
     """
     WebEngineViewを作成
@@ -67,6 +70,7 @@ def create_webengine_view() -> tuple[object | None, str]:
 
     except Exception as e:
         return None, f"WebEngineView creation failed: {e}"
+
 
 def get_webengine_status() -> dict:
     """

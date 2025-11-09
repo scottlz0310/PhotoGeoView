@@ -282,19 +282,13 @@ checkers:
                         # Black formatter
                         if "black" in cmd_str:
                             if "--check" in cmd_str:
-                                return Mock(
-                                    returncode=0, stdout="All done! ✨ 🍰 ✨", stderr=""
-                                )
+                                return Mock(returncode=0, stdout="All done! ✨ 🍰 ✨", stderr="")
                             else:
-                                return Mock(
-                                    returncode=0, stdout="reformatted 1 file", stderr=""
-                                )
+                                return Mock(returncode=0, stdout="reformatted 1 file", stderr="")
 
                         # isort
                         elif "isort" in cmd_str:
-                            return Mock(
-                                returncode=0, stdout="Skipped 0 files", stderr=""
-                            )
+                            return Mock(returncode=0, stdout="Skipped 0 files", stderr="")
 
                         # flake8
                         elif "flake8" in cmd_str:
@@ -326,9 +320,7 @@ checkers:
 
                         # bandit
                         elif "bandit" in cmd_str:
-                            return Mock(
-                                returncode=0, stdout="No issues identified.", stderr=""
-                            )
+                            return Mock(returncode=0, stdout="No issues identified.", stderr="")
 
                         # Default success
                         else:
@@ -352,9 +344,7 @@ checkers:
                     assert "3.10" in result.python_versions_tested
 
                     # Verify specific checks were run
-                    check_names = [
-                        check.name for check in result.check_results.values()
-                    ]
+                    check_names = [check.name for check in result.check_results.values()]
                     assert any("Code Quality" in name for name in check_names)
                     assert any("Security" in name for name in check_names)
                     assert any("Test" in name for name in check_names)
@@ -362,9 +352,7 @@ checkers:
                     # Verify reports were generated
                     reports_dir = project_dir / "reports"
                     if reports_dir.exists():
-                        report_files = list(reports_dir.glob("*.md")) + list(
-                            reports_dir.glob("*.json")
-                        )
+                        report_files = list(reports_dir.glob("*.md")) + list(reports_dir.glob("*.json"))
                         assert len(report_files) > 0
 
         finally:
@@ -536,14 +524,10 @@ def test_exception():
                     assert result.overall_status == CheckStatus.FAILURE
 
                     # Check that test failures were captured
-                    test_results = [
-                        r for r in result.check_results.values() if "Test" in r.name
-                    ]
+                    test_results = [r for r in result.check_results.values() if "Test" in r.name]
                     assert len(test_results) > 0
 
-                    failed_test_result = next(
-                        (r for r in test_results if not r.is_successful), None
-                    )
+                    failed_test_result = next((r for r in test_results if not r.is_successful), None)
                     assert failed_test_result is not None
                     assert len(failed_test_result.errors) > 0
 
@@ -635,14 +619,10 @@ API_KEY = "sk-1234567890abcdef"
                     assert result.overall_status == CheckStatus.FAILURE
 
                     # Check that security issues were captured
-                    security_results = [
-                        r for r in result.check_results.values() if "Security" in r.name
-                    ]
+                    security_results = [r for r in result.check_results.values() if "Security" in r.name]
                     assert len(security_results) > 0
 
-                    failed_security_result = next(
-                        (r for r in security_results if not r.is_successful), None
-                    )
+                    failed_security_result = next((r for r in security_results if not r.is_successful), None)
                     assert failed_security_result is not None
                     assert len(failed_security_result.errors) > 0
 
@@ -676,9 +656,7 @@ API_KEY = "sk-1234567890abcdef"
                 mock_which.return_value = "/usr/bin/tool"
 
                 with patch("subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(
-                        returncode=0, stdout="Success", stderr=""
-                    )
+                    mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
                     # Run simulation
                     result = simulator.run(checks=["code_quality", "tests"])
@@ -725,9 +703,7 @@ API_KEY = "sk-1234567890abcdef"
                 mock_which.return_value = "/usr/bin/tool"
 
                 with patch("subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(
-                        returncode=0, stdout="Success", stderr=""
-                    )
+                    mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
                     # Run simulation
                     result = simulator.run(checks=["code_quality"])
@@ -799,16 +775,12 @@ class TestMultiplePythonVersions:
 
                     # Should have results for each version
                     version_specific_results = [
-                        r
-                        for r in result.check_results.values()
-                        if r.python_version is not None
+                        r for r in result.check_results.values() if r.python_version is not None
                     ]
 
                     # May have version-specific results
                     if version_specific_results:
-                        python_versions_in_results = {
-                            r.python_version for r in version_specific_results
-                        }
+                        python_versions_in_results = {r.python_version for r in version_specific_results}
                         assert len(python_versions_in_results) > 0
 
         finally:
@@ -830,9 +802,7 @@ class TestGitHookIntegration:
         try:
             # Initialize git repo
             subprocess.run(["git", "init"], check=True, capture_output=True)
-            subprocess.run(
-                ["git", "config", "user.email", "test@example.com"], check=True
-            )
+            subprocess.run(["git", "config", "user.email", "test@example.com"], check=True)
             subprocess.run(["git", "config", "user.name", "Test User"], check=True)
 
             config_path = project_dir / "ci-config.yaml"
@@ -848,10 +818,7 @@ class TestGitHookIntegration:
 
                 # Check hook content
                 hook_content = hook_path.read_text()
-                assert (
-                    "ci-simulation" in hook_content.lower()
-                    or "simulator" in hook_content.lower()
-                )
+                assert "ci-simulation" in hook_content.lower() or "simulator" in hook_content.lower()
 
                 # Check that hook is executable
                 assert os.access(hook_path, os.X_OK)
@@ -959,11 +926,7 @@ def test_memory_usage():
                     assert isinstance(result, SimulationResult)
 
                     # Look for performance-related results
-                    perf_results = [
-                        r
-                        for r in result.check_results.values()
-                        if "performance" in r.name.lower()
-                    ]
+                    perf_results = [r for r in result.check_results.values() if "performance" in r.name.lower()]
 
                     if perf_results:
                         assert len(perf_results) > 0

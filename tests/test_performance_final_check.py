@@ -59,17 +59,11 @@ class PerformanceFinalCheckTest(unittest.TestCase):
         self.performance_data = []
 
         # テスト用サービス
-        self.file_discovery_service = FileDiscoveryService(
-            logger_system=self.logger_system
-        )
+        self.file_discovery_service = FileDiscoveryService(logger_system=self.logger_system)
 
-        self.memory_aware_discovery = MemoryAwareFileDiscovery(
-            max_memory_mb=256, logger_system=self.logger_system
-        )
+        self.memory_aware_discovery = MemoryAwareFileDiscovery(max_memory_mb=256, logger_system=self.logger_system)
 
-        self.paginated_discovery = PaginatedFileDiscovery(
-            page_size=100, logger_system=self.logger_system
-        )
+        self.paginated_discovery = PaginatedFileDiscovery(page_size=100, logger_system=self.logger_system)
 
     def tearDown(self):
         """テストクリーンアップ"""
@@ -139,9 +133,7 @@ class PerformanceFinalCheckTest(unittest.TestCase):
                 )
 
                 if iteration > 0:
-                    print(
-                        f"   反復 {iteration}: {current_memory['rss_mb']:.1f}MB ({len(images)}個の画像)"
-                    )
+                    print(f"   反復 {iteration}: {current_memory['rss_mb']:.1f}MB ({len(images)}個の画像)")
 
             # ガベージコレクション
             if iteration % 20 == 0:
@@ -162,9 +154,7 @@ class PerformanceFinalCheckTest(unittest.TestCase):
             f"メモリリークが検出されました: {memory_increase:.1f}MB増加",
         )
 
-        print(
-            f"✅ メモリリーク検出テスト{'成功' if not memory_leak_detected else '失敗'}"
-        )
+        print(f"✅ メモリリーク検出テスト{'成功' if not memory_leak_detected else '失敗'}")
 
     def test_02_long_term_stability(self):
         """
@@ -236,13 +226,9 @@ class PerformanceFinalCheckTest(unittest.TestCase):
 
         # 統計計算
         if performance_samples:
-            avg_duration = sum(s["duration"] for s in performance_samples) / len(
-                performance_samples
-            )
+            avg_duration = sum(s["duration"] for s in performance_samples) / len(performance_samples)
             max_duration = max(s["duration"] for s in performance_samples)
-            avg_memory = sum(s["memory_mb"] for s in performance_samples) / len(
-                performance_samples
-            )
+            avg_memory = sum(s["memory_mb"] for s in performance_samples) / len(performance_samples)
             max_memory = max(s["memory_mb"] for s in performance_samples)
         else:
             avg_duration = max_duration = avg_memory = max_memory = 0
@@ -257,9 +243,7 @@ class PerformanceFinalCheckTest(unittest.TestCase):
 
         # 安定性判定
         error_rate = error_count / iteration_count if iteration_count > 0 else 1.0
-        stability_ok = (
-            error_rate < 0.05 and max_duration < 10.0
-        )  # エラー率5%未満、最大処理時間10秒未満
+        stability_ok = error_rate < 0.05 and max_duration < 10.0  # エラー率5%未満、最大処理時間10秒未満
 
         self.assertTrue(
             stability_ok,
@@ -330,21 +314,18 @@ class PerformanceFinalCheckTest(unittest.TestCase):
                 "normal": {
                     "duration": normal_duration,
                     "images_found": len(images),
-                    "memory_increase": normal_memory["rss_mb"]
-                    - initial_memory["rss_mb"],
+                    "memory_increase": normal_memory["rss_mb"] - initial_memory["rss_mb"],
                 },
                 "paginated": {
                     "duration": paginated_duration,
                     "images_found": len(paginated_images),
                     "batch_count": batch_count,
-                    "memory_increase": paginated_final_memory["rss_mb"]
-                    - paginated_memory["rss_mb"],
+                    "memory_increase": paginated_final_memory["rss_mb"] - paginated_memory["rss_mb"],
                 },
                 "memory_aware": {
                     "duration": memory_aware_duration,
                     "images_found": len(memory_aware_images),
-                    "memory_increase": memory_aware_final["rss_mb"]
-                    - memory_aware_initial["rss_mb"],
+                    "memory_increase": memory_aware_final["rss_mb"] - memory_aware_initial["rss_mb"],
                 },
             }
 
@@ -369,16 +350,12 @@ class PerformanceFinalCheckTest(unittest.TestCase):
             # 5000ファイルでも30秒以内で処理完了
             if result["file_count"] == 5000 and result["normal"]["duration"] > 30.0:
                 performance_ok = False
-                print(
-                    f"❌ 5000ファイルの処理時間が要件を超過: {result['normal']['duration']:.3f}秒"
-                )
+                print(f"❌ 5000ファイルの処理時間が要件を超過: {result['normal']['duration']:.3f}秒")
 
             # メモリ使用量が200MB以下
             if result["normal"]["memory_increase"] > 200.0:
                 performance_ok = False
-                print(
-                    f"❌ メモリ使用量が要件を超過: {result['normal']['memory_increase']:.1f}MB"
-                )
+                print(f"❌ メモリ使用量が要件を超過: {result['normal']['memory_increase']:.1f}MB")
 
         self.assertTrue(performance_ok, "大量ファイル性能要件を満たしていません")
 
@@ -431,9 +408,7 @@ def run_performance_final_check():
             print(f"  - {test}: {traceback}")
 
     success = result.wasSuccessful()
-    print(
-        f"\n🏆 総合結果: {'✅ 全パフォーマンス要件クリア' if success else '❌ パフォーマンス要件未達'}"
-    )
+    print(f"\n🏆 総合結果: {'✅ 全パフォーマンス要件クリア' if success else '❌ パフォーマンス要件未達'}")
     print("=" * 80)
 
     return success

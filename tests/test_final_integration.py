@@ -163,9 +163,7 @@ class TestFinalIntegration:
 
         # Test logging doesn't crash
         try:
-            main_window.logger_system.log_ai_operation(
-                AIComponent.KIRO, "test_operation", "Test log message"
-            )
+            main_window.logger_system.log_ai_operation(AIComponent.KIRO, "test_operation", "Test log message")
         except Exception as e:
             pytest.fail(f"Logging failed: {e}")
 
@@ -195,9 +193,7 @@ class TestFinalIntegration:
         try:
             # Test state operations with existing state keys
             # Use a simpler state key that should work
-            original_value = main_window.state_manager.get_state_value(
-                "current_theme", "default"
-            )
+            original_value = main_window.state_manager.get_state_value("current_theme", "default")
 
             # Test setting and getting a state value
             test_result = main_window.state_manager.update_state(current_theme="dark")

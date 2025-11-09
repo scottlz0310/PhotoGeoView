@@ -161,9 +161,7 @@ class MapPanel(QWidget):
 
             # 全画面ボタン
             self.fullscreen_button = QPushButton("⛶ 地図全画面")
-            self.fullscreen_button.setToolTip(
-                "地図をウィンドウいっぱいに表示 / 通常表示に戻る"
-            )
+            self.fullscreen_button.setToolTip("地図をウィンドウいっぱいに表示 / 通常表示に戻る")
             self.fullscreen_button.setFixedSize(90, 24)
             self.fullscreen_button.clicked.connect(self._toggle_fullscreen)
             title_layout.addWidget(self.fullscreen_button)
@@ -227,9 +225,7 @@ class MapPanel(QWidget):
                     print(f"❌ {message}")
 
                 if self.web_view:
-                    self.web_view.setSizePolicy(
-                        QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-                    )
+                    self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
                     # WebEngine設定
                     try:
@@ -428,9 +424,7 @@ class MapPanel(QWidget):
                 return
 
             # Folium地図を作成
-            map_obj = folium.Map(
-                location=center, zoom_start=zoom, tiles="OpenStreetMap"
-            )
+            map_obj = folium.Map(location=center, zoom_start=zoom, tiles="OpenStreetMap")
 
             # 写真位置のマーカーを追加
             if markers:
@@ -465,14 +459,10 @@ class MapPanel(QWidget):
                 self.web_view.load(QUrl.fromLocalFile(self.current_map_file))
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "create_map"}, AIComponent.KIRO
-            )
+            self.error_handler.handle_error(e, ErrorCategory.UI_ERROR, {"operation": "create_map"}, AIComponent.KIRO)
             self._show_error_message(f"地図の作成に失敗しました: {e}")
 
-    def _add_photo_marker(
-        self, map_obj: object, photo_path: str, lat: float, lon: float
-    ):
+    def _add_photo_marker(self, map_obj: object, photo_path: str, lat: float, lon: float):
         """写真位置のマーカーを追加"""
         try:
             if not folium_available or folium is None:
@@ -486,9 +476,7 @@ class MapPanel(QWidget):
                 icon = None
 
                 # 現在選択されている画像かどうかを判定
-                is_current_photo = (
-                    self.current_latitude == lat and self.current_longitude == lon
-                )
+                is_current_photo = self.current_latitude == lat and self.current_longitude == lon
 
                 if hasattr(folium, "Popup"):
                     # より詳細なポップアップ情報
@@ -578,9 +566,7 @@ class MapPanel(QWidget):
             self._create_map((latitude, longitude), zoom_level, single_marker)
 
             if self.status_label:
-                self.status_label.setText(
-                    f"フォーカス: {latitude:.6f}, {longitude:.6f}"
-                )
+                self.status_label.setText(f"フォーカス: {latitude:.6f}, {longitude:.6f}")
 
             # シグナルを発信
             self.map_loaded.emit(latitude, longitude)
@@ -648,9 +634,7 @@ class MapPanel(QWidget):
             )
             return 15  # デフォルトズーム
 
-    def add_image_location(
-        self, image_path: Path, latitude: float, longitude: float, name: str | None = None
-    ):
+    def add_image_location(self, image_path: Path, latitude: float, longitude: float, name: str | None = None):
         """画像の位置情報を追加"""
         try:
             location = {
@@ -721,24 +705,18 @@ class MapPanel(QWidget):
                 self._create_map((center_lat, center_lon), zoom, self.photo_locations)
 
                 if self.status_label:
-                    self.status_label.setText(
-                        f"{len(self.photo_locations)}個の写真位置を表示中"
-                    )
+                    self.status_label.setText(f"{len(self.photo_locations)}個の写真位置を表示中")
 
                 # 最新の座標でシグナルを発信
                 latest = list(self.photo_locations.values())[-1]
                 self.map_loaded.emit(latest[0], latest[1])
 
-            elif (
-                self.current_latitude is not None and self.current_longitude is not None
-            ):
+            elif self.current_latitude is not None and self.current_longitude is not None:
                 # 単一の座標
                 self._create_map((self.current_latitude, self.current_longitude), 15)
 
                 if self.status_label:
-                    self.status_label.setText(
-                        f"座標: {self.current_latitude:.6f}, {self.current_longitude:.6f}"
-                    )
+                    self.status_label.setText(f"座標: {self.current_latitude:.6f}, {self.current_longitude:.6f}")
 
                 # シグナルを発信
                 self.map_loaded.emit(self.current_latitude, self.current_longitude)
@@ -755,9 +733,7 @@ class MapPanel(QWidget):
             )
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "update_map"}, AIComponent.KIRO
-            )
+            self.error_handler.handle_error(e, ErrorCategory.UI_ERROR, {"operation": "update_map"}, AIComponent.KIRO)
             self._show_error_message("地図の更新に失敗しました")
 
     def _create_welcome_html(self):
@@ -962,11 +938,7 @@ class MapPanel(QWidget):
                 self.web_view.load(QUrl.fromLocalFile(no_gps_file))
 
             if self.status_label:
-                status_msg = (
-                    f"GPS情報なし: {image_name}"
-                    if image_name
-                    else "GPS情報が含まれていません"
-                )
+                status_msg = f"GPS情報なし: {image_name}" if image_name else "GPS情報が含まれていません"
                 self.status_label.setText(status_msg)
 
         except Exception as e:
@@ -1083,9 +1055,7 @@ class MapPanel(QWidget):
                 self._focus_on_location(self.current_latitude, self.current_longitude)
 
                 if self.status_label:
-                    self.status_label.setText(
-                        f"選択画像にフォーカス: {Path(self.current_photo).name}"
-                    )
+                    self.status_label.setText(f"選択画像にフォーカス: {Path(self.current_photo).name}")
 
                 # ログ出力
                 self.logger_system.log_ai_operation(
@@ -1103,9 +1073,7 @@ class MapPanel(QWidget):
                 self._update_map()
 
                 if self.status_label:
-                    self.status_label.setText(
-                        f"{len(self.photo_locations)}個の写真位置を表示中"
-                    )
+                    self.status_label.setText(f"{len(self.photo_locations)}個の写真位置を表示中")
 
                 # ログ出力
                 self.logger_system.log_ai_operation(
@@ -1129,9 +1097,7 @@ class MapPanel(QWidget):
                 )
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "reset_view"}, AIComponent.KIRO
-            )
+            self.error_handler.handle_error(e, ErrorCategory.UI_ERROR, {"operation": "reset_view"}, AIComponent.KIRO)
 
     def _show_overview(self):
         """全ての画像位置を表示"""
@@ -1141,9 +1107,7 @@ class MapPanel(QWidget):
                 self._update_map()
 
                 if self.status_label:
-                    self.status_label.setText(
-                        f"{len(self.photo_locations)}個の写真位置を表示中"
-                    )
+                    self.status_label.setText(f"{len(self.photo_locations)}個の写真位置を表示中")
 
                 # ログ出力
                 self.logger_system.log_ai_operation(
@@ -1492,13 +1456,8 @@ class MapPanel(QWidget):
         try:
             if self.web_view:
                 # WebViewの地図を再描画
-                if (
-                    self.current_latitude is not None
-                    and self.current_longitude is not None
-                ):
-                    self._focus_on_location(
-                        self.current_latitude, self.current_longitude
-                    )
+                if self.current_latitude is not None and self.current_longitude is not None:
+                    self._focus_on_location(self.current_latitude, self.current_longitude)
                 else:
                     self._update_map()
 
@@ -1559,9 +1518,7 @@ class MapPanel(QWidget):
     def _update_fallback_display(self):
         """テキストベース表示を更新"""
         try:
-            if not hasattr(self.map_widget, "widget") or not hasattr(
-                self.map_widget.widget(), "setPlainText"
-            ):
+            if not hasattr(self.map_widget, "widget") or not hasattr(self.map_widget.widget(), "setPlainText"):
                 return
 
             text_widget = self.map_widget.widget()
@@ -1585,7 +1542,9 @@ class MapPanel(QWidget):
                 content += f"   🔗 Google Maps: {maps_url}\n"
 
                 # OpenStreetMapリンク
-                osm_url = f"https://www.openstreetmap.org/?mlat={self.current_latitude}&mlon={self.current_longitude}&zoom=15"
+                osm_url = (
+                    f"https://www.openstreetmap.org/?mlat={self.current_latitude}&mlon={self.current_longitude}&zoom=15"
+                )
                 content += f"   🔗 OpenStreetMap: {osm_url}\n"
             else:
                 content += "   まだ位置情報が設定されていません。\n"
@@ -1610,9 +1569,7 @@ class MapPanel(QWidget):
 
             if not WEBENGINE_AVAILABLE:
                 content += "\n🔧 WebEngine地図表示を有効にするには:\n"
-                content += (
-                    "   1. PyQtWebEngineをインストール: pip install PyQtWebEngine\n"
-                )
+                content += "   1. PyQtWebEngineをインストール: pip install PyQtWebEngine\n"
                 content += "   2. アプリケーションを再起動してください\n"
             elif not folium_available:
                 content += "\n🔧 Folium地図表示を有効にするには:\n"
@@ -1632,9 +1589,7 @@ class MapPanel(QWidget):
     def _update_fallback_display_no_gps(self, image_name: str = ""):
         """GPS情報なし画像用のテキストベース表示を更新"""
         try:
-            if not hasattr(self.map_widget, "widget") or not hasattr(
-                self.map_widget.widget(), "setPlainText"
-            ):
+            if not hasattr(self.map_widget, "widget") or not hasattr(self.map_widget.widget(), "setPlainText"):
                 return
 
             text_widget = self.map_widget.widget()
@@ -1680,9 +1635,7 @@ class MapPanel(QWidget):
 
             if not WEBENGINE_AVAILABLE:
                 content += "\n🔧 WebEngine地図表示を有効にするには:\n"
-                content += (
-                    "   1. PyQtWebEngineをインストール: pip install PyQtWebEngine\n"
-                )
+                content += "   1. PyQtWebEngineをインストール: pip install PyQtWebEngine\n"
                 content += "   2. アプリケーションを再起動してください\n"
             elif not folium_available:
                 content += "\n🔧 Folium地図表示を有効にするには:\n"
@@ -1703,9 +1656,7 @@ class MapPanel(QWidget):
         """キーボードイベントの処理"""
         try:
             # ESCキーで地図全画面表示を終了
-            if (
-                event.key() == Qt.Key.Key_Escape and self.is_fullscreen_mode
-            ) or event.key() == Qt.Key.Key_F11:
+            if (event.key() == Qt.Key.Key_Escape and self.is_fullscreen_mode) or event.key() == Qt.Key.Key_F11:
                 self._toggle_fullscreen()
                 event.accept()
                 return

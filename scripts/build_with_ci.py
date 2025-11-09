@@ -265,38 +265,24 @@ class CIIntegratedBuilder:
                 f.write(f"**Generated:** {build_report['build_timestamp']}\n")
                 f.write(f"**Project:** {build_report['project_name']}\n")
                 f.write(f"**Status:** {build_report['build_status']}\n")
-                f.write(
-                    f"**CI Integration:** {'✅ Enabled' if build_report['ci_integration'] else '❌ Disabled'}\n\n"
-                )
+                f.write(f"**CI Integration:** {'✅ Enabled' if build_report['ci_integration'] else '❌ Disabled'}\n\n")
 
                 f.write("## Build Artifacts\n\n")
                 for artifact in build_report["artifacts"]:
                     size_mb = artifact["size"] / (1024 * 1024)
-                    f.write(
-                        f"- **{artifact['name']}** ({size_mb:.1f}MB, {artifact['type']})\n"
-                    )
+                    f.write(f"- **{artifact['name']}** ({size_mb:.1f}MB, {artifact['type']})\n")
 
                 if build_report["ci_results"]:
                     ci_results = build_report["ci_results"]
                     f.write("\n## CI Results\n\n")
-                    f.write(
-                        f"- **Status:** {ci_results.get('overall_status', 'Unknown')}\n"
-                    )
-                    f.write(
-                        f"- **Duration:** {ci_results.get('duration', 0):.2f} seconds\n"
-                    )
-                    f.write(
-                        f"- **Python Versions:** {', '.join(ci_results.get('python_versions', []))}\n"
-                    )
-                    f.write(
-                        f"- **Summary:** {ci_results.get('summary', 'No summary available')}\n"
-                    )
+                    f.write(f"- **Status:** {ci_results.get('overall_status', 'Unknown')}\n")
+                    f.write(f"- **Duration:** {ci_results.get('duration', 0):.2f} seconds\n")
+                    f.write(f"- **Python Versions:** {', '.join(ci_results.get('python_versions', []))}\n")
+                    f.write(f"- **Summary:** {ci_results.get('summary', 'No summary available')}\n")
 
                 f.write("\n## Validation Results\n\n")
                 validation = build_report["validation_results"]
-                f.write(
-                    f"- **Package Import:** {'✅ Pass' if validation['package_import'] else '❌ Fail'}\n"
-                )
+                f.write(f"- **Package Import:** {'✅ Pass' if validation['package_import'] else '❌ Fail'}\n")
                 f.write(
                     f"- **Dependencies:** {'✅ Resolved' if validation['dependencies_resolved'] else '❌ Issues'}\n"
                 )
@@ -368,9 +354,7 @@ def main():
     parser = argparse.ArgumentParser(description="CI統合ビルドスクリプト")
     parser.add_argument("--project-root", type=Path, help="プロジェクトルートパス")
     parser.add_argument("--skip-ci", action="store_true", help="CI チェックをスキップ")
-    parser.add_argument(
-        "--skip-validation", action="store_true", help="ビルド後検証をスキップ"
-    )
+    parser.add_argument("--skip-validation", action="store_true", help="ビルド後検証をスキップ")
 
     args = parser.parse_args()
 

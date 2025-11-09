@@ -71,6 +71,7 @@ class FileDiscoveryResult:
         except (OSError, FileNotFoundError):
             return True
 
+
 @dataclass
 class FolderScanCache:
     """フォルダスキャン結果のキャッシュ"""
@@ -101,11 +102,10 @@ class FolderScanCache:
             current_mtime = self.folder_path.stat().st_mtime
             expected_mtime = int(self.cache_key.split("_")[-1])
             # 浮動小数点数と整数の比較を適切に行う
-            return (
-                abs(current_mtime - expected_mtime) > 1.0
-            )  # 1秒以上の差がある場合のみ期限切れ
+            return abs(current_mtime - expected_mtime) > 1.0  # 1秒以上の差がある場合のみ期限切れ
         except (OSError, FileNotFoundError, ValueError):
             return True
+
 
 @dataclass
 class CacheMetrics:
@@ -133,6 +133,7 @@ class CacheMetrics:
             "memory_usage_mb": self.memory_usage_bytes / 1024 / 1024,
             "hit_rate": self.hit_rate,
         }
+
 
 class FileDiscoveryCache:
     """
@@ -452,9 +453,7 @@ class FileDiscoveryCache:
                 # FolderScanCacheと同じキャッシュキー生成ロジックを使用
                 try:
                     folder_stat = folder_path.stat()
-                    cache_key = (
-                        f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
-                    )
+                    cache_key = f"folder_{hash(str(folder_path))}_{int(folder_stat.st_mtime)}"
                 except (OSError, FileNotFoundError):
                     cache_key = f"folder_{hash(str(folder_path))}_{int(time.time())}"
 
@@ -487,8 +486,7 @@ class FileDiscoveryCache:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "folder_cache_hit",
-                        f"フォルダキャッシュヒット: {folder_path} - "
-                        f"{len(folder_cache.file_results)}個のファイル",
+                        f"フォルダキャッシュヒット: {folder_path} - " f"{len(folder_cache.file_results)}個のファイル",
                     )
 
                     return folder_cache
@@ -696,9 +694,7 @@ class FileDiscoveryCache:
             # 概算メモリ使用量を計算
             file_memory = len(self._file_cache) * 1024  # 1KB per entry estimate
             folder_memory = len(self._folder_cache) * 10240  # 10KB per entry estimate
-            validation_memory = (
-                len(self._validation_cache) * 100
-            )  # 100B per entry estimate
+            validation_memory = len(self._validation_cache) * 100  # 100B per entry estimate
 
             total_memory = file_memory + folder_memory + validation_memory
 
@@ -840,9 +836,7 @@ class FileDiscoveryCache:
                     / 1024
                     / 1024,
                     "total_entries": (
-                        self.file_metrics.entries
-                        + self.folder_metrics.entries
-                        + self.validation_metrics.entries
+                        self.file_metrics.entries + self.folder_metrics.entries + self.validation_metrics.entries
                     ),
                     "overall_hit_rate": self._calculate_overall_hit_rate(),
                     "last_cleanup": self.last_cleanup.isoformat(),
@@ -865,11 +859,7 @@ class FileDiscoveryCache:
     def _calculate_overall_hit_rate(self) -> float:
         """全体のヒット率を計算"""
 
-        total_hits = (
-            self.file_metrics.hits
-            + self.folder_metrics.hits
-            + self.validation_metrics.hits
-        )
+        total_hits = self.file_metrics.hits + self.folder_metrics.hits + self.validation_metrics.hits
         total_requests = (
             self.file_metrics.hits
             + self.file_metrics.misses
@@ -936,10 +926,7 @@ class FileDiscoveryCache:
 
         # ログレベルの決定
         log_level = "INFO"
-        if (
-            overall_hit_rate < 0.5
-            or total_memory_mb > self.max_memory_bytes / 1024 / 1024 * 0.9
-        ):  # 50%未満
+        if overall_hit_rate < 0.5 or total_memory_mb > self.max_memory_bytes / 1024 / 1024 * 0.9:  # 50%未満
             log_level = "WARNING"
 
         self.logger_system.log_ai_operation(
@@ -955,9 +942,7 @@ class FileDiscoveryCache:
         )
 
         # 詳細統計をパフォーマンスログに記録
-        self.logger_system.log_performance(
-            AIComponent.KIRO, "cache_detailed_performance", stats
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, "cache_detailed_performance", stats)
 
     def enable_debug_cache_logging(self):
         """
@@ -1001,9 +986,7 @@ class FileDiscoveryCache:
             recommendations.append("キャッシュ戦略の見直しが必要です")
 
         # メモリ使用量の評価
-        memory_usage_ratio = stats["total_memory_mb"] / (
-            self.max_memory_bytes / 1024 / 1024
-        )
+        memory_usage_ratio = stats["total_memory_mb"] / (self.max_memory_bytes / 1024 / 1024)
         if memory_usage_ratio <= 0.7:
             health_score += 30
         elif memory_usage_ratio <= 0.9:
@@ -1016,11 +999,7 @@ class FileDiscoveryCache:
 
         # エントリ数の評価
         total_entries = stats["total_entries"]
-        max_total_entries = (
-            self.max_file_entries
-            + self.max_folder_entries
-            + (self.max_file_entries * 2)
-        )
+        max_total_entries = self.max_file_entries + self.max_folder_entries + (self.max_file_entries * 2)
         entry_usage_ratio = total_entries / max_total_entries
         if entry_usage_ratio <= 0.8:
             health_score += 30

@@ -32,15 +32,13 @@ class LogLevel(Enum):
     PERFORMANCE = "PERFORMANCE"  # Custom level for performance metrics
     AI_OPERATION = "AI_OPERATION"  # Custom level for AI operations
 
+
 class AILogFormatter(logging.Formatter):
     """Custom formatter for AI integration logging"""
 
     def __init__(self):
         super().__init__()
-        self.format_string = (
-            "%(asctime)s | %(levelname)-12s | %(ai_component)-8s | "
-            "%(name)-20s | %(message)s"
-        )
+        self.format_string = "%(asctime)s | %(levelname)-12s | %(ai_component)-8s | " "%(name)-20s | %(message)s"
 
     def format(self, record):
         """Format log record with AI component information"""
@@ -58,6 +56,7 @@ class AILogFormatter(logging.Formatter):
         # Use custom format
         formatter = logging.Formatter(self.format_string)
         return formatter.format(record)
+
 
 class PerformanceLogHandler(logging.Handler):
     """Custom handler for performance metrics logging"""
@@ -106,6 +105,7 @@ class PerformanceLogHandler(logging.Handler):
         except Exception as e:
             # Fallback to stderr if file writing fails
             print(f"Failed to write performance metrics: {e}", file=sys.stderr)
+
 
 class LoggerSystem:
     """
@@ -223,10 +223,7 @@ class LoggerSystem:
 
             # Add filter for AI-specific logs
             ai_handler.addFilter(
-                lambda record, component=ai_component: getattr(
-                    record, "ai_component", None
-                )
-                == component.value.upper()
+                lambda record, component=ai_component: getattr(record, "ai_component", None) == component.value.upper()
             )
 
             logging.getLogger().addHandler(ai_handler)
@@ -299,9 +296,7 @@ class LoggerSystem:
         op_key = f"{ai_component.value}_{operation}"
         self.operation_counts[op_key] = self.operation_counts.get(op_key, 0) + 1
 
-    def log_performance(
-        self, ai_component: AIComponent, operation: str, metrics: dict[str, Any]
-    ):
+    def log_performance(self, ai_component: AIComponent, operation: str, metrics: dict[str, Any]):
         """
         Log performance metrics
 
@@ -352,9 +347,7 @@ class LoggerSystem:
 
         logger.error(f"Error in {operation}: {error!s}", extra=extra, exc_info=True)
 
-    def log_integration_event(
-        self, event: str, components: list[AIComponent], details: dict[str, Any] | None = None
-    ):
+    def log_integration_event(self, event: str, components: list[AIComponent], details: dict[str, Any] | None = None):
         """
         Log an integration event involving multiple AI components
 
@@ -398,11 +391,7 @@ class LoggerSystem:
 
         metrics = PerformanceMetrics(
             memory_usage_mb=memory_info.rss / 1024 / 1024,
-            memory_peak_mb=(
-                memory_info.peak_wss / 1024 / 1024
-                if hasattr(memory_info, "peak_wss")
-                else 0
-            ),
+            memory_peak_mb=(memory_info.peak_wss / 1024 / 1024 if hasattr(memory_info, "peak_wss") else 0),
             memory_available_mb=psutil.virtual_memory().available / 1024 / 1024,
             cpu_usage_percent=process.cpu_percent(),
             cpu_cores=psutil.cpu_count(),
@@ -429,21 +418,9 @@ class LoggerSystem:
         total_operations = sum(self.operation_counts.values())
 
         ai_totals = {
-            "copilot": sum(
-                count
-                for op, count in self.operation_counts.items()
-                if op.startswith("copilot_")
-            ),
-            "cursor": sum(
-                count
-                for op, count in self.operation_counts.items()
-                if op.startswith("cursor_")
-            ),
-            "kiro": sum(
-                count
-                for op, count in self.operation_counts.items()
-                if op.startswith("kiro_")
-            ),
+            "copilot": sum(count for op, count in self.operation_counts.items() if op.startswith("copilot_")),
+            "cursor": sum(count for op, count in self.operation_counts.items() if op.startswith("cursor_")),
+            "kiro": sum(count for op, count in self.operation_counts.items() if op.startswith("kiro_")),
         }
 
         return {
@@ -507,12 +484,11 @@ class LoggerSystem:
 
         return OperationContext(self, ai_component, operation)
 
+
 class OperationContext:
     """Context manager for operation logging"""
 
-    def __init__(
-        self, logger_system: LoggerSystem, ai_component: AIComponent, operation: str
-    ):
+    def __init__(self, logger_system: LoggerSystem, ai_component: AIComponent, operation: str):
         self.logger_system = logger_system
         self.ai_component = ai_component
         self.operation = operation

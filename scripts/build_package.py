@@ -33,7 +33,7 @@ def create_pyinstaller_spec():
     """PyInstaller用のspecファイルを作成"""
     platform_info = get_platform_info()
 
-    spec_content = f'''# -*- mode: python ; coding: utf-8 -*-
+    spec_content = f"""# -*- mode: python ; coding: utf-8 -*-
 
 import sys
 from pathlib import
@@ -190,7 +190,7 @@ else:  # Linux
         codesign_identity=None,
         entitlements_file=None,
     )
-'''
+"""
 
     with open("PhotoGeoView.spec", "w", encoding="utf-8") as f:
         f.write(spec_content)
@@ -239,9 +239,7 @@ def create_linux_appimage():
     # 必要なディレクトリ構造
     (appdir / "usr" / "bin").mkdir(parents=True, exist_ok=True)
     (appdir / "usr" / "share" / "applications").mkdir(parents=True, exist_ok=True)
-    (appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(
-        parents=True, exist_ok=True
-    )
+    (appdir / "usr" / "share" / "icons" / "hicolor" / "256x256" / "apps").mkdir(parents=True, exist_ok=True)
 
     # 実行ファイルをコピー
     if Path("dist/PhotoGeoView").exists():
@@ -262,9 +260,7 @@ Terminal=false
     with open(appdir / "PhotoGeoView.desktop", "w") as f:
         f.write(desktop_content)
 
-    with open(
-        appdir / "usr" / "share" / "applications" / "PhotoGeoView.desktop", "w"
-    ) as f:
+    with open(appdir / "usr" / "share" / "applications" / "PhotoGeoView.desktop", "w") as f:
         f.write(desktop_content)
 
     # AppRunスクリプト作成
@@ -340,16 +336,10 @@ def create_build_info():
     platform_info = get_platform_info()
 
     build_info = {
-        "build_date": subprocess.check_output(
-            ["date", "+%Y-%m-%d %H:%M:%S"], text=True
-        ).strip(),
+        "build_date": subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S"], text=True).strip(),
         "platform": platform_info,
-        "git_commit": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True
-        ).strip()[:8],
-        "git_branch": subprocess.check_output(
-            ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True
-        ).strip(),
+        "git_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()[:8],
+        "git_branch": subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip(),
         "python_version": sys.version,
         "build_system": "PyInstaller",
     }

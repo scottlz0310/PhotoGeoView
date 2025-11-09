@@ -33,9 +33,7 @@ class TestFileSystemWatcher:
 
     def test_init_with_watchdog_available(self):
         """watchdog が利用可能な場合の初期化テスト"""
-        with patch(
-            "src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", True
-        ):
+        with patch("src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", True):
             watcher = FileSystemWatcher(logger_system=self.logger_system)
 
             assert watcher.watchdog_available is True
@@ -55,9 +53,7 @@ class TestFileSystemWatcher:
 
     def test_init_with_watchdog_unavailable(self):
         """watchdog が利用できない場合の初期化テスト"""
-        with patch(
-            "src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", False
-        ):
+        with patch("src.integration.services.file_system_watcher.WATCHDOG_AVAILABLE", False):
             watcher = FileSystemWatcher(logger_system=self.logger_system)
 
             assert watcher.watchdog_available is False
@@ -120,9 +116,7 @@ class TestFileSystemWatcher:
     def test_stop_watching_success(self, mock_observer_class):
         """正常な監視停止テスト"""
         mock_observer = Mock()
-        mock_observer.is_alive.return_value = (
-            True  # Changed to True to trigger stop call
-        )
+        mock_observer.is_alive.return_value = True  # Changed to True to trigger stop call
         mock_observer_class.return_value = mock_observer
 
         watcher = FileSystemWatcher(logger_system=self.logger_system)
@@ -252,9 +246,7 @@ class TestFileSystemWatcher:
         ]
 
         for image_file in image_files:
-            assert handler._is_image_file(image_file), (
-                f"{image_file.suffix} should be recognized as image file"
-            )
+            assert handler._is_image_file(image_file), f"{image_file.suffix} should be recognized as image file"
 
         # 非画像ファイルのテスト
         non_image_files = [
@@ -266,9 +258,9 @@ class TestFileSystemWatcher:
         ]
 
         for non_image_file in non_image_files:
-            assert not handler._is_image_file(non_image_file), (
-                f"{non_image_file.suffix} should not be recognized as image file"
-            )
+            assert not handler._is_image_file(
+                non_image_file
+            ), f"{non_image_file.suffix} should not be recognized as image file"
 
     def test_change_notification_system(self):
         """変更通知システムの統合テスト"""
@@ -308,9 +300,7 @@ class TestFileSystemWatcher:
         # 通知が正しく記録されたことを確認
         assert len(notifications) == len(test_cases)
 
-        for i, (expected_path, expected_type, expected_old_path) in enumerate(
-            test_cases
-        ):
+        for i, (expected_path, expected_type, expected_old_path) in enumerate(test_cases):
             notification = notifications[i]
             assert notification["file_path"] == expected_path
             assert notification["change_type"] == expected_type

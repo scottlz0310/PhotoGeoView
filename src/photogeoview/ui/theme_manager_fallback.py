@@ -191,6 +191,7 @@ class ThemeManagerFallback(QObject):
         }
         """
 
+
 # qt_theme_managerからのインポートを試行し、失敗した場合はフォールバックを使用
 try:
     from qt_theme_manager import ThemeManager

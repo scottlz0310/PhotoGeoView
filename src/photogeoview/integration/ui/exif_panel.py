@@ -183,9 +183,7 @@ class EXIFPanel(QWidget):
             # タイトル
             self.title_label = QLabel("📷 画像情報・位置情報")
             title_fg = self._get_color("foreground", "#2c3e50")
-            title_bg = self._get_color(
-                "hover", self._get_color("background", "#ecf0f1")
-            )
+            title_bg = self._get_color("hover", self._get_color("background", "#ecf0f1"))
             self.title_label.setStyleSheet(f"""
                 QLabel {{
                     font-weight: bold;
@@ -448,9 +446,7 @@ class EXIFPanel(QWidget):
                     f"ファイル情報セクション作成: {len(file_info)}件",
                 )
 
-            file_section = self._create_info_section(
-                "📁 ファイル情報", file_info, "#34495e"
-            )
+            file_section = self._create_info_section("📁 ファイル情報", file_info, "#34495e")
             self.integrated_layout.addWidget(file_section)
 
             if hasattr(self, "logger_system"):
@@ -490,9 +486,7 @@ class EXIFPanel(QWidget):
                     f"カメラ情報セクション作成: {len(camera_info)}件",
                 )
 
-            camera_section = self._create_info_section(
-                "📸 カメラ情報", camera_info, "#8e44ad"
-            )
+            camera_section = self._create_info_section("📸 カメラ情報", camera_info, "#8e44ad")
             self.integrated_layout.addWidget(camera_section)
 
             if hasattr(self, "logger_system"):
@@ -534,9 +528,7 @@ class EXIFPanel(QWidget):
                     f"撮影設定セクション作成: {len(shooting_info)}件",
                 )
 
-            shooting_section = self._create_info_section(
-                "⚙️ 撮影設定", shooting_info, "#e67e22"
-            )
+            shooting_section = self._create_info_section("⚙️ 撮影設定", shooting_info, "#e67e22")
             self.integrated_layout.addWidget(shooting_section)
 
             if hasattr(self, "logger_system"):
@@ -574,9 +566,7 @@ class EXIFPanel(QWidget):
                     f"撮影日時セクション作成: {len(datetime_info)}件",
                 )
 
-            datetime_section = self._create_info_section(
-                "📅 撮影日時", datetime_info, "#27ae60"
-            )
+            datetime_section = self._create_info_section("📅 撮影日時", datetime_info, "#27ae60")
             self.integrated_layout.addWidget(datetime_section)
 
             if hasattr(self, "logger_system"):
@@ -629,34 +619,26 @@ class EXIFPanel(QWidget):
         coord_frame = QFrame()
         coord_frame.setFrameStyle(QFrame.Shape.Box)
         coord_border = self._get_color("border", "#bdc3c7")
-        coord_frame.setStyleSheet(
-            f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}"
-        )
+        coord_frame.setStyleSheet(f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}")
         coord_layout = QGridLayout(coord_frame)
         coord_layout.setSpacing(5)
 
         # 緯度
         coord_layout.addWidget(QLabel("緯度:"), 0, 0)
         self.latitude_label = QLabel("Not available")
-        self.latitude_label.setStyleSheet(
-            f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
-        )
+        self.latitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
         coord_layout.addWidget(self.latitude_label, 0, 1)
 
         # 経度
         coord_layout.addWidget(QLabel("経度:"), 1, 0)
         self.longitude_label = QLabel("Not available")
-        self.longitude_label.setStyleSheet(
-            f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
-        )
+        self.longitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
         coord_layout.addWidget(self.longitude_label, 1, 1)
 
         # 高度
         coord_layout.addWidget(QLabel("高度:"), 2, 0)
         self.altitude_label = QLabel("Not available")
-        self.altitude_label.setStyleSheet(
-            f"color: {self._get_color('error', '#e74c3c')};"
-        )
+        self.altitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
         coord_layout.addWidget(self.altitude_label, 2, 1)
 
         gps_layout.addWidget(coord_frame, 0, 0, 1, 2)
@@ -664,35 +646,27 @@ class EXIFPanel(QWidget):
         # GPS時刻・日付情報
         time_frame = QFrame()
         time_frame.setFrameStyle(QFrame.Shape.Box)
-        time_frame.setStyleSheet(
-            f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}"
-        )
+        time_frame.setStyleSheet(f"QFrame {{ border: 1px solid {coord_border}; border-radius: 3px; padding: 5px; }}")
         time_layout = QGridLayout(time_frame)
         time_layout.setSpacing(5)
 
         # GPS時刻
         time_layout.addWidget(QLabel("GPS時刻:"), 0, 0)
         self.gps_time_label = QLabel("Not available")
-        self.gps_time_label.setStyleSheet(
-            f"color: {self._get_color('error', '#e74c3c')};"
-        )
+        self.gps_time_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
         time_layout.addWidget(self.gps_time_label, 0, 1)
 
         # GPS日付
         time_layout.addWidget(QLabel("GPS日付:"), 1, 0)
         self.gps_date_label = QLabel("Not available")
-        self.gps_date_label.setStyleSheet(
-            f"color: {self._get_color('error', '#e74c3c')};"
-        )
+        self.gps_date_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
         time_layout.addWidget(self.gps_date_label, 1, 1)
 
         gps_layout.addWidget(time_frame, 1, 0, 1, 2)
 
         self.integrated_layout.addWidget(self.gps_group)
 
-    def _create_info_section(
-        self, title: str, info_dict: dict[str, str], border_color: str = "#bdc3c7"
-    ) -> QGroupBox:
+    def _create_info_section(self, title: str, info_dict: dict[str, str], border_color: str = "#bdc3c7") -> QGroupBox:
         """情報セクションを作成(統合版)"""
         group = QGroupBox(title)
 
@@ -1057,11 +1031,7 @@ class EXIFPanel(QWidget):
             if hasattr(self, "_last_exif_data") and self._last_exif_data:
                 self._create_integrated_sections(self._last_exif_data)
                 self._update_gps_display(self._last_exif_data)
-            elif (
-                hasattr(self, "current_image_path")
-                and self.current_image_path
-                and self.current_image_path.exists()
-            ):
+            elif hasattr(self, "current_image_path") and self.current_image_path and self.current_image_path.exists():
                 self._load_exif_data()
 
             # UI更新を再開
@@ -1132,14 +1102,10 @@ class EXIFPanel(QWidget):
                     # "35.123456°" のような形式から数値を抽出
                     if isinstance(latitude_str, str) and "°" in latitude_str:
                         latitude = float(latitude_str.replace("°", ""))
-                        conversion_info.append(
-                            f"緯度変換: '{latitude_str}' → {latitude:.6f}"
-                        )
+                        conversion_info.append(f"緯度変換: '{latitude_str}' → {latitude:.6f}")
                     elif isinstance(latitude_str, (int, float)):
                         latitude = float(latitude_str)
-                        conversion_info.append(
-                            f"緯度変換: {latitude_str} → {latitude:.6f}"
-                        )
+                        conversion_info.append(f"緯度変換: {latitude_str} → {latitude:.6f}")
                 except (ValueError, TypeError) as e:
                     conversion_info.append(f"緯度変換エラー: {e}")
                     latitude = None
@@ -1150,14 +1116,10 @@ class EXIFPanel(QWidget):
                     # "139.123456°" のような形式から数値を抽出
                     if isinstance(longitude_str, str) and "°" in longitude_str:
                         longitude = float(longitude_str.replace("°", ""))
-                        conversion_info.append(
-                            f"経度変換: '{longitude_str}' → {longitude:.6f}"
-                        )
+                        conversion_info.append(f"経度変換: '{longitude_str}' → {longitude:.6f}")
                     elif isinstance(longitude_str, (int, float)):
                         longitude = float(longitude_str)
-                        conversion_info.append(
-                            f"経度変換: {longitude_str} → {longitude:.6f}"
-                        )
+                        conversion_info.append(f"経度変換: {longitude_str} → {longitude:.6f}")
                 except (ValueError, TypeError) as e:
                     conversion_info.append(f"経度変換エラー: {e}")
                     longitude = None
@@ -1179,14 +1141,10 @@ class EXIFPanel(QWidget):
             # 緯度表示
             if latitude is not None:
                 self.latitude_label.setText(f"{latitude:.6f}°")
-                self.latitude_label.setStyleSheet(
-                    f"color: {self._get_color('success', '#27ae60')}; font-weight: bold;"
-                )
+                self.latitude_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')}; font-weight: bold;")
             else:
                 self.latitude_label.setText("Not available")
-                self.latitude_label.setStyleSheet(
-                    f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
-                )
+                self.latitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
 
             # 経度表示
             if longitude is not None:
@@ -1196,45 +1154,31 @@ class EXIFPanel(QWidget):
                 )
             else:
                 self.longitude_label.setText("Not available")
-                self.longitude_label.setStyleSheet(
-                    f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;"
-                )
+                self.longitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')}; font-weight: bold;")
 
             # 高度表示
             if altitude is not None:
                 self.altitude_label.setText(f"{altitude:.1f}m")
-                self.altitude_label.setStyleSheet(
-                    f"color: {self._get_color('success', '#27ae60')};"
-                )
+                self.altitude_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')};")
             else:
                 self.altitude_label.setText("Not available")
-                self.altitude_label.setStyleSheet(
-                    f"color: {self._get_color('error', '#e74c3c')};"
-                )
+                self.altitude_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
 
             # GPS時刻表示
             if gps_time:
                 self.gps_time_label.setText(str(gps_time))
-                self.gps_time_label.setStyleSheet(
-                    f"color: {self._get_color('success', '#27ae60')};"
-                )
+                self.gps_time_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')};")
             else:
                 self.gps_time_label.setText("Not available")
-                self.gps_time_label.setStyleSheet(
-                    f"color: {self._get_color('error', '#e74c3c')};"
-                )
+                self.gps_time_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
 
             # GPS日付表示
             if gps_date:
                 self.gps_date_label.setText(str(gps_date))
-                self.gps_date_label.setStyleSheet(
-                    f"color: {self._get_color('success', '#27ae60')};"
-                )
+                self.gps_date_label.setStyleSheet(f"color: {self._get_color('success', '#27ae60')};")
             else:
                 self.gps_date_label.setText("Not available")
-                self.gps_date_label.setStyleSheet(
-                    f"color: {self._get_color('error', '#e74c3c')};"
-                )
+                self.gps_date_label.setStyleSheet(f"color: {self._get_color('error', '#e74c3c')};")
 
             # ボタンの有効/無効を設定
             has_gps = latitude is not None and longitude is not None
@@ -1357,9 +1301,7 @@ class EXIFPanel(QWidget):
             # タイトルラベルのスタイル更新
             if hasattr(self, "title_label"):
                 title_fg = self._get_color_safe("foreground", "#2c3e50")
-                title_bg = self._get_color_safe(
-                    "hover", self._get_color_safe("background", "#ecf0f1")
-                )
+                title_bg = self._get_color_safe("hover", self._get_color_safe("background", "#ecf0f1"))
                 self.title_label.setStyleSheet(f"""
                     QLabel {{
                         font-weight: bold;
@@ -1418,13 +1360,7 @@ class EXIFPanel(QWidget):
                 # ウィンドウテキストの色の明度を計算
                 window_text_color = palette.color(palette.ColorRole.WindowText)
                 lightness = (
-                    (
-                        window_text_color.red()
-                        + window_text_color.green()
-                        + window_text_color.blue()
-                    )
-                    / 3.0
-                    / 255.0
+                    (window_text_color.red() + window_text_color.green() + window_text_color.blue()) / 3.0 / 255.0
                 )
 
                 # 明度が0.5より高い場合はダークテーマと判定

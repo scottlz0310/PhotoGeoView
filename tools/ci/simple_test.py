@@ -12,9 +12,7 @@ import time
 from pathlib import Path
 
 # Setup basic logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -71,9 +69,7 @@ def run_simple_checks():
         logger.info(f"{status} {check_name}: {result['message']}")
 
     logger.info("=" * 60)
-    final_status = (
-        "✅ ALL CHECKS PASSED" if overall_success else "❌ SOME CHECKS FAILED"
-    )
+    final_status = "✅ ALL CHECKS PASSED" if overall_success else "❌ SOME CHECKS FAILED"
     logger.info(final_status)
 
     return overall_success

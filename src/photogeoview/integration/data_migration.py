@@ -35,6 +35,7 @@ class MigrationStatus(Enum):
     FAILED = "failed"
     SKIPPED = "skipped"
 
+
 @dataclass
 class MigrationResult:
     """Result of a data migration operation"""
@@ -46,6 +47,7 @@ class MigrationResult:
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     validation_results: list[ValidationResult] = field(default_factory=list)
+
 
 class DataMigrationManager:
     """
@@ -75,9 +77,7 @@ class DataMigrationManager:
         self.backup_dir = backup_dir or (self.data_dir / "migration_backups")
         self.logger_system = logger_system or LoggerSystem()
         self.error_handler = IntegratedErrorHandler(self.logger_system)
-        self.validator = validator or DataValidator(
-            self.logger_system, self.error_handler
-        )
+        self.validator = validator or DataValidator(self.logger_system, self.error_handler)
 
         # Migration results
         self.migration_results: list[MigrationResult] = []
@@ -210,9 +210,7 @@ class DataMigrationManager:
                 ai_results = self._migrate_ai_data(ai_name, data_mappings)
                 migration_summary[ai_name] = ai_results
 
-                self.logger_system.info(
-                    f"Completed {ai_name} data migration: {len(ai_results)} operations"
-                )
+                self.logger_system.info(f"Completed {ai_name} data migration: {len(ai_results)} operations")
 
             # Generate migration report
             self._generate_migration_report(migration_summary)
@@ -240,9 +238,7 @@ class DataMigrationManager:
                 ]
             }
 
-    def _migrate_ai_data(
-        self, ai_name: str, data_mappings: dict[str, Any]
-    ) -> list[MigrationResult]:
+    def _migrate_ai_data(self, ai_name: str, data_mappings: dict[str, Any]) -> list[MigrationResult]:
         """Migrate data for a specific AI implementation"""
         results = []
 
@@ -252,9 +248,7 @@ class DataMigrationManager:
             try:
                 if "sql_queries" in mapping_config:
                     # Database migration
-                    result = self._migrate_database_data(
-                        ai_name, data_type, mapping_config
-                    )
+                    result = self._migrate_database_data(ai_name, data_type, mapping_config)
                 else:
                     # File-based migration
                     result = self._migrate_file_data(ai_name, data_type, mapping_config)
@@ -271,15 +265,11 @@ class DataMigrationManager:
                 )
                 results.append(error_result)
 
-                self.logger_system.error(
-                    f"Failed to migrate {ai_name} {data_type}: {e}"
-                )
+                self.logger_system.error(f"Failed to migrate {ai_name} {data_type}: {e}")
 
         return results
 
-    def _migrate_file_data(
-        self, ai_name: str, data_type: str, mapping_config: dict[str, Any]
-    ) -> MigrationResult:
+    def _migrate_file_data(self, ai_name: str, data_type: str, mapping_config: dict[str, Any]) -> MigrationResult:
         """Migrate data from JSON/file sources"""
         source_files = mapping_config["source_files"]
         target_model = mapping_config["target_model"]
@@ -316,30 +306,18 @@ class DataMigrationManager:
                 # Migrate each object
                 for source_obj in source_data:
                     try:
-                        migrated_obj = self._convert_object(
-                            source_obj, field_mappings, target_model
-                        )
+                        migrated_obj = self._convert_object(source_obj, field_mappings, target_model)
 
                         if migrated_obj:
                             # Validate migrated object
-                            validation_result = self._validate_migrated_object(
-                                migrated_obj, target_model
-                            )
+                            validation_result = self._validate_migrated_object(migrated_obj, target_model)
                             result.validation_results.append(validation_result)
 
-                            if (
-                                validation_result.is_valid
-                                or not validation_result.has_errors
-                            ):
+                            if validation_result.is_valid or not validation_result.has_errors:
                                 migrated_objects.append(migrated_obj)
                                 result.migrated_count += 1
                             else:
-                                result.errors.extend(
-                                    [
-                                        error["message"]
-                                        for error in validation_result.errors
-                                    ]
-                                )
+                                result.errors.extend([error["message"] for error in validation_result.errors])
 
                     except Exception as e:
                         result.errors.append(f"Failed to migrate object: {e!s}")
@@ -349,25 +327,17 @@ class DataMigrationManager:
 
         # Save migrated objects
         if migrated_objects:
-            self._save_migrated_objects(
-                migrated_objects, target_model, ai_name, data_type
-            )
+            self._save_migrated_objects(migrated_objects, target_model, ai_name, data_type)
 
         # Determine final status
         if result.errors:
-            result.status = (
-                MigrationStatus.PARTIAL
-                if result.migrated_count > 0
-                else MigrationStatus.FAILED
-            )
+            result.status = MigrationStatus.PARTIAL if result.migrated_count > 0 else MigrationStatus.FAILED
         elif result.migrated_count == 0:
             result.status = MigrationStatus.SKIPPED
 
         return result
 
-    def _migrate_database_data(
-        self, ai_name: str, data_type: str, mapping_config: dict[str, Any]
-    ) -> MigrationResult:
+    def _migrate_database_data(self, ai_name: str, data_type: str, mapping_config: dict[str, Any]) -> MigrationResult:
         """Migrate data from SQLite database sources"""
         source_files = mapping_config["source_files"]
         target_model = mapping_config["target_model"]
@@ -409,61 +379,37 @@ class DataMigrationManager:
                                     row_dict = dict(row)
 
                                     # Create object based on target model
-                                    migrated_obj = self._create_object_from_db_row(
-                                        row_dict, target_model
-                                    )
+                                    migrated_obj = self._create_object_from_db_row(row_dict, target_model)
 
                                     if migrated_obj:
                                         # Validate migrated object
-                                        validation_result = (
-                                            self._validate_migrated_object(
-                                                migrated_obj, target_model
-                                            )
-                                        )
-                                        result.validation_results.append(
-                                            validation_result
-                                        )
+                                        validation_result = self._validate_migrated_object(migrated_obj, target_model)
+                                        result.validation_results.append(validation_result)
 
-                                        if (
-                                            validation_result.is_valid
-                                            or not validation_result.has_errors
-                                        ):
+                                        if validation_result.is_valid or not validation_result.has_errors:
                                             migrated_objects.append(migrated_obj)
                                             result.migrated_count += 1
                                         else:
                                             result.errors.extend(
-                                                [
-                                                    error["message"]
-                                                    for error in validation_result.errors
-                                                ]
+                                                [error["message"] for error in validation_result.errors]
                                             )
 
                                 except Exception as e:
-                                    result.errors.append(
-                                        f"Failed to migrate row from {query_name}: {e!s}"
-                                    )
+                                    result.errors.append(f"Failed to migrate row from {query_name}: {e!s}")
 
                         except Exception as e:
-                            result.errors.append(
-                                f"Failed to execute query {query_name}: {e!s}"
-                            )
+                            result.errors.append(f"Failed to execute query {query_name}: {e!s}")
 
             except Exception as e:
                 result.errors.append(f"Failed to process database {source_file}: {e!s}")
 
         # Save migrated objects
         if migrated_objects:
-            self._save_migrated_objects(
-                migrated_objects, target_model, ai_name, data_type
-            )
+            self._save_migrated_objects(migrated_objects, target_model, ai_name, data_type)
 
         # Determine final status
         if result.errors:
-            result.status = (
-                MigrationStatus.PARTIAL
-                if result.migrated_count > 0
-                else MigrationStatus.FAILED
-            )
+            result.status = MigrationStatus.PARTIAL if result.migrated_count > 0 else MigrationStatus.FAILED
         elif result.migrated_count == 0:
             result.status = MigrationStatus.SKIPPED
 
@@ -485,9 +431,7 @@ class DataMigrationManager:
                     value = source_obj[source_field]
 
                     # Transform value if needed
-                    converted_value = self._transform_field_value(
-                        target_field, value, target_model
-                    )
+                    converted_value = self._transform_field_value(target_field, value, target_model)
                     converted_data[target_field] = converted_value
 
             # Create target model instance
@@ -504,9 +448,7 @@ class DataMigrationManager:
             self.logger_system.error(f"Failed to convert object to {target_model}: {e}")
             return None
 
-    def _create_object_from_db_row(
-        self, row_dict: dict[str, Any], target_model: str
-    ) -> Any | None:
+    def _create_object_from_db_row(self, row_dict: dict[str, Any], target_model: str) -> Any | None:
         """Create target model object from database row"""
         try:
             if target_model == "ImageMetadata":
@@ -519,36 +461,26 @@ class DataMigrationManager:
             return None
 
         except Exception as e:
-            self.logger_system.error(
-                f"Failed to create {target_model} from database row: {e}"
-            )
+            self.logger_system.error(f"Failed to create {target_model} from database row: {e}")
             return None
 
     def _create_image_metadata(self, data: dict[str, Any]) -> ImageMetadata | None:
         """Create ImageMetadata instance from data"""
         try:
             # Required fields with defaults
-            file_path = Path(
-                data.get("file_path", data.get("path", data.get("image_path", "")))
-            )
+            file_path = Path(data.get("file_path", data.get("path", data.get("image_path", ""))))
             file_size = data.get("file_size", data.get("size", 0))
 
             # Handle datetime fields
-            created_date = self._parse_datetime(
-                data.get("created_date", data.get("created", datetime.now()))
-            )
-            modified_date = self._parse_datetime(
-                data.get("modified_date", data.get("modified", datetime.now()))
-            )
+            created_date = self._parse_datetime(data.get("created_date", data.get("created", datetime.now())))
+            modified_date = self._parse_datetime(data.get("modified_date", data.get("modified", datetime.now())))
 
             return ImageMetadata(
                 file_path=file_path,
                 file_size=file_size,
                 created_date=created_date,
                 modified_date=modified_date,
-                file_format=data.get(
-                    "file_format", file_path.suffix if file_path else ""
-                ),
+                file_format=data.get("file_format", file_path.suffix if file_path else ""),
                 # EXIF data
                 camera_make=data.get("camera_make", data.get("make")),
                 camera_model=data.get("camera_model", data.get("model")),
@@ -561,16 +493,12 @@ class DataMigrationManager:
                 latitude=data.get("latitude", data.get("gps_lat", data.get("lat"))),
                 longitude=data.get("longitude", data.get("gps_lon", data.get("lng"))),
                 altitude=data.get("altitude", data.get("gps_alt", data.get("alt"))),
-                gps_timestamp=self._parse_datetime(
-                    data.get("gps_timestamp", data.get("gps_time"))
-                ),
+                gps_timestamp=self._parse_datetime(data.get("gps_timestamp", data.get("gps_time"))),
                 # Image dimensions
                 width=data.get("width", data.get("image_width")),
                 height=data.get("height", data.get("image_height")),
                 # UI data
-                thumbnail_path=(
-                    Path(data["thumbnail_path"]) if data.get("thumbnail_path") else None
-                ),
+                thumbnail_path=(Path(data["thumbnail_path"]) if data.get("thumbnail_path") else None),
                 display_name=data.get(
                     "display_name",
                     data.get("name", file_path.name if file_path else ""),
@@ -584,16 +512,12 @@ class DataMigrationManager:
             self.logger_system.error(f"Failed to create ImageMetadata: {e}")
             return None
 
-    def _create_theme_configuration(
-        self, data: dict[str, Any]
-    ) -> ThemeConfiguration | None:
+    def _create_theme_configuration(self, data: dict[str, Any]) -> ThemeConfiguration | None:
         """Create ThemeConfiguration instance from data"""
         try:
             return ThemeConfiguration(
                 name=data.get("name", data.get("theme_name", "unknown")),
-                display_name=data.get(
-                    "display_name", data.get("name", "Unknown Theme")
-                ),
+                display_name=data.get("display_name", data.get("name", "Unknown Theme")),
                 description=data.get("description", ""),
                 version=data.get("version", "1.0.0"),
                 author=data.get("author", ""),
@@ -607,28 +531,18 @@ class DataMigrationManager:
             self.logger_system.error(f"Failed to create ThemeConfiguration: {e}")
             return None
 
-    def _create_application_state(
-        self, data: dict[str, Any]
-    ) -> ApplicationState | None:
+    def _create_application_state(self, data: dict[str, Any]) -> ApplicationState | None:
         """Create ApplicationState instance from data"""
         try:
             return ApplicationState(
-                current_folder=(
-                    Path(data["current_folder"]) if data.get("current_folder") else None
-                ),
-                selected_image=(
-                    Path(data["selected_image"]) if data.get("selected_image") else None
-                ),
+                current_folder=(Path(data["current_folder"]) if data.get("current_folder") else None),
+                selected_image=(Path(data["selected_image"]) if data.get("selected_image") else None),
                 current_theme=data.get("current_theme", data.get("theme", "default")),
                 thumbnail_size=data.get("thumbnail_size", data.get("thumb_size", 150)),
                 window_geometry=data.get("window_geometry", data.get("geometry")),
                 splitter_states=data.get("splitter_states", data.get("splitters", {})),
-                image_sort_mode=data.get(
-                    "image_sort_mode", data.get("sort_by", "name")
-                ),
-                image_sort_ascending=data.get(
-                    "image_sort_ascending", data.get("sort_asc", True)
-                ),
+                image_sort_mode=data.get("image_sort_mode", data.get("sort_by", "name")),
+                image_sort_ascending=data.get("image_sort_ascending", data.get("sort_asc", True)),
                 performance_mode=data.get("performance_mode", "balanced"),
             )
 
@@ -636,9 +550,7 @@ class DataMigrationManager:
             self.logger_system.error(f"Failed to create ApplicationState: {e}")
             return None
 
-    def _transform_field_value(
-        self, field_name: str, value: Any, target_model: str
-    ) -> Any:
+    def _transform_field_value(self, field_name: str, value: Any, target_model: str) -> Any:
         """Transform field value during migration if needed"""
         try:
             # Path transformations
@@ -725,9 +637,7 @@ class DataMigrationManager:
         # Default to current time
         return datetime.now()
 
-    def _validate_migrated_object(
-        self, obj: Any, target_model: str
-    ) -> ValidationResult:
+    def _validate_migrated_object(self, obj: Any, target_model: str) -> ValidationResult:
         """Validate migrated object"""
         if target_model == "ImageMetadata":
             return self.validator.validate_image_metadata(obj)
@@ -741,15 +651,10 @@ class DataMigrationManager:
 
         return ValidationResult(is_valid=True)
 
-    def _save_migrated_objects(
-        self, objects: list[Any], target_model: str, ai_name: str, data_type: str
-    ):
+    def _save_migrated_objects(self, objects: list[Any], target_model: str, ai_name: str, data_type: str):
         """Save migrated objects to appropriate storage"""
         try:
-            output_file = (
-                self.data_dir
-                / f"migrated_{ai_name}_{data_type}_{target_model.lower()}.json"
-            )
+            output_file = self.data_dir / f"migrated_{ai_name}_{data_type}_{target_model.lower()}.json"
 
             # Convert objects to serializable format
             serializable_objects = []
@@ -771,9 +676,7 @@ class DataMigrationManager:
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(serializable_objects, f, indent=2, default=str)
 
-            self.logger_system.info(
-                f"Saved {len(objects)} migrated {target_model} objects to {output_file}"
-            )
+            self.logger_system.info(f"Saved {len(objects)} migrated {target_model} objects to {output_file}")
 
         except Exception as e:
             self.logger_system.error(f"Failed to save migrated objects: {e}")
@@ -781,9 +684,7 @@ class DataMigrationManager:
     def _create_backup(self, source_file: Path) -> Path:
         """Create backup of source data file"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = (
-            self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
-        )
+        backup_file = self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
 
         if source_file.suffix == ".db":
             # For SQLite databases, use proper backup method
@@ -798,9 +699,7 @@ class DataMigrationManager:
 
         return backup_file
 
-    def _generate_migration_report(
-        self, migration_summary: dict[str, list[MigrationResult]]
-    ):
+    def _generate_migration_report(self, migration_summary: dict[str, list[MigrationResult]]):
         """Generate detailed migration report"""
         report_file = self.data_dir / "data_migration_report.json"
 
@@ -816,16 +715,10 @@ class DataMigrationManager:
         for ai_name, results in migration_summary.items():
             ai_summary = {
                 "total_operations": len(results),
-                "successful": sum(
-                    1 for r in results if r.status == MigrationStatus.SUCCESS
-                ),
-                "partial": sum(
-                    1 for r in results if r.status == MigrationStatus.PARTIAL
-                ),
+                "successful": sum(1 for r in results if r.status == MigrationStatus.SUCCESS),
+                "partial": sum(1 for r in results if r.status == MigrationStatus.PARTIAL),
                 "failed": sum(1 for r in results if r.status == MigrationStatus.FAILED),
-                "skipped": sum(
-                    1 for r in results if r.status == MigrationStatus.SKIPPED
-                ),
+                "skipped": sum(1 for r in results if r.status == MigrationStatus.SKIPPED),
                 "total_migrated": sum(r.migrated_count for r in results),
                 "total_errors": sum(len(r.errors) for r in results),
             }
@@ -843,9 +736,7 @@ class DataMigrationManager:
                     "migrated_count": r.migrated_count,
                     "error_count": len(r.errors),
                     "warning_count": len(r.warnings),
-                    "validation_issues": sum(
-                        len(v.errors) + len(v.warnings) for v in r.validation_results
-                    ),
+                    "validation_issues": sum(len(v.errors) + len(v.warnings) for v in r.validation_results),
                 }
                 for r in results
             ]
@@ -853,13 +744,7 @@ class DataMigrationManager:
         report_data["overall_summary"] = {
             "total_migrated_objects": total_migrated,
             "total_errors": total_errors,
-            "migration_status": (
-                "success"
-                if total_errors == 0
-                else "partial"
-                if total_migrated > 0
-                else "failed"
-            ),
+            "migration_status": ("success" if total_errors == 0 else "partial" if total_migrated > 0 else "failed"),
         }
 
         with open(report_file, "w", encoding="utf-8") as f:

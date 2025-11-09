@@ -51,9 +51,7 @@ class AppController:
     - Kiro optimization and monitoring
     """
 
-    def __init__(
-        self, config_manager: IConfigManager = None, logger_system: LoggerSystem = None
-    ):
+    def __init__(self, config_manager: IConfigManager = None, logger_system: LoggerSystem = None):
         """
         Initialize the application controller
 
@@ -105,9 +103,7 @@ class AppController:
         self.cache: dict[str, Any] = {}
         self.cache_stats = {"hits": 0, "misses": 0, "size": 0}
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, "initialization", "AppController initialized"
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, "initialization", "AppController initialized")
 
     async def initialize(self) -> bool:
         """
@@ -118,9 +114,7 @@ class AppController:
         """
 
         try:
-            with self.logger_system.operation_context(
-                AIComponent.KIRO, "app_initialization"
-            ):
+            with self.logger_system.operation_context(AIComponent.KIRO, "app_initialization"):
                 # Initialize AI components
                 await self._initialize_ai_components()
 
@@ -159,13 +153,9 @@ class AppController:
 
         try:
             # Initialize Kiro integration components first
-            self.cache_system = UnifiedCacheSystem(
-                config_manager=self.config_manager, logger_system=self.logger_system
-            )
+            self.cache_system = UnifiedCacheSystem(config_manager=self.config_manager, logger_system=self.logger_system)
 
-            self.state_manager = StateManager(
-                config_manager=self.config_manager, logger_system=self.logger_system
-            )
+            self.state_manager = StateManager(config_manager=self.config_manager, logger_system=self.logger_system)
 
             self.performance_monitor = KiroPerformanceMonitor(
                 config_manager=self.config_manager, logger_system=self.logger_system
@@ -207,9 +197,7 @@ class AppController:
         self.register_event_handler("theme_changed", self._on_theme_changed)
         self.register_event_handler("error_occurred", self._on_error_occurred)
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, "event_system", "Event system initialized"
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, "event_system", "Event system initialized")
 
     async def _load_application_state(self):
         """Load application state from configuration"""
@@ -227,9 +215,7 @@ class AppController:
                     self.app_state.thumbnail_size = saved_state["thumbnail_size"]
 
                 if "folder_history" in saved_state:
-                    self.app_state.folder_history = [
-                        Path(p) for p in saved_state["folder_history"]
-                    ]
+                    self.app_state.folder_history = [Path(p) for p in saved_state["folder_history"]]
 
                 self.lcomer_system.log_ai_operation(
                     AIComponent.KIRO,
@@ -264,9 +250,7 @@ class AppController:
             self.config_manager.set_setting("app_state", state_data)
             await asyncio.to_thread(self.config_manager.save_config)
 
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO, "state_saving", "Application state saved"
-            )
+            self.logger_system.log_ai_operation(AIComponent.KIRO, "state_saving", "Application state saved")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -381,11 +365,7 @@ class AppController:
                     "category": error_context.category.value,
                     "severity": error_context.severity.value,
                     "message": error_context.user_message,
-                    "ai_component": (
-                        error_context.ai_component.value
-                        if error_context.ai_component
-                        else None
-                    ),
+                    "ai_component": (error_context.ai_component.value if error_context.ai_component else None),
                 }
             )
 
@@ -408,9 +388,7 @@ class AppController:
         start_time = time.time()
 
         try:
-            with self.logger_system.operation_context(
-                AIComponent.COPILOT, "image_processing"
-            ):
+            with self.logger_system.operation_context(AIComponent.COPILOT, "image_processing"):
                 # Check cache first
                 cache_key = f"image_{image_path.stem}_{image_path.stat().st_mtime}"
                 cached_metadata = self.get_from_cache(cache_key)
@@ -489,9 +467,7 @@ class AppController:
             )
             return None
 
-    def _populate_exif_metadata(
-        self, metadata: ImageMetadata, exif_data: dict[str, Any]
-    ):
+    def _populate_exif_metadata(self, metadata: ImageMetadata, exif_data: dict[str, Any]):
         """Populate metadata with EXIF information"""
 
         # Camera information
@@ -557,9 +533,7 @@ class AppController:
             return []
 
         try:
-            with self.logger_system.operation_context(
-                AIComponent.CURSOR, "folder_loading"
-            ):
+            with self.logger_system.operation_context(AIComponent.CURSOR, "folder_loading"):
                 # Get supported formats
                 supported_formats = self.image_processor.get_supported_formats()
 
@@ -567,8 +541,7 @@ class AppController:
                 image_files = []
                 for file_path in folder_path.iterdir():
                     if (
-                        file_path.is_file()
-                        and file_path.suffix.lower() in supported_formats
+                        file_path.is_file() and file_path.suffix.lower() in supported_formats
                     ) and self.image_processor.validate_image(file_path):
                         image_files.append(file_path)
 
@@ -633,9 +606,7 @@ class AppController:
         self.cache.clear()
         self.cache_stats = {"hits": 0, "misses": 0, "size": 0}
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, "cache_management", "Cache cleared"
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, "cache_management", "Cache cleared")
 
     # Performance monitoring
 
@@ -655,10 +626,7 @@ class AppController:
     def get_ai_component_status(self) -> dict[str, str]:
         """Get status of all AI components"""
 
-        return {
-            component.value: info["status"]
-            for component, info in self.ai_components.items()
-        }
+        return {component.value: info["status"] for component, info in self.ai_components.items()}
 
     # Shutdown
 

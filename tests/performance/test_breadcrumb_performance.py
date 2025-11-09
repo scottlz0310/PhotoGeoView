@@ -71,9 +71,7 @@ class TestBreadcrumbPerformance:
             assert result2["valid"] is True
 
             # Check that result was cached
-            cached_info = breadcrumb_bar.performance_optimizer.get_cached_path_info(
-                test_path
-            )
+            cached_info = breadcrumb_bar.performance_optimizer.get_cached_path_info(test_path)
             assert cached_info is not None
             assert "validation_result" in cached_info
 
@@ -107,9 +105,7 @@ class TestBreadcrumbPerformance:
 
         # Mock path validation and navigation state update
         with (
-            patch.object(
-                breadcrumb_bar, "_validate_path_comprehensive"
-            ) as mock_validate,
+            patch.object(breadcrumb_bar, "_validate_path_comprehensive") as mock_validate,
             patch.object(breadcrumb_bar, "current_state") as mock_state,
             patch.object(
                 breadcrumb_bar,
@@ -117,9 +113,7 @@ class TestBreadcrumbPerformance:
                 new_callable=AsyncMock,
             ),
             patch.object(breadcrumb_bar, "_update_accessibility_info"),
-            patch.object(
-                breadcrumb_bar, "_notify_navigation_listeners", new_callable=AsyncMock
-            ),
+            patch.object(breadcrumb_bar, "_notify_navigation_listeners", new_callable=AsyncMock),
         ):
             # Setup mocks
             mock_validate.return_value = {
@@ -135,9 +129,7 @@ class TestBreadcrumbPerformance:
 
             # Check that operation was monitored
             metrics = breadcrumb_bar.performance_optimizer.monitor.get_all_metrics()
-            assert (
-                len(metrics) > 0 or result
-            )  # Either metrics recorded or operation succeeded
+            assert len(metrics) > 0 or result  # Either metrics recorded or operation succeeded
 
     @pytest.mark.asyncio
     async def test_breadcrumb_rendering_optimization(self, performance_optimizer):
@@ -154,19 +146,13 @@ class TestBreadcrumbPerformance:
             segments = [f"segment_{i}" for i in range(segments_count)]
             test_path = Path("/test/path")
 
-            optimized = await performance_optimizer.optimize_breadcrumb_rendering(
-                test_path, segments
-            )
+            optimized = await performance_optimizer.optimize_breadcrumb_rendering(test_path, segments)
 
             if should_optimize:
-                assert len(optimized) < len(segments), (
-                    f"Expected optimization for {segments_count} segments"
-                )
+                assert len(optimized) < len(segments), f"Expected optimization for {segments_count} segments"
                 assert "..." in optimized, "Expected ellipsis in optimized segments"
             else:
-                assert optimized == segments, (
-                    f"Expected no optimization for {segments_count} segments"
-                )
+                assert optimized == segments, f"Expected no optimization for {segments_count} segments"
 
     def test_cache_hit_performance(self, performance_optimizer):
         """Test cache hit performance for repeated operations"""
@@ -188,9 +174,7 @@ class TestBreadcrumbPerformance:
 
         # Cache hits should be very fast
         avg_time_per_hit = (end_time - start_time) / 1000
-        assert avg_time_per_hit < 0.001, (
-            f"Cache hits too slow: {avg_time_per_hit:.6f}s per hit"
-        )
+        assert avg_time_per_hit < 0.001, f"Cache hits too slow: {avg_time_per_hit:.6f}s per hit"
 
     @pytest.mark.asyncio
     async def test_concurrent_path_operations(self, breadcrumb_bar):
@@ -199,9 +183,7 @@ class TestBreadcrumbPerformance:
 
         # Mock validation to return success
         with (
-            patch.object(
-                breadcrumb_bar, "_validate_path_comprehensive"
-            ) as mock_validate,
+            patch.object(breadcrumb_bar, "_validate_path_comprehensive") as mock_validate,
             patch.object(breadcrumb_bar, "current_state") as mock_state,
             patch.object(
                 breadcrumb_bar,
@@ -209,9 +191,7 @@ class TestBreadcrumbPerformance:
                 new_callable=AsyncMock,
             ),
             patch.object(breadcrumb_bar, "_update_accessibility_info"),
-            patch.object(
-                breadcrumb_bar, "_notify_navigation_listeners", new_callable=AsyncMock
-            ),
+            patch.object(breadcrumb_bar, "_notify_navigation_listeners", new_callable=AsyncMock),
         ):
             mock_validate.return_value = {
                 "valid": True,
@@ -224,25 +204,18 @@ class TestBreadcrumbPerformance:
             # Execute concurrent path operations
             start_time = time.time()
             tasks = [
-                asyncio.create_task(
-                    asyncio.to_thread(breadcrumb_bar.set_current_path, path)
-                )
-                for path in test_paths
+                asyncio.create_task(asyncio.to_thread(breadcrumb_bar.set_current_path, path)) for path in test_paths
             ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             end_time = time.time()
 
             # Check that operations completed reasonably quickly
             total_time = end_time - start_time
-            assert total_time < 5.0, (
-                f"Concurrent operations too slow: {total_time:.3f}s"
-            )
+            assert total_time < 5.0, f"Concurrent operations too slow: {total_time:.3f}s"
 
             # Check that most operations succeeded
             successful_results = [r for r in results if r is True]
-            assert len(successful_results) >= len(test_paths) * 0.8, (
-                "Too many operations failed"
-            )
+            assert len(successful_results) >= len(test_paths) * 0.8, "Too many operations failed"
 
     def test_memory_usage_optimization(self, performance_optimizer):
         """Test that caches don't grow unbounded"""
@@ -254,9 +227,7 @@ class TestBreadcrumbPerformance:
 
         # Check that cache size is limited
         cache_size = performance_optimizer.path_cache.size()
-        assert cache_size <= 1000, (
-            f"Cache size not limited: {cache_size}"
-        )  # Should be <= max_size
+        assert cache_size <= 1000, f"Cache size not limited: {cache_size}"  # Should be <= max_size
 
     @pytest.mark.asyncio
     async def test_error_handling_performance(self, breadcrumb_bar):
@@ -265,12 +236,8 @@ class TestBreadcrumbPerformance:
 
         # Mock validation to return error
         with (
-            patch.object(
-                breadcrumb_bar, "_validate_path_comprehensive"
-            ) as mock_validate,
-            patch.object(
-                breadcrumb_bar, "_navigate_to_fallback_path", return_value=True
-            ),
+            patch.object(breadcrumb_bar, "_validate_path_comprehensive") as mock_validate,
+            patch.object(breadcrumb_bar, "_navigate_to_fallback_path", return_value=True),
         ):
             mock_validate.return_value = {
                 "valid": False,
@@ -285,9 +252,7 @@ class TestBreadcrumbPerformance:
 
             # Error handling should still be reasonably fast
             error_handling_time = end_time - start_time
-            assert error_handling_time < 1.0, (
-                f"Error handling too slow: {error_handling_time:.3f}s"
-            )
+            assert error_handling_time < 1.0, f"Error handling too slow: {error_handling_time:.3f}s"
 
 
 @pytest.mark.benchmark
@@ -317,9 +282,7 @@ class TestBreadcrumbBenchmarks:
 
         def validate_paths():
             for path in test_paths:
-                with patch.object(
-                    breadcrumb_bar, "_sync_validate_path", return_value=True
-                ):
+                with patch.object(breadcrumb_bar, "_sync_validate_path", return_value=True):
                     breadcrumb_bar._validate_path_comprehensive(path)
 
         # Benchmark the operations
@@ -328,14 +291,11 @@ class TestBreadcrumbBenchmarks:
     def test_cache_operations_benchmark(self, performance_optimizer, benchmark):
         """Benchmark cache operations for path info"""
         test_paths = [Path(f"/test/path/{i}") for i in range(1000)]
-        test_infos = [
-            {"validation_result": {"valid": True}, "data": f"data_{i}"}
-            for i in range(1000)
-        ]
+        test_infos = [{"validation_result": {"valid": True}, "data": f"data_{i}"} for i in range(1000)]
 
         def cache_operations():
             # Cache all paths
-            for path, info in zip(test_paths, test_infos):
+            for path, info in zip(test_paths, test_infos, strict=False):
                 performance_optimizer.cache_path_info(path, info)
 
             # Retrieve all paths
@@ -346,21 +306,16 @@ class TestBreadcrumbBenchmarks:
         benchmark(cache_operations)
 
     @pytest.mark.asyncio
-    async def test_breadcrumb_truncation_benchmark(
-        self, performance_optimizer, benchmark
-    ):
+    async def test_breadcrumb_truncation_benchmark(self, performance_optimizer, benchmark):
         """Benchmark breadcrumb truncation operations"""
         # Create various length segment lists
         test_cases = [
-            ([f"segment_{i}" for i in range(length)], Path(f"/path/{length}"))
-            for length in [5, 10, 20, 50, 100]
+            ([f"segment_{i}" for i in range(length)], Path(f"/path/{length}")) for length in [5, 10, 20, 50, 100]
         ]
 
         async def truncation_operations():
             for segments, path in test_cases:
-                await performance_optimizer.optimize_breadcrumb_rendering(
-                    path, segments
-                )
+                await performance_optimizer.optimize_breadcrumb_rendering(path, segments)
 
         # Benchmark the operations
         await benchmark(truncation_operations)
@@ -387,13 +342,10 @@ class TestBreadcrumbBenchmarks:
         import threading
 
         test_paths = [Path(f"/test/path/{i}") for i in range(100)]
-        test_infos = [
-            {"validation_result": {"valid": True}, "data": f"data_{i}"}
-            for i in range(100)
-        ]
+        test_infos = [{"validation_result": {"valid": True}, "data": f"data_{i}"} for i in range(100)]
 
         # Pre-populate cache
-        for path, info in zip(test_paths, test_infos):
+        for path, info in zip(test_paths, test_infos, strict=False):
             performance_optimizer.cache_path_info(path, info)
 
         def concurrent_cache_access():

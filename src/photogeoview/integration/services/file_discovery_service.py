@@ -72,6 +72,7 @@ def measure_performance(operation_name: str, log_level: str = "DEBUG"):
 
     return decorator
 
+
 class FileDiscoveryService:
     """
     画像ファイル検出サービス
@@ -113,9 +114,7 @@ class FileDiscoveryService:
         )
 
         # 画像処理インスタンスの初期化
-        self.image_processor = image_processor or CS4CodingImageProcessor(
-            logger_system=self.logger_system
-        )
+        self.image_processor = image_processor or CS4CodingImageProcessor(logger_system=self.logger_system)
 
         # キャッシュシステムの初期化
         self.enable_cache = enable_cache
@@ -164,9 +163,7 @@ class FileDiscoveryService:
         """指定されたフォルダ内の画像ファイルを検出する(キャッシュ対応)"""
 
         # 操作コンテキストを使用してログ記録を自動化
-        with self.logger_system.operation_context(
-            AIComponent.KIRO, "image_discovery"
-        ):
+        with self.logger_system.operation_context(AIComponent.KIRO, "image_discovery"):
             discovered_files = []
             scan_duration = 0.0  # 初期化(デコレータで自動計測)
             scan_details = {
@@ -182,9 +179,7 @@ class FileDiscoveryService:
                     if cached_folder_scan:
                         # キャッシュヒット - キャッシュされた結果を使用
                         discovered_files = [
-                            result.file_path
-                            for result in cached_folder_scan.file_results
-                            if result.is_valid
+                            result.file_path for result in cached_folder_scan.file_results if result.is_valid
                         ]
                         scan_duration = 0.0  # キャッシュヒット時は時間計測不要
 
@@ -201,9 +196,7 @@ class FileDiscoveryService:
                             {
                                 "cache_hit": True,
                                 "cached_scan_duration": cached_folder_scan.scan_duration,
-                                "cached_file_count": len(
-                                    cached_folder_scan.file_results
-                                ),
+                                "cached_file_count": len(cached_folder_scan.file_results),
                                 "images_found": len(discovered_files),
                                 "scan_duration": scan_duration,
                             }
@@ -241,9 +234,7 @@ class FileDiscoveryService:
                         level="WARNING",
                     )
                     scan_details["error"] = "folder_not_found"
-                    self._log_performance(
-                        "scan", scan_details, {"error": "folder_not_found"}
-                    )
+                    self._log_performance("scan", scan_details, {"error": "folder_not_found"})
                     return []
 
                 if not folder_path.is_dir():
@@ -254,9 +245,7 @@ class FileDiscoveryService:
                         level="WARNING",
                     )
                     scan_details["error"] = "not_directory"
-                    self._log_performance(
-                        "scan", scan_details, {"error": "not_directory"}
-                    )
+                    self._log_performance("scan", scan_details, {"error": "not_directory"})
                     return []
 
                 # フォルダ内のファイルを走査
@@ -282,9 +271,7 @@ class FileDiscoveryService:
                         AIComponent.KIRO,
                     )
                     scan_details["error"] = "permission_denied"
-                    self._log_performance(
-                        "scan", scan_details, {"error": "permission_denied"}
-                    )
+                    self._log_performance("scan", scan_details, {"error": "permission_denied"})
                     return []
 
                 # 画像ファイルのフィルタリング(キャッシュ対応)
@@ -309,9 +296,7 @@ class FileDiscoveryService:
                             # キャッシュから個別ファイル結果を確認
                             cached_result = None
                             if self.enable_cache and self.cache:
-                                cached_result = self.cache.get_cached_file_result(
-                                    file_path
-                                )
+                                cached_result = self.cache.get_cached_file_result(file_path)
 
                             if cached_result:
                                 # ファイルキャッシュヒット
@@ -349,9 +334,7 @@ class FileDiscoveryService:
                                             validation_time=0.0,  # デコレータで自動計測
                                         )
                                         file_results.append(file_result)
-                                        self.cache.cache_file_result(
-                                            file_path, is_valid, 0.0
-                                        )
+                                        self.cache.cache_file_result(file_path, is_valid, 0.0)
                                     except (OSError, FileNotFoundError):
                                         # ファイルアクセスエラーは無視して続行
                                         pass
@@ -465,9 +448,7 @@ class FileDiscoveryService:
         """CS4CodingImageProcessorと連携してファイルの有効性をチェックする(キャッシュ対応)"""
 
         # 操作コンテキストを使用してバリデーション処理をログ記録
-        with self.logger_system.operation_context(
-            AIComponent.COPILOT, "image_validation"
-        ):
+        with self.logger_system.operation_context(AIComponent.COPILOT, "image_validation"):
             validation_details = {
                 "file_path": str(file_path),
                 "file_name": file_path.name,
@@ -519,9 +500,7 @@ class FileDiscoveryService:
                     validation_details.update(
                         {
                             "file_size": file_stat.st_size,
-                            "file_modified": datetime.fromtimestamp(
-                                file_stat.st_mtime
-                            ).isoformat(),
+                            "file_modified": datetime.fromtimestamp(file_stat.st_mtime).isoformat(),
                             "file_extension": file_path.suffix.lower(),
                         }
                     )
@@ -734,21 +713,15 @@ class FileDiscoveryService:
                         "is_valid": is_valid,
                         "cache_enabled": self.enable_cache,
                         "cache_hit": validation_details.get("cache_hit", False),
-                        "processor_duration": validation_details.get(
-                            "processor_duration", 0
-                        ),
-                        "load_test_duration": validation_details.get(
-                            "load_test_duration", 0
-                        ),
+                        "processor_duration": validation_details.get("processor_duration", 0),
+                        "load_test_duration": validation_details.get("load_test_duration", 0),
                         "start_time": validation_details["start_time"],
                         "end_time": validation_details["end_time"],
                     },
                 )
 
                 # バリデーション時間の警告チェック
-                self._check_validation_performance_warnings(
-                    validation_duration, file_size, is_valid
-                )
+                self._check_validation_performance_warnings(validation_duration, file_size, is_valid)
 
                 return is_valid
 
@@ -826,14 +799,10 @@ class FileDiscoveryService:
         stats = self.discovery_stats.copy()
 
         if stats["total_scans"] > 0:
-            stats["avg_files_per_scan"] = (
-                stats["total_files_found"] / stats["total_scans"]
-            )
+            stats["avg_files_per_scan"] = stats["total_files_found"] / stats["total_scans"]
             stats["avg_scan_time"] = stats["total_scan_time"] / stats["total_scans"]
             stats["success_rate"] = (
-                stats["total_valid_files"] / stats["total_files_found"]
-                if stats["total_files_found"] > 0
-                else 0
+                stats["total_valid_files"] / stats["total_files_found"] if stats["total_files_found"] > 0 else 0
             )
         else:
             stats["avg_files_per_scan"] = 0
@@ -875,11 +844,7 @@ class FileDiscoveryService:
                 "success_rate": stats["success_rate"],
                 "validation_success_rate": stats["validation_success_rate"],
                 "current_memory_usage_mb": stats["current_memory_usage_mb"],
-                "last_scan_time": (
-                    stats["last_scan_time"].isoformat()
-                    if stats["last_scan_time"]
-                    else None
-                ),
+                "last_scan_time": (stats["last_scan_time"].isoformat() if stats["last_scan_time"] else None),
                 "timestamp": stats["stats_generated_at"],
             },
         )
@@ -1060,9 +1025,7 @@ class FileDiscoveryService:
             )
             return False
 
-    def _update_discovery_stats(
-        self, total_files: int, found_files: int, scan_time: float
-    ):
+    def _update_discovery_stats(self, total_files: int, found_files: int, scan_time: float):
         """
         検出統計情報を更新する
 
@@ -1089,9 +1052,7 @@ class FileDiscoveryService:
             level="DEBUG",
         )
 
-    def _log_performance(
-        self, operation_type: str, details: dict[str, Any], metrics: dict[str, Any]
-    ):
+    def _log_performance(self, operation_type: str, details: dict[str, Any], metrics: dict[str, Any]):
         """統合パフォーマンスログ記録メソッド"""
         # 基本メトリクス
         performance_metrics = {
@@ -1101,9 +1062,7 @@ class FileDiscoveryService:
         }
 
         # パフォーマンスログに記録
-        self.logger_system.log_performance(
-            AIComponent.KIRO, f"{operation_type}_performance", performance_metrics
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, f"{operation_type}_performance", performance_metrics)
 
         # 簡潔なデバッグ情報
         if self.debug_enabled:
@@ -1114,9 +1073,7 @@ class FileDiscoveryService:
                 level="DEBUG",
             )
 
-    def _check_performance_warnings(
-        self, duration: float, total_files: int, found_files: int
-    ):
+    def _check_performance_warnings(self, duration: float, total_files: int, found_files: int):
         """
         パフォーマンス警告をチェックし、必要に応じて警告ログを出力する
 
@@ -1152,8 +1109,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_warning",
-                f"遅いスキャン検出: {duration:.2f}秒 (閾値: {SLOW_SCAN_THRESHOLD}秒) - "
-                f"ファイル数: {total_files}",
+                f"遅いスキャン検出: {duration:.2f}秒 (閾値: {SLOW_SCAN_THRESHOLD}秒) - " f"ファイル数: {total_files}",
                 level="WARNING",
             )
 
@@ -1177,9 +1133,7 @@ class FileDiscoveryService:
 
         # 成功率の警告
         success_rate = found_files / total_files if total_files > 0 else 0
-        if (
-            success_rate < 0.1 and total_files > 10
-        ):  # 10%未満の成功率で10ファイル以上の場合
+        if success_rate < 0.1 and total_files > 10:  # 10%未満の成功率で10ファイル以上の場合
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_warning",
@@ -1215,9 +1169,7 @@ class FileDiscoveryService:
             if value is not None and hasattr(self, key):
                 setattr(self, key, value)
 
-    def _log_configuration_change(
-        self, config_type: str, config_details: dict[str, Any]
-    ):
+    def _log_configuration_change(self, config_type: str, config_details: dict[str, Any]):
         """設定変更のログ出力を統一するヘルパーメソッド"""
         self.log_with_appropriate_level(
             "INFO",
@@ -1391,9 +1343,7 @@ class FileDiscoveryService:
         perf_message += ", ".join(perf_parts)
 
         # INFO レベルでパフォーマンス情報をログ出力
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, f"{operation}_performance", perf_message, level="INFO"
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, f"{operation}_performance", perf_message, level="INFO")
 
         # 詳細なパフォーマンスメトリクスを記録
         enhanced_metrics = {
@@ -1403,16 +1353,12 @@ class FileDiscoveryService:
             "timestamp": datetime.now().isoformat(),
         }
 
-        self.logger_system.log_performance(
-            AIComponent.KIRO, f"{operation}_detailed_performance", enhanced_metrics
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, f"{operation}_detailed_performance", enhanced_metrics)
 
         # パフォーマンス警告のチェック
         self._check_performance_thresholds(operation, enhanced_metrics)
 
-    def log_error_details(
-        self, operation: str, error: Exception, context: dict[str, Any] | None = None
-    ):
+    def log_error_details(self, operation: str, error: Exception, context: dict[str, Any] | None = None):
         """
         エラー発生時の詳細情報を記録する
 
@@ -1453,28 +1399,18 @@ class FileDiscoveryService:
         )
 
         # エラーの詳細情報をパフォーマンスログにも記録
-        self.logger_system.log_performance(
-            AIComponent.KIRO, f"{operation}_error_metrics", error_details
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, f"{operation}_error_metrics", error_details)
 
         # 統合エラーハンドラーにも通知
-        self.error_handler.handle_error(
-            error, self._categorize_error(error), error_context, AIComponent.KIRO
-        )
+        self.error_handler.handle_error(error, self._categorize_error(error), error_context, AIComponent.KIRO)
 
     def log_with_appropriate_level(
         self, level: str, operation: str, message: str, details: dict[str, Any] | None = None
     ):
         """ログレベルに応じた適切な出力を行う(統合版)"""
-        log_level = (
-            level.upper()
-            if level.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-            else "INFO"
-        )
+        log_level = level.upper() if level.upper() in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] else "INFO"
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, operation, message, level=log_level
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, operation, message, level=log_level)
 
         if details:
             if log_level == "DEBUG":
@@ -1496,9 +1432,7 @@ class FileDiscoveryService:
             エラーカテゴリ
         """
 
-        if (
-            isinstance(error, (PermissionError, FileNotFoundError, OSError))
-        ):
+        if isinstance(error, (PermissionError, FileNotFoundError, OSError)):
             return ErrorCategory.FILE_ERROR
         elif isinstance(error, MemoryError):
             return ErrorCategory.SYSTEM_ERROR
@@ -1685,13 +1619,11 @@ class FileDiscoveryService:
                 "total_scans": self.discovery_stats["total_scans"],
                 "total_files_found": self.discovery_stats["total_files_found"],
                 "total_valid_files": self.discovery_stats["total_valid_files"],
-                "avg_scan_time": self.discovery_stats["total_scan_time"]
-                / max(1, self.discovery_stats["total_scans"]),
+                "avg_scan_time": self.discovery_stats["total_scan_time"] / max(1, self.discovery_stats["total_scans"]),
                 "cache_hit_rate": self.discovery_stats["cache_hits"]
                 / max(
                     1,
-                    self.discovery_stats["cache_hits"]
-                    + self.discovery_stats["cache_misses"],
+                    self.discovery_stats["cache_hits"] + self.discovery_stats["cache_misses"],
                 ),
                 "memory_usage_mb": self._get_memory_usage(),
                 "timestamp": datetime.now().isoformat(),
@@ -1708,9 +1640,7 @@ class FileDiscoveryService:
             )
 
             # 詳細統計をパフォーマンスログに記録
-            self.logger_system.log_performance(
-                AIComponent.KIRO, "periodic_performance_detailed", stats
-            )
+            self.logger_system.log_performance(AIComponent.KIRO, "periodic_performance_detailed", stats)
 
         # 初回実行
         log_periodic_stats()
@@ -1736,16 +1666,13 @@ class FileDiscoveryService:
     def get_performance_summary(self) -> dict[str, Any]:
         """パフォーマンス統計の要約を取得する(簡略化版)"""
         total_operations = self.discovery_stats["total_scans"]
-        cache_requests = (
-            self.discovery_stats["cache_hits"] + self.discovery_stats["cache_misses"]
-        )
+        cache_requests = self.discovery_stats["cache_hits"] + self.discovery_stats["cache_misses"]
 
         return {
             "operations": {
                 "total_scans": total_operations,
                 "total_files_found": self.discovery_stats["total_files_found"],
-                "avg_files_per_scan": self.discovery_stats["total_files_found"]
-                / max(1, total_operations),
+                "avg_files_per_scan": self.discovery_stats["total_files_found"] / max(1, total_operations),
             },
             "cache": {
                 "hit_rate": self.discovery_stats["cache_hits"] / max(1, cache_requests),
@@ -1763,9 +1690,7 @@ class FileDiscoveryService:
     ) -> AsyncIterator[Path]:
         """非同期で画像ファイルを検出する(UIスレッド非ブロッキング)"""
 
-        with self.logger_system.operation_context(
-            AIComponent.KIRO, "async_image_discovery"
-        ) as ctx:
+        with self.logger_system.operation_context(AIComponent.KIRO, "async_image_discovery") as ctx:
             total_processed = 0
             total_found = 0
 
@@ -1846,17 +1771,14 @@ class FileDiscoveryService:
                         # 進行状況を更新
                         if progress_callback and total_processed % 10 == 0:
                             progress_message = f"処理中... {total_found}個の画像を発見"
-                            progress_callback(
-                                total_processed, total_files, progress_message
-                            )
+                            progress_callback(total_processed, total_files, progress_message)
 
                     # バッチ処理完了
                     batch_duration = time.time() - batch_start_time
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "async_batch_complete",
-                        f"バッチ処理完了: {batch_duration:.2f}秒, "
-                        f"発見ファイル数: {total_found}個",
+                        f"バッチ処理完了: {batch_duration:.2f}秒, " f"発見ファイル数: {total_found}個",
                         level="DEBUG",
                     )
 
@@ -1865,9 +1787,7 @@ class FileDiscoveryService:
 
                 # 最終進行状況を更新
                 if progress_callback:
-                    progress_callback(
-                        total_files, total_files, f"完了: {total_found}個の画像を発見"
-                    )
+                    progress_callback(total_files, total_files, f"完了: {total_found}個の画像を発見")
 
                 # 完了ログ
                 self.logger_system.log_ai_operation(
@@ -1885,9 +1805,7 @@ class FileDiscoveryService:
                         "total_files_processed": total_processed,
                         "total_images_found": total_found,
                         "batch_size": batch_size,
-                        "success_rate": (
-                            total_found / total_processed if total_processed > 0 else 0
-                        ),
+                        "success_rate": (total_found / total_processed if total_processed > 0 else 0),
                         "timestamp": datetime.now().isoformat(),
                     },
                 )
@@ -1936,16 +1854,12 @@ class FileDiscoveryService:
             loop = asyncio.get_event_loop()
 
             # CS4CodingImageProcessorの検証を別スレッドで実行
-            is_valid = await loop.run_in_executor(
-                None, self.image_processor.validate_image, file_path
-            )
+            is_valid = await loop.run_in_executor(None, self.image_processor.validate_image, file_path)
 
             if is_valid:
                 # 実際の画像読み込みテストも非同期で実行
                 try:
-                    test_image = await loop.run_in_executor(
-                        None, self.image_processor.load_image, file_path
-                    )
+                    test_image = await loop.run_in_executor(None, self.image_processor.load_image, file_path)
 
                     if test_image is None:
                         self.logger_system.log_ai_operation(
@@ -2001,9 +1915,7 @@ class FileDiscoveryService:
         )
 
         try:
-            async for image_path in self.discover_images_async(
-                folder_path, progress_callback
-            ):
+            async for image_path in self.discover_images_async(folder_path, progress_callback):
                 discovered_files.append(image_path)
 
             self.logger_system.log_ai_operation(
@@ -2043,15 +1955,12 @@ class FileDiscoveryService:
             cache_stats.update(
                 {
                     "discovery_cache_hits": self.discovery_stats.get("cache_hits", 0),
-                    "discovery_cache_misses": self.discovery_stats.get(
-                        "cache_misses", 0
-                    ),
+                    "discovery_cache_misses": self.discovery_stats.get("cache_misses", 0),
                     "discovery_cache_hit_rate": (
                         self.discovery_stats.get("cache_hits", 0)
                         / max(
                             1,
-                            self.discovery_stats.get("cache_hits", 0)
-                            + self.discovery_stats.get("cache_misses", 0),
+                            self.discovery_stats.get("cache_hits", 0) + self.discovery_stats.get("cache_misses", 0),
                         )
                     ),
                 }
@@ -2229,9 +2138,7 @@ class FileDiscoveryService:
             self.discovery_stats["cache_hits"] = 0
             self.discovery_stats["cache_misses"] = 0
 
-            self.logger_system.log_ai_operation(
-                AIComponent.KIRO, "cache_disabled", "キャッシュ機能を無効化"
-            )
+            self.logger_system.log_ai_operation(AIComponent.KIRO, "cache_disabled", "キャッシュ機能を無効化")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -2290,8 +2197,7 @@ class FileDiscoveryService:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "cache_memory_warning",
-                    f"キャッシュメモリ使用量が多いです: {total_memory_mb:.1f}MB。"
-                    "クリーンアップを実行します。",
+                    f"キャッシュメモリ使用量が多いです: {total_memory_mb:.1f}MB。" "クリーンアップを実行します。",
                     level="WARNING",
                 )
 
@@ -2301,8 +2207,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "cache_optimization_complete",
-                f"キャッシュ最適化完了 - ヒット率: {overall_hit_rate:.1%}, "
-                f"メモリ使用量: {total_memory_mb:.1f}MB",
+                f"キャッシュ最適化完了 - ヒット率: {overall_hit_rate:.1%}, " f"メモリ使用量: {total_memory_mb:.1f}MB",
             )
 
         except Exception as e:

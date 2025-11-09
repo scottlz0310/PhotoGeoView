@@ -82,19 +82,13 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
         self._create_japanese_images()
 
         # コンポーネントの初期化
-        self.file_discovery_service = FileDiscoveryService(
-            logger_system=self.logger_system
-        )
+        self.file_discovery_service = FileDiscoveryService(logger_system=self.logger_system)
 
         self.file_system_watcher = FileSystemWatcher(logger_system=self.logger_system)
 
-        self.paginated_discovery = PaginatedFileDiscovery(
-            page_size=50, logger_system=self.logger_system
-        )
+        self.paginated_discovery = PaginatedFileDiscovery(page_size=50, logger_system=self.logger_system)
 
-        self.memory_aware_discovery = MemoryAwareFileDiscovery(
-            max_memory_mb=128, logger_system=self.logger_system
-        )
+        self.memory_aware_discovery = MemoryAwareFileDiscovery(max_memory_mb=128, logger_system=self.logger_system)
 
         # テスト結果の記録用
         self.test_results = []
@@ -178,14 +172,10 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             selected_folder = self.test_images_dir
 
             # 2. ファイル検出サービスでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                selected_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(selected_folder)
 
             # 3. 検出結果の検証
-            self.assertGreater(
-                len(discovered_images), 0, "画像ファイルが検出される必要があります"
-            )
+            self.assertGreater(len(discovered_images), 0, "画像ファイルが検出される必要があります")
 
             # 4. ファイルシステム監視の開始
             self.file_system_watcher.start_watching(selected_folder)
@@ -201,9 +191,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
 
             # 7. 各コンポーネントの呼び出し確認
             mock_thumbnail_grid.show_loading_state.assert_called_once()
-            mock_thumbnail_grid.set_image_list.assert_called_once_with(
-                discovered_images
-            )
+            mock_thumbnail_grid.set_image_list.assert_called_once_with(discovered_images)
 
             # 8. ファイルシステム監視の動作確認
             watch_status = self.file_system_watcher.get_watch_status()
@@ -228,9 +216,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             print("✅ 完全ワークフロー統合テスト成功")
             print(f"   検出された画像: {len(discovered_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(
-                f"   ファイルシステム監視: {'有効' if watch_status.get('is_watching') else '無効'}"
-            )
+            print(f"   ファイルシステム監視: {'有効' if watch_status.get('is_watching') else '無効'}")
 
         except Exception as e:
             duration = time.time() - start_time
@@ -329,20 +315,14 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(
-                f"✅ 包括的エラーハンドリングテスト{'成功' if all_passed else '失敗'}"
-            )
+            print(f"✅ 包括的エラーハンドリングテスト{'成功' if all_passed else '失敗'}")
             print(f"   テストケース: {len(error_cases)}個")
-            print(
-                f"   成功ケース: {sum(1 for case in error_cases if case['passed'])}個"
-            )
+            print(f"   成功ケース: {sum(1 for case in error_cases if case['passed'])}個")
             print(f"   処理時間: {duration:.3f}秒")
 
             for case in error_cases:
                 status = "✅" if case["passed"] else "❌"
-                print(
-                    f"   {status} {case['case']}: {case['result']}個 (期待値: {case['expected']})"
-                )
+                print(f"   {status} {case['case']}: {case['result']}個 (期待値: {case['expected']})")
 
             if not all_passed:
                 raise AssertionError("一部のエラーハンドリングケースが失敗しました")
@@ -374,9 +354,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
 
         try:
             # 1. 日本語ファイル名の処理
-            japanese_images = self.file_discovery_service.discover_images(
-                self.japanese_dir
-            )
+            japanese_images = self.file_discovery_service.discover_images(self.japanese_dir)
             self.assertGreater(
                 len(japanese_images),
                 0,
@@ -406,9 +384,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             japanese_sub_image.write_bytes(b"sub_image_data" * 10)
 
             sub_images = self.file_discovery_service.discover_images(japanese_subfolder)
-            self.assertEqual(
-                len(sub_images), 1, "日本語サブフォルダの画像が検出される必要があります"
-            )
+            self.assertEqual(len(sub_images), 1, "日本語サブフォルダの画像が検出される必要があります")
             self.assertEqual(
                 sub_images[0].name,
                 "サブ画像.jpg",
@@ -418,12 +394,8 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             # 4. エラーメッセージの日本語確認（空フォルダ）
             empty_japanese_folder = self.test_dir / "空の日本語フォルダ"
             empty_japanese_folder.mkdir()
-            empty_result = self.file_discovery_service.discover_images(
-                empty_japanese_folder
-            )
-            self.assertEqual(
-                len(empty_result), 0, "空の日本語フォルダでは画像が検出されない"
-            )
+            empty_result = self.file_discovery_service.discover_images(empty_japanese_folder)
+            self.assertEqual(len(empty_result), 0, "空の日本語フォルダでは画像が検出されない")
 
             duration = time.time() - start_time
 
@@ -496,9 +468,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             memory_before = process.memory_info().rss / 1024 / 1024  # MB
 
             # メモリ集約的な処理をシミュレート
-            memory_aware_images = self.memory_aware_discovery.discover_images(
-                self.large_images_dir
-            )
+            memory_aware_images = self.memory_aware_discovery.discover_images(self.large_images_dir)
 
             memory_after = process.memory_info().rss / 1024 / 1024  # MB
             memory_usage = memory_after - memory_before
@@ -510,9 +480,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
 
             for i in range(5):
                 response_start = time.time()
-                test_images = self.file_discovery_service.discover_images(
-                    self.test_images_dir
-                )
+                test_images = self.file_discovery_service.discover_images(self.test_images_dir)
                 response_time = time.time() - response_start
                 response_times.append(response_time)
 
@@ -547,9 +515,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
                 },
             }
 
-            all_performance_passed = all(
-                check["passed"] for check in performance_checks.values()
-            )
+            all_performance_passed = all(check["passed"] for check in performance_checks.values())
 
             duration = time.time() - start_time
 
@@ -565,12 +531,8 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
             }
             self.test_results.append(test_result)
 
-            print(
-                f"✅ パフォーマンス要件検証テスト{'成功' if all_performance_passed else '失敗'}"
-            )
-            print(
-                f"   段階的読み込み: {len(paginated_images)}個の画像を{batch_count}バッチで処理"
-            )
+            print(f"✅ パフォーマンス要件検証テスト{'成功' if all_performance_passed else '失敗'}")
+            print(f"   段階的読み込み: {len(paginated_images)}個の画像を{batch_count}バッチで処理")
             print(f"   メモリ使用量増加: {memory_usage:.1f}MB")
             print(f"   平均応答時間: {avg_response_time:.3f}秒")
             print(f"   最大応答時間: {max_response_time:.3f}秒")
@@ -644,9 +606,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
 
             # 3. 初期状態の確認
             initial_images = self.file_discovery_service.discover_images(watch_folder)
-            self.assertEqual(
-                len(initial_images), 1, "初期画像が検出される必要があります"
-            )
+            self.assertEqual(len(initial_images), 1, "初期画像が検出される必要があります")
 
             # 4. ファイル追加のシミュレート
             time.sleep(0.1)  # 監視開始を待つ
@@ -662,9 +622,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
 
             # 7. 最終状態の確認
             final_images = self.file_discovery_service.discover_images(watch_folder)
-            self.assertEqual(
-                len(final_images), 1, "最終的に1個の画像が残る必要があります"
-            )
+            self.assertEqual(len(final_images), 1, "最終的に1個の画像が残る必要があります")
             self.assertEqual(
                 final_images[0].name,
                 "新しい画像.png",
@@ -710,9 +668,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
     def generate_final_integration_report(self) -> Dict[str, Any]:
         """最終統合テストレポートの生成"""
         total_tests = len(self.test_results)
-        passed_tests = sum(
-            1 for result in self.test_results if result["status"] == "passed"
-        )
+        passed_tests = sum(1 for result in self.test_results if result["status"] == "passed")
         failed_tests = total_tests - passed_tests
 
         total_duration = sum(result["duration"] for result in self.test_results)
@@ -753,11 +709,7 @@ class FinalIntegrationVerificationTest(unittest.TestCase):
                 "success_rate": passed_tests / total_tests if total_tests > 0 else 0,
                 "total_duration": total_duration,
                 "average_duration": avg_duration,
-                "overall_status": (
-                    "✅ 全機能統合成功"
-                    if failed_tests == 0
-                    else f"❌ {failed_tests}個のテストが失敗"
-                ),
+                "overall_status": ("✅ 全機能統合成功" if failed_tests == 0 else f"❌ {failed_tests}個のテストが失敗"),
             },
             "test_results": self.test_results,
             "requirements_coverage": requirements_coverage,
@@ -782,9 +734,7 @@ def run_final_integration_verification():
     print("=" * 100)
 
     # テストスイートの作成と実行
-    suite = unittest.TestLoader().loadTestsFromTestCase(
-        FinalIntegrationVerificationTest
-    )
+    suite = unittest.TestLoader().loadTestsFromTestCase(FinalIntegrationVerificationTest)
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
 
@@ -813,9 +763,7 @@ def run_final_integration_verification():
     print("\n" + "=" * 100)
     print("🎯 最終統合検証結果サマリー")
     print("=" * 100)
-    print(
-        f"実行日時: {datetime.fromisoformat(report['timestamp']).strftime('%Y-%m-%d %H:%M:%S')}"
-    )
+    print(f"実行日時: {datetime.fromisoformat(report['timestamp']).strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"総テスト数: {report['summary']['total_tests']}")
     print(f"成功: {report['summary']['passed_tests']}")
     print(f"失敗: {report['summary']['failed_tests']}")

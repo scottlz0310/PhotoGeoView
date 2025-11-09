@@ -95,9 +95,7 @@ class TestAIComponentCompatibility:
                 import asyncio
                 from unittest.mock import AsyncMock
 
-                with patch.object(
-                    app_controller, "initialize", new_callable=AsyncMock
-                ) as mock_init:
+                with patch.object(app_controller, "initialize", new_callable=AsyncMock) as mock_init:
                     mock_init.return_value = True
                     result = asyncio.run(app_controller.initialize())
                     assert result is True
@@ -120,15 +118,9 @@ class TestAIComponentCompatibility:
             # AI コンポーネント状態確認
             if hasattr(controller, "ai_components"):
                 ai_components = controller.ai_components
-                assert "copilot" in str(ai_components).lower() or "COPILOT" in str(
-                    ai_components
-                )
-                assert "cursor" in str(ai_components).lower() or "CURSOR" in str(
-                    ai_components
-                )
-                assert "kiro" in str(ai_components).lower() or "KIRO" in str(
-                    ai_components
-                )
+                assert "copilot" in str(ai_components).lower() or "COPILOT" in str(ai_components)
+                assert "cursor" in str(ai_components).lower() or "CURSOR" in str(ai_components)
+                assert "kiro" in str(ai_components).lower() or "KIRO" in str(ai_components)
 
         except ImportError as e:
             pytest.skip(f"統合コントローラーが利用できません: {e}")
@@ -260,9 +252,7 @@ class TestAIConfigurationCompatibility:
             if hasattr(logging_system, "log_ai_operation"):
                 # モックを使用してAI操作ログをテスト
                 with patch.object(logging_system, "log_ai_operation") as mock_log:
-                    logging_system.log_ai_operation(
-                        AIComponent.KIRO, "test", "test_operation", "test message"
-                    )
+                    logging_system.log_ai_operation(AIComponent.KIRO, "test", "test_operation", "test message")
                     mock_log.assert_called_once()
 
         except ImportError as e:
@@ -317,12 +307,8 @@ class TestAIPerformanceCompatibility:
                 test_value = "test_value"
 
                 # imageキャッシュに格納・取得
-                cache_system.put(
-                    "image", test_key, test_value, component=AIComponent.KIRO
-                )
-                cached_value = cache_system.get(
-                    "image", test_key, component=AIComponent.KIRO
-                )
+                cache_system.put("image", test_key, test_value, component=AIComponent.KIRO)
+                cached_value = cache_system.get("image", test_key, component=AIComponent.KIRO)
 
                 assert cached_value == test_value
 
@@ -358,9 +344,7 @@ class TestAIErrorHandlingCompatibility:
                 test_error = Exception("テストエラー")
 
                 with patch.object(error_handler, "handle_error") as mock_handle:
-                    error_handler.handle_error(
-                        test_error, ErrorCategory.INTEGRATION_ERROR, {}
-                    )
+                    error_handler.handle_error(test_error, ErrorCategory.INTEGRATION_ERROR, {})
                     mock_handle.assert_called_once()
 
         except ImportError as e:

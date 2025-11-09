@@ -452,12 +452,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="CI統合セットアップスクリプト")
     parser.add_argument("--project-root", type=Path, help="プロジェクトルートパス")
-    parser.add_argument(
-        "--skip-hooks", action="store_true", help="Git hooksセットアップをスキップ"
-    )
-    parser.add_argument(
-        "--skip-deps", action="store_true", help="依存関係インストールをスキップ"
-    )
+    parser.add_argument("--skip-hooks", action="store_true", help="Git hooksセットアップをスキップ")
+    parser.add_argument("--skip-deps", action="store_true", help="依存関係インストールをスキップ")
 
     args = parser.parse_args()
 

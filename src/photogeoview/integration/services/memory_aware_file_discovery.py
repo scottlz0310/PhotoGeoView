@@ -64,6 +64,7 @@ class MemoryStats:
         """危険なメモリ使用量かどうか"""
         return self.usage_percentage > 90.0
 
+
 class MemoryAwareFileDiscovery:
     """
     メモリ管理機能付きファイル検出
@@ -154,9 +155,7 @@ class MemoryAwareFileDiscovery:
         """
         start_time = time.time()
 
-        with self.logger_system.operation_context(
-            AIComponent.KIRO, "memory_aware_discovery"
-        ):
+        with self.logger_system.operation_context(AIComponent.KIRO, "memory_aware_discovery"):
             # 開始前のメモリ状態をチェック
             initial_memory = self._get_current_memory_stats()
             self._log_memory_status("discovery_start", initial_memory)
@@ -189,9 +188,7 @@ class MemoryAwareFileDiscovery:
                 self._stats["cache_misses"] += 1
 
                 # ファイル検出を実行
-                discovered_files = self.file_discovery_service.discover_images(
-                    folder_path
-                )
+                discovered_files = self.file_discovery_service.discover_images(folder_path)
 
                 # 検出中のメモリ監視
                 current_memory = self._get_current_memory_stats()
@@ -237,8 +234,7 @@ class MemoryAwareFileDiscovery:
                         "duration": duration,
                         "initial_memory_mb": initial_memory.current_usage_mb,
                         "final_memory_mb": final_memory.current_usage_mb,
-                        "memory_delta_mb": final_memory.current_usage_mb
-                        - initial_memory.current_usage_mb,
+                        "memory_delta_mb": final_memory.current_usage_mb - initial_memory.current_usage_mb,
                         "peak_memory_usage": final_memory.usage_percentage,
                         "cache_hit": cached_result is not None,
                         "timestamp": datetime.now().isoformat(),
@@ -271,9 +267,7 @@ class MemoryAwareFileDiscovery:
             process_memory = process.memory_info()
 
             # キャッシュサイズの推定
-            cache_size_mb = sum(len(str(v)) for v in self._cache_data.values()) / (
-                1024 * 1024
-            )  # バイトからMBに変換
+            cache_size_mb = sum(len(str(v)) for v in self._cache_data.values()) / (1024 * 1024)  # バイトからMBに変換
 
             return MemoryStats(
                 current_usage_mb=process_memory.rss / (1024 * 1024),
@@ -468,8 +462,7 @@ class MemoryAwareFileDiscovery:
             "cleanup_performed": True,
             "memory_before_mb": before_memory.current_usage_mb,
             "memory_after_mb": after_memory.current_usage_mb,
-            "memory_freed_mb": before_memory.current_usage_mb
-            - after_memory.current_usage_mb,
+            "memory_freed_mb": before_memory.current_usage_mb - after_memory.current_usage_mb,
             "cleanup_timestamp": datetime.now().isoformat(),
         }
 
@@ -501,9 +494,7 @@ class MemoryAwareFileDiscovery:
         final_stats["cleanup_timestamp"] = datetime.now().isoformat()
         final_stats["final_memory_status"] = self.get_memory_status()
 
-        self.logger_system.log_performance(
-            AIComponent.KIRO, "memory_aware_final_stats", final_stats
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, "memory_aware_final_stats", final_stats)
 
         # リソースをクリア
         self._cache_data.clear()
@@ -581,9 +572,7 @@ class MemoryAwareFileDiscovery:
         )
 
         # 詳細統計をパフォーマンスログに記録
-        self.logger_system.log_performance(
-            AIComponent.KIRO, "memory_detailed_performance", summary
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, "memory_detailed_performance", summary)
 
     def enable_debug_memory_logging(self):
         """

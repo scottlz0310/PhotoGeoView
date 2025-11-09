@@ -1,5 +1,5 @@
 # PhotoGeoView メインCI/CDワークフロー
-# 
+#
 # このワークフローは以下を実行します:
 # - Python 3.12, 3.13, 3.14でのマルチバージョンテスト
 # - コード品質チェック (ruff lint/format, mypy)
@@ -21,7 +21,7 @@ jobs:
   test:
     name: Test on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    
+
     strategy:
       fail-fast: false
       matrix:

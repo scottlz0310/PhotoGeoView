@@ -14,9 +14,7 @@ from pathlib import Path
 from typing import Dict, List
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ci_simulator_safe")
 
 
@@ -31,9 +29,7 @@ class SafeChecker:
         """Run a command safely with timeout protection."""
         try:
             self.logger.info(f"Running: {' '.join(cmd)}")
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=timeout, cwd=Path.cwd()
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=Path.cwd())
             return result.returncode == 0, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
             self.logger.warning(f"Command timed out after {timeout} seconds")
@@ -132,9 +128,7 @@ class SecurityChecker(SafeChecker):
         return {
             "name": self.name,
             "status": "success" if has_requirements else "warning",
-            "message": "pyproject.toml found"
-            if has_requirements
-            else "No pyproject.toml found",
+            "message": "pyproject.toml found" if has_requirements else "No pyproject.toml found",
             "duration": duration,
         }
 
@@ -161,9 +155,7 @@ def run_safe_ci():
                 "skipped": "⏭️",
             }.get(result["status"], "❓")
 
-            logger.info(
-                f"{status_icon} {result['name']}: {result['message']} ({result['duration']:.2f}s)"
-            )
+            logger.info(f"{status_icon} {result['name']}: {result['message']} ({result['duration']:.2f}s)")
 
             if result["status"] == "failure":
                 overall_success = False
@@ -194,9 +186,7 @@ def run_safe_ci():
         }.get(result["status"], "❓")
         logger.info(f"{status_icon} {result['name']}: {result['message']}")
 
-    final_status = (
-        "✅ ALL CHECKS COMPLETED" if overall_success else "⚠️ SOME ISSUES FOUND"
-    )
+    final_status = "✅ ALL CHECKS COMPLETED" if overall_success else "⚠️ SOME ISSUES FOUND"
     logger.info(final_status)
     logger.info("=" * 60)
 

@@ -378,9 +378,7 @@ class TestConfigManager:
         config_manager = ConfigManager()
         config_manager.config = sample_config
 
-        black_config = config_manager.get_checker_specific_config(
-            "code_quality", "black"
-        )
+        black_config = config_manager.get_checker_specific_config("code_quality", "black")
         assert black_config["enabled"] is True
         assert black_config["line_length"] == 88
 
@@ -475,9 +473,7 @@ class TestConfigManagerIntegration:
         with open(config_path, "w") as f:
             yaml.dump(file_config, f)
 
-        with patch.dict(
-            os.environ, {"CI_TIMEOUT": "600", "CI_PYTHON_VERSIONS": "3.10,3.11"}
-        ):
+        with patch.dict(os.environ, {"CI_TIMEOUT": "600", "CI_PYTHON_VERSIONS": "3.10,3.11"}):
             config_manager = ConfigManager(config_path)
             config = config_manager.load_config()
 

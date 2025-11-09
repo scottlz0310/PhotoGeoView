@@ -28,6 +28,7 @@ class AIContributor(Enum):
     CURSOR = "Cursor (CursorBLD)"
     KIRO = "Kiro"
 
+
 class ContributionType(Enum):
     """貢献の種類"""
 
@@ -37,6 +38,7 @@ class ContributionType(Enum):
     TESTING = "テスト"
     DOCUMENTATION = "ドキュメント"
     ARCHITECTURE = "アーキテクチャ設計"
+
 
 @dataclass
 class AIContribution:
@@ -50,6 +52,7 @@ class AIContribution:
     timestamp: datetime = field(default_factory=datetime.now)
     confidence: float = 1.0  # 貢献度の確信度 (0.0-1.0)
 
+
 @dataclass
 class FileDocumentation:
     """ファイルドキュメント情報"""
@@ -61,6 +64,7 @@ class FileDocumentation:
     dependencies: list[str] = field(default_factory=list)
     api_endpoints: list[str] = field(default_factory=list)
     last_updated: datetime = field(default_factory=datetime.now)
+
 
 class DocumentationSystem:
     """
@@ -145,9 +149,7 @@ class DocumentationSystem:
         self.file_docs[str(file_path)] = file_doc
         return file_doc
 
-    def _extract_contributions_from_content(
-        self, content: str, file_path: Path
-    ) -> list[AIContribution]:
+    def _extract_contributions_from_content(self, content: str, file_path: Path) -> list[AIContribution]:
         """コンテンツからAI貢献を抽出"""
         contributions = []
         lines = content.split("\n")
@@ -156,9 +158,7 @@ class DocumentationSystem:
             for contributor, patterns in self.ai_attribution_patterns.items():
                 for pattern in patterns:
                     if re.search(pattern, line, re.IGNORECASE):
-                        contribution_type = self._classify_contribution_type(
-                            line, file_path
-                        )
+                        contribution_type = self._classify_contribution_type(line, file_path)
 
                         contribution = AIContribution(
                             contributor=contributor,
@@ -173,9 +173,7 @@ class DocumentationSystem:
 
         return contributions
 
-    def _determine_primary_contributor(
-        self, contributions: list[AIContribution]
-    ) -> AIContributor:
+    def _determine_primary_contributor(self, contributions: list[AIContribution]) -> AIContributor:
         """主要貢献者を決定"""
         if not contributions:
             return AIContributor.KIRO  # デフォルト
@@ -188,9 +186,7 @@ class DocumentationSystem:
 
         return max(contributor_scores.items(), key=lambda x: x[1])[0]
 
-    def _classify_contribution_type(
-        self, line: str, file_path: Path
-    ) -> ContributionType:
+    def _classify_contribution_type(self, line: str, file_path: Path) -> ContributionType:
         """貢献の種類を分類"""
         line_lower = line.lower()
         file_name = file_path.name.lower()
@@ -327,9 +323,7 @@ class DocumentationSystem:
                 header_lines.append(f"  - {endpoint}()")
             header_lines.append("")
 
-        header_lines.extend(
-            [f"最終更新: {file_doc.last_updated.strftime('%Y年%m月%d日')}", '"""', ""]
-        )
+        header_lines.extend([f"最終更新: {file_doc.last_updated.strftime('%Y年%m月%d日')}", '"""', ""])
 
         return "\n".join(header_lines)
 
@@ -559,15 +553,11 @@ class DocumentationSystem:
 
         # トラブルシューティングガイド生成
         troubleshooting_guide = self.generate_troubleshooting_guide()
-        (output_dir / "troubleshooting_guide.md").write_text(
-            troubleshooting_guide, encoding="utf-8"
-        )
+        (output_dir / "troubleshooting_guide.md").write_text(troubleshooting_guide, encoding="utf-8")
 
         # AI貢献度レポート生成
         contribution_report = self._generate_contribution_report()
-        (output_dir / "ai_contribution_report.md").write_text(
-            contribution_report, encoding="utf-8"
-        )
+        (output_dir / "ai_contribution_report.md").write_text(contribution_report, encoding="utf-8")
 
         logger = logging.getLogger(__name__)
         success_msg = f"統合ドキュメントを生成しました: {output_dir}"
@@ -603,20 +593,12 @@ class DocumentationSystem:
                     }
 
                 contributor_stats[contrib.contributor]["count"] += 1
-                contributor_stats[contrib.contributor]["types"].add(
-                    contrib.contribution_type
-                )
-                contributor_stats[contrib.contributor]["files"].add(
-                    str(contrib.file_path)
-                )
+                contributor_stats[contrib.contributor]["types"].add(contrib.contribution_type)
+                contributor_stats[contrib.contributor]["files"].add(str(contrib.file_path))
                 total_contributions += 1
 
         for contributor, stats in contributor_stats.items():
-            percentage = (
-                (stats["count"] / total_contributions * 100)
-                if total_contributions > 0
-                else 0
-            )
+            percentage = (stats["count"] / total_contributions * 100) if total_contributions > 0 else 0
 
             report_lines.extend(
                 [
@@ -644,9 +626,7 @@ class DocumentationSystem:
             if file_doc.contributions:
                 report_lines.append("**貢献詳細**:")
                 for contrib in file_doc.contributions:
-                    report_lines.append(
-                        f"- {contrib.contributor.value}: {contrib.contribution_type.value}"
-                    )
+                    report_lines.append(f"- {contrib.contributor.value}: {contrib.contribution_type.value}")
                 report_lines.append("")
 
         return "\n".join(report_lines)
@@ -677,7 +657,7 @@ class DocumentationSystem:
                 if content.startswith('"""'):
                     # 既存のdocstringを見つけて置換
                     end_pos = content.find('"""', 3)
-                    new_content = new_header + content[end_pos + 3:] if end_pos != -1 else new_header + content
+                    new_content = new_header + content[end_pos + 3 :] if end_pos != -1 else new_header + content
                 else:
                     # ヘッダーを先頭に追加
                     new_content = new_header + content
@@ -694,6 +674,7 @@ class DocumentationSystem:
                 print(error_msg)  # ユーザーへのエラー通知
 
         return updated_files
+
 
 # 使用例とテスト用の関数
 def main():
@@ -712,6 +693,7 @@ def main():
     update_msg = f"更新対象ファイル数: {len(updated_files)}"
     logger.info(update_msg)
     print(update_msg)  # ユーザーへの結果表示
+
 
 if __name__ == "__main__":
     main()

@@ -143,9 +143,7 @@ class TestDataValidator:
         assert any("file_path" in error["field"] for error in result.errors)
         assert any("file_size" in error["field"] for error in result.errors)
 
-    def test_validate_image_metadata_invalid_gps(
-        self, validator, sample_image_metadata
-    ):
+    def test_validate_image_metadata_invalid_gps(self, validator, sample_image_metadata):
         """Test validation with invalid GPS coordinates"""
         # Set invalid GPS coordinates
         sample_image_metadata.latitude = 95.0  # Invalid latitude (> 90)
@@ -173,9 +171,7 @@ class TestDataValidator:
 
         # Should have warnings about non-existent file
         assert len(result.warnings) > 0
-        assert any(
-            "does not exist" in warning["message"] for warning in result.warnings
-        )
+        assert any("does not exist" in warning["message"] for warning in result.warnings)
 
     def test_validate_image_metadata_unsupported_format(self, validator, temp_dir):
         """Test validation with unsupported image format"""
@@ -193,14 +189,9 @@ class TestDataValidator:
 
         # Should have warnings about unsupported format
         assert len(result.warnings) > 0
-        assert any(
-            "Unsupported image format" in warning["message"]
-            for warning in result.warnings
-        )
+        assert any("Unsupported image format" in warning["message"] for warning in result.warnings)
 
-    def test_validate_theme_configuration_valid(
-        self, validator, sample_theme_configuration
-    ):
+    def test_validate_theme_configuration_valid(self, validator, sample_theme_configuration):
         """Test validation of valid ThemeConfiguration"""
         result = validator.validate_theme_configuration(sample_theme_configuration)
 
@@ -235,10 +226,7 @@ class TestDataValidator:
 
         assert not result.is_valid
         assert len(result.errors) > 0
-        assert any(
-            "name" in error["field"] and "alphanumeric" in error["message"]
-            for error in result.errors
-        )
+        assert any("name" in error["field"] and "alphanumeric" in error["message"] for error in result.errors)
 
     def test_validate_theme_configuration_invalid_colors(self, validator):
         """Test validation with invalid color formats"""
@@ -258,9 +246,7 @@ class TestDataValidator:
         assert not result.is_valid
         assert len(result.errors) >= 2
         assert any(
-            "color_scheme" in error["field"]
-            and "Invalid color format" in error["message"]
-            for error in result.errors
+            "color_scheme" in error["field"] and "Invalid color format" in error["message"] for error in result.errors
         )
 
     def test_validate_theme_configuration_missing_required_colors(self, validator):
@@ -278,14 +264,9 @@ class TestDataValidator:
 
         # Should have warnings about missing required colors
         assert len(result.warnings) >= 3
-        assert any(
-            "Missing required color" in warning["message"]
-            for warning in result.warnings
-        )
+        assert any("Missing required color" in warning["message"] for warning in result.warnings)
 
-    def test_validate_application_state_valid(
-        self, validator, sample_application_state
-    ):
+    def test_validate_application_state_valid(self, validator, sample_application_state):
         """Test validation of valid ApplicationState"""
         result = validator.validate_application_state(sample_application_state)
 
@@ -293,9 +274,7 @@ class TestDataValidator:
         assert result.is_valid
         assert len(result.errors) == 0
 
-    def test_validate_application_state_invalid_thumbnail_size(
-        self, validator, sample_application_state
-    ):
+    def test_validate_application_state_invalid_thumbnail_size(self, validator, sample_application_state):
         """Test validation with invalid thumbnail size"""
         sample_application_state.thumbnail_size = 1000  # Outside recommended range
 
@@ -305,9 +284,7 @@ class TestDataValidator:
         assert len(result.warnings) > 0
         assert any("thumbnail_size" in warning["field"] for warning in result.warnings)
 
-    def test_validate_application_state_invalid_performance_mode(
-        self, validator, sample_application_state
-    ):
+    def test_validate_application_state_invalid_performance_mode(self, validator, sample_application_state):
         """Test validation with invalid performance mode"""
         sample_application_state.performance_mode = "invalid_mode"
 
@@ -317,9 +294,7 @@ class TestDataValidator:
         assert len(result.errors) > 0
         assert any("performance_mode" in error["field"] for error in result.errors)
 
-    def test_validate_application_state_invalid_sort_mode(
-        self, validator, sample_application_state
-    ):
+    def test_validate_application_state_invalid_sort_mode(self, validator, sample_application_state):
         """Test validation with invalid sort mode"""
         sample_application_state.image_sort_mode = "invalid_sort"
 
@@ -343,9 +318,7 @@ class TestDataValidator:
 
         # Should have warnings about non-existent folder
         assert len(result.warnings) > 0
-        assert any(
-            "does not exist" in warning["message"] for warning in result.warnings
-        )
+        assert any("does not exist" in warning["message"] for warning in result.warnings)
 
     def test_validate_all_models(
         self,
@@ -444,9 +417,7 @@ class TestValidationResult:
         """Test adding error issues"""
         result = ValidationResult(is_valid=True)
 
-        result.add_issue(
-            ValidationSeverity.ERROR, "test_field", "Test error", "test_value"
-        )
+        result.add_issue(ValidationSeverity.ERROR, "test_field", "Test error", "test_value")
 
         assert not result.is_valid  # Should become False
         assert len(result.errors) == 1

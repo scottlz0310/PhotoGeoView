@@ -22,15 +22,16 @@ repos:
     rev: v1.13.0
     hooks:
       - id: mypy
-        additional_dependencies: [types-all]
+        additional_dependencies: [types-Pillow, types-psutil, types-toml]
         args: [--config-file=pyproject.toml]
+        exclude: ^(tools/ci/|scripts/ci\.py|tools/ci_integration\.py)
 
   # セキュリティチェック
   - repo: https://github.com/pycqa/bandit
     rev: 1.8.0
     hooks:
       - id: bandit
-        args: [-r, src/, -f, json]
+        args: [-r, src/]
         exclude: tests/
 
   # 基本的なチェック

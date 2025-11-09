@@ -95,9 +95,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_set_current_path_valid(self):
         """Test setting a valid path"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Set path
         result = breadcrumb_bar.set_current_path(self.test_path)
@@ -108,9 +106,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_set_current_path_invalid(self):
         """Test setting an invalid path"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Try to set non-existent path
         invalid_path = Path("/nonexistent/path/that/does/not/exist")
@@ -121,9 +117,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_path_validation(self):
         """Test path validation logic"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Test valid directory
         assert breadcrumb_bar._validate_path(self.test_path) is True
@@ -137,9 +131,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_navigate_up(self):
         """Test navigate up functionality"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Set up nested path
         nested_path = self.test_path / "level1" / "level2"
@@ -154,9 +146,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_navigate_to_segment(self):
         """Test navigate to specific segment"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Set up path with multiple segments
         test_path = self.test_path / "level1" / "level2"
@@ -196,9 +186,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_navigation_listener_management(self):
         """Test navigation listener add/remove functionality"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Create mock listener
         listener = Mock()
@@ -219,18 +207,14 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_navigation_event_notification(self):
         """Test navigation event notification to listeners"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Add mock listener
         listener = Mock()
         breadcrumb_bar.add_navigation_listener(listener)
 
         # Create navigation event
-        event = NavigationEvent(
-            event_type="navigate", target_path=self.test_path, success=True
-        )
+        event = NavigationEvent(event_type="navigate", target_path=self.test_path, success=True)
 
         # Notify listeners
         breadcrumb_bar._notify_navigation_listeners(event)
@@ -240,9 +224,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_inavigation_aware_interface(self):
         """Test INavigationAware interface implementation"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Test get_supported_navigation_events
         supported_events = breadcrumb_bar.get_supported_navigation_events()
@@ -257,9 +239,7 @@ class TestBreadcrumbAddressBarSimple:
         assert all(event in supported_events for event in expected_events)
 
         # Test on_navigation_changed
-        event = NavigationEvent(
-            event_type="navigate", target_path=self.test_path, success=True
-        )
+        event = NavigationEvent(event_type="navigate", target_path=self.test_path, success=True)
 
         # Handle navigation change
         breadcrumb_bar.on_navigation_changed(event)
@@ -269,9 +249,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_performance_stats(self):
         """Test performance statistics functionality"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Get initial stats
         stats = breadcrumb_bar.get_performance_stats()
@@ -291,9 +269,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_get_current_path(self):
         """Test get_current_path method"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Set path
         breadcrumb_bar.set_current_path(self.test_path)
@@ -306,9 +282,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_get_breadcrumb_segments(self):
         """Test get_breadcrumb_segments method"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Set path
         test_path = self.test_path / "level1" / "level2"
@@ -323,9 +297,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_path_truncation_configuration(self):
         """Test path truncation configuration"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Test different truncation modes
         for mode in ["smart", "middle", "end", "none"]:
@@ -338,9 +310,7 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_cleanup(self):
         """Test cleanup functionality"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         # Add some listeners
         listener = Mock()
@@ -354,29 +324,20 @@ class TestBreadcrumbAddressBarSimple:
 
     def test_file_system_change_path_affects_breadcrumb(self):
         """Test path affects breadcrumb logic"""
-        breadcrumb_bar = BreadcrumbAddressBar(
-            file_system_watcher=self.file_watcher, logger_system=self.logger_system
-        )
+        breadcrumb_bar = BreadcrumbAddressBar(file_system_watcher=self.file_watcher, logger_system=self.logger_system)
 
         current_path = self.test_path / "level1" / "level2"
 
         # Test same path
-        assert (
-            breadcrumb_bar._path_affects_breadcrumb(current_path, current_path) is True
-        )
+        assert breadcrumb_bar._path_affects_breadcrumb(current_path, current_path) is True
 
         # Test parent path
         parent_path = current_path.parent
-        assert (
-            breadcrumb_bar._path_affects_breadcrumb(parent_path, current_path) is True
-        )
+        assert breadcrumb_bar._path_affects_breadcrumb(parent_path, current_path) is True
 
         # Test unrelated path
         unrelated_path = Path("/some/other/path")
-        assert (
-            breadcrumb_bar._path_affects_breadcrumb(unrelated_path, current_path)
-            is False
-        )
+        assert breadcrumb_bar._path_affects_breadcrumb(unrelated_path, current_path) is False
 
 
 if __name__ == "__main__":

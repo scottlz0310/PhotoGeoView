@@ -130,10 +130,7 @@ class ThumbnailItem(QLabel):
 
                     # ダークテーマかどうかを判定
                     current_theme = self.theme_manager.get_current_theme()
-                    if (
-                        isinstance(current_theme, str)
-                        and "dark" in current_theme.lower()
-                    ):
+                    if isinstance(current_theme, str) and "dark" in current_theme.lower():
                         # ダークテーマ用の色調整
                         if bg_color.startswith("#") and len(bg_color) == 7:
                             try:
@@ -297,9 +294,7 @@ class ThumbnailItem(QLabel):
             if "DateTime" in exif_data:
                 tooltip_parts.append(f"Date: {exif_data['DateTime']}")
             if "Make" in exif_data and "Model" in exif_data:
-                tooltip_parts.append(
-                    f"Camera: {exif_data['Make']} {exif_data['Model']}"
-                )
+                tooltip_parts.append(f"Camera: {exif_data['Make']} {exif_data['Model']}")
             if "ExposureTime" in exif_data:
                 tooltip_parts.append(f"Exposure: {exif_data['ExposureTime']}s")
             if "FNumber" in exif_data:
@@ -323,6 +318,7 @@ class ThumbnailItem(QLabel):
         if event.button() == Qt.MouseButton.LeftButton:
             self.exif_info_requested.emit(self.image_path)
         super().mouseDoubleClickEvent(event)
+
 
 class ThumbnailLoader(QObject):
     """
@@ -393,9 +389,7 @@ class ThumbnailLoader(QObject):
                         self.thumbnail_loaded.emit(image_path, image)
                     else:
                         # Create error placeholder image
-                        err = QImage(
-                            thumbnail_size, thumbnail_size, QImage.Format.Format_RGB32
-                        )
+                        err = QImage(thumbnail_size, thumbnail_size, QImage.Format.Format_RGB32)
                         err.fill(QColor("#f8d7da"))
                         self.thumbnail_loaded.emit(image_path, err)
 
@@ -442,11 +436,7 @@ class ThumbnailLoader(QObject):
         """Get cache statistics"""
         total_requests = self.cache_hits + self.cache_misses
         hit_rate = self.cache_hits / total_requests if total_requests > 0 else 0
-        avg_load_time = (
-            sum(self.recent_load_times) / len(self.recent_load_times)
-            if self.recent_load_times
-            else 0
-        )
+        avg_load_time = sum(self.recent_load_times) / len(self.recent_load_times) if self.recent_load_times else 0
 
         return {
             "cache_size": len(self.cache),
@@ -462,6 +452,7 @@ class ThumbnailLoader(QObject):
         self.cache.clear()
         self.cache_hits = 0
         self.cache_misses = 0
+
 
 class OptimizedThumbnailGrid(QWidget):
     """
@@ -513,9 +504,7 @@ class OptimizedThumbnailGrid(QWidget):
 
         # Grid settings
         try:
-            self.thumbnail_size = self.state_manager.get_state_value(
-                "thumbnail_size", 150
-            )
+            self.thumbnail_size = self.state_manager.get_state_value("thumbnail_size", 150)
         except:
             self.thumbnail_size = 150  # デフォルト値
         self.columns = 4
@@ -539,12 +528,8 @@ class OptimizedThumbnailGrid(QWidget):
         # Threading - 初期化を最初に行う
         self.load_mutex = QMutex()
         # サムネイル読み込み用のワーカー数を大幅に増加(I/O処理の並列化)
-        self.thumbnail_executor = ThreadPoolExecutor(
-            max_workers=8, thread_name_prefix="thumbnail"
-        )
-        self.exif_executor = ThreadPoolExecutor(
-            max_workers=4, thread_name_prefix="exif"
-        )
+        self.thumbnail_executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="thumbnail")
+        self.exif_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="exif")
 
         # UI components initialization
         self.performance_label = None
@@ -648,12 +633,8 @@ class OptimizedThumbnailGrid(QWidget):
             with contextlib.suppress(Exception):
                 self.scroll_area.setObjectName("thumbnailScrollArea")
             self.scroll_area.setWidgetResizable(True)
-            self.scroll_area.setHorizontalScrollBarPolicy(
-                Qt.ScrollBarPolicy.ScrollBarAsNeeded
-            )
-            self.scroll_area.setVerticalScrollBarPolicy(
-                Qt.ScrollBarPolicy.ScrollBarAsNeeded
-            )
+            self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
             # Grid widget
             self.grid_widget = QWidget()
@@ -661,9 +642,7 @@ class OptimizedThumbnailGrid(QWidget):
                 self.grid_widget.setObjectName("thumbnailGridContainer")
             self.grid_layout = QGridLayout(self.grid_widget)
             self.grid_layout.setSpacing(self.spacing)
-            self.grid_layout.setAlignment(
-                Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-            )
+            self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
             self.scroll_area.setWidget(self.grid_widget)
             layout.addWidget(self.scroll_area)
@@ -672,9 +651,7 @@ class OptimizedThumbnailGrid(QWidget):
             self._apply_container_theme()
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "setup_ui"}, AIComponent.CURSOR
-            )
+            self.error_handler.handle_error(e, ErrorCategory.UI_ERROR, {"operation": "setup_ui"}, AIComponent.CURSOR)
 
     def _apply_container_theme(self):
         """テーマに応じてスクロールエリアやコントロールの背景/色を調整"""
@@ -835,9 +812,7 @@ class OptimizedThumbnailGrid(QWidget):
 
                 # Create thumbnail item
                 thumbnail_item = ThumbnailItem(image_path, self.thumbnail_size)
-                thumbnail_item.set_theme_manager(
-                    self.theme_manager
-                )  # テーママネージャーを設定
+                thumbnail_item.set_theme_manager(self.theme_manager)  # テーママネージャーを設定
                 thumbnail_item.clicked.connect(self._on_thumbnail_clicked)
 
                 # Add to layout
@@ -957,9 +932,7 @@ class OptimizedThumbnailGrid(QWidget):
         """Handle loading completion"""
         try:
             if hasattr(self, "performance_label") and self.performance_label:
-                self.performance_label.setText(
-                    f"読み込み中: {self.loaded_count}/{self.total_count}"
-                )
+                self.performance_label.setText(f"読み込み中: {self.loaded_count}/{self.total_count}")
 
             self.logger_system.log_ai_operation(
                 AIComponent.CURSOR,
@@ -1021,9 +994,7 @@ class OptimizedThumbnailGrid(QWidget):
         """Handle batch loading completion"""
         try:
             if hasattr(self, "performance_label") and self.performance_label:
-                self.performance_label.setText(
-                    f"読み込み中: {self.loaded_count}/{self.total_count}"
-                )
+                self.performance_label.setText(f"読み込み中: {self.loaded_count}/{self.total_count}")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1128,9 +1099,7 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Add loading widget to grid layout instead of replacing scroll area content
             if self.grid_layout:
-                self.grid_layout.addWidget(
-                    loading_widget, 0, 0, 1, -1
-                )  # Span all columns
+                self.grid_layout.addWidget(loading_widget, 0, 0, 1, -1)  # Span all columns
 
         except Exception as e:
             self.logger_system.error(f"Loading state display error: {e}")
@@ -1177,9 +1146,7 @@ class OptimizedThumbnailGrid(QWidget):
 
             # Add error widget to grid layout instead of replacing scroll area content
             if self.grid_layout:
-                self.grid_layout.addWidget(
-                    error_widget, 0, 0, 1, -1
-                )  # Span all columns
+                self.grid_layout.addWidget(error_widget, 0, 0, 1, -1)  # Span all columns
 
         except Exception as e:
             self.logger_system.error(f"Error state display error: {e}")
@@ -1266,9 +1233,7 @@ class OptimizedThumbnailGrid(QWidget):
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
         try:
-            self.logger_system.info(
-                f"サムネイルグリッド: テーマ変更を検出 - {theme_name}"
-            )
+            self.logger_system.info(f"サムネイルグリッド: テーマ変更を検出 - {theme_name}")
 
             # 全てのサムネイルアイテムにテーママネージャーを設定
             for thumbnail_item in self.thumbnail_items:
@@ -1290,9 +1255,7 @@ class OptimizedThumbnailGrid(QWidget):
 
                 if self.theme_manager:
                     try:
-                        text_color = self.theme_manager.get_color(
-                            "secondary", "#7f8c8d"
-                        )
+                        text_color = self.theme_manager.get_color("secondary", "#7f8c8d")
                         bg_color = self.theme_manager.get_color("background", "#ffffff")
                     except Exception:
                         pass  # デフォルト色を使用
@@ -1313,9 +1276,7 @@ class OptimizedThumbnailGrid(QWidget):
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
         try:
-            self.logger_system.info(
-                f"サムネイルグリッド: テーマ変更を検出 - {theme_name}"
-            )
+            self.logger_system.info(f"サムネイルグリッド: テーマ変更を検出 - {theme_name}")
 
             # 全てのサムネイルアイテムにテーママネージャーを設定
             for thumbnail_item in self.thumbnail_items:
@@ -1337,9 +1298,7 @@ class OptimizedThumbnailGrid(QWidget):
 
                 if self.theme_manager:
                     try:
-                        text_color = self.theme_manager.get_color(
-                            "secondary", "#7f8c8d"
-                        )
+                        text_color = self.theme_manager.get_color("secondary", "#7f8c8d")
                         bg_color = self.theme_manager.get_color("background", "#ffffff")
                     except Exception:
                         pass  # デフォルト色を使用
@@ -1360,9 +1319,7 @@ class OptimizedThumbnailGrid(QWidget):
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
         try:
-            self.logger_system.info(
-                f"サムネイルグリッド: テーマ変更を検出 - {theme_name}"
-            )
+            self.logger_system.info(f"サムネイルグリッド: テーマ変更を検出 - {theme_name}")
 
             # 全てのサムネイルアイテムにテーママネージャーを設定
             for thumbnail_item in self.thumbnail_items:
@@ -1384,9 +1341,7 @@ class OptimizedThumbnailGrid(QWidget):
 
                 if self.theme_manager:
                     try:
-                        text_color = self.theme_manager.get_color(
-                            "secondary", "#7f8c8d"
-                        )
+                        text_color = self.theme_manager.get_color("secondary", "#7f8c8d")
                         bg_color = self.theme_manager.get_color("background", "#ffffff")
                     except Exception:
                         pass  # デフォルト色を使用
@@ -1425,6 +1380,4 @@ class OptimizedThumbnailGrid(QWidget):
             )
 
         except Exception as e:
-            self.error_handler.handle_error(
-                e, ErrorCategory.UI_ERROR, {"operation": "cleanup"}, AIComponent.CURSOR
-            )
+            self.error_handler.handle_error(e, ErrorCategory.UI_ERROR, {"operation": "cleanup"}, AIComponent.CURSOR)

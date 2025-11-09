@@ -46,9 +46,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
         import platform
 
         if platform.system() == "Windows":
-            self.skipTest(
-                "Windows環境ではファイルリスト表示エラーハンドリングテストをスキップ"
-            )
+            self.skipTest("Windows環境ではファイルリスト表示エラーハンドリングテストをスキップ")
 
         # テスト用の一時ディレクトリを作成
         self.test_dir = Path(tempfile.mkdtemp())
@@ -64,9 +62,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
         self.logger_system.log_ai_operation = self._capture_log_message
 
         # コンポーネントの初期化
-        self.file_discovery_service = FileDiscoveryService(
-            logger_system=self.logger_system
-        )
+        self.file_discovery_service = FileDiscoveryService(logger_system=self.logger_system)
 
         # テスト結果の記録用
         self.test_results = []
@@ -86,9 +82,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
-    def _capture_log_message(
-        self, component, operation, message, level="INFO", **kwargs
-    ):
+    def _capture_log_message(self, component, operation, message, level="INFO", **kwargs):
         """ログメッセージをキャプチャ"""
         self.log_messages.append(
             {
@@ -177,14 +171,10 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             self.log_messages.clear()
 
             # 存在しないフォルダでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                self.nonexistent_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.nonexistent_folder)
 
             # 結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "戻り値はリスト型である必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "戻り値はリスト型である必要があります")
             self.assertEqual(
                 len(discovered_images),
                 0,
@@ -194,10 +184,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             # 日本語ログメッセージの確認
             japanese_log_found = False
             for log_entry in self.log_messages:
-                if (
-                    "存在しません" in log_entry["message"]
-                    or "見つかりません" in log_entry["message"]
-                ):
+                if "存在しません" in log_entry["message"] or "見つかりません" in log_entry["message"]:
                     japanese_log_found = True
                     break
 
@@ -215,11 +202,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
                 "folder_path": str(self.nonexistent_folder),
                 "images_found": len(discovered_images),
                 "japanese_messages_found": japanese_log_found,
-                "log_messages": [
-                    msg["message"]
-                    for msg in self.log_messages
-                    if "存在" in msg["message"]
-                ],
+                "log_messages": [msg["message"] for msg in self.log_messages if "存在" in msg["message"]],
                 "message": "存在しないフォルダのエラーハンドリング成功: 日本語エラーメッセージを確認",
             }
             self.test_results.append(test_result)
@@ -264,14 +247,10 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             self.log_messages.clear()
 
             # 権限のないフォルダでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                self.restricted_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.restricted_folder)
 
             # 結果の検証（権限エラーの場合は空リストが返される）
-            self.assertIsInstance(
-                discovered_images, list, "戻り値はリスト型である必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "戻り値はリスト型である必要があります")
 
             # Windows環境では権限制限が効かない場合があるため、条件付きチェック
             if os.name != "nt":  # Linux/Unix環境
@@ -284,10 +263,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             # 日本語ログメッセージの確認
             permission_log_found = False
             for log_entry in self.log_messages:
-                if any(
-                    keyword in log_entry["message"]
-                    for keyword in ["権限", "アクセス", "Permission"]
-                ):
+                if any(keyword in log_entry["message"] for keyword in ["権限", "アクセス", "Permission"]):
                     permission_log_found = True
                     break
 
@@ -311,9 +287,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
                 "log_messages": [
                     msg["message"]
                     for msg in self.log_messages
-                    if any(
-                        k in msg["message"] for k in ["権限", "アクセス", "Permission"]
-                    )
+                    if any(k in msg["message"] for k in ["権限", "アクセス", "Permission"])
                 ],
                 "message": f"権限エラーハンドリング成功 (OS: {os.name}): 適切なエラー処理を確認",
             }
@@ -324,16 +298,11 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             print(f"   検出された画像: {len(discovered_images)}個")
             print(f"   処理時間: {duration:.3f}秒")
             print(f"   OS環境: {os.name}")
-            print(
-                f"   権限エラーメッセージ確認: {'✅' if permission_log_found else '❌ (OS環境による)'}"
-            )
+            print(f"   権限エラーメッセージ確認: {'✅' if permission_log_found else '❌ (OS環境による)'}")
 
             # ログメッセージの表示
             for log_entry in self.log_messages:
-                if any(
-                    keyword in log_entry["message"]
-                    for keyword in ["権限", "アクセス", "Permission"]
-                ):
+                if any(keyword in log_entry["message"] for keyword in ["権限", "アクセス", "Permission"]):
                     print(f"   ログ: {log_entry['message']}")
 
         except Exception as e:
@@ -365,14 +334,10 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             self.log_messages.clear()
 
             # 破損ファイルのあるフォルダでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                self.corrupted_files_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.corrupted_files_folder)
 
             # 結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "戻り値はリスト型である必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "戻り値はリスト型である必要があります")
             self.assertEqual(
                 len(discovered_images),
                 0,
@@ -382,10 +347,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             # 破損ファイル検出の日本語ログメッセージの確認
             corruption_log_found = False
             for log_entry in self.log_messages:
-                if any(
-                    keyword in log_entry["message"]
-                    for keyword in ["破損", "無効", "エラー", "失敗"]
-                ):
+                if any(keyword in log_entry["message"] for keyword in ["破損", "無効", "エラー", "失敗"]):
                     corruption_log_found = True
                     break
 
@@ -400,9 +362,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
 
             for file_path in corrupted_files:
                 if file_path.is_file():
-                    is_valid = self.file_discovery_service.validate_image_file(
-                        file_path
-                    )
+                    is_valid = self.file_discovery_service.validate_image_file(file_path)
                     validation_results[file_path.name] = is_valid
 
             # すべての破損ファイルが無効と判定されることを確認
@@ -437,9 +397,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             print(f"   検出された有効画像: {len(discovered_images)}個（期待値: 0）")
             print(f"   テストした破損ファイル: {len(validation_results)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(
-                f"   破損ファイル検出メッセージ確認: {'✅' if corruption_log_found else '❌'}"
-            )
+            print(f"   破損ファイル検出メッセージ確認: {'✅' if corruption_log_found else '❌'}")
 
             # バリデーション結果の表示
             for filename, is_valid in validation_results.items():
@@ -448,10 +406,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
 
             # 関連ログメッセージの表示
             for log_entry in self.log_messages:
-                if any(
-                    keyword in log_entry["message"]
-                    for keyword in ["破損", "無効", "エラー"]
-                ):
+                if any(keyword in log_entry["message"] for keyword in ["破損", "無効", "エラー"]):
                     print(f"   ログ: {log_entry['message']}")
 
         except Exception as e:
@@ -483,14 +438,10 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             self.log_messages.clear()
 
             # 混在フォルダでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                self.mixed_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.mixed_folder)
 
             # 結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "戻り値はリスト型である必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "戻り値はリスト型である必要があります")
             self.assertEqual(
                 len(discovered_images),
                 1,
@@ -509,10 +460,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             # 破損ファイル除外の日本語ログメッセージの確認
             exclusion_log_found = False
             for log_entry in self.log_messages:
-                if any(
-                    keyword in log_entry["message"]
-                    for keyword in ["除外", "破損", "無効"]
-                ):
+                if any(keyword in log_entry["message"] for keyword in ["除外", "破損", "無効"]):
                     exclusion_log_found = True
                     break
 
@@ -540,16 +488,11 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             print(f"   検出された画像: {len(discovered_images)}個（期待値: 1）")
             print(f"   検出されたファイル: {[img.name for img in discovered_images]}")
             print(f"   処理時間: {duration:.3f}秒")
-            print(
-                f"   破損ファイル除外メッセージ確認: {'✅' if exclusion_log_found else '❌'}"
-            )
+            print(f"   破損ファイル除外メッセージ確認: {'✅' if exclusion_log_found else '❌'}")
 
             # 関連ログメッセージの表示
             for log_entry in self.log_messages:
-                if any(
-                    keyword in log_entry["message"]
-                    for keyword in ["除外", "破損", "無効"]
-                ):
+                if any(keyword in log_entry["message"] for keyword in ["除外", "破損", "無効"]):
                     print(f"   ログ: {log_entry['message']}")
 
         except Exception as e:
@@ -592,9 +535,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
                 self.log_messages.clear()
 
                 # 画像検出を実行
-                discovered_images = self.file_discovery_service.discover_images(
-                    folder_path
-                )
+                discovered_images = self.file_discovery_service.discover_images(folder_path)
 
                 # 日本語メッセージの確認
                 japanese_found = False
@@ -614,9 +555,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
                 }
 
             # 日本語ファイル名の処理確認
-            japanese_images = self.file_discovery_service.discover_images(
-                self.japanese_folder
-            )
+            japanese_images = self.file_discovery_service.discover_images(self.japanese_folder)
             japanese_file_handling = len(japanese_images) > 0
 
             duration = time.time() - start_time
@@ -636,17 +575,13 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             print("✅ 日本語エラーメッセージの包括的テスト成功")
             print(f"   テストシナリオ数: {len(error_scenarios)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(
-                f"   日本語ファイル名処理: {'✅' if japanese_file_handling else '❌'}"
-            )
+            print(f"   日本語ファイル名処理: {'✅' if japanese_file_handling else '❌'}")
             print(f"   日本語画像検出数: {len(japanese_images)}個")
 
             # シナリオ別結果の表示
             for scenario_name, result in japanese_messages_found.items():
                 status = "✅" if result["found"] else "❌"
-                print(
-                    f"   {scenario_name}: {status} (画像: {result['images_found']}個)"
-                )
+                print(f"   {scenario_name}: {status} (画像: {result['images_found']}個)")
                 for message in result["messages"][:2]:  # 最大2個のメッセージを表示
                     print(f"     メッセージ: {message}")
 
@@ -687,9 +622,7 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             for folder_path, folder_type in test_folders:
                 try:
                     folder_start_time = time.time()
-                    discovered_images = self.file_discovery_service.discover_images(
-                        folder_path
-                    )
+                    discovered_images = self.file_discovery_service.discover_images(folder_path)
                     folder_duration = time.time() - folder_start_time
 
                     processing_results.append(
@@ -717,15 +650,11 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
                     )
 
             # 処理継続の確認
-            successful_processes = sum(
-                1 for result in processing_results if result["status"] == "success"
-            )
+            successful_processes = sum(1 for result in processing_results if result["status"] == "success")
             total_processes = len(processing_results)
 
             # 少なくとも一部の処理が成功していることを確認
-            self.assertGreater(
-                successful_processes, 0, "少なくとも一部の処理が成功する必要があります"
-            )
+            self.assertGreater(successful_processes, 0, "少なくとも一部の処理が成功する必要があります")
 
             duration = time.time() - start_time
 
@@ -796,18 +725,14 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
 
             for folder_path, expected_error_type in error_scenarios:
                 # 画像検出を実行
-                discovered_images = self.file_discovery_service.discover_images(
-                    folder_path
-                )
+                discovered_images = self.file_discovery_service.discover_images(folder_path)
 
                 # UIエラーハンドリングのシミュレーション
                 if len(discovered_images) == 0:
                     if not folder_path.exists():
                         # 存在しないフォルダのエラー処理
                         mock_folder_navigator._handle_discovery_error(
-                            FileNotFoundError(
-                                f"フォルダが見つかりません: {folder_path}"
-                            ),
+                            FileNotFoundError(f"フォルダが見つかりません: {folder_path}"),
                             folder_path,
                         )
                     else:
@@ -847,12 +772,8 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
             print("✅ UIエラー統合テスト成功")
             print(f"   エラーシナリオ数: {len(error_scenarios)}個")
             print(f"   処理時間: {duration:.3f}秒")
-            print(
-                f"   エラーハンドリング呼び出し: {mock_folder_navigator._handle_discovery_error.call_count}回"
-            )
-            print(
-                f"   画像なしメッセージ呼び出し: {mock_folder_navigator._show_no_images_message.call_count}回"
-            )
+            print(f"   エラーハンドリング呼び出し: {mock_folder_navigator._handle_discovery_error.call_count}回")
+            print(f"   画像なしメッセージ呼び出し: {mock_folder_navigator._show_no_images_message.call_count}回")
 
             # シナリオ別結果の表示
             for result in ui_error_results:
@@ -876,21 +797,16 @@ class FileListDisplayErrorHandlingTest(unittest.TestCase):
     def generate_error_handling_report(self) -> Dict[str, Any]:
         """エラーハンドリングテスト結果レポートの生成"""
         total_tests = len(self.test_results)
-        passed_tests = sum(
-            1 for result in self.test_results if result["status"] == "passed"
-        )
+        passed_tests = sum(1 for result in self.test_results if result["status"] == "passed")
         failed_tests = total_tests - passed_tests
 
         total_duration = sum(result["duration"] for result in self.test_results)
         avg_duration = total_duration / total_tests if total_tests > 0 else 0
 
         # 日本語メッセージ確認の統計
-        japanese_message_tests = [
-            r for r in self.test_results if "japanese" in r.get("message", "").lower()
-        ]
+        japanese_message_tests = [r for r in self.test_results if "japanese" in r.get("message", "").lower()]
         japanese_success_rate = (
-            len([r for r in japanese_message_tests if r["status"] == "passed"])
-            / len(japanese_message_tests)
+            len([r for r in japanese_message_tests if r["status"] == "passed"]) / len(japanese_message_tests)
             if japanese_message_tests
             else 0
         )
@@ -933,9 +849,7 @@ def run_error_handling_tests():
     print("=" * 80)
 
     # テストスイートの作成と実行
-    suite = unittest.TestLoader().loadTestsFromTestCase(
-        FileListDisplayErrorHandlingTest
-    )
+    suite = unittest.TestLoader().loadTestsFromTestCase(FileListDisplayErrorHandlingTest)
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
 
@@ -969,9 +883,7 @@ def run_error_handling_tests():
         print(f"成功: {report['summary']['passed_tests']}")
         print(f"失敗: {report['summary']['failed_tests']}")
         print(f"成功率: {report['summary']['success_rate']:.1%}")
-        print(
-            f"日本語メッセージ成功率: {report['summary']['japanese_message_success_rate']:.1%}"
-        )
+        print(f"日本語メッセージ成功率: {report['summary']['japanese_message_success_rate']:.1%}")
         print(f"総実行時間: {report['summary']['total_duration']:.3f}秒")
         print(f"平均実行時間: {report['summary']['average_duration']:.3f}秒")
 

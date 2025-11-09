@@ -101,14 +101,10 @@ class EnhancedFolderNavigator(QWidget):
         self.max_history = 20
 
         # File discovery service for image detection
-        self.file_discovery_service = FileDiscoveryService(
-            logger_system=self.logger_system
-        )
+        self.file_discovery_service = FileDiscoveryService(logger_system=self.logger_system)
 
         # File system watcher for real-time updates
-        self.file_system_watcher = FileSystemWatcher(
-            logger_system=self.logger_system, enable_monitoring=True
-        )
+        self.file_system_watcher = FileSystemWatcher(logger_system=self.logger_system, enable_monitoring=True)
 
         # Add change listener for file system events
         self.file_system_watcher.add_change_listener(self._on_file_system_change)
@@ -249,9 +245,7 @@ class EnhancedFolderNavigator(QWidget):
             # Fix: Use QDir.Filter instead of model.Filter
             from PySide6.QtCore import QDir
 
-            self.file_system_model.setFilter(
-                QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot
-            )
+            self.file_system_model.setFilter(QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot)
 
             # Set model to tree view
             self.folder_tree.setModel(self.file_system_model)
@@ -310,9 +304,7 @@ class EnhancedFolderNavigator(QWidget):
         """Connect internal signals"""
 
         # Connect state manager changes
-        self.state_manager.add_change_listener(
-            "current_folder", self._on_current_folder_changed
-        )
+        self.state_manager.add_change_listener("current_folder", self._on_current_folder_changed)
 
     # File discovery methods
 
@@ -420,9 +412,7 @@ class EnhancedFolderNavigator(QWidget):
                 ErrorCategory.UI_ERROR,
                 {
                     "operation": "clear_previous_folder_data",
-                    "previous_folder": (
-                        str(previous_folder) if previous_folder else "None"
-                    ),
+                    "previous_folder": (str(previous_folder) if previous_folder else "None"),
                     "user_action": "フォルダ変更時のデータクリア",
                 },
                 AIComponent.CURSOR,
@@ -460,7 +450,9 @@ class EnhancedFolderNavigator(QWidget):
                 error_message = f"フォルダ '{folder_name}' へのアクセス権限がありません。\n管理者権限で実行するか、フォルダの権限設定を確認してください。"
                 user_message = "アクセス権限エラー"
             elif "FileNotFound" in error_type or "NotFound" in error_type:
-                error_message = f"フォルダ '{folder_name}' が見つかりません。\nフォルダが移動または削除された可能性があります。"
+                error_message = (
+                    f"フォルダ '{folder_name}' が見つかりません。\nフォルダが移動または削除された可能性があります。"
+                )
                 user_message = "フォルダが見つかりません"
             elif "Timeout" in error_type:
                 error_message = f"フォルダ '{folder_name}' の読み込みがタイムアウトしました。\nネットワークドライブの場合は接続を確認してください。"
@@ -485,9 +477,7 @@ class EnhancedFolderNavigator(QWidget):
 
             # アクセシビリティ対応
             msg_box.setAccessibleName(f"エラーダイアログ: {user_message}")
-            msg_box.setAccessibleDescription(
-                f"フォルダアクセスエラーの詳細: {error_message}"
-            )
+            msg_box.setAccessibleDescription(f"フォルダアクセスエラーの詳細: {error_message}")
 
             # 適切なボタンテキスト
             msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -532,7 +522,9 @@ class EnhancedFolderNavigator(QWidget):
             folder_name = folder_path.name if folder_path else "選択されたフォルダ"
 
             # ステータスメッセージを作成
-            status_message = f"📁 '{folder_name}' - 画像ファイルが見つかりません (対応形式: JPEG, PNG, GIF, BMP, TIFF, WebP)"
+            status_message = (
+                f"📁 '{folder_name}' - 画像ファイルが見つかりません (対応形式: JPEG, PNG, GIF, BMP, TIFF, WebP)"
+            )
 
             # ログに記録
             self.logger_system.log_ai_operation(
@@ -805,9 +797,7 @@ class EnhancedFolderNavigator(QWidget):
         """
         try:
             # FileDiscoveryServiceの対応拡張子を使用
-            supported_extensions = (
-                self.file_discovery_service.get_supported_extensions()
-            )
+            supported_extensions = self.file_discovery_service.get_supported_extensions()
             return file_path.suffix.lower() in supported_extensions
 
         except Exception as e:
@@ -850,9 +840,7 @@ class EnhancedFolderNavigator(QWidget):
                 ErrorCategory.UI_ERROR,
                 {
                     "operation": "trigger_folder_refresh",
-                    "current_folder": (
-                        str(self.current_folder) if self.current_folder else "None"
-                    ),
+                    "current_folder": (str(self.current_folder) if self.current_folder else "None"),
                     "user_action": "フォルダ更新トリガー",
                 },
                 AIComponent.CURSOR,
@@ -892,9 +880,7 @@ class EnhancedFolderNavigator(QWidget):
                 ErrorCategory.FILE_ERROR,
                 {
                     "operation": "perform_folder_refresh",
-                    "current_folder": (
-                        str(self.current_folder) if self.current_folder else "None"
-                    ),
+                    "current_folder": (str(self.current_folder) if self.current_folder else "None"),
                     "user_action": "フォルダ再スキャン実行",
                 },
                 AIComponent.CURSOR,
@@ -920,18 +906,14 @@ class EnhancedFolderNavigator(QWidget):
 
             # アクセシビリティ対応
             msg_box.setAccessibleName("情報ダイアログ: ファイル監視機能")
-            msg_box.setAccessibleDescription(
-                "ファイル監視機能が利用できない場合の説明と対処法"
-            )
+            msg_box.setAccessibleDescription("ファイル監視機能が利用できない場合の説明と対処法")
 
             # 適切なボタンテキスト
             msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg_box.button(QMessageBox.StandardButton.Ok).setText("了解")
 
             # 詳細情報ボタンを追加
-            details_button = msg_box.addButton(
-                "詳細情報", QMessageBox.ButtonRole.ActionRole
-            )
+            details_button = msg_box.addButton("詳細情報", QMessageBox.ButtonRole.ActionRole)
             details_button.setAccessibleDescription("ファイル監視機能の詳細情報を表示")
 
             msg_box.exec()
@@ -988,9 +970,7 @@ class EnhancedFolderNavigator(QWidget):
 
             # アクセシビリティ対応
             msg_box.setAccessibleName("詳細情報ダイアログ: ファイル監視機能")
-            msg_box.setAccessibleDescription(
-                "ファイル監視機能の詳細な説明とトラブルシューティング情報"
-            )
+            msg_box.setAccessibleDescription("ファイル監視機能の詳細な説明とトラブルシューティング情報")
 
             # ボタンの設定
             msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
@@ -1039,9 +1019,7 @@ class EnhancedFolderNavigator(QWidget):
 
         try:
             if not folder_path.exists() or not folder_path.is_dir():
-                self.navigation_error.emit(
-                    "invalid_path", f"Invalid folder: {folder_path}"
-                )
+                self.navigation_error.emit("invalid_path", f"Invalid folder: {folder_path}")
                 return False
 
             # Stop watching previous folder
@@ -1083,9 +1061,7 @@ class EnhancedFolderNavigator(QWidget):
                 f"フォルダ変更完了: {folder_path} ({len(discovered_images)}個の画像ファイル)",
             )
 
-            self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "folder_navigate", f"Navigated to: {folder_path}"
-            )
+            self.logger_system.log_ai_operation(AIComponent.CURSOR, "folder_navigate", f"Navigated to: {folder_path}")
 
             return True
 
@@ -1102,13 +1078,9 @@ class EnhancedFolderNavigator(QWidget):
         """Open folder selection dialog"""
 
         try:
-            initial_dir = (
-                str(self.current_folder) if self.current_folder else str(Path.home())
-            )
+            initial_dir = str(self.current_folder) if self.current_folder else str(Path.home())
 
-            folder = QFileDialog.getExistingDirectory(
-                self, "Select Folder", initial_dir
-            )
+            folder = QFileDialog.getExistingDirectory(self, "Select Folder", initial_dir)
 
             if folder:
                 self.navigate_to_folder(Path(folder))
@@ -1382,9 +1354,7 @@ class EnhancedFolderNavigator(QWidget):
                 for bookmark in self.bookmarks:
                     if bookmark.exists():
                         action = bookmarks_menu.addAction(bookmark.name)
-                        action.triggered.connect(
-                            lambda checked, path=bookmark: self.navigate_to_folder(path)
-                        )
+                        action.triggered.connect(lambda checked, path=bookmark: self.navigate_to_folder(path))
 
                 bookmarks_menu.addSeparator()
                 clear_bookmarks_action = bookmarks_menu.addAction("Clear All Bookmarks")
@@ -1468,9 +1438,7 @@ class EnhancedFolderNavigator(QWidget):
             self.bookmarks.clear()
             self.config_manager.set_setting("ui.bookmarks", [])
 
-            self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "bookmarks_clear", "All bookmarks cleared"
-            )
+            self.logger_system.log_ai_operation(AIComponent.CURSOR, "bookmarks_clear", "All bookmarks cleared")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1488,9 +1456,7 @@ class EnhancedFolderNavigator(QWidget):
             self.config_manager.set_setting("ui.folder_history", [])
             self._update_history_combo()
 
-            self.logger_system.log_ai_operation(
-                AIComponent.CURSOR, "history_clear", "Folder history cleared"
-            )
+            self.logger_system.log_ai_operation(AIComponent.CURSOR, "history_clear", "Folder history cleared")
 
         except Exception as e:
             self.error_handler.handle_error(

@@ -154,9 +154,7 @@ class TestStateManager(unittest.TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
-        self.state_manager = StateManager(
-            state_file=Path(self.temp_dir) / "test_state.json"
-        )
+        self.state_manager = StateManager(state_file=Path(self.temp_dir) / "test_state.json")
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
@@ -174,9 +172,7 @@ class TestStateManager(unittest.TestCase):
         self.state_manager.save_state()
 
         # 新しいStateManagerインスタンスで読み込み
-        new_state_manager = StateManager(
-            state_file=Path(self.temp_dir) / "test_state.json"
-        )
+        new_state_manager = StateManager(state_file=Path(self.temp_dir) / "test_state.json")
         new_state_manager.load_state()
 
         loaded_value = new_state_manager.get_state("test_key")
@@ -196,9 +192,7 @@ class TestIntegratedErrorHandler(unittest.TestCase):
         context = {"component": "test", "operation": "test_op"}
 
         with patch.object(self.logger, "error") as mock_error:
-            result = self.error_handler.handle_error(
-                test_error, ErrorCategory.INTEGRATION_ERROR, context
-            )
+            result = self.error_handler.handle_error(test_error, ErrorCategory.INTEGRATION_ERROR, context)
 
             mock_error.assert_called()
             self.assertIsNotNone(result)

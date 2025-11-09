@@ -25,12 +25,14 @@ class ProcessingStatus(Enum):
     FAILED = "failed"
     CACHED = "cached"
 
+
 class AIComponent(Enum):
     """AI component enumeration"""
 
     COPILOT = "copilot"
     CURSOR = "cursor"
     KIRO = "kiro"
+
 
 @dataclass
 class ImageMetadata:
@@ -131,6 +133,7 @@ class ImageMetadata:
             return (self.width * self.height) / 1_000_000
         return None
 
+
 @dataclass
 class ThemeConfiguration:
     """
@@ -208,11 +211,10 @@ class ThemeConfiguration:
     @property
     def accessibility_score(self) -> float:
         """Calculate accessibility score (0-1)"""
-        enabled_features = sum(
-            1 for enabled in self.accessibility_features.values() if enabled
-        )
+        enabled_features = sum(1 for enabled in self.accessibility_features.values() if enabled)
         total_features = len(self.accessibility_features)
         return enabled_features / total_features if total_features > 0 else 0.0
+
 
 @dataclass
 class ApplicationState:
@@ -309,11 +311,8 @@ class ApplicationState:
     @property
     def average_operation_time(self) -> dict[str, float]:
         """Get average operation times"""
-        return {
-            operation: sum(times) / len(times)
-            for operation, times in self.operation_times.items()
-            if times
-        }
+        return {operation: sum(times) / len(times) for operation, times in self.operation_times.items() if times}
+
 
 @dataclass
 class CacheEntry:
@@ -342,6 +341,7 @@ class CacheEntry:
         """Mark cache entry as accessed"""
         self.last_accessed = datetime.now()
         self.access_count += 1
+
 
 @dataclass
 class PerformanceMetrics:

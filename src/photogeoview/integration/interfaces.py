@@ -15,6 +15,7 @@ from typing import Any
 
 # Import new theme and navigation interfaces
 
+
 class IImageProcessor(ABC):
     """
     Unified interface for image processing operations
@@ -83,6 +84,7 @@ class IImageProcessor(ABC):
             True if valid image, False otherwise
         """
         pass
+
 
 class IThemeManager(ABC):
     """
@@ -162,6 +164,7 @@ class IThemeManager(ABC):
             True if configuration is valid, False otherwise
         """
         pass
+
 
 class IMapProvider(ABC):
     """
@@ -264,6 +267,7 @@ class IMapProvider(ABC):
         """
         pass
 
+
 class IConfigManager(ABC):
     """
     Unified interface for configuration management
@@ -341,6 +345,7 @@ class IConfigManager(ABC):
         """
         pass
 
+
 class IPerformanceMonitor(ABC):
     """
     Unified interface for performance monitoring
@@ -397,6 +402,7 @@ class IPerformanceMonitor(ABC):
             Dictionary mapping AI component names to status strings
         """
         pass
+
 
 # Note: Additional interfaces for theme and navigation integration are available in:
 # - theme_interfaces.py: Theme management interfaces (IThemeProvider, IThemeValidator, etc.)

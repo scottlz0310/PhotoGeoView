@@ -36,6 +36,7 @@ class StateChangeEvent:
     component: AIComponent
     timestamp: datetime = field(default_factory=datetime.now)
 
+
 class StateManager:
     """
     Unified state manager for AI integration
@@ -48,9 +49,7 @@ class StateManager:
     - State validation and migration
     """
 
-    def __init__(
-        self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None
-    ):
+    def __init__(self, config_manager: ConfigManager = None, logger_system: LoggerSystem = None):
         """
         Initialize the state manager
 
@@ -101,9 +100,7 @@ class StateManager:
         # Setup default validators
         self._setup_default_validators()
 
-        self.logger_system.log_ai_operation(
-            AIComponent.KIRO, "state_manager_init", "State manager initialized"
-        )
+        self.logger_system.log_ai_operation(AIComponent.KIRO, "state_manager_init", "State manager initialized")
 
     def _initialize_directories(self):
         """Initialize state storage directories"""
@@ -127,13 +124,9 @@ class StateManager:
         self.validators["selected_image"] = lambda x: x is None or isinstance(x, Path)
 
         # Numeric validators
-        self.validators["thumbnail_size"] = (
-            lambda x: isinstance(x, int) and 50 <= x <= 500
-        )
+        self.validators["thumbnail_size"] = lambda x: isinstance(x, int) and 50 <= x <= 500
         self.validators["map_zoom"] = lambda x: isinstance(x, int) and 1 <= x <= 20
-        self.validators["current_zoom"] = (
-            lambda x: isinstance(x, (int, float)) and 0.1 <= x <= 10.0
-        )
+        self.validators["current_zoom"] = lambda x: isinstance(x, (int, float)) and 0.1 <= x <= 10.0
 
         # String validators
         self.validators["current_theme"] = lambda x: isinstance(x, str) and len(x) > 0
@@ -207,9 +200,7 @@ class StateManager:
                 )
                 return default
 
-    def set_state_value(
-        self, key: str, value: Any, component: AIComponent = AIComponent.KIRO
-    ) -> bool:
+    def set_state_value(self, key: str, value: Any, component: AIComponent = AIComponent.KIRO) -> bool:
         """
         Set a state value
 
@@ -260,9 +251,7 @@ class StateManager:
                     if self.auto_save_enabled:
                         self._auto_save_if_needed()
 
-                    self.logger_system.log_ai_operation(
-                        component, "state_change", f"State changed: {key} = {value}"
-                    )
+                    self.logger_system.log_ai_operation(component, "state_change", f"State changed: {key} = {value}")
 
                     return True
 
@@ -332,9 +321,7 @@ class StateManager:
             if listener not in self.change_listeners[key]:
                 self.change_listeners[key].append(listener)
 
-    def remove_change_listener(
-        self, key: str, listener: Callable[[str, Any, Any], None]
-    ):
+    def remove_change_listener(self, key: str, listener: Callable[[str, Any, Any], None]):
         """
         Remove a change listener
 
@@ -371,16 +358,12 @@ class StateManager:
             if listener in self.global_listeners:
                 self.global_listeners.remove(listener)
 
-    def _notify_change_listeners(
-        self, key: str, old_value: Any, new_value: Any, component: AIComponent
-    ):
+    def _notify_change_listeners(self, key: str, old_value: Any, new_value: Any, component: AIComponent):
         """Notify all relevant change listeners"""
 
         try:
             # Create change event
-            event = StateChangeEvent(
-                key=key, old_value=old_value, new_value=new_value, component=component
-            )
+            event = StateChangeEvent(key=key, old_value=old_value, new_value=new_value, component=component)
 
             # Notify key-specific listeners
             for listener in self.change_listeners.get(key, []):
@@ -425,9 +408,7 @@ class StateManager:
 
             # Remove future history if we're not at the end
             if self.current_history_index < len(self.state_history) - 1:
-                self.state_history = self.state_history[
-                    : self.current_history_index + 1
-                ]
+                self.state_history = self.state_history[: self.current_history_index + 1]
 
             # Add new state
             self.state_history.append(copy.deepcopy(state_dict))
@@ -550,9 +531,7 @@ class StateManager:
 
                 self.last_save_time = datetime.now()
 
-                self.logger_system.log_ai_operation(
-                    AIComponent.KIRO, "state_save", f"State saved to {target_file}"
-                )
+                self.logger_system.log_ai_operation(AIComponent.KIRO, "state_save", f"State saved to {target_file}")
 
                 return True
 
@@ -643,14 +622,10 @@ class StateManager:
             return state_dict
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO, e, "state_to_dict_conversion", {}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "state_to_dict_conversion", {})
             return {}
 
-    def _restore_state_from_dict(
-        self, state_dict: dict[str, Any], add_to_history: bool = True
-    ):
+    def _restore_state_from_dict(self, state_dict: dict[str, Any], add_to_history: bool = True):
         """Restore state from dictionary"""
 
         try:
@@ -662,14 +637,10 @@ class StateManager:
                 state_dict["selected_image"] = Path(state_dict["selected_image"])
 
             if "folder_history" in state_dict:
-                state_dict["folder_history"] = [
-                    Path(p) for p in state_dict["folder_history"]
-                ]
+                state_dict["folder_history"] = [Path(p) for p in state_dict["folder_history"]]
 
             if "loaded_images" in state_dict:
-                state_dict["loaded_images"] = [
-                    Path(p) for p in state_dict["loaded_images"]
-                ]
+                state_dict["loaded_images"] = [Path(p) for p in state_dict["loaded_images"]]
 
             # Convert datetime strings back to datetime objects
             for key in ["session_start", "last_activity"]:
@@ -691,9 +662,7 @@ class StateManager:
         except Exception as e:
             self.logger_system.log_error(AIComponent.KIRO, e, "state_restoration", {})
 
-    def _migrate_state(
-        self, state_dict: dict[str, Any], version: str
-    ) -> dict[str, Any]:
+    def _migrate_state(self, state_dict: dict[str, Any], version: str) -> dict[str, Any]:
         """Migrate state from older versions"""
 
         try:
@@ -710,9 +679,7 @@ class StateManager:
             return state_dict
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO, e, "state_migration", {"version": version}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "state_migration", {"version": version})
             return state_dict
 
     # Performance and monitoring
@@ -728,15 +695,11 @@ class StateManager:
                 "current_history_index": self.current_history_index,
                 "can_undo": self.can_undo(),
                 "can_redo": self.can_redo(),
-                "change_listeners": sum(
-                    len(listeners) for listeners in self.change_listeners.values()
-                ),
+                "change_listeners": sum(len(listeners) for listeners in self.change_listeners.values()),
                 "global_listeners": len(self.global_listeners),
                 "auto_save_enabled": self.auto_save_enabled,
                 "last_save_time": self.last_save_time.isoformat(),
-                "session_duration": (
-                    datetime.now() - self.app_state.session_start
-                ).total_seconds(),
+                "session_duration": (datetime.now() - self.app_state.session_start).total_seconds(),
             }
 
         except Exception as e:
@@ -753,16 +716,8 @@ class StateManager:
 
         try:
             return {
-                "current_folder": (
-                    str(self.app_state.current_folder)
-                    if self.app_state.current_folder
-                    else None
-                ),
-                "selected_image": (
-                    str(self.app_state.selected_image)
-                    if self.app_state.selected_image
-                    else None
-                ),
+                "current_folder": (str(self.app_state.current_folder) if self.app_state.current_folder else None),
+                "selected_image": (str(self.app_state.selected_image) if self.app_state.selected_image else None),
                 "loaded_images_count": len(self.app_state.loaded_images),
                 "current_theme": self.app_state.current_theme,
                 "thumbnail_size": self.app_state.thumbnail_size,
@@ -822,6 +777,4 @@ class StateManager:
             )
 
         except Exception as e:
-            self.logger_system.log_error(
-                AIComponent.KIRO, e, "state_manager_shutdown", {}
-            )
+            self.logger_system.log_error(AIComponent.KIRO, e, "state_manager_shutdown", {})

@@ -20,6 +20,7 @@ class FileDiscoveryErrorLevel(Enum):
     ERROR = "error"  # エラー - 機能が利用不可
     CRITICAL = "critical"  # 致命的 - アプリケーション停止が必要
 
+
 class FileDiscoveryError(Exception):
     """ファイル検出エラーの基底クラス"""
 
@@ -49,6 +50,7 @@ class FileDiscoveryError(Exception):
         self.details = details or {}
         self.timestamp = datetime.now()
 
+
 class FolderAccessError(FileDiscoveryError):
     """フォルダアクセスエラー"""
 
@@ -66,6 +68,7 @@ class FolderAccessError(FileDiscoveryError):
             details={"reason": reason},
         )
 
+
 class FolderNotFoundError(FileDiscoveryError):
     """フォルダ不存在エラー"""
 
@@ -79,6 +82,7 @@ class FolderNotFoundError(FileDiscoveryError):
             level=FileDiscoveryErrorLevel.ERROR,
             file_path=folder_path,
         )
+
 
 class PermissionDeniedError(FileDiscoveryError):
     """権限不足エラー"""
@@ -95,6 +99,7 @@ class PermissionDeniedError(FileDiscoveryError):
             details={"operation": operation},
         )
 
+
 class FileValidationError(FileDiscoveryError):
     """ファイルバリデーションエラー"""
 
@@ -109,6 +114,7 @@ class FileValidationError(FileDiscoveryError):
             file_path=file_path,
             details={"validation_reason": reason},
         )
+
 
 class CorruptedFileError(FileDiscoveryError):
     """破損ファイルエラー"""
@@ -127,14 +133,13 @@ class CorruptedFileError(FileDiscoveryError):
             details={"corruption_details": details},
         )
 
+
 class UnsupportedFileFormatError(FileDiscoveryError):
     """未対応ファイル形式エラー"""
 
     def __init__(self, file_path: Path, supported_formats: list[str]):
         error_code = "UNSUPPORTED_FORMAT"
-        message = (
-            f"未対応のファイル形式です: {file_path.name} (拡張子: {file_path.suffix})"
-        )
+        message = f"未対応のファイル形式です: {file_path.name} (拡張子: {file_path.suffix})"
 
         super().__init__(
             message=message,
@@ -143,6 +148,7 @@ class UnsupportedFileFormatError(FileDiscoveryError):
             file_path=file_path,
             details={"supported_formats": supported_formats},
         )
+
 
 class ScanTimeoutError(FileDiscoveryError):
     """スキャンタイムアウトエラー"""
@@ -159,6 +165,7 @@ class ScanTimeoutError(FileDiscoveryError):
             details={"timeout_seconds": timeout_seconds},
         )
 
+
 class MemoryLimitExceededError(FileDiscoveryError):
     """メモリ制限超過エラー"""
 
@@ -172,6 +179,7 @@ class MemoryLimitExceededError(FileDiscoveryError):
             level=FileDiscoveryErrorLevel.CRITICAL,
             details={"current_usage_mb": current_usage_mb, "limit_mb": limit_mb},
         )
+
 
 class TooManyFilesError(FileDiscoveryError):
     """ファイル数過多エラー"""
@@ -187,6 +195,7 @@ class TooManyFilesError(FileDiscoveryError):
             file_path=folder_path,
             details={"file_count": file_count, "limit": limit},
         )
+
 
 @dataclass
 class FileDiscoveryErrorMessages:
@@ -336,6 +345,7 @@ class FileDiscoveryErrorMessages:
             ],
         )
 
+
 class FileDiscoveryErrorHandler:
     """FileDiscoveryService専用エラーハンドラー"""
 
@@ -363,9 +373,7 @@ class FileDiscoveryErrorHandler:
         """
 
         # エラー統計を更新
-        self.error_counts[error.error_code] = (
-            self.error_counts.get(error.error_code, 0) + 1
-        )
+        self.error_counts[error.error_code] = self.error_counts.get(error.error_code, 0) + 1
 
         # 最近のエラーリストに追加
         self.recent_errors.insert(0, error)
@@ -375,9 +383,7 @@ class FileDiscoveryErrorHandler:
         self._log_error(error)
 
         # 回復提案を取得
-        recovery_suggestions = FileDiscoveryErrorMessages.get_recovery_suggestions(
-            error.error_code
-        )
+        recovery_suggestions = FileDiscoveryErrorMessages.get_recovery_suggestions(error.error_code)
 
         # エラー処理結果を返す
         return {
@@ -417,11 +423,7 @@ class FileDiscoveryErrorHandler:
             "total_errors": sum(self.error_counts.values()),
             "error_counts": self.error_counts.copy(),
             "recent_error_count": len(self.recent_errors),
-            "most_common_error": (
-                max(self.error_counts, key=self.error_counts.get)
-                if self.error_counts
-                else None
-            ),
+            "most_common_error": (max(self.error_counts, key=self.error_counts.get) if self.error_counts else None),
         }
 
     def clear_error_history(self):

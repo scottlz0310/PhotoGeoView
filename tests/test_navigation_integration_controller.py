@@ -211,28 +211,20 @@ class TestNavigationIntegrationController(unittest.TestCase):
         component = MockNavigationAware("test_component")
 
         # Register component
-        result = self.controller.register_navigation_component(
-            component, "test_component"
-        )
+        result = self.controller.register_navigation_component(component, "test_component")
 
         self.assertTrue(result)
         self.assertIn(component, self.controller.registered_components)
         self.assertIn("test_component", self.controller.component_registry)
-        self.assertEqual(
-            self.controller.component_registry["test_component"], component
-        )
+        self.assertEqual(self.controller.component_registry["test_component"], component)
 
     def test_register_duplicate_component(self):
         """Test registering the same component twice"""
         component = MockNavigationAware("test_component")
 
         # Register component twice
-        result1 = self.controller.register_navigation_component(
-            component, "test_component"
-        )
-        result2 = self.controller.register_navigation_component(
-            component, "test_component"
-        )
+        result1 = self.controller.register_navigation_component(component, "test_component")
+        result2 = self.controller.register_navigation_component(component, "test_component")
 
         self.assertTrue(result1)
         self.assertTrue(result2)  # Should still return True
@@ -244,9 +236,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
 
         # Register and then unregister component
         self.controller.register_navigation_component(component, "test_component")
-        result = self.controller.unregister_navigation_component(
-            component, "test_component"
-        )
+        result = self.controller.unregister_navigation_component(component, "test_component")
 
         self.assertTrue(result)
         self.assertNotIn(component, self.controller.registered_components)
@@ -287,9 +277,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
         result = await self.controller.navigate_to_path(test_dir)
 
         self.assertTrue(result)
-        self.assertEqual(
-            self.controller.current_navigation_state.current_path, test_dir
-        )
+        self.assertEqual(self.controller.current_navigation_state.current_path, test_dir)
 
     @pytest.mark.asyncio
     async def test_navigate_to_invalid_path(self):
@@ -424,9 +412,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
         self.controller.add_error_listener(error_listener)
 
         # Trigger navigation error
-        await self.controller._handle_navigation_error(
-            Path("/invalid"), "Test error", "test_component"
-        )
+        await self.controller._handle_navigation_error(Path("/invalid"), "Test error", "test_component")
 
         # Check that error listener was called
         self.assertEqual(len(error_listeners), 1)
@@ -585,9 +571,7 @@ class TestNavigationIntegrationController(unittest.TestCase):
 
         # Should still succeed
         self.assertTrue(result)
-        self.assertEqual(
-            self.controller.current_navigation_state.current_path, test_dir
-        )
+        self.assertEqual(self.controller.current_navigation_state.current_path, test_dir)
 
     def test_component_registration_with_exception(self):
         """Test component registration when component raises exception"""

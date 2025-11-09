@@ -45,9 +45,7 @@ class TestThemePersistenceIntegration:
     @pytest.fixture
     def theme_controller(self, config_manager, logger_system):
         """Create theme integration controller"""
-        return ThemeIntegrationController(
-            config_manager=config_manager, logger_system=logger_system
-        )
+        return ThemeIntegrationController(config_manager=config_manager, logger_system=logger_system)
 
     def test_theme_configuration_save(self, theme_controller, config_manager):
         """Test saving theme configuration to file"""
@@ -183,9 +181,7 @@ class TestThemePersistenceIntegration:
         assert history[-1]["theme_name"] == "theme4"
         assert history[-2]["theme_name"] == "theme3"
 
-    def test_configuration_file_corruption_handling(
-        self, theme_controller, config_manager, temp_config_dir
-    ):
+    def test_configuration_file_corruption_handling(self, theme_controller, config_manager, temp_config_dir):
         """Test handling of corrupted configuration files"""
         # Create corrupted config file
         config_file = temp_config_dir / "config.json"
@@ -198,9 +194,7 @@ class TestThemePersistenceIntegration:
             # Should handle corruption gracefully
             assert loaded_theme == "default"  # Fallback theme
 
-    def test_theme_backup_and_restore(
-        self, theme_controller, config_manager, temp_config_dir
-    ):
+    def test_theme_backup_and_restore(self, theme_controller, config_manager, temp_config_dir):
         """Test theme configuration backup and restore"""
         # Create theme configuration
         theme_config = {
@@ -279,9 +273,7 @@ class TestThemePersistenceIntegration:
         assert new_theme == "old_theme"
         assert theme_details.get("name") == "old_theme"
 
-    def test_theme_export_import(
-        self, theme_controller, config_manager, temp_config_dir
-    ):
+    def test_theme_export_import(self, theme_controller, config_manager, temp_config_dir):
         """Test theme configuration export and import"""
         # Create theme configuration
         theme_config = ThemeConfiguration(
@@ -312,9 +304,7 @@ class TestThemePersistenceIntegration:
         assert imported_theme.name == "export_theme"
         assert imported_theme.display_name == "Export Theme"
 
-    def test_theme_persistence_with_user_preferences(
-        self, theme_controller, config_manager
-    ):
+    def test_theme_persistence_with_user_preferences(self, theme_controller, config_manager):
         """Test theme persistence with user-specific preferences"""
         # Setup user preferences
         user_prefs = {

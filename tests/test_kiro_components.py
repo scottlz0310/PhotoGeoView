@@ -103,9 +103,7 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
         self.monitor.log_operation_time("ui_update", 0.1)
 
         # Check that component response times were updated
-        copilot_times = self.monitor.ai_components[AIComponent.COPILOT][
-            "response_times"
-        ]
+        copilot_times = self.monitor.ai_components[AIComponent.COPILOT]["response_times"]
         cursor_times = self.monitor.ai_components[AIComponent.CURSOR]["response_times"]
 
         self.assertGreater(len(copilot_times), 0)
@@ -151,9 +149,7 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
 
         new_thresholds = {"memory_warning_mb": 500.0, "cpu_warning_percent": 80.0}
 
-        self.monitor.update_thresholds(
-            memory_warning_mb=500.0, cpu_warning_percent=80.0
-        )
+        self.monitor.update_thresholds(memory_warning_mb=500.0, cpu_warning_percent=80.0)
 
         self.assertEqual(self.monitor.thresholds.memory_warning_mb, 500.0)
         self.assertEqual(self.monitor.thresholds.cpu_warning_percent, 80.0)
@@ -195,14 +191,10 @@ class TestKiroPerformanceMonitor(unittest.TestCase):
         self.monitor.clear_alerts()
 
         # Create multiple alerts of the same type
-        self.monitor._create_alert(
-            "warning", "Test alert", AIComponent.KIRO, "test_metric", 100.0, 50.0
-        )
+        self.monitor._create_alert("warning", "Test alert", AIComponent.KIRO, "test_metric", 100.0, 50.0)
 
         # Second alert should be blocked by cooldown
-        self.monitor._create_alert(
-            "warning", "Test alert", AIComponent.KIRO, "test_metric", 100.0, 50.0
-        )
+        self.monitor._create_alert("warning", "Test alert", AIComponent.KIRO, "test_metric", 100.0, 50.0)
 
         # Should only have one alert due to cooldown
         self.assertLessEqual(len(self.monitor.recent_alerts), 1)
@@ -321,9 +313,7 @@ class TestUnifiedCacheSystem(unittest.TestCase):
         """Test cache system initialization"""
 
         self.assertIsNotNone(self.cache_system)
-        self.assertEqual(
-            len(self.cache_system.caches), 4
-        )  # image, thumbnail, metadata, map
+        self.assertEqual(len(self.cache_system.caches), 4)  # image, thumbnail, metadata, map
         self.assertIn("image", self.cache_system.caches)
         self.assertIn("thumbnail", self.cache_system.caches)
         self.assertIn("metadata", self.cache_system.caches)
@@ -355,9 +345,7 @@ class TestUnifiedCacheSystem(unittest.TestCase):
 
         # Test thumbnail caching
         size = (150, 150)
-        self.assertTrue(
-            self.cache_system.cache_thumbnail(test_path, size, test_thumbnail_data)
-        )
+        self.assertTrue(self.cache_system.cache_thumbnail(test_path, size, test_thumbnail_data))
         cached_thumbnail = self.cache_system.get_cached_thumbnail(test_path, size)
         self.assertEqual(cached_thumbnail, test_thumbnail_data)
 
@@ -487,9 +475,7 @@ class TestStateManager(unittest.TestCase):
         self.assertEqual(self.state_manager.get_state_value("current_theme"), "dark")
 
         # Test default values
-        self.assertEqual(
-            self.state_manager.get_state_value("nonexistent", "default"), "default"
-        )
+        self.assertEqual(self.state_manager.get_state_value("nonexistent", "default"), "default")
 
     def test_state_validation(self):
         """Test state value validation"""
@@ -514,9 +500,7 @@ class TestStateManager(unittest.TestCase):
 
         self.assertEqual(self.state_manager.get_state_value("current_theme"), "blue")
         self.assertEqual(self.state_manager.get_state_value("thumbnail_size"), 200)
-        self.assertEqual(
-            self.state_manager.get_state_value("performance_mode"), "performance"
-        )
+        self.assertEqual(self.state_manager.get_state_value("performance_mode"), "performance")
 
     def test_change_listeners(self):
         """Test state change listeners"""
@@ -672,13 +656,9 @@ class TestKiroComponentsIntegration(unittest.TestCase):
             config_manager=self.config_manager, logger_system=self.logger_system
         )
 
-        self.cache_system = UnifiedCacheSystem(
-            config_manager=self.config_manager, logger_system=self.logger_system
-        )
+        self.cache_system = UnifiedCacheSystem(config_manager=self.config_manager, logger_system=self.logger_system)
 
-        self.state_manager = StateManager(
-            config_manager=self.config_manager, logger_system=self.logger_system
-        )
+        self.state_manager = StateManager(config_manager=self.config_manager, logger_system=self.logger_system)
 
     def tearDown(self):
         """Clean up integration test environment"""

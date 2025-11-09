@@ -301,19 +301,13 @@ class TestDataMigrationManager:
         assert "database" in legacy_mappings
         assert "settings" in legacy_mappings
 
-    def test_migrate_cursor_image_cache(
-        self, migration_manager, sample_cursor_image_cache
-    ):
+    def test_migrate_cursor_image_cache(self, migration_manager, sample_cursor_image_cache):
         """Test migration of CursorBLD image cache data"""
         cache_file, cache_data = sample_cursor_image_cache
 
         # Run migration for cursor_bld image_cache
-        mapping_config = migration_manager.migration_mappings["cursor_bld"][
-            "image_cache"
-        ]
-        result = migration_manager._migrate_file_data(
-            "cursor_bld", "image_cache", mapping_config
-        )
+        mapping_config = migration_manager.migration_mappings["cursor_bld"]["image_cache"]
+        result = migration_manager._migrate_file_data("cursor_bld", "image_cache", mapping_config)
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "cursor_bld_image_cache"
@@ -324,19 +318,13 @@ class TestDataMigrationManager:
         backup_files = list(migration_manager.backup_dir.glob("image_cache_*"))
         assert len(backup_files) > 0
 
-    def test_migrate_cursor_theme_data(
-        self, migration_manager, sample_cursor_theme_data
-    ):
+    def test_migrate_cursor_theme_data(self, migration_manager, sample_cursor_theme_data):
         """Test migration of CursorBLD theme data"""
         theme_file, theme_data = sample_cursor_theme_data
 
         # Run migration for cursor_bld theme_data
-        mapping_config = migration_manager.migration_mappings["cursor_bld"][
-            "theme_data"
-        ]
-        result = migration_manager._migrate_file_data(
-            "cursor_bld", "theme_data", mapping_config
-        )
+        mapping_config = migration_manager.migration_mappings["cursor_bld"]["theme_data"]
+        result = migration_manager._migrate_file_data("cursor_bld", "theme_data", mapping_config)
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "cursor_bld_theme_data"
@@ -348,12 +336,8 @@ class TestDataMigrationManager:
         exif_file, exif_data = sample_cs4_exif_data
 
         # Run migration for cs4_coding exif_cache
-        mapping_config = migration_manager.migration_mappings["cs4_coding"][
-            "exif_cache"
-        ]
-        result = migration_manager._migrate_file_data(
-            "cs4_coding", "exif_cache", mapping_config
-        )
+        mapping_config = migration_manager.migration_mappings["cs4_coding"]["exif_cache"]
+        result = migration_manager._migrate_file_data("cs4_coding", "exif_cache", mapping_config)
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "cs4_coding_exif_cache"
@@ -366,18 +350,14 @@ class TestDataMigrationManager:
 
         # Run migration for legacy database
         mapping_config = migration_manager.migration_mappings["legacy"]["database"]
-        result = migration_manager._migrate_database_data(
-            "legacy", "database", mapping_config
-        )
+        result = migration_manager._migrate_database_data("legacy", "database", mapping_config)
 
         assert isinstance(result, MigrationResult)
         assert result.source_type == "legacy_database"
         assert result.target_model == "ImageMetadata"
         assert result.migrated_count > 0  # Should have migrated some records
 
-    def test_migrate_all_data(
-        self, migration_manager, sample_cursor_image_cache, sample_cursor_theme_data
-    ):
+    def test_migrate_all_data(self, migration_manager, sample_cursor_image_cache, sample_cursor_theme_data):
         """Test migration of all data"""
         cache_file, cache_data = sample_cursor_image_cache
         theme_file, theme_data = sample_cursor_theme_data
@@ -396,9 +376,7 @@ class TestDataMigrationManager:
         assert len(cursor_results) > 0
 
         # Check that some migrations were successful
-        successful_migrations = [
-            r for r in cursor_results if r.status == MigrationStatus.SUCCESS
-        ]
+        successful_migrations = [r for r in cursor_results if r.status == MigrationStatus.SUCCESS]
         assert len(successful_migrations) > 0
 
     def test_create_image_metadata(self, migration_manager, temp_dir):
@@ -474,9 +452,7 @@ class TestDataMigrationManager:
     def test_transform_field_value(self, migration_manager):
         """Test field value transformation during migration"""
         # Test path transformation
-        path_value = migration_manager._transform_field_value(
-            "file_path", "/test/path", "ImageMetadata"
-        )
+        path_value = migration_manager._transform_field_value("file_path", "/test/path", "ImageMetadata")
         assert isinstance(path_value, Path)
         assert str(path_value) == "/test/path"
 
@@ -487,22 +463,16 @@ class TestDataMigrationManager:
         assert isinstance(datetime_value, datetime)
 
         # Test numeric transformation
-        int_value = migration_manager._transform_field_value(
-            "file_size", "1024", "ImageMetadata"
-        )
+        int_value = migration_manager._transform_field_value("file_size", "1024", "ImageMetadata")
         assert isinstance(int_value, int)
         assert int_value == 1024
 
-        float_value = migration_manager._transform_field_value(
-            "latitude", "35.6762", "ImageMetadata"
-        )
+        float_value = migration_manager._transform_field_value("latitude", "35.6762", "ImageMetadata")
         assert isinstance(float_value, float)
         assert float_value == 35.6762
 
         # Test boolean transformation
-        bool_value = migration_manager._transform_field_value(
-            "image_sort_ascending", "true", "ApplicationState"
-        )
+        bool_value = migration_manager._transform_field_value("image_sort_ascending", "true", "ApplicationState")
         assert isinstance(bool_value, bool)
         assert bool_value is True
 
@@ -572,12 +542,8 @@ class TestDataMigrationManager:
             json.dump(invalid_data, f)
 
         # Run migration
-        mapping_config = migration_manager.migration_mappings["cursor_bld"][
-            "image_cache"
-        ]
-        result = migration_manager._migrate_file_data(
-            "cursor_bld", "image_cache", mapping_config
-        )
+        mapping_config = migration_manager.migration_mappings["cursor_bld"]["image_cache"]
+        result = migration_manager._migrate_file_data("cursor_bld", "image_cache", mapping_config)
 
         # Should have validation results with issues
         assert len(result.validation_results) > 0

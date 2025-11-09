@@ -88,9 +88,7 @@ class TestConfigManager:
     def test_ai_config_update(self, config_manager):
         """Test updating AI-specific configuration"""
         # Update Copilot configuration
-        updates = {
-            "image_processing": {"high_quality_exif": False, "detailed_metadata": False}
-        }
+        updates = {"image_processing": {"high_quality_exif": False, "detailed_metadata": False}}
 
         assert config_manager.update_ai_config("copilot", updates)
 
@@ -108,9 +106,7 @@ class TestConfigManager:
         assert state.thumbnail_size == 150
 
         # Update state
-        assert config_manager.update_application_state(
-            current_theme="dark", thumbnail_size=200, images_processed=5
-        )
+        assert config_manager.update_application_state(current_theme="dark", thumbnail_size=200, images_processed=5)
 
         # Verify update
         updated_state = config_manager.get_application_state()
@@ -141,9 +137,7 @@ class TestConfigManager:
     def test_application_state_persistence(self, config_manager, temp_config_dir):
         """Test application state saving and loading"""
         # Update application state
-        config_manager.update_application_state(
-            current_theme="dark", thumbnail_size=200, images_processed=10
-        )
+        config_manager.update_application_state(current_theme="dark", thumbnail_size=200, images_processed=10)
 
         # Save state
         assert config_manager.save_application_state()
@@ -174,9 +168,7 @@ class TestConfigManager:
     def test_application_state_reset(self, config_manager):
         """Test application state reset"""
         # Modify state
-        config_manager.update_application_state(
-            current_theme="dark", thumbnail_size=200, images_processed=10
-        )
+        config_manager.update_application_state(current_theme="dark", thumbnail_size=200, images_processed=10)
 
         # Reset state
         assert config_manager.reset_application_state()
@@ -256,9 +248,7 @@ class TestConfigManager:
     def test_state_summary(self, config_manager):
         """Test application state summary"""
         # Update some state
-        config_manager.update_application_state(
-            current_theme="dark", images_processed=5
-        )
+        config_manager.update_application_state(current_theme="dark", images_processed=5)
 
         summary = config_manager.get_state_summary()
 
@@ -333,9 +323,7 @@ class TestConfigMigrationManager:
         migration_manager = ConfigMigrationManager(config_dir=temp_config_dir)
 
         # Test path transformation
-        result = migration_manager._transform_setting_value(
-            "current_folder", "/test/path"
-        )
+        result = migration_manager._transform_setting_value("current_folder", "/test/path")
         assert isinstance(result, str)
 
         # Test boolean transformation

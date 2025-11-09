@@ -24,10 +24,12 @@ class ThemeType(Enum):
     CUSTOM = "custom"
     IMPORTED = "imported"
 
+
 class ValidationError(Exception):
     """Theme validation error"""
 
     pass
+
 
 @dataclass
 class FontConfig:
@@ -69,6 +71,7 @@ class FontConfig:
         """Convert to CSS font specification"""
         return f"{self.style} {self.weight} {self.size}px {self.family}"
 
+
 @dataclass
 class ColorScheme:
     """Color scheme configuration with validation"""
@@ -102,9 +105,7 @@ class ColorScheme:
         for field_name in color_fields:
             color_value = getattr(self, field_name)
             if not self._is_valid_color(color_value):
-                raise ValidationError(
-                    f"Invalid color value for {field_name}: {color_value}"
-                )
+                raise ValidationError(f"Invalid color value for {field_name}: {color_value}")
 
     @staticmethod
     def _is_valid_color(color: str) -> bool:
@@ -113,9 +114,7 @@ class ColorScheme:
             return False
 
         # Hex colors
-        if re.match(r"^#[0-9A-Fa-f]{6}$", color) or re.match(
-            r"^#[0-9A-Fa-f]{3}$", color
-        ):
+        if re.match(r"^#[0-9A-Fa-f]{6}$", color) or re.match(r"^#[0-9A-Fa-f]{3}$", color):
             return True
 
         # RGB/RGBA colors
@@ -157,6 +156,7 @@ class ColorScheme:
             return luminance < 0.5
 
         return False
+
 
 @dataclass
 class ThemeConfiguration:
@@ -264,15 +264,11 @@ class ThemeConfiguration:
 
         # Validate name format (no spaces, special characters)
         if self.name and not re.match(r"^[a-zA-Z0-9_-]+$", self.name):
-            self.validation_errors.append(
-                "Theme name must contain only letters, numbers, underscores, and hyphens"
-            )
+            self.validation_errors.append("Theme name must contain only letters, numbers, underscores, and hyphens")
 
         # Validate version format (semantic versioning)
         if self.version and not re.match(r"^\d+\.\d+\.\d+$", self.version):
-            self.validation_errors.append(
-                "Theme version must follow semantic versioning (x.y.z)"
-            )
+            self.validation_errors.append("Theme version must follow semantic versioning (x.y.z)")
 
         # Validate colors
         try:
@@ -288,15 +284,11 @@ class ThemeConfiguration:
                 # FontConfig validation happens in __post_init__
                 pass
             except ValidationError as e:
-                self.validation_errors.append(
-                    f"Font '{font_name}' validation error: {e!s}"
-                )
+                self.validation_errors.append(f"Font '{font_name}' validation error: {e!s}")
 
         # Validate file path if provided
         if self.file_path and not self.file_path.exists():
-            self.validation_errors.append(
-                f"Theme file does not exist: {self.file_path}"
-            )
+            self.validation_errors.append(f"Theme file does not exist: {self.file_path}")
 
         self.is_valid = len(self.validation_errors) == 0
         return self.is_valid
@@ -353,12 +345,8 @@ class ThemeConfiguration:
             fonts[name] = FontConfig(**font_data)
 
         # Parse dates
-        created_date = datetime.fromisoformat(
-            data.get("created_date", datetime.now().isoformat())
-        )
-        modified_date = datetime.fromisoformat(
-            data.get("modified_date", datetime.now().isoformat())
-        )
+        created_date = datetime.fromisoformat(data.get("created_date", datetime.now().isoformat()))
+        modified_date = datetime.fromisoformat(data.get("modified_date", datetime.now().isoformat()))
 
         return cls(
             name=data["name"],
@@ -457,6 +445,7 @@ class ThemeConfiguration:
             css_vars.append(f"--font-{name}: {font.to_css()};")
 
         return "\n".join([":root {"] + [f"  {var}" for var in css_vars] + ["}"])
+
 
 @dataclass
 class ThemeInfo:

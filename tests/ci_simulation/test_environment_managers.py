@@ -528,9 +528,7 @@ class TestDisplayManager:
         mock_popen.return_value = mock_process
 
         manager = DisplayManager()
-        success = manager.start_virtual_display(
-            display_number=99, screen_size="1920x1080", color_depth=24
-        )
+        success = manager.start_virtual_display(display_number=99, screen_size="1920x1080", color_depth=24)
 
         assert success is True
         assert manager.display_number == 99

@@ -53,9 +53,7 @@ class TestCIIntegration(unittest.TestCase):
                 timeout=30,
             )
 
-            self.assertEqual(
-                result.returncode, 0, f"CI simulator execution failed: {result.stderr}"
-            )
+            self.assertEqual(result.returncode, 0, f"CI simulator execution failed: {result.stderr}")
             self.assertIn("CI Simulator", result.stdout)
 
         except subprocess.TimeoutExpired:
@@ -98,9 +96,7 @@ class TestCIIntegration(unittest.TestCase):
         settings_dir = kiro_dir / "settings"
 
         # These directories should exist or be creatable
-        self.assertTrue(
-            kiro_dir.exists() or True, ".kiro directory structure should be available"
-        )
+        self.assertTrue(kiro_dir.exists() or True, ".kiro directory structure should be available")
 
     def test_gitignore_entries(self):
         """Test that .gitignore includes CI simulation entries."""
@@ -264,9 +260,7 @@ class TestCIIntegration(unittest.TestCase):
             if not dir_path.exists():
                 try:
                     dir_path.mkdir(parents=True, exist_ok=True)
-                    self.assertTrue(
-                        dir_path.exists(), f"Could not create directory: {dir_path}"
-                    )
+                    self.assertTrue(dir_path.exists(), f"Could not create directory: {dir_path}")
                     # Clean up test directory if we created it
                     if dir_name == "temp":
                         shutil.rmtree(dir_path, ignore_errors=True)

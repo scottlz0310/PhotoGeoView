@@ -14,9 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # ログ設定
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("github_actions_ai_analyzer")
 
 
@@ -71,9 +69,7 @@ class GitHubActionsAnalyzer:
                     analysis["issues"].append(issue)
 
                     # 改善提案を生成
-                    recommendation = self._generate_recommendation(
-                        check_name, status, message
-                    )
+                    recommendation = self._generate_recommendation(check_name, status, message)
                     if recommendation:
                         analysis["recommendations"].append(recommendation)
 
@@ -120,9 +116,7 @@ class GitHubActionsAnalyzer:
                     {
                         "type": "windows_specific",
                         "description": "Windows固有の問題が検出されました",
-                        "count": analysis["patterns_found"]["windows_specific"][
-                            "count"
-                        ],
+                        "count": analysis["patterns_found"]["windows_specific"]["count"],
                     }
                 )
 
@@ -136,9 +130,7 @@ class GitHubActionsAnalyzer:
                 )
 
             # 改善提案を生成
-            analysis["recommendations"] = self._generate_log_recommendations(
-                analysis["patterns_found"]
-            )
+            analysis["recommendations"] = self._generate_log_recommendations(analysis["patterns_found"])
 
             return analysis
 
@@ -146,9 +138,7 @@ class GitHubActionsAnalyzer:
             logger.error(f"ログファイル解析エラー: {e}")
             return {"error": str(e)}
 
-    def _generate_recommendation(
-        self, check_name: str, status: str, message: str
-    ) -> str | None:
+    def _generate_recommendation(self, check_name: str, status: str, message: str) -> str | None:
         """チェック結果に基づく改善提案を生成"""
         recommendations = {
             "テストチェック": {
@@ -172,19 +162,13 @@ class GitHubActionsAnalyzer:
         recommendations = []
 
         if patterns_found.get("error"):
-            recommendations.append(
-                "エラーが多数検出されています。ログの詳細を確認し、根本原因を特定してください。"
-            )
+            recommendations.append("エラーが多数検出されています。ログの詳細を確認し、根本原因を特定してください。")
 
         if patterns_found.get("windows_specific"):
-            recommendations.append(
-                "Windows固有の問題が検出されています。Windows環境でのテスト設定を見直してください。"
-            )
+            recommendations.append("Windows固有の問題が検出されています。Windows環境でのテスト設定を見直してください。")
 
         if patterns_found.get("test_failure"):
-            recommendations.append(
-                "テスト失敗が検出されています。テストケースとテスト環境を確認してください。"
-            )
+            recommendations.append("テスト失敗が検出されています。テストケースとテスト環境を確認してください。")
 
         if patterns_found.get("import_error"):
             recommendations.append(
@@ -192,14 +176,10 @@ class GitHubActionsAnalyzer:
             )
 
         if patterns_found.get("permission_error"):
-            recommendations.append(
-                "権限エラーが検出されています。ファイル権限とアクセス設定を確認してください。"
-            )
+            recommendations.append("権限エラーが検出されています。ファイル権限とアクセス設定を確認してください。")
 
         if patterns_found.get("memory_error"):
-            recommendations.append(
-                "メモリエラーが検出されています。メモリ使用量を最適化してください。"
-            )
+            recommendations.append("メモリエラーが検出されています。メモリ使用量を最適化してください。")
 
         if patterns_found.get("coverage_error"):
             recommendations.append(
@@ -207,9 +187,7 @@ class GitHubActionsAnalyzer:
             )
 
         if patterns_found.get("qt_error"):
-            recommendations.append(
-                "Qt関連のエラーが検出されています。Qt環境設定を確認してください。"
-            )
+            recommendations.append("Qt関連のエラーが検出されています。Qt環境設定を確認してください。")
 
         return recommendations
 
@@ -233,9 +211,7 @@ class GitHubActionsAnalyzer:
         all_issues = []
         all_recommendations = []
 
-        for json_file in sorted(
-            json_files, key=lambda x: x.stat().st_mtime, reverse=True
-        )[:10]:  # 最新10件
+        for json_file in sorted(json_files, key=lambda x: x.stat().st_mtime, reverse=True)[:10]:  # 最新10件
             report_analysis = self.analyze_ci_report(json_file)
 
             if "error" not in report_analysis:
@@ -262,9 +238,7 @@ class GitHubActionsAnalyzer:
 
         analysis["common_issues"] = [
             {"type": issue_type, "count": count}
-            for issue_type, count in sorted(
-                issue_types.items(), key=lambda x: x[1], reverse=True
-            )
+            for issue_type, count in sorted(issue_types.items(), key=lambda x: x[1], reverse=True)
         ]
 
         # 改善提案を統合
@@ -308,9 +282,7 @@ class GitHubActionsAnalyzer:
 
             if log_analysis.get("patterns_found"):
                 report.append("### 検出されたパターン")
-                for pattern_name, pattern_data in log_analysis[
-                    "patterns_found"
-                ].items():
+                for pattern_name, pattern_data in log_analysis["patterns_found"].items():
                     count = pattern_data.get("count", 0)
                     report.append(f"- **{pattern_name}**: {count}回")
                 report.append("")
@@ -318,9 +290,7 @@ class GitHubActionsAnalyzer:
             if log_analysis.get("issues"):
                 report.append("### 検出された問題")
                 for issue in log_analysis["issues"]:
-                    report.append(
-                        f"- **{issue['type']}**: {issue['description']} ({issue['count']}回)"
-                    )
+                    report.append(f"- **{issue['type']}**: {issue['description']} ({issue['count']}回)")
                 report.append("")
 
             if log_analysis.get("recommendations"):
@@ -363,10 +333,7 @@ def main():
     print(report)
 
     # ファイルに保存
-    output_file = (
-        reports_dir
-        / f"ai_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-    )
+    output_file = reports_dir / f"ai_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(report)
 

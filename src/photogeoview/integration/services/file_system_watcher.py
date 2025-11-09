@@ -57,6 +57,7 @@ class FileChangeType(Enum):
     MODIFIED = "modified"
     MOVED = "moved"
 
+
 class FileSystemWatcher:
     """
     ファイルシステム監視サービス
@@ -106,9 +107,7 @@ class FileSystemWatcher:
         self.enable_monitoring = enable_monitoring and self.watchdog_available
 
         # コールバック関数の管理
-        self.change_listeners: list[
-            Callable[[Path, FileChangeType, Path | None], None]
-        ] = []
+        self.change_listeners: list[Callable[[Path, FileChangeType, Path | None], None]] = []
 
         # 監視統計情報
         self.watch_stats = {
@@ -157,9 +156,7 @@ class FileSystemWatcher:
         """
 
         # 操作コンテキストを使用してログ記録を自動化
-        with self.logger_system.operation_context(
-            AIComponent.KIRO, "start_file_watching"
-        ):
+        with self.logger_system.operation_context(AIComponent.KIRO, "start_file_watching"):
             start_time = time.time()
             watch_details = {
                 "folder_path": str(folder_path),
@@ -309,14 +306,10 @@ class FileSystemWatcher:
             監視停止に成功した場合True、失敗した場合False
         """
 
-        with self.logger_system.operation_context(
-            AIComponent.KIRO, "stop_file_watching"
-        ):
+        with self.logger_system.operation_context(AIComponent.KIRO, "stop_file_watching"):
             stop_time = time.time()
             stop_details = {
-                "current_folder": (
-                    str(self.current_folder) if self.current_folder else None
-                ),
+                "current_folder": (str(self.current_folder) if self.current_folder else None),
                 "was_watching": self.is_watching,
                 "stop_time": datetime.now().isoformat(),
             }
@@ -333,9 +326,7 @@ class FileSystemWatcher:
 
                 # 監視統計の記録
                 if self.watch_stats["start_time"]:
-                    watch_duration = (
-                        datetime.now() - self.watch_stats["start_time"]
-                    ).total_seconds()
+                    watch_duration = (datetime.now() - self.watch_stats["start_time"]).total_seconds()
                     stop_details.update(
                         {
                             "watch_duration": watch_duration,
@@ -411,9 +402,7 @@ class FileSystemWatcher:
                 self.current_folder = None
                 return False
 
-    def add_change_listener(
-        self, callback: Callable[[Path, FileChangeType, Path | None], None]
-    ):
+    def add_change_listener(self, callback: Callable[[Path, FileChangeType, Path | None], None]):
         """
         ファイル変更通知のコールバック関数を追加する
 
@@ -443,9 +432,7 @@ class FileSystemWatcher:
                 level="DEBUG",
             )
 
-    def remove_change_listener(
-        self, callback: Callable[[Path, FileChangeType, Path | None], None]
-    ):
+    def remove_change_listener(self, callback: Callable[[Path, FileChangeType, Path | None], None]):
         """
         ファイル変更通知のコールバック関数を削除する
 
@@ -484,9 +471,7 @@ class FileSystemWatcher:
 
         # 監視期間の計算
         if self.is_watching and self.watch_stats["start_time"]:
-            status["watch_duration"] = (
-                datetime.now() - self.watch_stats["start_time"]
-            ).total_seconds()
+            status["watch_duration"] = (datetime.now() - self.watch_stats["start_time"]).total_seconds()
 
         return status
 
@@ -654,18 +639,11 @@ class FileSystemWatcher:
 
         watch_duration = 0.0
         if self.is_watching and self.watch_stats["start_time"]:
-            watch_duration = (
-                datetime.now() - self.watch_stats["start_time"]
-            ).total_seconds()
+            watch_duration = (datetime.now() - self.watch_stats["start_time"]).total_seconds()
 
-        event_rate = (
-            self.watch_stats["total_events"] / max(1, watch_duration)
-            if watch_duration > 0
-            else 0
-        )
+        event_rate = self.watch_stats["total_events"] / max(1, watch_duration) if watch_duration > 0 else 0
         filter_efficiency = (
-            self.watch_stats["filtered_events"]
-            / max(1, self.watch_stats["total_events"])
+            self.watch_stats["filtered_events"] / max(1, self.watch_stats["total_events"])
             if self.watch_stats["total_events"] > 0
             else 0
         )
@@ -673,9 +651,7 @@ class FileSystemWatcher:
         summary = {
             "monitoring": {
                 "is_watching": self.is_watching,
-                "current_folder": (
-                    str(self.current_folder) if self.current_folder else None
-                ),
+                "current_folder": (str(self.current_folder) if self.current_folder else None),
                 "watch_duration": watch_duration,
                 "watchdog_available": self.watchdog_available,
             },
@@ -716,9 +692,8 @@ class FileSystemWatcher:
             )
 
         # 詳細統計をパフォーマンスログに記録
-        self.logger_system.log_performance(
-            AIComponent.KIRO, "watcher_detailed_performance", summary
-        )
+        self.logger_system.log_performance(AIComponent.KIRO, "watcher_detailed_performance", summary)
+
 
 if WATCHDOG_AVAILABLE:
 
@@ -848,9 +823,7 @@ if WATCHDOG_AVAILABLE:
                         level="DEBUG",
                     )
 
-                    self.watcher._notify_listeners(
-                        dest_path, FileChangeType.MOVED, src_path
-                    )
+                    self.watcher._notify_listeners(dest_path, FileChangeType.MOVED, src_path)
 
 else:
 

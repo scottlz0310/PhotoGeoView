@@ -39,9 +39,7 @@ class TestFileDiscoveryCache(unittest.TestCase):
         import platform
 
         if platform.system() == "Windows":
-            self.skipTest(
-                "Windows環境ではファイルディスカバリーキャッシュテストをスキップ"
-            )
+            self.skipTest("Windows環境ではファイルディスカバリーキャッシュテストをスキップ")
 
         self.logger_system = LoggerSystem()
         self.cache = FileDiscoveryCache(
@@ -314,9 +312,7 @@ class TestFileDiscoveryResult(unittest.TestCase):
         )
 
         # キャッシュキーが正しく生成されることを確認
-        expected_key = (
-            f"file_{self.test_file.stem}_{file_stat.st_size}_{int(file_stat.st_mtime)}"
-        )
+        expected_key = f"file_{self.test_file.stem}_{file_stat.st_size}_{int(file_stat.st_mtime)}"
         self.assertEqual(result.cache_key, expected_key)
 
     def test_expiration_check(self):

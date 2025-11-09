@@ -32,6 +32,7 @@ class ValidationSeverity(Enum):
     ERROR = "error"
     CRITICAL = "critical"
 
+
 @dataclass
 class ValidationResult:
     """Result of a validation operation"""
@@ -41,9 +42,7 @@ class ValidationResult:
     warnings: list[dict[str, Any]] = field(default_factory=list)
     info: list[dict[str, Any]] = field(default_factory=list)
 
-    def add_issue(
-        self, severity: ValidationSeverity, field: str, message: str, value: Any = None
-    ):
+    def add_issue(self, severity: ValidationSeverity, field: str, message: str, value: Any = None):
         """Add a validation issue"""
         issue = {
             "field": field,
@@ -52,10 +51,7 @@ class ValidationResult:
             "timestamp": datetime.now().isoformat(),
         }
 
-        if (
-            severity == ValidationSeverity.ERROR
-            or severity == ValidationSeverity.CRITICAL
-        ):
+        if severity == ValidationSeverity.ERROR or severity == ValidationSeverity.CRITICAL:
             self.errors.append(issue)
             self.is_valid = False
         elif severity == ValidationSeverity.WARNING:
@@ -77,6 +73,7 @@ class ValidationResult:
     def has_warnings(self) -> bool:
         """Check if there are any warnings"""
         return len(self.warnings) > 0
+
 
 class DataValidator:
     """
@@ -119,9 +116,7 @@ class DataValidator:
             "hex": re.compile(r"^#[0-9A-Fa-f]{6}$"),
             "hex_short": re.compile(r"^#[0-9A-Fa-f]{3}$"),
             "rgb": re.compile(r"^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$"),
-            "rgba": re.compile(
-                r"^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[0-1]?\.?\d*\s*\)$"
-            ),
+            "rgba": re.compile(r"^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[0-1]?\.?\d*\s*\)$"),
         }
 
     def _setup_validation_rules(self) -> dict[str, dict[str, Any]]:
@@ -191,10 +186,7 @@ class DataValidator:
                         "file_path",
                         f"File does not exist: {metadata.file_path}",
                     )
-                elif (
-                    metadata.file_path.suffix.lower()
-                    not in self.supported_image_formats
-                ):
+                elif metadata.file_path.suffix.lower() not in self.supported_image_formats:
                     result.add_issue(
                         ValidationSeverity.WARNING,
                         "file_path",
@@ -256,9 +248,7 @@ class DataValidator:
 
         return result
 
-    def validate_theme_configuration(
-        self, theme: ThemeConfiguration
-    ) -> ValidationResult:
+    def validate_theme_configuration(self, theme: ThemeConfiguration) -> ValidationResult:
         """Validate ThemeConfiguration instance"""
         result = ValidationResult(is_valid=True)
         rules = self.validation_rules["theme_configuration"]
@@ -405,9 +395,7 @@ class DataValidator:
             results["image_metadata"] = self.validate_image_metadata(image_metadata)
 
         if theme_config:
-            results["theme_configuration"] = self.validate_theme_configuration(
-                theme_config
-            )
+            results["theme_configuration"] = self.validate_theme_configuration(theme_config)
 
         if app_state:
             results["application_state"] = self.validate_application_state(app_state)

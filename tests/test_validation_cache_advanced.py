@@ -103,9 +103,7 @@ class TestValidationCacheAdvanced(unittest.TestCase):
 
         # ミス数が増加していることを確認
         stats_after_miss = self.cache.get_cache_stats()
-        self.assertEqual(
-            stats_after_miss["validation_cache"]["misses"], initial_misses + 1
-        )
+        self.assertEqual(stats_after_miss["validation_cache"]["misses"], initial_misses + 1)
 
         # 結果をキャッシュ
         self.cache.cache_validation_result(self.invalid_file, False)
@@ -159,18 +157,14 @@ class TestValidationCacheAdvanced(unittest.TestCase):
             test_files.append(test_file)
 
             # バリデーション結果をキャッシュ
-            self.cache.cache_validation_result(
-                test_file, i % 2 == 0
-            )  # 偶数は有効、奇数は無効
+            self.cache.cache_validation_result(test_file, i % 2 == 0)  # 偶数は有効、奇数は無効
 
         # 統計を確認
         stats = self.cache.get_cache_stats()
 
         # エントリ数がmax_file_entries * 2（バリデーションキャッシュの制限）を超えていないことを確認
         max_validation_entries = self.cache.max_file_entries * 2
-        self.assertLessEqual(
-            stats["validation_cache"]["entries"], max_validation_entries
-        )
+        self.assertLessEqual(stats["validation_cache"]["entries"], max_validation_entries)
 
         # 削除が発生していることを確認
         self.assertGreater(stats["validation_cache"]["evictions"], 0)

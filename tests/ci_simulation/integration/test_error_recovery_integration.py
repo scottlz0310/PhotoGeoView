@@ -411,9 +411,7 @@ checkers:
                 mock_which.side_effect = mock_which_missing
 
                 with patch("subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(
-                        returncode=0, stdout="Success", stderr=""
-                    )
+                    mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
                     # Run simulation
                     result = simulator.run(checks=["code_quality"])
@@ -427,10 +425,7 @@ checkers:
 
                     # Check that skipped checks mention missing dependencies
                     for check in skipped_checks:
-                        assert (
-                            "not available" in check.output.lower()
-                            or "missing" in check.output.lower()
-                        )
+                        assert "not available" in check.output.lower() or "missing" in check.output.lower()
 
         finally:
             os.chdir(original_cwd)
@@ -525,9 +520,7 @@ checkers:
                                 stderr="Formatting issues found",
                             )
                         elif "pytest" in cmd_str:
-                            return Mock(
-                                returncode=1, stdout="", stderr="Some tests failed"
-                            )
+                            return Mock(returncode=1, stdout="", stderr="Some tests failed")
 
                         # Other tools succeed
                         else:
@@ -583,27 +576,17 @@ checkers:
 
                         # Different types of errors for different tools
                         if "black" in cmd_str:
-                            return Mock(
-                                returncode=1, stdout="", stderr="Syntax error in file"
-                            )
+                            return Mock(returncode=1, stdout="", stderr="Syntax error in file")
                         elif "flake8" in cmd_str:
-                            return Mock(
-                                returncode=1, stdout="Style violations found", stderr=""
-                            )
+                            return Mock(returncode=1, stdout="Style violations found", stderr="")
                         elif "mypy" in cmd_str:
-                            return Mock(
-                                returncode=1, stdout="Type errors found", stderr=""
-                            )
+                            return Mock(returncode=1, stdout="Type errors found", stderr="")
                         elif "pytest" in cmd_str:
                             return Mock(returncode=1, stdout="", stderr="Test failures")
                         elif "safety" in cmd_str:
-                            return Mock(
-                                returncode=1, stdout="Vulnerabilities found", stderr=""
-                            )
+                            return Mock(returncode=1, stdout="Vulnerabilities found", stderr="")
                         elif "bandit" in cmd_str:
-                            return Mock(
-                                returncode=1, stdout="Security issues found", stderr=""
-                            )
+                            return Mock(returncode=1, stdout="Security issues found", stderr="")
 
                         return Mock(returncode=0, stdout="Success", stderr="")
 
@@ -641,11 +624,7 @@ checkers:
                         "vulnerabilit",
                         "security",
                     ]
-                    found_error_types = [
-                        error_type
-                        for error_type in error_types
-                        if error_type in error_text
-                    ]
+                    found_error_types = [error_type for error_type in error_types if error_type in error_text]
                     assert len(found_error_types) > 0
 
         finally:
@@ -717,9 +696,7 @@ class TestSystemResilienceIntegration:
 
                     def mock_subprocess_permission_error(*args, **kwargs):
                         # Simulate permission error
-                        raise PermissionError(
-                            "Permission denied: cannot write to directory"
-                        )
+                        raise PermissionError("Permission denied: cannot write to directory")
 
                     mock_run.side_effect = mock_subprocess_permission_error
 
@@ -819,9 +796,7 @@ class TestSystemResilienceIntegration:
                 mock_which.side_effect = mock_which_partial
 
                 with patch("subprocess.run") as mock_run:
-                    mock_run.return_value = Mock(
-                        returncode=0, stdout="Success", stderr=""
-                    )
+                    mock_run.return_value = Mock(returncode=0, stdout="Success", stderr="")
 
                     # Run simulation
                     result = simulator.run(checks=["code_quality", "security", "tests"])
@@ -835,11 +810,7 @@ class TestSystemResilienceIntegration:
                     skipped_checks = result.get_checks_by_status(CheckStatus.SKIPPED)
 
                     # Should have at least some results
-                    total_checks = (
-                        len(successful_checks)
-                        + len(failed_checks)
-                        + len(skipped_checks)
-                    )
+                    total_checks = len(successful_checks) + len(failed_checks) + len(skipped_checks)
                     assert total_checks > 0
 
                     # Should have some skipped checks due to missing tools

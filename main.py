@@ -173,17 +173,13 @@ def main():
 
         logger_system = LoggerSystem()
         config_manager = ConfigManager(logger_system=logger_system)
-        state_manager = StateManager(
-            config_manager=config_manager, logger_system=logger_system
-        )
+        state_manager = StateManager(config_manager=config_manager, logger_system=logger_system)
 
         controller_msg = "🎯 アプリケーションコントローラーを初期化中..."
         logger.info(controller_msg)
         print(controller_msg)
 
-        controller = AppController(
-            config_manager=config_manager, logger_system=logger_system
-        )
+        controller = AppController(config_manager=config_manager, logger_system=logger_system)
 
         # メインウィンドウを作成・表示
         window_msg = "🖼️  メインウィンドウを表示中..."

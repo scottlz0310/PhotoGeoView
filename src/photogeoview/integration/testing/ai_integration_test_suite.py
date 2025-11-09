@@ -29,6 +29,7 @@ class TestResult:
     performance_data: dict[str, Any] | None = None
     timestamp: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class IntegrationTestResult:
     """Integration test result with multi-AI coordination"""

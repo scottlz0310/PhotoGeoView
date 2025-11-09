@@ -185,12 +185,8 @@ class IntegrationReportGenerator:
             total_tests=total_tests,
             regressions=regressions,
             improvements=improvements,
-            average_execution_time=(
-                sum(execution_times) / len(execution_times) if execution_times else 0.0
-            ),
-            memory_usage_mb=(
-                sum(memory_usages) / len(memory_usages) if memory_usages else 0.0
-            ),
+            average_execution_time=(sum(execution_times) / len(execution_times) if execution_times else 0.0),
+            memory_usage_mb=(sum(memory_usages) / len(memory_usages) if memory_usages else 0.0),
         )
 
     def check_ai_component_status(self) -> Dict[str, str]:
@@ -239,9 +235,7 @@ class IntegrationReportGenerator:
         # テスト結果に基づく推奨事項
         failed_tests = [t for t in report.test_results if t.status == "failed"]
         if failed_tests:
-            recommendations.append(
-                f"❌ {len(failed_tests)}個の失敗テストを修正してください"
-            )
+            recommendations.append(f"❌ {len(failed_tests)}個の失敗テストを修正してください")
 
         # 品質メトリクスに基づく推奨事項
         if report.quality_metrics.quality_score < 70:
@@ -261,15 +255,9 @@ class IntegrationReportGenerator:
             )
 
         # AIコンポーネント状態に基づく推奨事項
-        failed_components = [
-            comp
-            for comp, status in report.ai_component_status.items()
-            if "❌" in status
-        ]
+        failed_components = [comp for comp, status in report.ai_component_status.items() if "❌" in status]
         if failed_components:
-            recommendations.append(
-                f"🤖 AIコンポーネント({', '.join(failed_components)})の問題を解決してください"
-            )
+            recommendations.append(f"🤖 AIコンポーネント({', '.join(failed_components)})の問題を解決してください")
 
         if not recommendations:
             recommendations.append("✅ すべての品質基準を満たしています")
@@ -309,9 +297,7 @@ class IntegrationReportGenerator:
 
         return report
 
-    def save_report_markdown(
-        self, report: IntegrationReport, output_path: Path
-    ) -> None:
+    def save_report_markdown(self, report: IntegrationReport, output_path: Path) -> None:
         """レポートをMarkdown形式で保存"""
         lines = [
             "# PhotoGeoView AI統合 CI/CDレポート",
@@ -428,9 +414,7 @@ class IntegrationReportGenerator:
             "recommendations": report.recommendations,
         }
 
-        output_path.write_text(
-            json.dumps(report_data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        output_path.write_text(json.dumps(report_data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def main():
@@ -438,9 +422,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="AI統合レポート生成")
-    parser.add_argument(
-        "--output-dir", type=Path, default=Path("reports"), help="出力ディレクトリ"
-    )
+    parser.add_argument("--output-dir", type=Path, default=Path("reports"), help="出力ディレクトリ")
     parser.add_argument(
         "--format",
         choices=["markdown", "json", "both"],

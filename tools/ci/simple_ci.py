@@ -52,14 +52,10 @@ class SimpleCI:
 
         errors = []
         for py_file in python_files[:20]:  # 最初の20ファイルのみチェック
-            success, _, stderr = self.run_command(
-                [sys.executable, "-m", "py_compile", str(py_file)], timeout=10
-            )
+            success, _, stderr = self.run_command([sys.executable, "-m", "py_compile", str(py_file)], timeout=10)
 
             if not success and "SyntaxError" in stderr:
-                errors.append(
-                    f"{py_file.name}: {stderr.split('SyntaxError:')[-1].strip()}"
-                )
+                errors.append(f"{py_file.name}: {stderr.split('SyntaxError:')[-1].strip()}")
 
         if errors:
             return {
@@ -108,9 +104,7 @@ class SimpleCI:
             return {"status": "warn", "message": "テストファイルが見つかりません"}
 
         # pytest --collect-only で テスト収集のみ実行
-        success, stdout, stderr = self.run_command(
-            [sys.executable, "-m", "pytest", "--collect-only", "-q"], timeout=30
-        )
+        success, stdout, stderr = self.run_command([sys.executable, "-m", "pytest", "--collect-only", "-q"], timeout=30)
 
         if success:
             test_count = stdout.count("::") if "::" in stdout else len(test_files)
@@ -132,9 +126,7 @@ class SimpleCI:
             return {"status": "warn", "message": "pyproject.tomlが見つかりません"}
 
         # pip check で依存関係の整合性をチェック（pyproject管理）
-        success, stdout, stderr = self.run_command(
-            [sys.executable, "-m", "pip", "check"], timeout=30
-        )
+        success, stdout, stderr = self.run_command([sys.executable, "-m", "pip", "check"], timeout=30)
 
         if success:
             return {"status": "pass", "message": "依存関係の整合性OK"}
@@ -191,9 +183,7 @@ class SimpleCI:
                 # 結果表示
                 status_icons = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}
                 icon = status_icons.get(result["status"], "❓")
-                print(
-                    f"{icon} {check_name}: {result['message']} ({result['duration']}s)"
-                )
+                print(f"{icon} {check_name}: {result['message']} ({result['duration']}s)")
 
                 # 詳細があれば表示
                 if "details" in result:
@@ -221,9 +211,7 @@ class SimpleCI:
         print("=" * 50)
 
         for status, count in status_counts.items():
-            icon = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}.get(
-                status, "❓"
-            )
+            icon = {"pass": "✅", "warn": "⚠️", "fail": "❌", "skip": "⏭️"}.get(status, "❓")
             print(f"{icon} {status.upper()}: {count}個")
 
         print(f"\n⏱️  総実行時間: {total_duration}秒")
@@ -301,9 +289,7 @@ def main():
         default="json",
         help="レポート形式",
     )
-    parser.add_argument(
-        "--no-report", action="store_true", help="レポート保存をスキップ"
-    )
+    parser.add_argument("--no-report", action="store_true", help="レポート保存をスキップ")
 
     args = parser.parse_args()
 

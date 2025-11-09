@@ -68,9 +68,7 @@ class ColorPickerWidget(QWidget):
         # Color preview button
         self.color_button = QPushButton()
         self.color_button.setFixedSize(40, 30)
-        self.color_button.setStyleSheet(
-            f"background-color: {self.current_color}; border: 1px solid #ccc;"
-        )
+        self.color_button.setStyleSheet(f"background-color: {self.current_color}; border: 1px solid #ccc;")
 
         # Color value input
         self.color_input = QLineEdit(self.current_color)
@@ -113,9 +111,7 @@ class ColorPickerWidget(QWidget):
         """Set the current color"""
         if self._is_valid_color(color):
             self.current_color = color
-            self.color_button.setStyleSheet(
-                f"background-color: {color}; border: 1px solid #ccc;"
-            )
+            self.color_button.setStyleSheet(f"background-color: {color}; border: 1px solid #ccc;")
             if self.color_input.text() != color:
                 self.color_input.setText(color)
             self.color_changed.emit(self.property_name, color)
@@ -124,14 +120,13 @@ class ColorPickerWidget(QWidget):
         """Get the current color"""
         return self.current_color
 
+
 class FontPickerWidget(QWidget):
     """Font picker widget with preview"""
 
     font_changed = Signal(str, dict)  # property_name, font_config
 
-    def __init__(
-        self, property_name: str, initial_font: FontConfig = None, parent=None
-    ):
+    def __init__(self, property_name: str, initial_font: FontConfig = None, parent=None):
         super().__init__(parent)
         self.property_name = property_name
         self.current_font = initial_font or FontConfig("Arial", 12)
@@ -271,6 +266,7 @@ class FontPickerWidget(QWidget):
         """Get the current font"""
         return self.current_font
 
+
 class ThemePreviewWidget(QWidget):
     """Widget for previewing theme changes in real-time"""
 
@@ -355,6 +351,7 @@ class ThemePreviewWidget(QWidget):
 
         self.preview_frame.setStyleSheet(stylesheet)
 
+
 class ThemeEditorDialog(QWidget):
     """Main theme editor dialog for creating and editing custom themes"""
 
@@ -377,9 +374,7 @@ class ThemeEditorDialog(QWidget):
 
         # Theme being edited (None for new theme)
         self.original_theme = theme_config
-        self.current_theme = (
-            theme_config.copy() if theme_config else self._create_new_theme()
-        )
+        self.current_theme = theme_config.copy() if theme_config else self._create_new_theme()
 
         self.setWindowTitle("Theme Editor" if theme_config else "New Theme")
         self.setMinimumSize(800, 600)
@@ -680,9 +675,7 @@ class ThemeEditorDialog(QWidget):
 
         # Custom properties
         if self.current_theme.custom_properties:
-            self.properties_text.setPlainText(
-                json.dumps(self.current_theme.custom_properties, indent=2)
-            )
+            self.properties_text.setPlainText(json.dumps(self.current_theme.custom_properties, indent=2))
 
         # Update preview
         self._update_preview()
@@ -797,9 +790,7 @@ class ThemeEditorDialog(QWidget):
         if file_path:
             try:
                 if self.current_theme.save_to_file(Path(file_path)):
-                    QMessageBox.information(
-                        self, "Success", f"Theme exported to {file_path}"
-                    )
+                    QMessageBox.information(self, "Success", f"Theme exported to {file_path}")
                 else:
                     QMessageBox.critical(self, "Error", "Failed to export theme.")
             except Exception as e:
@@ -892,6 +883,7 @@ class ThemeEditorDialog(QWidget):
                 event.ignore()
         else:
             event.accept()
+
 
 class ThemeImportDialog(QWidget):
     """Dialog for importing custom themes with validation"""
@@ -1018,9 +1010,7 @@ Type: {theme_config.theme_type.value}
                 is_valid = theme_config.validate()
 
                 if is_valid:
-                    self.validation_text.setPlainText(
-                        "✓ Theme file is valid and ready to import."
-                    )
+                    self.validation_text.setPlainText("✓ Theme file is valid and ready to import.")
                     self.validation_text.setStyleSheet("color: green;")
                     self.import_button.setEnabled(True)
                 else:
@@ -1038,9 +1028,7 @@ Type: {theme_config.theme_type.value}
     def _show_invalid_file(self):
         """Show invalid file message"""
         self.theme_info_text.setPlainText("Invalid theme file format.")
-        self.validation_text.setPlainText(
-            "✗ Unable to read theme file. Please check the file format."
-        )
+        self.validation_text.setPlainText("✗ Unable to read theme file. Please check the file format.")
         self.validation_text.setStyleSheet("color: red;")
         self.import_button.setEnabled(False)
 
@@ -1073,9 +1061,7 @@ Type: {theme_config.theme_type.value}
                 self.theme_imported.emit(theme_name)
                 self.logger.info(f"Theme imported successfully: {theme_name}")
 
-                QMessageBox.information(
-                    self, "Success", f"Theme '{theme_name}' imported successfully!"
-                )
+                QMessageBox.information(self, "Success", f"Theme '{theme_name}' imported successfully!")
                 self.close()
             else:
                 self.progress_bar.setVisible(False)

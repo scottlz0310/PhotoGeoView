@@ -21,9 +21,7 @@ class TestCheckResult:
 
     def test_check_result_creation(self):
         """Test basic CheckResult creation."""
-        result = CheckResult(
-            name="test_check", status=CheckStatus.SUCCESS, duration=1.5
-        )
+        result = CheckResult(name="test_check", status=CheckStatus.SUCCESS, duration=1.5)
 
         assert result.name == "test_check"
         assert result.status == CheckStatus.SUCCESS
@@ -258,9 +256,7 @@ class TestSimulationResult:
         assert warning_result.is_successful is True
         assert failure_result.is_successful is False
 
-    def test_failed_checks_property(
-        self, sample_check_result, sample_failed_check_result
-    ):
+    def test_failed_checks_property(self, sample_check_result, sample_failed_check_result):
         """Test failed_checks property."""
         result = SimulationResult(
             CheckStatus.WARNING,
@@ -274,9 +270,7 @@ class TestSimulationResult:
         assert len(failed) == 1
         assert failed[0].name == "failed_check"
 
-    def test_successful_checks_property(
-        self, sample_check_result, sample_failed_check_result
-    ):
+    def test_successful_checks_property(self, sample_check_result, sample_failed_check_result):
         """Test successful_checks property."""
         result = SimulationResult(
             CheckStatus.WARNING,
@@ -290,9 +284,7 @@ class TestSimulationResult:
         assert len(successful) == 1
         assert successful[0].name == "test_check"
 
-    def test_get_checks_by_status(
-        self, sample_check_result, sample_failed_check_result
-    ):
+    def test_get_checks_by_status(self, sample_check_result, sample_failed_check_result):
         """Test get_checks_by_status method."""
         result = SimulationResult(
             CheckStatus.WARNING,
@@ -329,13 +321,8 @@ class TestSimulationResult:
 
         assert restored.overall_status == sample_simulation_result.overall_status
         assert restored.total_duration == sample_simulation_result.total_duration
-        assert len(restored.check_results) == len(
-            sample_simulation_result.check_results
-        )
-        assert (
-            restored.python_versions_tested
-            == sample_simulation_result.python_versions_tested
-        )
+        assert len(restored.check_results) == len(sample_simulation_result.check_results)
+        assert restored.python_versions_tested == sample_simulation_result.python_versions_tested
         assert restored.summary == sample_simulation_result.summary
 
     def test_save_and_load_from_file(self, sample_simulation_result, temp_dir):
@@ -351,9 +338,7 @@ class TestSimulationResult:
 
         assert loaded_result.overall_status == sample_simulation_result.overall_status
         assert loaded_result.total_duration == sample_simulation_result.total_duration
-        assert len(loaded_result.check_results) == len(
-            sample_simulation_result.check_results
-        )
+        assert len(loaded_result.check_results) == len(sample_simulation_result.check_results)
 
 
 class TestCheckTask:

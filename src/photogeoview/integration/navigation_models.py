@@ -25,6 +25,7 @@ class PathType(Enum):
     REMOVABLE = "removable"
     VIRTUAL = "virtual"
 
+
 class SegmentState(Enum):
     """Breadcrumb segment state enumeration"""
 
@@ -34,10 +35,12 @@ class SegmentState(Enum):
     LOADING = "loading"
     ERROR = "error"
 
+
 class NavigationError(Exception):
     """Navigation-related error"""
 
     pass
+
 
 @dataclass
 class BreadcrumbSegment:
@@ -155,6 +158,7 @@ class BreadcrumbSegment:
             "access_count": self.access_count,
         }
 
+
 @dataclass
 class PathInfo:
     """
@@ -256,6 +260,7 @@ class PathInfo:
         if self.total_space and self.used_space:
             return (self.used_space / self.total_space) * 100
         return None
+
 
 @dataclass
 class NavigationState:
@@ -368,23 +373,15 @@ class NavigationState:
 
         # Always keep root and current segments
         root_segments = [s for s in self.breadcrumb_segments if s.is_root]
-        current_segments = [
-            s for s in self.breadcrumb_segments if s.state == SegmentState.CURRENT
-        ]
+        current_segments = [s for s in self.breadcrumb_segments if s.state == SegmentState.CURRENT]
 
         # Calculate how many middle segments we can keep
-        reserved_count = (
-            len(root_segments) + len(current_segments) + 1
-        )  # +1 for ellipsis
+        reserved_count = len(root_segments) + len(current_segments) + 1  # +1 for ellipsis
         available_count = self.max_visible_segments - reserved_count
 
         if available_count > 0:
             # Keep some segments before the current one
-            middle_segments = [
-                s
-                for s in self.breadcrumb_segments
-                if not s.is_root and s.state != SegmentState.CURRENT
-            ]
+            middle_segments = [s for s in self.breadcrumb_segments if not s.is_root and s.state != SegmentState.CURRENT]
 
             if len(middle_segments) > available_count:
                 # Keep the last N segments before current
@@ -559,6 +556,7 @@ class NavigationState:
             "update_count": self.update_count,
             "segment_generation_time": self.segment_generation_time,
         }
+
 
 @dataclass
 class NavigationEvent:

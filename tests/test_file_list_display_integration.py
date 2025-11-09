@@ -68,9 +68,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
         self._create_test_images()
 
         # コンポーネントの初期化
-        self.file_discovery_service = FileDiscoveryService(
-            logger_system=self.logger_system
-        )
+        self.file_discovery_service = FileDiscoveryService(logger_system=self.logger_system)
 
         # UIコンポーネントはモックを使用（実際のQtウィジェットを避ける）
         self.folder_navigator = Mock()
@@ -125,17 +123,11 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
 
         try:
             # 1. フォルダ内の画像ファイルを検出
-            discovered_images = self.file_discovery_service.discover_images(
-                self.test_images_dir
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.test_images_dir)
 
             # 2. 検出結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "検出結果はリスト型である必要があります"
-            )
-            self.assertGreater(
-                len(discovered_images), 0, "画像ファイルが検出される必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "検出結果はリスト型である必要があります")
+            self.assertGreater(len(discovered_images), 0, "画像ファイルが検出される必要があります")
 
             # 3. 検出された画像ファイルの検証
             expected_extensions = {".jpg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
@@ -162,9 +154,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
                 discovered_names,
                 "テキストファイルは除外される必要があります",
             )
-            self.assertNotIn(
-                "video.mp4", discovered_names, "動画ファイルは除外される必要があります"
-            )
+            self.assertNotIn("video.mp4", discovered_names, "動画ファイルは除外される必要があります")
             self.assertNotIn(
                 "corrupted.jpg",
                 discovered_names,
@@ -180,12 +170,8 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             self.thumbnail_grid.set_image_list(discovered_images)
 
             # 7. 呼び出しの検証
-            self.folder_navigator.folder_selected.emit.assert_called_once_with(
-                self.test_images_dir
-            )
-            self.thumbnail_grid.set_image_list.assert_called_once_with(
-                discovered_images
-            )
+            self.folder_navigator.folder_selected.emit.assert_called_once_with(self.test_images_dir)
+            self.thumbnail_grid.set_image_list.assert_called_once_with(discovered_images)
 
             duration = time.time() - start_time
 
@@ -231,14 +217,10 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
 
         try:
             # 1. 空フォルダでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                self.empty_dir
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.empty_dir)
 
             # 2. 結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "検出結果はリスト型である必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "検出結果はリスト型である必要があります")
             self.assertEqual(
                 len(discovered_images),
                 0,
@@ -291,14 +273,10 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
 
         try:
             # 1. 存在しないフォルダでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                nonexistent_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(nonexistent_folder)
 
             # 2. 結果の検証
-            self.assertIsInstance(
-                discovered_images, list, "検出結果はリスト型である必要があります"
-            )
+            self.assertIsInstance(discovered_images, list, "検出結果はリスト型である必要があります")
             self.assertEqual(
                 len(discovered_images),
                 0,
@@ -352,9 +330,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
 
             for file_path in test_files:
                 if file_path.is_file():
-                    is_valid = self.file_discovery_service.validate_image_file(
-                        file_path
-                    )
+                    is_valid = self.file_discovery_service.validate_image_file(file_path)
                     validation_results[file_path.name] = is_valid
 
             # 2. バリデーション結果の検証
@@ -362,10 +338,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             valid_extensions = [".jpg", ".png", ".gif", ".bmp", ".tiff", ".webp"]
             for file_name, is_valid in validation_results.items():
                 file_path = Path(file_name)
-                if (
-                    file_path.suffix.lower() in valid_extensions
-                    and not file_name.startswith("corrupted")
-                ):
+                if file_path.suffix.lower() in valid_extensions and not file_name.startswith("corrupted"):
                     self.assertTrue(
                         is_valid,
                         f"有効な画像ファイルがバリデーションを通過する必要があります: {file_name}",
@@ -429,9 +402,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             selected_folder = self.test_images_dir
 
             # 2. ファイル検出サービスでの画像検出
-            discovered_images = self.file_discovery_service.discover_images(
-                selected_folder
-            )
+            discovered_images = self.file_discovery_service.discover_images(selected_folder)
 
             # 3. サムネイルグリッドでの画像リスト設定をシミュレート
             # 実際のUIコンポーネントの代わりにモックを使用
@@ -450,9 +421,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             # 5. 呼び出しの検証
             if discovered_images:
                 mock_thumbnail_grid.show_loading_state.assert_called_once()
-                mock_thumbnail_grid.set_image_list.assert_called_once_with(
-                    discovered_images
-                )
+                mock_thumbnail_grid.set_image_list.assert_called_once_with(discovered_images)
                 mock_thumbnail_grid.show_empty_state.assert_not_called()
             else:
                 mock_thumbnail_grid.show_empty_state.assert_called_once()
@@ -504,15 +473,11 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             # 実際の実装では、ログハンドラーをモックして日本語メッセージをキャプチャ
 
             # 2. 空フォルダでの日本語メッセージ確認
-            discovered_images = self.file_discovery_service.discover_images(
-                self.empty_dir
-            )
+            discovered_images = self.file_discovery_service.discover_images(self.empty_dir)
 
             # 3. 存在しないフォルダでの日本語メッセージ確認
             nonexistent_folder = self.test_dir / "存在しないフォルダ"
-            discovered_images_nonexistent = self.file_discovery_service.discover_images(
-                nonexistent_folder
-            )
+            discovered_images_nonexistent = self.file_discovery_service.discover_images(nonexistent_folder)
 
             # 4. 日本語ファイル名のテスト
             japanese_image_dir = self.test_dir / "日本語フォルダ"
@@ -520,22 +485,16 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
             japanese_image = japanese_image_dir / "日本語画像.jpg"
             japanese_image.write_bytes(b"dummy_japanese_image_data" * 10)
 
-            discovered_japanese = self.file_discovery_service.discover_images(
-                japanese_image_dir
-            )
+            discovered_japanese = self.file_discovery_service.discover_images(japanese_image_dir)
 
             # 5. 結果の検証
-            self.assertEqual(
-                len(discovered_images), 0, "空フォルダでは画像が検出されない"
-            )
+            self.assertEqual(len(discovered_images), 0, "空フォルダでは画像が検出されない")
             self.assertEqual(
                 len(discovered_images_nonexistent),
                 0,
                 "存在しないフォルダでは画像が検出されない",
             )
-            self.assertEqual(
-                len(discovered_japanese), 1, "日本語ファイル名の画像が検出される"
-            )
+            self.assertEqual(len(discovered_japanese), 1, "日本語ファイル名の画像が検出される")
 
             duration = time.time() - start_time
 
@@ -583,9 +542,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
 
             for i in range(iterations):
                 iteration_start = time.time()
-                discovered_images = self.file_discovery_service.discover_images(
-                    self.test_images_dir
-                )
+                discovered_images = self.file_discovery_service.discover_images(self.test_images_dir)
                 iteration_duration = time.time() - iteration_start
                 durations.append(iteration_duration)
 
@@ -641,9 +598,7 @@ class FileListDisplayIntegrationTest(unittest.TestCase):
     def generate_test_report(self) -> Dict[str, Any]:
         """テスト結果レポートの生成"""
         total_tests = len(self.test_results)
-        passed_tests = sum(
-            1 for result in self.test_results if result["status"] == "passed"
-        )
+        passed_tests = sum(1 for result in self.test_results if result["status"] == "passed")
         failed_tests = total_tests - passed_tests
 
         total_duration = sum(result["duration"] for result in self.test_results)

@@ -29,6 +29,7 @@ class MigrationStatus(Enum):
     FAILED = "failed"
     SKIPPED = "skipped"
 
+
 @dataclass
 class MigrationResult:
     """Migration result data structure"""
@@ -40,6 +41,7 @@ class MigrationResult:
     errors: list[str]
     warnings: list[str]
     backup_file: Path | None = None
+
 
 class ConfigMigrationManager:
     """
@@ -151,9 +153,7 @@ class ConfigMigrationManager:
                 "mappings": {
                     # Integration settings
                     "error_correlation": "integration.error_correlation",
-                    "integration_performance_monitoring": (
-                        "integration.performance_monitoring"
-                    ),
+                    "integration_performance_monitoring": ("integration.performance_monitoring"),
                     "ai_coordination": "integration.ai_coordination",
                     "quality_assurance": "integration.quality_assurance",
                     # Optimization settings
@@ -226,23 +226,17 @@ class ConfigMigrationManager:
                 # Update totals
                 migration_summary["total_files_processed"] += len(ai_results)
                 for result in ai_results:
-                    migration_summary["total_settings_migrated"] += (
-                        result.migrated_settings
-                    )
+                    migration_summary["total_settings_migrated"] += result.migrated_settings
                     migration_summary["errors"].extend(result.errors)
                     migration_summary["warnings"].extend(result.warnings)
 
             migration_summary["end_time"] = datetime.now().isoformat()
-            migration_summary["status"] = self._determine_overall_status(
-                migration_summary
-            )
+            migration_summary["status"] = self._determine_overall_status(migration_summary)
 
             # Generate migration report
             self._generate_migration_report(migration_summary)
 
-            self.logger_system.info(
-                f"Configuration migration completed: {migration_summary['status']}"
-            )
+            self.logger_system.info(f"Configuration migration completed: {migration_summary['status']}")
 
             return migration_summary
 
@@ -257,9 +251,7 @@ class ConfigMigrationManager:
             migration_summary["errors"].append(str(e))
             return migration_summary
 
-    def _migrate_ai_configuration(
-        self, ai_name: str, mapping_config: dict[str, Any]
-    ) -> list[MigrationResult]:
+    def _migrate_ai_configuration(self, ai_name: str, mapping_config: dict[str, Any]) -> list[MigrationResult]:
         """Migrate configuration for a specific AI implementation"""
 
         results = []
@@ -293,17 +285,11 @@ class ConfigMigrationManager:
                 backup_file = self._create_backup(source_file)
 
                 # Migrate settings
-                migrated_config, migration_errors, migration_warnings = (
-                    self._migrate_settings(source_config, mappings)
-                )
+                migrated_config, migration_errors, migration_warnings = self._migrate_settings(source_config, mappings)
 
                 # Determine migration status
                 if migration_errors:
-                    status = (
-                        MigrationStatus.FAILED
-                        if not migrated_config
-                        else MigrationStatus.PARTIAL
-                    )
+                    status = MigrationStatus.FAILED if not migrated_config else MigrationStatus.PARTIAL
                 else:
                     status = MigrationStatus.SUCCESS
 
@@ -323,9 +309,7 @@ class ConfigMigrationManager:
                 if migrated_config:
                     self._save_migrated_config(target_section, migrated_config)
 
-                self.logger_system.info(
-                    f"Migrated {len(migrated_config)} settings from {source_file}"
-                )
+                self.logger_system.info(f"Migrated {len(migrated_config)} settings from {source_file}")
 
             except Exception as e:
                 result = MigrationResult(
@@ -360,9 +344,7 @@ class ConfigMigrationManager:
                     transformed_value = self._transform_setting_value(source_key, value)
 
                     # Set nested value using dot notation
-                    self._set_nested_value(
-                        migrated_config, target_path, transformed_value
-                    )
+                    self._set_nested_value(migrated_config, target_path, transformed_value)
 
                 else:
                     warnings.append(f"Source setting not found: {source_key}")
@@ -383,23 +365,11 @@ class ConfigMigrationManager:
             # Convert theme names
             "current_theme": lambda x: x.lower() if isinstance(x, str) else x,
             # Ensure numeric ranges
-            "thumbnail_size": lambda x: (
-                max(50, min(500, int(x))) if isinstance(x, (int, float)) else x
-            ),
-            "map_zoom_default": lambda x: (
-                max(1, min(20, int(x))) if isinstance(x, (int, float)) else x
-            ),
+            "thumbnail_size": lambda x: (max(50, min(500, int(x))) if isinstance(x, (int, float)) else x),
+            "map_zoom_default": lambda x: (max(1, min(20, int(x))) if isinstance(x, (int, float)) else x),
             # Convert boolean strings
-            "debug_mode": lambda x: (
-                str(x).lower() in ["true", "1", "yes", "on"]
-                if isinstance(x, str)
-                else bool(x)
-            ),
-            "auto_save": lambda x: (
-                str(x).lower() in ["true", "1", "yes", "on"]
-                if isinstance(x, str)
-                else bool(x)
-            ),
+            "debug_mode": lambda x: (str(x).lower() in ["true", "1", "yes", "on"] if isinstance(x, str) else bool(x)),
+            "auto_save": lambda x: (str(x).lower() in ["true", "1", "yes", "on"] if isinstance(x, str) else bool(x)),
         }
 
         if key in transformations:
@@ -430,17 +400,13 @@ class ConfigMigrationManager:
         """Create backup of source configuration file"""
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = (
-            self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
-        )
+        backup_file = self.backup_dir / f"{source_file.stem}_{timestamp}{source_file.suffix}"
 
         shutil.copy2(source_file, backup_file)
 
         return backup_file
 
-    def _save_migrated_config(
-        self, target_section: str, migrated_config: dict[str, Any]
-    ):
+    def _save_migrated_config(self, target_section: str, migrated_config: dict[str, Any]):
         """Save migrated configuration to appropriate file"""
 
         # Determine target file based on section
@@ -470,11 +436,7 @@ class ConfigMigrationManager:
         """Deep merge source dictionary into target dictionary"""
 
         for key, value in source.items():
-            if (
-                key in target
-                and isinstance(target[key], dict)
-                and isinstance(value, dict)
-            ):
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
                 self._deep_merge(target[key], value)
             else:
                 target[key] = value
@@ -550,9 +512,7 @@ class ConfigMigrationManager:
                     parts = backup_file.stem.split("_")
                     if len(parts) >= 3:  # name_timestamp format
                         original_name = "_".join(parts[:-2])  # Remove timestamp parts
-                        original_file = (
-                            self.config_dir / f"{original_name}{backup_file.suffix}"
-                        )
+                        original_file = self.config_dir / f"{original_name}{backup_file.suffix}"
 
                         # Restore backup
                         shutil.copy2(backup_file, original_file)
@@ -563,9 +523,7 @@ class ConfigMigrationManager:
                 except Exception as e:
                     self.logger_system.error(f"Failed to restore {backup_file}: {e}")
 
-            self.logger_system.info(
-                f"Migration rollback completed: {restored_count} files restored"
-            )
+            self.logger_system.info(f"Migration rollback completed: {restored_count} files restored")
             return restored_count > 0
 
         except Exception as e:
