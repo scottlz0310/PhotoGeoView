@@ -1,6 +1,6 @@
 # PhotoGeoView AI統合 APIドキュメント
 
-生成日時: 2025年11月09日 20:50:39
+生成日時: 2025年11月11日 19:21:26
 
 ## 概要
 
@@ -21,8 +21,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - sys
-- main as main_module
 - traceback
+- pathlib
 
 ---
 
@@ -57,9 +57,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `validate_image()`
 
 **主要依存関係**:
-- time
-- exifread
 - PIL
+- contextlib
+- pathlib
 
 ---
 
@@ -75,8 +75,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - os
-- PySide6.QtWidgets
-- PySide6.QtWebEngineWidgets
+- PySide6.QtCore
+- PySide6.QtWebEngineCore
 
 ---
 
@@ -91,9 +91,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `add_image_overlay()`
 
 **主要依存関係**:
-- pathlib
 - typing
 - folium
+- pathlib
 
 ---
 
@@ -125,8 +125,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `add_segment()`
 
 **主要依存関係**:
-- PySide6.QtWidgets
 - logging
+- PySide6.QtCore
 - pathlib
 
 ---
@@ -141,8 +141,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - json
-- dataclasses
 - enum
+- pathlib
 
 ---
 
@@ -155,8 +155,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - json
-- dataclasses
 - enum
+- pathlib
 
 ---
 
@@ -171,9 +171,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `register_fallback_handler()`
 
 **主要依存関係**:
-- traceback
-- dataclasses
 - logging
+- enum
+- pathlib
 
 ---
 
@@ -188,8 +188,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `clear_error_history()`
 
 **主要依存関係**:
-- datetime
 - dataclasses
+- datetime
 - enum
 
 ---
@@ -205,9 +205,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `get_folder_history()`
 
 **主要依存関係**:
-- PySide6.QtWidgets
-- pathlib
 - PySide6.QtCore
+- pathlib
+- typing
 
 ---
 
@@ -222,9 +222,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `validate_image()`
 
 **主要依存関係**:
+- typing
 - abc
 - pathlib
-- typing
 
 ---
 
@@ -239,9 +239,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `critical()`
 
 **主要依存関係**:
-- json
-- threading
 - logging
+- json
+- pathlib
 
 ---
 
@@ -256,9 +256,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `log_ai_operation()`
 
 **主要依存関係**:
+- logging
 - os
 - json
-- logging
 
 ---
 
@@ -273,9 +273,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `is_dark_theme()`
 
 **主要依存関係**:
-- dataclasses
 - enum
 - pathlib
+- dataclasses
 
 ---
 
@@ -290,8 +290,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `update_preview()`
 
 **主要依存関係**:
+- PySide6.QtCore
 - json
-- PySide6.QtWidgets
 - pathlib
 
 ---
@@ -307,9 +307,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `debug_theme_status()`
 
 **主要依存関係**:
+- PySide6.QtCore
 - json
-- traceback
-- PySide6.QtWidgets
+- pathlib
 
 ---
 
@@ -342,8 +342,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - json
-- dataclasses
 - enum
+- pathlib
 
 ---
 
@@ -358,9 +358,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `create_theme_grid()`
 
 **主要依存関係**:
-- dataclasses
-- PySide6.QtWidgets
 - PySide6.QtCore
+- typing
+- dataclasses
 
 ---
 
@@ -375,9 +375,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `mousePressEvent()`
 
 **主要依存関係**:
-- time
-- PySide6.QtGui
-- PySide6.QtWidgets
+- PySide6.QtCore
+- pathlib
+- contextlib
 
 ---
 
@@ -391,9 +391,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `cleanup()`
 
 **主要依存関係**:
-- dataclasses
-- PySide6.QtWidgets
+- PySide6.QtCore
 - pathlib
+- dataclasses
 
 ---
 
@@ -408,8 +408,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 **目的**: AI Integration Test Suite
 
 **主要依存関係**:
-- datetime
 - dataclasses
+- datetime
 - typing
 
 ---
@@ -426,8 +426,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - os
-- time
-- inspect
+- PySide6.QtCore
+- contextlib
 
 ---
 
@@ -442,8 +442,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `update_ai_config()`
 
 **主要依存関係**:
+- copy
 - json
-- threading
 - pathlib
 
 ---
@@ -459,9 +459,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `emit_event()`
 
 **主要依存関係**:
-- time
-- threading
 - logging
+- contextlib
+- pathlib
 
 ---
 
@@ -476,9 +476,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `validate_image_metadata()`
 
 **主要依存関係**:
-- dataclasses
 - enum
 - pathlib
+- dataclasses
 
 ---
 
@@ -493,9 +493,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `get_template_info()`
 
 **主要依存関係**:
-- datetime
-- dataclasses
 - logging
+- datetime
+- typing
 
 ---
 
@@ -510,9 +510,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `scan_project_files()`
 
 **主要依存関係**:
-- dataclasses
 - logging
 - enum
+- pathlib
 
 ---
 
@@ -526,9 +526,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `deleteLater()`
 
 **主要依存関係**:
-- PySide6.QtWidgets
 - PySide6.QtCore
 - pathlib
+- contextlib
 
 ---
 
@@ -543,9 +543,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `cache_file_result()`
 
 **主要依存関係**:
-- time
-- dataclasses
+- pathlib
 - threading
+- dataclasses
 
 ---
 
@@ -560,9 +560,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `validate_image_file()`
 
 **主要依存関係**:
-- time
+- logging
 - os
-- functools
+- pathlib
 
 ---
 
@@ -577,9 +577,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `get_watch_status()`
 
 **主要依存関係**:
-- time
-- watchdog.observers
-- watchdog.events
+- enum
+- pathlib
+- typing
 
 ---
 
@@ -595,8 +595,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - PySide6.QtGui
-- pathlib
 - PySide6.QtCore
+- PySide6.QtWidgets
 
 ---
 
@@ -611,9 +611,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `set_current_path()`
 
 **主要依存関係**:
-- os
 - ui.breadcrumb_bar
-- PySide6.QtWidgets
+- os
+- PySide6.QtCore
 
 ---
 
@@ -628,9 +628,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `force_memory_cleanup()`
 
 **主要依存関係**:
-- time
+- pathlib
 - dataclasses
-- gc
+- typing
 
 ---
 
@@ -646,8 +646,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - os
-- threading
 - pathlib
+- threading
 
 ---
 
@@ -663,8 +663,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - typing
+- collections.abc
 - abc
-- pathlib
 
 ---
 
@@ -680,8 +680,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - os
-- dataclasses
 - enum
+- pathlib
 
 ---
 
@@ -696,9 +696,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `reset_pagination()`
 
 **主要依存関係**:
-- time
-- dataclasses
 - pathlib
+- dataclasses
+- collections.abc
 
 ---
 
@@ -713,9 +713,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `get_metrics_summary()`
 
 **主要依存関係**:
-- time
-- json
 - os
+- json
+- pathlib
 
 ---
 
@@ -731,8 +731,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - os
-- time
-- dataclasses
+- threading
+- collections.abc
 
 ---
 
@@ -747,9 +747,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `is_loaded()`
 
 **主要依存関係**:
-- time
-- threading
 - pathlib
+- threading
+- typing
 
 ---
 
@@ -764,9 +764,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `add_change_listener()`
 
 **主要依存関係**:
+- copy
 - json
-- dataclasses
-- threading
+- pathlib
 
 ---
 
@@ -782,8 +782,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - threading
+- collections.abc
 - typing
-- datetime
 
 ---
 
@@ -799,8 +799,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - typing
+- collections.abc
 - abc
-- pathlib
 
 ---
 
@@ -816,8 +816,8 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 
 **主要依存関係**:
 - typing
-- abc
 - collections.abc
+- abc
 
 ---
 
@@ -832,9 +832,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `clear()`
 
 **主要依存関係**:
-- dataclasses
+- weakref
+- pathlib
 - threading
-- collections
 
 ---
 
@@ -849,9 +849,9 @@ PhotoGeoViewプロジェクトは複数のAIエージェントによって開発
 - `show_warning()`
 
 **主要依存関係**:
-- PySide6.QtWidgets
-- enum
 - PySide6.QtCore
+- enum
+- collections.abc
 
 ---
 

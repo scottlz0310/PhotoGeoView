@@ -1,6 +1,6 @@
 # PhotoGeoView AI貢献度レポート
 
-生成日時: 2025年11月09日 20:50:39
+生成日時: 2025年11月11日 19:21:26
 
 ## 概要
 
@@ -28,9 +28,9 @@
 **関数数**: 0
 
 **AI言及**:
-- CursorBLD
-- GitHub Copilot
-- Cursor
+- CS4Coding
+- Copilot
+- Kiro
 
 ### __init__.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -38,9 +38,9 @@
 **関数数**: 0
 
 **AI言及**:
-- CursorBLD
-- GitHub Copilot
-- Cursor
+- CS4Coding
+- Copilot
+- Kiro
 
 ### __init__.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -49,8 +49,8 @@
 
 **AI言及**:
 - CursorBLD
-- Cursor
 - Kiro
+- UI/UX
 
 ### __init__.py
 **主要貢献者**: Kiro
@@ -79,9 +79,9 @@
 **関数数**: 10
 
 **AI言及**:
-- qt-theme
 - Kiro
 - KIRO
+- qt-theme
 
 ### breadcrumb_fallback.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -94,9 +94,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
 - COPILOT
-- GitHub Copilot
+- CS4Coding
+- Copilot
 
 ### config_migration.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -104,9 +104,9 @@
 **関数数**: 3
 
 **AI言及**:
-- CursorBLD
-- Cursor
 - Qt theme
+- CS4Coding
+- Kiro
 
 ### controllers.py
 **主要貢献者**: Kiro
@@ -114,9 +114,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
 - COPILOT
-- GitHub Copilot
+- CS4Coding
+- Copilot
 
 ### data_migration.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -124,9 +124,9 @@
 **関数数**: 2
 
 **AI言及**:
+- CS4Coding
+- Kiro
 - CursorBLD
-- Cursor
-- qt_theme_name=data.get("qt_theme_name", data.get("qt_theme
 
 ### data_validation.py
 **主要貢献者**: Kiro
@@ -134,8 +134,8 @@
 **関数数**: 8
 
 **AI言及**:
-- KIRO
 - Kiro
+- KIRO
 
 ### doc_templates.py
 **主要貢献者**: Kiro
@@ -143,9 +143,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
-- GitHub Copilot
-- Cursor
+- CS4Coding
+- Copilot
+- Kiro
 
 ### documentation_system.py
 **主要貢献者**: Kiro
@@ -153,9 +153,9 @@
 **関数数**: 8
 
 **AI言及**:
-- GitHub Copilot
-- Qt.*Theme
-- 最適化
+- CS4Coding
+- 地図が表示
+- Qt-Theme
 
 ### error_handling.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -163,9 +163,9 @@
 **関数数**: 5
 
 **AI言及**:
-- CursorBLD
-- GitHub Copilot
-- Cursor
+- CS4Coding
+- Copilot
+- Kiro
 
 ### exif_labels.py
 **主要貢献者**: GitHub Copilot (CS4Coding)
@@ -182,8 +182,8 @@
 **関数数**: 4
 
 **AI言及**:
+- CS4Coding
 - Kiro
-- 地図表示
 - 統合
 
 ### file_discovery_cache.py
@@ -193,8 +193,8 @@
 
 **AI言及**:
 - Kiro
-- 最適化
 - 統合
+- KIRO
 
 ### file_discovery_errors.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -212,8 +212,8 @@
 
 **AI言及**:
 - COPILOT
+- CS4Coding
 - Kiro
-- 最適化
 
 ### file_system_watcher.py
 **主要貢献者**: Kiro
@@ -222,8 +222,8 @@
 
 **AI言及**:
 - Kiro
-- 最適化
 - 統合
+- KIRO
 
 ### folder_navigator.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -231,9 +231,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
-- Cursor
 - Kiro
+- CURSOR
+- CursorBLD
 
 ### image_loader.py
 **主要貢献者**: GitHub Copilot (CS4Coding)
@@ -246,9 +246,9 @@
 **関数数**: 10
 
 **AI言及**:
-- KIRO
-- Kiro
 - Cursor
+- Kiro
+- KIRO
 
 ### image_processor.py
 **主要貢献者**: GitHub Copilot (CS4Coding)
@@ -256,7 +256,7 @@
 **関数数**: 10
 
 **AI言及**:
-- KIRO
+- COPILOT
 - CS4Coding
 - Kiro
 
@@ -266,9 +266,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
-- GitHub Copilot
-- Cursor
+- CS4Coding
+- Copilot
+- Kiro
 
 ### logging.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -276,9 +276,9 @@
 **関数数**: 10
 
 **AI言及**:
+- CS4Coding
+- Kiro
 - CursorBLD
-- Cursor
-- kiro
 
 ### logging_system.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -286,9 +286,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
 - COPILOT
-- GitHub Copilot
+- CS4Coding
+- Copilot
 
 ### main_window.py
 **主要貢献者**: Kiro
@@ -296,9 +296,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
-- GitHub Copilot
-- Cursor
+- CS4Coding
+- Copilot
+- Kiro
 
 ### map_panel.py
 **主要貢献者**: GitHub Copilot (CS4Coding)
@@ -306,9 +306,9 @@
 **関数数**: 7
 
 **AI言及**:
-- 地図に表示
-- 地図パネルの表示
-- 地図でGPS情報なし表示
+- 地図を表示
+- 地図が表示
+- folium
 
 ### map_provider.py
 **主要貢献者**: GitHub Copilot (CS4Coding)
@@ -317,8 +317,8 @@
 
 **AI言及**:
 - COPILOT
-- Folium
 - Kiro
+- folium
 
 ### memory_aware_file_discovery.py
 **主要貢献者**: Kiro
@@ -327,8 +327,8 @@
 
 **AI言及**:
 - Kiro
-- 最適化
 - KIRO
+- 最適化
 
 ### models.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -336,9 +336,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
 - COPILOT
-- GitHub Copilot
+- CS4Coding
+- Copilot
 
 ### navigation_integration_controller.py
 **主要貢献者**: Kiro
@@ -346,8 +346,8 @@
 **関数数**: 10
 
 **AI言及**:
-- KIRO
 - Kiro
+- KIRO
 
 ### navigation_interfaces.py
 **主要貢献者**: Kiro
@@ -372,8 +372,8 @@
 
 **AI言及**:
 - Kiro
-- 最適化
 - KIRO
+- 最適化
 
 ### performance_dashboard.py
 **主要貢献者**: Kiro
@@ -390,8 +390,8 @@
 
 **AI言及**:
 - COPILOT
-- kiro
 - Kiro
+- CURSOR
 
 ### performance_optimizer.py
 **主要貢献者**: Kiro
@@ -407,8 +407,8 @@
 **関数数**: 10
 
 **AI言及**:
-- KIRO
 - Kiro
+- KIRO
 
 ### theme_editor.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -416,8 +416,8 @@
 **関数数**: 6
 
 **AI言及**:
-- qt-theme
 - Kiro
+- qt-theme
 
 ### theme_integration_controller.py
 **主要貢献者**: Kiro
@@ -425,8 +425,8 @@
 **関数数**: 10
 
 **AI言及**:
-- KIRO
 - Kiro
+- KIRO
 
 ### theme_interfaces.py
 **主要貢献者**: Kiro
@@ -442,9 +442,9 @@
 **関数数**: 10
 
 **AI言及**:
-- Qt theme applied successfully: {theme
-- qt_themes_available = list(theme
-- qt_theme_manager: QtTheme
+- Qt-Theme-Manager not available or no qt_theme
+- qt_theme_manager, "get_available_theme
+- qt_theme_manager and hasattr(theme, "qt_theme_name") and theme.qt_theme
 
 ### theme_manager_fallback.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -461,8 +461,8 @@
 **関数数**: 10
 
 **AI言及**:
-- Kiro
 - Qt theme
+- Kiro
 
 ### theme_navigation_integration.py
 **主要貢献者**: Kiro
@@ -487,9 +487,9 @@
 **関数数**: 10
 
 **AI言及**:
-- CursorBLD
-- Cursor
+- CS4Coding
 - Kiro
+- CURSOR
 
 ### ui_integration_controller.py
 **主要貢献者**: Cursor (CursorBLD)
@@ -497,9 +497,9 @@
 **関数数**: 4
 
 **AI言及**:
-- CursorBLD
 - COPILOT
-- Cursor
+- CS4Coding
+- Kiro
 
 ### unified_cache.py
 **主要貢献者**: Kiro
@@ -507,9 +507,9 @@
 **関数数**: 10
 
 **AI言及**:
-- KIRO
-- Kiro
 - COPILOT
+- Kiro
+- KIRO
 
 ### user_notification_system.py
 **主要貢献者**: Kiro
