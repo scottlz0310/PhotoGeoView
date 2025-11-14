@@ -29,16 +29,12 @@ function App(): JSX.Element {
             <p className="note">Click the button to test React state</p>
           </div>
 
-          <p className="status">
-            ✨ Ready for AI-driven development with TypeScript
-          </p>
+          <p className="status">✨ Ready for AI-driven development with TypeScript</p>
         </div>
       </main>
 
       <footer className="app-footer">
-        <p>
-          🤖 Generated with Claude Code | Built with modern tech stack
-        </p>
+        <p>🤖 Generated with Claude Code | Built with modern tech stack</p>
       </footer>
     </div>
   )
