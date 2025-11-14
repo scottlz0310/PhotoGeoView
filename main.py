@@ -22,6 +22,32 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
+# Windows環境でのUTF-8出力設定
+if sys.platform == "win32":
+    # PYTHONIOENCODINGが設定されていない場合、UTF-8を使用するよう設定
+    if "PYTHONIOENCODING" not in os.environ:
+        os.environ["PYTHONIOENCODING"] = "utf-8"
+
+    # Windows コンソールのコードページをUTF-8に設定（実行時）
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleCP(65001)
+        kernel32.SetConsoleOutputCP(65001)
+    except Exception:
+        # 設定に失敗しても続行
+        pass
+
+    # stdoutとstderrのエンコーディングを強制的にUTF-8に再設定
+    try:
+        if sys.stdout.encoding.lower() != "utf-8":
+            import codecs
+            sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, errors="replace")
+            sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, errors="replace")
+    except Exception:
+        # エンコーディング設定に失敗した場合は続行
+        pass
+
 
 def setup_logging():
     """ログシステムをセットアップ"""
@@ -32,7 +58,7 @@ def setup_logging():
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler(log_dir / "photogeoview.log"),
+            logging.FileHandler(log_dir / "photogeoview.log", encoding="utf-8"),
             logging.StreamHandler(sys.stdout),
         ],
     )
@@ -191,7 +217,40 @@ def main():
             state_manager=state_manager,
             logger_system=logger_system,
         )
-        main_window.show()
+
+        show_msg = "📺 ウィンドウを表示します..."
+        logger.info(show_msg)
+        print(show_msg)
+
+        # Windows対策: ウィンドウ属性を設定してから表示
+        from PySide6.QtCore import Qt
+
+        try:
+            # ウィンドウを作成したことをアプリケーションに通知
+            main_window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+            main_window.setAttribute(Qt.WidgetAttribute.WA_QuitOnClose, True)
+
+            print("DEBUG: About to call main_window.show()...")
+            logger.info("DEBUG: About to call main_window.show()...")
+
+            # Windowsでは先にactivateWindow()を呼ぶと安定する場合がある
+            main_window.activateWindow()
+            main_window.raise_()
+            main_window.show()
+
+            print("DEBUG: main_window.show() returned successfully")
+            logger.info("DEBUG: main_window.show() returned successfully")
+        except Exception as e:
+            error_msg = f"❌ show()呼び出し中にエラー発生: {e}"
+            print(error_msg)
+            logger.error(error_msg)
+            import traceback
+            traceback.print_exc()
+            raise
+
+        shown_msg = "📺 ウィンドウが表示されました"
+        logger.info(shown_msg)
+        print(shown_msg)
 
         success_msg = "✨ PhotoGeoView AI統合版が正常に起動しました！"
         log_msg = "📝 ログファイル: logs/photogeoview.log"
@@ -211,7 +270,17 @@ def main():
         logger.info(run_msg)
         print(run_msg)
 
-        sys.exit(app.exec())
+        try:
+            exit_code = app.exec()
+            logger.info(f"アプリケーション正常終了 (exit code: {exit_code})")
+            print(f"アプリケーション正常終了 (exit code: {exit_code})")
+            sys.exit(exit_code)
+        except Exception as e:
+            logger.error(f"イベントループ中にエラー発生: {e}")
+            print(f"❌ イベントループ中にエラー発生: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
 
     except ImportError as e:
         logger = logging.getLogger(__name__)

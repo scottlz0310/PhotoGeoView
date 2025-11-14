@@ -56,35 +56,58 @@ class EXIFPanel(QWidget):
         logger_system: LoggerSystem,
         theme_manager: object | None = None,
     ):
+        logger_system.info("EXIFPanel.__init__: Starting initialization...")
         super().__init__()
         # QSSで特定できるようにオブジェクト名を設定
         self.setObjectName("exifPanel")
 
+        logger_system.info("EXIFPanel.__init__: Setting up managers...")
         self.config_manager = config_manager
         self.state_manager = state_manager
         self.logger_system = logger_system
         self.error_handler = IntegratedErrorHandler(logger_system)
         self.theme_manager = theme_manager
         self._last_exif_data: dict[str, Any] | None = None
+        self._applying_panel_theme = False
+        self._current_latitude: float | None = None
+        self._current_longitude: float | None = None
 
-        # テーマ変更シグナルの接続
-        if self.theme_manager:
-            if hasattr(self.theme_manager, "theme_changed"):
-                self.theme_manager.theme_changed.connect(self._on_theme_changed)
-            elif hasattr(self.theme_manager, "theme_changed_compat"):
-                self.theme_manager.theme_changed_compat.connect(self._on_theme_changed)
+        # テーマ変更シグナルの接続（一時的に無効化してデバッグ）
+        logger_system.info("EXIFPanel.__init__: Skipping theme signal connection for debugging...")
+        # if self.theme_manager:
+        #     try:
+        #         if hasattr(self.theme_manager, "theme_changed"):
+        #             logger_system.info("EXIFPanel.__init__: Connecting to theme_changed signal...")
+        #             self.theme_manager.theme_changed.connect(self._on_theme_changed)
+        #             logger_system.info("EXIFPanel.__init__: Connected to theme_changed signal")
+        #         elif hasattr(self.theme_manager, "theme_changed_compat"):
+        #             logger_system.info("EXIFPanel.__init__: Connecting to theme_changed_compat signal...")
+        #             self.theme_manager.theme_changed_compat.connect(self._on_theme_changed)
+        #             logger_system.info("EXIFPanel.__init__: Connected to theme_changed_compat signal")
+        #     except Exception as e:
+        #         logger_system.warning(f"EXIFPanel.__init__: Failed to connect theme signals: {e}")
 
         # EXIF処理エンジン
+        logger_system.info("EXIFPanel.__init__: Creating image processor...")
         self.image_processor = CS4CodingImageProcessor(config_manager, logger_system)
 
         # 現在の画像パス
         self.current_image_path: Path | None = None
 
-        # UI初期化
-        self._setup_ui()
+        # UI初期化（統合版）
+        logger_system.info("EXIFPanel.__init__: Setting up integrated UI...")
+        try:
+            self._setup_ui()
+            logger_system.info("EXIFPanel.__init__: Integrated UI ready")
+        except Exception as e:
+            logger_system.error(f"EXIFPanel.__init__: Failed to setup integrated UI, falling back: {e}")
+            self._setup_placeholder_ui()
+
         # 背景の自動塗りつぶしを有効化
         with contextlib.suppress(Exception):
             self.setAutoFillBackground(True)
+
+        logger_system.info("EXIFPanel.__init__: Initialization complete")
 
         # 高さ設定の復元は不要(固定高さのため)
 
@@ -128,30 +151,37 @@ class EXIFPanel(QWidget):
 
     def _apply_panel_theme(self):
         """パネル自体にテーマを適用"""
-        try:
-            bg_color = self._get_color("background", "#ffffff")
-            border_color = self._get_color("border", "#e0e0e0")
+        if self._applying_panel_theme:
+            return
 
-            self.setStyleSheet(f"""
-                QWidget#exifPanel {{
-                    background-color: {bg_color};
-                    border: 1px solid {border_color};
-                    border-radius: 5px;
-                }}
-            """)
-            # パレットも同期
-            pal = self.palette()
-            pal.setColor(self.backgroundRole(), pal.window().color())
-            self.setPalette(pal)
-        except Exception:
-            # エラー時はデフォルトスタイルを適用
-            self.setStyleSheet("""
-                QWidget#exifPanel {
-                    background-color: #ffffff;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 5px;
-                }
-            """)
+        self._applying_panel_theme = True
+        try:
+            try:
+                bg_color = self._get_color("background", "#ffffff")
+                border_color = self._get_color("border", "#e0e0e0")
+
+                self.setStyleSheet(f"""
+                    QWidget#exifPanel {{
+                        background-color: {bg_color};
+                        border: 1px solid {border_color};
+                        border-radius: 5px;
+                    }}
+                """)
+                # パレットも同期
+                pal = self.palette()
+                pal.setColor(self.backgroundRole(), pal.window().color())
+                self.setPalette(pal)
+            except Exception:
+                # エラー時はデフォルトスタイルを適用
+                self.setStyleSheet("""
+                    QWidget#exifPanel {
+                        background-color: #ffffff;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 5px;
+                    }
+                """)
+        finally:
+            self._applying_panel_theme = False
 
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""
@@ -169,6 +199,14 @@ class EXIFPanel(QWidget):
                 {"operation": "theme_change"},
                 AIComponent.KIRO,
             )
+
+    def _setup_placeholder_ui(self):
+        """統合UI構築に失敗した場合のフォールバックUI"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        label = QLabel("EXIF Panel - Minimal UI")
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(label)
 
     def _setup_ui(self):
         """UIの初期化(統合版)"""
@@ -972,6 +1010,181 @@ class EXIFPanel(QWidget):
 
         self.integrated_layout.addWidget(control_frame)
 
+    def _refresh_exif_data(self):
+        """現在の画像からEXIF情報を再取得"""
+        try:
+            if not self.current_image_path or not self.current_image_path.exists():
+                if self.logger_system:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "exif_refresh_skipped",
+                        "No image selected for EXIF refresh",
+                        context={"has_image": bool(self.current_image_path)},
+                    )
+                return
+
+            if self.logger_system:
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "exif_refresh_requested",
+                    f"Refreshing EXIF data for {self.current_image_path.name}",
+                )
+
+            self._load_exif_data()
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "refresh_exif_data"},
+                AIComponent.KIRO,
+            )
+
+    def _show_on_map(self):
+        """現在のGPS座標を地図に表示"""
+        try:
+            if self._current_latitude is None or self._current_longitude is None:
+                if self.logger_system:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "map_show_unavailable",
+                        "Map display requested without GPS coordinates",
+                    )
+                return
+
+            if self.logger_system:
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "map_show_requested",
+                    f"Show on map requested: {self._current_latitude:.6f}, {self._current_longitude:.6f}",
+                )
+
+            self.gps_coordinates_updated.emit(self._current_latitude, self._current_longitude)
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "show_on_map"},
+                AIComponent.KIRO,
+            )
+
+    def _copy_coordinates(self):
+        """座標をクリップボードにコピー"""
+        try:
+            if self._current_latitude is None or self._current_longitude is None:
+                if self.logger_system:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "copy_coordinates_unavailable",
+                        "Copy requested without GPS coordinates",
+                    )
+                return
+
+            clipboard = QApplication.clipboard()
+            if not clipboard:
+                if self.logger_system:
+                    self.logger_system.log_ai_operation(
+                        AIComponent.KIRO,
+                        "copy_coordinates_failed",
+                        "Clipboard not available",
+                    )
+                return
+
+            coords_text = f"{self._current_latitude:.6f}, {self._current_longitude:.6f}"
+            clipboard.setText(coords_text)
+
+            if self.logger_system:
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "copy_coordinates_success",
+                    f"Coordinates copied: {coords_text}",
+                )
+
+        except Exception as e:
+            self.error_handler.handle_error(
+                e,
+                ErrorCategory.UI_ERROR,
+                {"operation": "copy_coordinates"},
+                AIComponent.KIRO,
+            )
+
+    def _toggle_debug_info(self, checked: bool):
+        """デバッグ情報の表示/非表示を切り替える"""
+        try:
+            if hasattr(self, "debug_frame") and self.debug_frame:
+                self.debug_frame.setVisible(checked)
+
+            if hasattr(self, "debug_toggle_button") and self.debug_toggle_button:
+                label = "🔧 デバッグ情報を非表示" if checked else "🔧 デバッグ情報を表示"
+                self.debug_toggle_button.setText(label)
+
+            if hasattr(self, "logger_system"):
+                state = "shown" if checked else "hidden"
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "exif_panel_debug_toggle",
+                    f"Debug section {state}",
+                )
+        except Exception as e:
+            if hasattr(self, "logger_system"):
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "exif_panel_debug_toggle_error",
+                    f"Toggle debug info failed: {e!s}",
+                )
+
+    def _update_debug_info(self, raw_gps_info: list[str] | None, conversion_info: list[str] | None):
+        """GPSデバッグ情報を更新"""
+        try:
+            if hasattr(self, "raw_gps_text") and self.raw_gps_text:
+                raw_text = "\n".join(raw_gps_info) if raw_gps_info else "GPS情報なし"
+                self.raw_gps_text.setPlainText(raw_text)
+
+            if hasattr(self, "conversion_info_label") and self.conversion_info_label:
+                conv_text = "\n".join(conversion_info) if conversion_info else "変換情報なし"
+                self.conversion_info_label.setText(conv_text)
+
+        except Exception as e:
+            if hasattr(self, "logger_system"):
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "exif_panel_debug_update_error",
+                    f"Update debug info failed: {e!s}",
+                )
+
+    def _show_error_message(self, message: str):
+        """EXIFパネル内にエラーメッセージを表示"""
+        try:
+            if hasattr(self, "logger_system"):
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "exif_panel_error_message",
+                    message,
+                )
+
+            if hasattr(self, "integrated_layout") and self.integrated_layout:
+                self._clear_layout(self.integrated_layout)
+                error_label = QLabel(f"⚠️ {message}")
+                error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                error_label.setWordWrap(True)
+                error_label.setStyleSheet(
+                    f"color: {self._get_color('error', '#e74c3c')};"
+                    "font-weight: bold; font-size: 14px; padding: 15px;"
+                )
+                self.integrated_layout.addWidget(error_label)
+            else:
+                # 最低限ログに残す
+                if hasattr(self, "logger_system"):
+                    self.logger_system.warning(f"EXIFPanel error message (no layout): {message}")
+        except Exception as e:
+            if hasattr(self, "logger_system"):
+                self.logger_system.log_ai_operation(
+                    AIComponent.KIRO,
+                    "exif_panel_error_display_failure",
+                    f"Failed to show error message: {e!s}",
+                )
+
     def set_image(self, image_path: Path):
         """画像を設定してEXIF情報を取得"""
         try:
@@ -1058,6 +1271,14 @@ class EXIFPanel(QWidget):
                 if child:
                     child.deleteLater()
 
+            # GPS情報をリセット
+            self._current_latitude = None
+            self._current_longitude = None
+            if hasattr(self, "map_button") and self.map_button:
+                self.map_button.setEnabled(False)
+            if hasattr(self, "copy_coords_button") and self.copy_coords_button:
+                self.copy_coords_button.setEnabled(False)
+
             # 初期メッセージを表示
             self.initial_message_label = QLabel("📷 画像を選択してください")
             self.initial_message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1087,6 +1308,10 @@ class EXIFPanel(QWidget):
             longitude_str = exif_data.get("GPS Longitude")
             altitude = exif_data.get("GPS Altitude")
             gps_time = exif_data.get("GPS Timestamp")
+
+            # 現在の座標をリセット
+            self._current_latitude = None
+            self._current_longitude = None
 
             # デバッグ情報用の生データを保存
             raw_gps_info = []
@@ -1182,8 +1407,18 @@ class EXIFPanel(QWidget):
 
             # ボタンの有効/無効を設定
             has_gps = latitude is not None and longitude is not None
-            self.map_button.setEnabled(has_gps)
-            self.copy_coords_button.setEnabled(has_gps)
+
+            if has_gps:
+                self._current_latitude = latitude
+                self._current_longitude = longitude
+            else:
+                self._current_latitude = None
+                self._current_longitude = None
+
+            if hasattr(self, "map_button") and self.map_button:
+                self.map_button.setEnabled(has_gps)
+            if hasattr(self, "copy_coords_button") and self.copy_coords_button:
+                self.copy_coords_button.setEnabled(has_gps)
 
             # GPS座標がある場合はシグナルを発信
             if has_gps:
@@ -1259,29 +1494,6 @@ class EXIFPanel(QWidget):
                         self._clear_nested_layout(nested_layout)
         except Exception:
             pass
-
-    def _apply_panel_theme(self):
-        """パネル自体にテーマを適用"""
-        try:
-            bg_color = self._get_color("background", "#ffffff")
-            border_color = self._get_color("border", "#e0e0e0")
-
-            self.setStyleSheet(f"""
-                QWidget#exifPanel {{
-                    background-color: {bg_color};
-                    border: 1px solid {border_color};
-                    border-radius: 5px;
-                }}
-            """)
-        except Exception:
-            # エラー時はデフォルトスタイルを適用
-            self.setStyleSheet("""
-                QWidget#exifPanel {
-                    background-color: #ffffff;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 5px;
-                }
-            """)
 
     def _on_theme_changed(self, theme_name: str):
         """テーマ変更時の処理"""

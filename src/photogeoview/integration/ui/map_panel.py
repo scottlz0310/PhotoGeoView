@@ -8,12 +8,17 @@ PyQtWebEngineが利用できない場合の代替表示も提供。
 Author: Kiro AI Integration System
 """
 
+import json
 import os
+import sys
 import tempfile
+from contextlib import suppress
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt, QTimer, QUrl, Signal
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -111,6 +116,62 @@ class MapPanel(QWidget):
         self.logger_system = logger_system
         self.error_handler = IntegratedErrorHandler(logger_system)
 
+        # WebEngine安全ガードの閾値 (デフォルトで2回失敗するまでは再試行)
+        self._guard_failure_threshold = self._determine_guard_threshold()
+
+        if self.logger_system:
+            self.logger_system.info("MapPanel.__init__: start")
+
+        # WebEngine動作フラグ
+        self._use_webengine = False
+        self._webengine_guard_path = Path("state/webengine_guard.json")
+        self._webengine_guard_path.parent.mkdir(parents=True, exist_ok=True)
+        self._headless_detected, self._headless_reason = self._detect_headless_environment()
+        (
+            self._pending_guard_disable,
+            self._guard_reason,
+            self._guard_crash_count,
+        ) = self._check_webengine_guard()
+        user_disabled = self._is_webengine_disabled()
+        self._disable_webengine = user_disabled or self._headless_detected or self._pending_guard_disable
+        if self._headless_detected:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "webengine_headless_guard",
+                f"WebEngine disabled (headless detected: {self._headless_reason})",
+                level="WARNING",
+            )
+        if self._pending_guard_disable:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "webengine_crash_guard",
+                f"WebEngine disabled (previous failure detected: {self._guard_reason})",
+                level="WARNING",
+            )
+        elif self.logger_system and self._guard_crash_count:
+            self.logger_system.log_ai_operation(
+                AIComponent.KIRO,
+                "webengine_guard_warning",
+                (
+                    "Previous WebEngine session did not exit cleanly "
+                    f"(failures={self._guard_crash_count}, threshold={self._guard_failure_threshold}). "
+                    "Retrying automatically."
+                ),
+                level="WARNING",
+            )
+        if self.logger_system:
+            disable_reasons: list[str] = []
+            if user_disabled:
+                disable_reasons.append("user/config flag")
+            if self._headless_detected:
+                disable_reasons.append("headless env")
+            if self._pending_guard_disable:
+                disable_reasons.append("Crash guard active")
+            reason_text = ", ".join(disable_reasons) if disable_reasons else "none"
+            self.logger_system.info(
+                f"MapPanel.__init__: WebEngine disabled={self._disable_webengine} (reasons: {reason_text})"
+            )
+
         # 地図プロパティ
         self.current_map_file: str | None = None
         self.photo_locations: dict[str, tuple[float, float]] = {}
@@ -135,12 +196,15 @@ class MapPanel(QWidget):
 
         # 全画面表示フラグ
         self.is_fullscreen_mode = False
+        self._shutdown_invoked = False
 
         # UI初期化
         self._setup_ui()
         self._setup_connections()
 
         # デフォルト地図で初期化
+        if self.logger_system:
+            self.logger_system.info("MapPanel.__init__: initialize default map")
         self._initialize_map()
 
     def _setup_ui(self):
@@ -212,17 +276,26 @@ class MapPanel(QWidget):
     def _create_map_display_area(self, layout):
         """地図表示エリアを作成"""
         try:
-            # WebEngineが利用可能な場合
-            if WEBENGINE_AVAILABLE and folium_available:
+            use_webengine = WEBENGINE_AVAILABLE and folium_available and not self._disable_webengine
+
+            if use_webengine:
+                if self.logger_system:
+                    self.logger_system.info("MapPanel: WebEngine display requested")
                 # WebEngineViewを直接作成
                 try:
+                    self._mark_webengine_session_active("WebEngine startup pending")
                     self.web_view = QWebEngineView()
                     message = "WebEngineView created successfully"
                     print(f"✅ {message}")
+                    if self.logger_system:
+                        self.logger_system.info("MapPanel: WebEngineView created successfully")
                 except Exception as e:
                     self.web_view = None
                     message = f"WebEngineView creation failed: {e}"
                     print(f"❌ {message}")
+                    self._clear_webengine_guard(reset_counter=False)
+                    if self.logger_system:
+                        self.logger_system.error(f"MapPanel: WebEngineView creation failed: {e}")
 
                 if self.web_view:
                     self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -249,18 +322,30 @@ class MapPanel(QWidget):
 
                     layout.addWidget(self.web_view, 1)
 
+                    self._use_webengine = True
+                    self._mark_webengine_session_active()
+                    if self.logger_system:
+                        self.logger_system.info("MapPanel: WebEngine mode activated")
+
                     if self.status_label:
                         self.status_label.setText("WebEngine地図表示モード")
                 else:
                     # WebEngineViewの作成に失敗した場合
                     self._create_fallback_display()
+                    self._use_webengine = False
                     if self.map_widget:
                         layout.addWidget(self.map_widget, 1)
+                    if self.logger_system:
+                        self.logger_system.warning("MapPanel: Falling back to text mode after WebEngine failure")
             else:
                 # WebEngineまたはfoliumが利用できない場合
                 self._create_fallback_display()
+                self._use_webengine = False
                 if self.map_widget:
                     layout.addWidget(self.map_widget, 1)
+                if self.logger_system:
+                    reason = "disabled" if self._disable_webengine else "dependency missing"
+                    self.logger_system.info(f"MapPanel: Text mode enabled ({reason})")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -273,10 +358,173 @@ class MapPanel(QWidget):
             self._create_fallback_display()
             if self.map_widget:
                 layout.addWidget(self.map_widget, 1)
+            if self.logger_system:
+                self.logger_system.error(f"MapPanel: Exception during map display setup: {e}")
+
+    def _is_webengine_disabled(self) -> bool:
+        """環境設定に基づきWebEngineを無効化するか判定"""
+        try:
+            config_flag = bool(self.config_manager.get_setting("core.force_text_map_mode", False))
+        except Exception:
+            config_flag = False
+
+        env_flag = os.environ.get("PGV_DISABLE_WEBENGINE", "").strip().lower() in {"1", "true", "yes"}
+        return config_flag or env_flag
+
+    def _determine_guard_threshold(self) -> int:
+        """WebEngineガードを発動させるまでの失敗回数閾値を決定"""
+        default_threshold = 2
+        value = default_threshold
+
+        try:
+            if self.config_manager is not None:
+                config_value = self.config_manager.get_setting("core.webengine_guard_threshold", default_threshold)
+                if isinstance(config_value, (int, float)):
+                    value = int(config_value)
+        except Exception:
+            pass
+
+        env_value = os.environ.get("PGV_WEBENGINE_GUARD_THRESHOLD", "").strip()
+        if env_value:
+            with suppress(ValueError):
+                value = int(env_value)
+
+        return max(0, min(10, value))
+
+    def _check_webengine_guard(self) -> tuple[bool, str, int]:
+        """以前のWebEngineセッションがクラッシュした場合に自動で無効化する"""
+
+        override = os.environ.get("PGV_IGNORE_WEBENGINE_GUARD", "").strip().lower() in {"1", "true", "yes"}
+        guard_state = self._load_webengine_guard()
+
+        if override:
+            self._reset_webengine_guard()
+            return (False, "", 0)
+
+        active_session = guard_state.get("active_session", False)
+        crash_count = guard_state.get("crash_count", 0)
+        reason = guard_state.get("last_reason") or "Previous WebEngine session terminated unexpectedly"
+        threshold = max(0, self._guard_failure_threshold)
+
+        if active_session:
+            # 前回の実行で正常に終了していない
+            crash_count += 1
+            guard_state.update(
+                {
+                    "active_session": False,
+                    "crash_count": crash_count,
+                    "last_reason": reason,
+                    "last_updated": datetime.now().isoformat(timespec="seconds"),
+                }
+            )
+            self._save_webengine_guard(guard_state)
+
+        reason_detail = ""
+        if crash_count > 0:
+            reason_detail = f"{reason} (failures={crash_count}, threshold={threshold})"
+
+        if threshold and crash_count >= threshold:
+            return (True, reason_detail, crash_count)
+
+        return (False, reason_detail, crash_count)
+
+    def _detect_headless_environment(self) -> tuple[bool, str]:
+        """ヘッドレス実行を検出し、WebEngineを安全に無効化する"""
+        reasons: list[str] = []
+
+        platform_flag = os.environ.get("QT_QPA_PLATFORM", "").strip().lower()
+        if platform_flag in {"offscreen", "minimal", "minimalistic", "headless"}:
+            reasons.append(f"QT_QPA_PLATFORM={platform_flag}")
+
+        for var in ("CI", "GITHUB_ACTIONS", "PGV_HEADLESS"):
+            value = os.environ.get(var, "").strip().lower()
+            if value in {"1", "true", "yes"}:
+                reasons.append(f"{var}={value}")
+
+        if sys.platform.startswith("linux"):
+            has_x11 = bool(os.environ.get("DISPLAY"))
+            has_wayland = bool(os.environ.get("WAYLAND_DISPLAY"))
+            if not has_x11 and not has_wayland:
+                reasons.append("No X11/Wayland display")
+
+        try:
+            app = QGuiApplication.instance()
+            if app is not None and app.primaryScreen() is None:
+                reasons.append("No primary screen detected")
+        except Exception:
+            # primaryScreen() may raise before the GUI is fully ready; ignore
+            pass
+
+        return (len(reasons) > 0, ", ".join(reasons) if reasons else "")
+
+    def _load_webengine_guard(self) -> dict[str, Any]:
+        """ガードファイルを読み込む"""
+        try:
+            if self._webengine_guard_path.exists():
+                with self._webengine_guard_path.open("r", encoding="utf-8") as fp:
+                    return json.load(fp)
+        except Exception:
+            pass
+        return {
+            "active_session": False,
+            "crash_count": 0,
+            "last_reason": "",
+            "last_updated": "",
+        }
+
+    def _save_webengine_guard(self, state: dict[str, Any]) -> None:
+        """ガードファイルを保存"""
+        try:
+            with self._webengine_guard_path.open("w", encoding="utf-8") as fp:
+                json.dump(state, fp, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
+    def _reset_webengine_guard(self) -> None:
+        """ガードをリセット (ユーザーの手動再試行)"""
+        with suppress(Exception):
+            if self._webengine_guard_path.exists():
+                self._webengine_guard_path.unlink()
+
+    def _mark_webengine_session_active(self, message: str | None = None) -> None:
+        """WebEngineセッション開始/進行を記録"""
+        state = self._load_webengine_guard()
+        state.update(
+            {
+                "active_session": True,
+                "last_reason": message or "WebEngine session in progress",
+                "last_updated": datetime.now().isoformat(timespec="seconds"),
+            }
+        )
+        self._save_webengine_guard(state)
+
+    def _clear_webengine_guard(self, reset_counter: bool) -> None:
+        """正常終了時にガードを解除"""
+        state = self._load_webengine_guard()
+        state["active_session"] = False
+        if reset_counter:
+            state["crash_count"] = 0
+            state["last_reason"] = "Last WebEngine session exited normally"
+        state["last_updated"] = datetime.now().isoformat(timespec="seconds")
+        self._save_webengine_guard(state)
+
+    def _relax_webengine_guard_after_safe_exit(self) -> None:
+        """Guard decay so a clean app exit lets the user retry WebEngine next launch."""
+        state = self._load_webengine_guard()
+        crash_count = max(0, int(state.get("crash_count", 0)))
+        if crash_count == 0:
+            return
+        state["active_session"] = False
+        state["crash_count"] = crash_count - 1
+        state["last_reason"] = "WebEngine guard relaxed after safe exit"
+        state["last_updated"] = datetime.now().isoformat(timespec="seconds")
+        self._save_webengine_guard(state)
 
     def _create_fallback_display(self):
         """WebEngineが利用できない場合のフォールバック表示"""
         try:
+            if self.logger_system:
+                self.logger_system.info("MapPanel: Creating fallback text display")
             # スクロール可能なテキスト表示エリアを作成
             scroll_area = QScrollArea()
             scroll_area.setWidgetResizable(True)
@@ -333,6 +581,23 @@ class MapPanel(QWidget):
    • 複数画像の位置情報一覧
    • 地図リンクの生成
 """
+            elif self._pending_guard_disable:
+                guard_reason = self._guard_reason or "原因不明の異常終了"
+                message = f"""🛡️ 地図表示 - セーフモード
+
+⚠️  WebEngineが直近のセッションで異常終了したため、安全のためテキストモードに切り替えました。
+
+• 理由: {guard_reason}
+• 失敗回数: {self._guard_crash_count}
+• 閾値: {self._guard_failure_threshold}
+
+🔁 再試行するには:
+    1. ファイル 'state\\webengine_guard.json' の内容を削除/リセットする
+    2. もしくは環境変数 PGV_IGNORE_WEBENGINE_GUARD=1 を設定して再起動する
+    3. 再発が続く場合は PGV_WEBENGINE_GUARD_THRESHOLD=3 などで閾値を調整してください
+
+WebEngineが正常終了するとガードは自動的に解除されます。
+"""
             else:
                 message = """🗺️ 地図表示 - テキストモード
 
@@ -370,6 +635,8 @@ class MapPanel(QWidget):
                 }
             """
             )
+            if self.logger_system:
+                self.logger_system.error("MapPanel: Failed to create fallback text display, using emergency label")
 
     def _setup_connections(self):
         """シグナル接続の設定"""
@@ -388,13 +655,17 @@ class MapPanel(QWidget):
     def _initialize_map(self):
         """デフォルト位置で地図を初期化"""
         try:
-            if self.web_view and folium_available:
+            if self._use_webengine and self.web_view and folium_available:
                 # WebEngine地図の初期化 - ウェルカム画面を表示
+                if self.logger_system:
+                    self.logger_system.info("MapPanel: Initializing WebEngine welcome map")
                 self._create_welcome_html()
                 if self.status_label:
                     self.status_label.setText("GPS情報付き画像を選択してください")
             else:
                 # テキストベース表示の初期化
+                if self.logger_system:
+                    self.logger_system.info("MapPanel: Initializing fallback text map")
                 self._update_fallback_display()
                 if self.status_label:
                     self.status_label.setText("テキストベース地図表示を初期化しました")
@@ -411,6 +682,8 @@ class MapPanel(QWidget):
             else:
                 # テキストベース表示でもエラーを表示
                 self._update_fallback_display()
+            if self.logger_system:
+                self.logger_system.error(f"MapPanel: Exception during map initialization: {e}")
 
     def _create_map(
         self,
@@ -1672,13 +1945,22 @@ class MapPanel(QWidget):
             )
             super().keyPressEvent(event)
 
-    def closeEvent(self, event) -> None:
-        """ウィンドウクローズ時のクリーンアップ"""
-        try:
-            # 一時ファイルのクリーンアップ
+    def shutdown(self) -> None:
+        """Release resources and clear guard state when the app exits."""
+        if self._shutdown_invoked:
+            return
+        self._shutdown_invoked = True
+
+        with suppress(Exception):
             if self.temp_html_file and self.temp_html_file.exists():
                 self.temp_html_file.unlink()
-        except Exception:
-            pass
 
+        if self._use_webengine:
+            self._clear_webengine_guard(reset_counter=True)
+        elif self._pending_guard_disable:
+            self._relax_webengine_guard_after_safe_exit()
+
+    def closeEvent(self, event) -> None:
+        """ウィンドウクローズ時のクリーンアップ"""
+        self.shutdown()
         super().closeEvent(event)

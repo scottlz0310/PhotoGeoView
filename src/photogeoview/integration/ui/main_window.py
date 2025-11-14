@@ -9,6 +9,7 @@ Author: Kiro AI Integration System
 """
 
 import sys
+from contextlib import suppress
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -282,10 +283,14 @@ class IntegratedMainWindow(QMainWindow):
         main_layout.addWidget(self.main_splitter)
 
         # Create left panel (folder navigation and thumbnails)
+        self.logger_system.info("Creating left panel components...")
         self._create_left_panel()
+        self.logger_system.info("Left panel components initialized")
 
         # Create right panel (image preview and map)
+        self.logger_system.info("Creating right panel components...")
         self._create_right_panel()
+        self.logger_system.info("Right panel components initialized")
 
         # Set splitter proportions (CursorBLD style)
         self.main_splitter.setSizes([400, 800])
@@ -400,6 +405,8 @@ class IntegratedMainWindow(QMainWindow):
                 "Breadcrumb placeholder added to left panel",
             )
 
+        self.logger_system.info("Left panel: breadcrumb section initialized")
+
         # 2. Thumbnail grid (上段)
         self.thumbnail_grid = OptimizedThumbnailGrid(
             self.config_manager,
@@ -409,6 +416,7 @@ class IntegratedMainWindow(QMainWindow):
         )
         self.thumbnail_grid.setMinimumHeight(200)  # 最小高さ設定
         self.left_panel_splitter.addWidget(self.thumbnail_grid)
+        self.logger_system.info("Left panel: thumbnail grid initialized")
 
         # 3. EXIF information panel (下段)
         from .exif_panel import EXIFPanel
@@ -419,26 +427,35 @@ class IntegratedMainWindow(QMainWindow):
             self.logger_system,
             self.theme_manager_widget,
         )
+        self.logger_system.info("Left panel: EXIF panel created")
         self.exif_panel.setMinimumHeight(300)  # 最小高さ設定
+        self.logger_system.info("Left panel: EXIF panel minimum height set")
         self.left_panel_splitter.addWidget(self.exif_panel)
+        self.logger_system.info("Left panel: EXIF panel added to splitter")
 
         # スプリッターの初期サイズ設定 (ブレッドクラム:サムネイル:EXIF = 1:5:4)
         self.left_panel_splitter.setSizes([50, 500, 400])
+        self.logger_system.info("Left panel: splitter default sizes applied")
 
         # 各エリアの伸縮設定(3つのウィジェット)
         self.left_panel_splitter.setStretchFactor(0, 0)  # ブレッドクラム: 固定
         self.left_panel_splitter.setStretchFactor(1, 1)  # サムネイルグリッド: 伸縮可能(メイン)
         self.left_panel_splitter.setStretchFactor(2, 1)  # EXIFパネル: 伸縮可能
+        self.logger_system.info("Left panel: splitter stretch factors configured")
 
         # 左パネルスプリッターをメインスプリッターに追加
         self.main_splitter.addWidget(self.left_panel_splitter)
+        self.logger_system.info("Left panel: splitter added to main splitter")
 
         # 左パネルスプリッターの設定を復元
         self._restore_left_panel_splitter_state()
 
+        self.logger_system.info("Left panel splitter setup complete")
+
     def _restore_left_panel_splitter_state(self):
         """左パネルスプリッターの状態を復元"""
         try:
+            self.logger_system.info("Restoring left panel splitter state")
             # 保存されたスプリッター状態を取得
             splitter_states = self.config_manager.get_setting("ui.splitter_states", {})
 
@@ -459,6 +476,8 @@ class IntegratedMainWindow(QMainWindow):
                     "left_panel_splitter_default",
                     "Left panel splitter set to default sizes (3-panel layout)",
                 )
+
+            self.logger_system.info("Left panel splitter state configured")
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -482,14 +501,38 @@ class IntegratedMainWindow(QMainWindow):
         # Image preview panel (Kiro component)
         from .image_preview_panel import ImagePreviewPanel
 
-        self.image_preview_panel = ImagePreviewPanel(self.config_manager, self.state_manager, self.logger_system)
-        right_splitter.addWidget(self.image_preview_panel)
+        self.logger_system.info("Creating ImagePreviewPanel")
+        try:
+            self.image_preview_panel = ImagePreviewPanel(self.config_manager, self.state_manager, self.logger_system)
+            right_splitter.addWidget(self.image_preview_panel)
+            self.logger_system.info("ImagePreviewPanel created successfully")
+        except Exception as exc:
+            self.logger_system.error(f"ImagePreviewPanel initialization failed: {exc}")
+            self.error_handler.handle_error(
+                exc,
+                ErrorCategory.UI_ERROR,
+                {"operation": "image_preview_panel_init"},
+                AIComponent.KIRO,
+            )
+            raise
 
         # Map panel (Kiro component)
         from .map_panel import MapPanel
 
-        self.map_panel = MapPanel(self.config_manager, self.state_manager, self.logger_system)
-        right_splitter.addWidget(self.map_panel)
+        self.logger_system.info("Creating MapPanel")
+        try:
+            self.map_panel = MapPanel(self.config_manager, self.state_manager, self.logger_system)
+            right_splitter.addWidget(self.map_panel)
+            self.logger_system.info("MapPanel created successfully")
+        except Exception as exc:
+            self.logger_system.error(f"MapPanel initialization failed: {exc}")
+            self.error_handler.handle_error(
+                exc,
+                ErrorCategory.UI_ERROR,
+                {"operation": "map_panel_init"},
+                AIComponent.KIRO,
+            )
+            raise
 
         # Set splitter proportions
         right_splitter.setSizes([400, 200])
@@ -615,8 +658,9 @@ class IntegratedMainWindow(QMainWindow):
                 self.breadcrumb_bar.breadcrumb_error.connect(self._on_breadcrumb_error)
                 # Breadcrumb path changes are handled by _on_breadcrumb_path_changed
 
-                # Set initial path from state
-                current_folder = self.state_manager.get_state_value("current_folder", Path.home())
+                # Set initial path from state (falling back to home when invalid)
+                raw_folder = self.state_manager.get_state_value("current_folder")
+                current_folder = self._resolve_initial_folder_path(raw_folder)
                 self.logger_system.info(f"Setting initial breadcrumb path: {current_folder}")
                 self.breadcrumb_bar.set_current_path(current_folder)
                 self.logger_system.info("Breadcrumb signals connected and initial path set")
@@ -640,6 +684,30 @@ class IntegratedMainWindow(QMainWindow):
                 {"operation": "breadcrumb_bar_init"},
                 AIComponent.KIRO,
             )
+
+    def _resolve_initial_folder_path(self, folder_value: Path | str | None) -> Path:
+        """Resolve the initial breadcrumb path safely for Windows environments."""
+
+        fallback_path = Path.home()
+
+        try:
+            if isinstance(folder_value, Path):
+                candidate = folder_value
+            elif isinstance(folder_value, str) and folder_value.strip():
+                candidate = Path(folder_value).expanduser()
+            else:
+                return fallback_path
+
+            if not candidate.exists():
+                self.logger_system.warning("Initial breadcrumb path does not exist, falling back to home")
+                return fallback_path
+
+            return candidate
+        except Exception as e:
+            self.logger_system.warning(
+                f"Failed to resolve initial breadcrumb path ({folder_value}), falling back to home: {e}",
+            )
+            return fallback_path
 
     def _apply_initial_theme(self):
         """Apply the initial theme from configuration"""
@@ -1210,7 +1278,7 @@ class IntegratedMainWindow(QMainWindow):
                 self.map_panel.set_coordinates(latitude, longitude)
 
             # Update status bar
-            self.status_bar.showMessage(f"GPS: {latitude:.6f}°, {longitude:.6f}°", 3000)
+            self._safe_status_message(f"GPS: {latitude:.6f}°, {longitude:.6f}°", 3000)
 
         except Exception as e:
             self.error_handler.handle_error(
@@ -1257,7 +1325,7 @@ class IntegratedMainWindow(QMainWindow):
             self.state_manager.update_state(current_folder=path)
 
             # Update status
-            self.status_bar.showMessage(f"Navigated to segment: {path}")
+            self._safe_status_message(f"Navigated to segment: {path}")
 
             # Emit folder changed signal
             self.folder_changed.emit(path)
@@ -1285,7 +1353,7 @@ class IntegratedMainWindow(QMainWindow):
         try:
             # Validate path before navigation
             if not path.exists() or not path.is_dir():
-                self.status_bar.showMessage(f"Invalid path: {path}", 5000)
+                self._safe_status_message(f"Invalid path: {path}", 5000)
                 return
 
             # Folder navigator removed - breadcrumb handles navigation
@@ -1294,7 +1362,7 @@ class IntegratedMainWindow(QMainWindow):
             self.state_manager.update_state(current_folder=path)
 
             # Update status
-            self.status_bar.showMessage(f"Navigation requested: {path}")
+            self._safe_status_message(f"Navigation requested: {path}")
 
             # Emit folder changed signal
             self.folder_changed.emit(path)
@@ -1317,7 +1385,7 @@ class IntegratedMainWindow(QMainWindow):
         """Handle breadcrumb error event"""
         try:
             # Show error in status bar
-            self.status_bar.showMessage(f"Breadcrumb error: {error_message}", 5000)
+            self._safe_status_message(f"Breadcrumb error: {error_message}", 5000)
 
             # Log error
             self.logger_system.log_ai_operation(
@@ -1348,7 +1416,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status bar
-            self.status_bar.showMessage(f"画像プレビュー読み込み完了: {image_path.name}", 2000)
+            self._safe_status_message(f"画像プレビュー読み込み完了: {image_path.name}", 2000)
 
             # Log the event
             self.logger_system.log_ai_operation(
@@ -1371,7 +1439,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status bar
-            self.status_bar.showMessage(f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}", 2000)
+            self._safe_status_message(f"地図読み込み完了: {latitude:.6f}, {longitude:.6f}", 2000)
 
             # Log the event
             self.logger_system.log_ai_operation(
@@ -1398,7 +1466,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status bar
-            self.status_bar.showMessage(f"地図エラー: {error_message}", 3000)
+            self._safe_status_message(f"地図エラー: {error_message}", 3000)
 
             # Log the error
             self.logger_system.log_error(
@@ -1424,7 +1492,7 @@ class IntegratedMainWindow(QMainWindow):
             self.state_manager.update_state(current_theme=theme_name)
 
             # Update status
-            self.status_bar.showMessage(f"Theme changed to: {theme_name}", 2000)
+            self._safe_status_message(f"Theme changed to: {theme_name}", 2000)
 
             # Emit signal
             self.theme_changed.emit(theme_name)
@@ -1446,7 +1514,7 @@ class IntegratedMainWindow(QMainWindow):
                 self.theme_manager.apply_theme(new_theme)
 
             # Update status
-            self.status_bar.showMessage(f"Theme changed from {old_theme} to {new_theme}", 2000)
+            self._safe_status_message(f"Theme changed from {old_theme} to {new_theme}", 2000)
 
             # Log the change
             self.logger_system.log_ai_operation(
@@ -1473,7 +1541,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status
-            self.status_bar.showMessage(f"Theme applied: {theme_name}", 1500)
+            self._safe_status_message(f"Theme applied: {theme_name}", 1500)
 
             # Log the application
             self.logger_system.log_ai_operation(
@@ -1496,7 +1564,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status with error
-            self.status_bar.showMessage(f"Theme error: {error_message}", 5000)
+            self._safe_status_message(f"Theme error: {error_message}", 5000)
 
             # Log the error
             self.logger_system.log_error(
@@ -1536,7 +1604,7 @@ class IntegratedMainWindow(QMainWindow):
             self.state_manager.update_state(current_folder=new_path)
 
             # Update status
-            self.status_bar.showMessage(f"Navigated to: {new_path}", 2000)
+            self._safe_status_message(f"Navigated to: {new_path}", 2000)
 
             # Emit folder changed signal
             self.folder_changed.emit(new_path)
@@ -1562,7 +1630,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status
-            self.status_bar.showMessage(f"Navigated to segment {segment_index}: {path.name}", 2000)
+            self._safe_status_message(f"Navigated to segment {segment_index}: {path.name}", 2000)
 
             # Log the segment click
             self.logger_system.log_ai_operation(
@@ -1590,7 +1658,7 @@ class IntegratedMainWindow(QMainWindow):
         try:
             # Validate path before navigation
             if not target_path.exists() or not target_path.is_dir():
-                self.status_bar.showMessage(f"Cannot navigate to: {target_path} (path not accessible)", 3000)
+                self._safe_status_message(f"Cannot navigate to: {target_path} (path not accessible)", 3000)
                 return
 
             # Perform navigation
@@ -1620,7 +1688,7 @@ class IntegratedMainWindow(QMainWindow):
 
         try:
             # Update status with error
-            self.status_bar.showMessage(f"Breadcrumb error: {error_message}", 4000)
+            self._safe_status_message(f"Breadcrumb error: {error_message}", 4000)
 
             # Log the error
             self.logger_system.log_error(
@@ -1753,7 +1821,7 @@ class IntegratedMainWindow(QMainWindow):
 
                         # Update status bar
                         if hasattr(self, "status_bar") and self.status_bar:
-                            self.status_bar.showMessage(
+                            self._safe_status_message(
                                 f"{len(image_files)}個の画像ファイルが見つかりました - {folder_path.name}",
                                 3000,
                             )
@@ -1763,7 +1831,7 @@ class IntegratedMainWindow(QMainWindow):
 
                         # Update status bar
                         if hasattr(self, "status_bar") and self.status_bar:
-                            self.status_bar.showMessage(
+                            self._safe_status_message(
                                 f"画像ファイルが見つかりませんでした - {folder_path.name}",
                                 3000,
                             )
@@ -1793,7 +1861,7 @@ class IntegratedMainWindow(QMainWindow):
 
                 # Update status bar with error
                 if hasattr(self, "status_bar") and self.status_bar:
-                    self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
+                    self._safe_status_message(f"エラー: {error_msg}", 5000)
 
                 # Show user-friendly error dialog
                 self._show_error_dialog(
@@ -1819,7 +1887,7 @@ class IntegratedMainWindow(QMainWindow):
 
             # Update status bar with error
             if hasattr(self, "status_bar") and self.status_bar:
-                self.status_bar.showMessage(f"エラー: {error_msg}", 5000)
+                self._safe_status_message(f"エラー: {error_msg}", 5000)
 
     def _show_error_dialog(self, title: str, message: str):
         """
@@ -1940,6 +2008,10 @@ class IntegratedMainWindow(QMainWindow):
         """Handle window close event"""
 
         try:
+            if hasattr(self, "map_panel") and self.map_panel:
+                with suppress(Exception):
+                    self.map_panel.shutdown()
+
             # Save window state
             self.config_manager.set_setting("ui.window_geometry", self.saveGeometry())
 
@@ -1994,7 +2066,7 @@ class IntegratedMainWindow(QMainWindow):
     def show_progress(self, message: str, maximum: int = 0):
         """Show progress bar with message"""
 
-        self.status_bar.showMessage(message)
+        self._safe_status_message(message)
         self.progress_bar.setMaximum(maximum)
         self.progress_bar.setValue(0)
         self.progress_bar.setVisible(True)
@@ -2004,13 +2076,13 @@ class IntegratedMainWindow(QMainWindow):
 
         self.progress_bar.setValue(value)
         if message:
-            self.status_bar.showMessage(message)
+            self._safe_status_message(message)
 
     def hide_progress(self):
         """Hide progress bar"""
 
         self.progress_bar.setVisible(False)
-        self.status_bar.showMessage("Ready")
+        self._safe_status_message("Ready")
 
     def get_current_folder(self) -> Path | None:
         """Get currently selected folder"""

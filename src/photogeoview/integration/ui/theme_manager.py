@@ -9,10 +9,11 @@ Author: Kiro AI Integration System
 """
 
 import json
+import platform
 from pathlib import Path
 from typing import Any, Protocol
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QTimer
 from PySide6.QtWidgets import QApplication, QWidget
 
 from ..config_manager import ConfigManager
@@ -73,38 +74,11 @@ class IntegratedThemeManager(QObject):
         self.logger_system = logger_system or LoggerSystem()
         self.error_handler = IntegratedErrorHandler(self.logger_system)
         self.main_window = main_window
-
-        # Theme storage
-        self.themes: dict[str, ThemeConfiguration] = {}
-        self.current_theme = "default"
-
-        # Theme directories
         self.theme_dir = Path("config/themes")
         self.custom_theme_dir = Path("config/custom_themes")
-
-        # CursorBLD Qt-Theme-Manager integration
-        self.qt_theme_manager: QtThemeManagerProtocol | None = None
-        self.qt_themes_available: list[str] = []
-
-        # Kiro accessibility features
-        self.accessibility_enabled = True
-        self.high_contrast_mode = False
-        self.large_fonts_mode = False
-
-        # Kiro performance settings
-        self.animation_enabled = True
-        self.transparency_enabled = True
-
-        # Initialize themes
-        self._initialize()
-
-    def set_main_window(self, main_window: QWidget):
-        """メインウィンドウへの参照を設定"""
-        self.main_window = main_window
-
-    def _initialize(self):
-        """Initialize the theme manager"""
-
+        self.themes: dict[str, ThemeConfiguration] = {}
+        self.current_theme = "default"
+        self.is_windows = platform.system().lower().startswith("windows")
         try:
             # Create theme directories
             self.theme_dir.mkdir(parents=True, exist_ok=True)
@@ -123,7 +97,8 @@ class IntegratedThemeManager(QObject):
             self._load_accessibility_settings()
 
             # Apply current theme
-            current_theme = self.state_manager.get_state().current_theme
+            current_theme = self.state_manager.get_state().current_theme or self.current_theme
+            self.current_theme = current_theme
             self.apply_theme(current_theme)
 
             self.logger_system.log_ai_operation(
@@ -782,21 +757,46 @@ class IntegratedThemeManager(QObject):
             if not style_sheet:
                 return True
 
-            # メインウィンドウにスタイルシートを適用
-            if self.main_window:
-                self.main_window.setStyleSheet(style_sheet)
-                self.logger_system.info(f"Style sheet applied to main window: {len(style_sheet)} characters")
+            if self.is_windows:
+                self.logger_system.warning(
+                    "Windows safety mode: skipping stylesheet application to avoid Qt crash"
+                )
                 return True
-            else:
-                # メインウィンドウが設定されていない場合、QApplicationに適用
-                app = QApplication.instance()
-                if app and hasattr(app, "setStyleSheet"):
-                    app.setStyleSheet(style_sheet)
-                    self.logger_system.info(f"Style sheet applied to QApplication: " f"{len(style_sheet)} characters")
-                    return True
-                else:
-                    self.logger_system.warning("No QApplication instance found for style sheet application")
-                    return False
+
+            app = QApplication.instance()
+
+            if app and hasattr(app, "setStyleSheet"):
+                style_length = len(style_sheet)
+                self.logger_system.info(
+                    f"Applying stylesheet to QApplication (length={style_length} characters)"
+                )
+                app.setStyleSheet(style_sheet)
+                self.logger_system.info(
+                    f"Style sheet applied to QApplication: {style_length} characters"
+                )
+                return True
+
+            # QApplicationが利用できない場合はメインウィンドウへの遅延適用を試みる
+            if self.main_window:
+                style_length = len(style_sheet)
+
+                def _apply_to_main_window():
+                    try:
+                        self.logger_system.info(
+                            f"Applying stylesheet to main window as fallback (length={style_length} characters)"
+                        )
+                        self.main_window.setStyleSheet(style_sheet)
+                        self.logger_system.info(
+                            f"Style sheet applied to main window: {style_length} characters"
+                        )
+                    except Exception as e:
+                        self.logger_system.error(f"Failed to apply style sheet to main window: {e}")
+
+                QTimer.singleShot(0, _apply_to_main_window)
+                return True
+
+            self.logger_system.warning("No QApplication or main window available for style sheet application")
+            return False
 
         except Exception as e:
             self.logger_system.error(f"Failed to apply style sheet: {e}")

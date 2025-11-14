@@ -4,6 +4,8 @@ ThemeManager フォールバック実装
 qt_theme_managerライブラリが利用できない場合の代替実装
 """
 
+from typing import Dict
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
 
