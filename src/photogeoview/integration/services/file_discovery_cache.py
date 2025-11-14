@@ -486,7 +486,7 @@ class FileDiscoveryCache:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "folder_cache_hit",
-                        f"フォルダキャッシュヒット: {folder_path} - " f"{len(folder_cache.file_results)}個のファイル",
+                        f"フォルダキャッシュヒット: {folder_path} - {len(folder_cache.file_results)}個のファイル",
                     )
 
                     return folder_cache

@@ -77,6 +77,7 @@ dev = [
     {include-group = "test"},
     {include-group = "lint"},
     {include-group = "security"},
+    "pre-commit>=4.4.0",
 ]
 
 # CI用

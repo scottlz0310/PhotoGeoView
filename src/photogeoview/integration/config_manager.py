@@ -118,7 +118,7 @@ class ConfigManager(IConfigManager):
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "config_initialization",
-                f"Configuration system initialized with " f"{len(self.config_data)} settings",
+                f"Configuration system initialized with {len(self.config_data)} settings",
             )
 
         except Exception as e:
@@ -1167,7 +1167,7 @@ class ConfigManager(IConfigManager):
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "state_reset",
-                    f"Application state reset to defaults " f"(backup saved: {backup_file})",
+                    f"Application state reset to defaults (backup saved: {backup_file})",
                 )
 
                 return True

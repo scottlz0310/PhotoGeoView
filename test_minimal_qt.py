@@ -2,7 +2,9 @@
 """Minimal Qt window test"""
 
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QLabel
+
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow
+
 
 def main():
     print("Creating QApplication...")
@@ -23,6 +25,7 @@ def main():
 
     print("Starting event loop...")
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()

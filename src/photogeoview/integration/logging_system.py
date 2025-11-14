@@ -38,7 +38,7 @@ class AILogFormatter(logging.Formatter):
 
     def __init__(self):
         super().__init__()
-        self.format_string = "%(asctime)s | %(levelname)-12s | %(ai_component)-8s | " "%(name)-20s | %(message)s"
+        self.format_string = "%(asctime)s | %(levelname)-12s | %(ai_component)-8s | %(name)-20s | %(message)s"
 
     def format(self, record):
         """Format log record with AI component information"""

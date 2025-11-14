@@ -31,6 +31,7 @@ if sys.platform == "win32":
     # Windows コンソールのコードページをUTF-8に設定（実行時）
     try:
         import ctypes
+
         kernel32 = ctypes.windll.kernel32
         kernel32.SetConsoleCP(65001)
         kernel32.SetConsoleOutputCP(65001)
@@ -42,6 +43,7 @@ if sys.platform == "win32":
     try:
         if sys.stdout.encoding.lower() != "utf-8":
             import codecs
+
             sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, errors="replace")
             sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, errors="replace")
     except Exception:
@@ -149,8 +151,7 @@ def main():
             os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
             os.environ.setdefault(
                 "QTWEBENGINE_CHROMIUM_FLAGS",
-                "--no-sandbox --disable-gpu --disable-gpu-compositing "
-                "--disable-software-rasterizer --in-process-gpu",
+                "--no-sandbox --disable-gpu --disable-gpu-compositing --disable-software-rasterizer --in-process-gpu",
             )
             os.environ.setdefault("QT_OPENGL", "software")
 
@@ -245,6 +246,7 @@ def main():
             print(error_msg)
             logger.error(error_msg)
             import traceback
+
             traceback.print_exc()
             raise
 
@@ -279,6 +281,7 @@ def main():
             logger.error(f"イベントループ中にエラー発生: {e}")
             print(f"❌ イベントループ中にエラー発生: {e}")
             import traceback
+
             traceback.print_exc()
             sys.exit(1)
 

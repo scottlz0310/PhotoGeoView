@@ -331,7 +331,7 @@ class PaginatedFileDiscovery:
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "has_more_check",
-            f"残りバッチ確認: {has_more} " f"(現在: {self._current_batch_index}/{self._total_batches})",
+            f"残りバッチ確認: {has_more} (現在: {self._current_batch_index}/{self._total_batches})",
             level="DEBUG",
         )
 
@@ -433,8 +433,7 @@ class PaginatedFileDiscovery:
         self.logger_system.log_ai_operation(
             AIComponent.KIRO,
             "paginated_cleanup",
-            f"PaginatedFileDiscoveryクリーンアップ開始 - "
-            f"処理済みバッチ数: {self._stats['total_batches_processed']}",
+            f"PaginatedFileDiscoveryクリーンアップ開始 - 処理済みバッチ数: {self._stats['total_batches_processed']}",
             level="DEBUG",
         )
 

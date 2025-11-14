@@ -13,7 +13,7 @@ import platform
 from pathlib import Path
 from typing import Any, Protocol
 
-from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtWidgets import QApplication, QWidget
 
 from ..config_manager import ConfigManager
@@ -128,14 +128,12 @@ class IntegratedThemeManager(QObject):
                     self.qt_themes_available = list(themes.keys())
                 else:
                     self.qt_themes_available = ["default", "dark", "light"]
-                    self.logger_system.warning(
-                        "Qt-Theme-Manager initialized but " "get_available_themes method not found"
-                    )
+                    self.logger_system.warning("Qt-Theme-Manager initialized but get_available_themes method not found")
 
                 self.logger_system.log_ai_operation(
                     AIComponent.CURSOR,
                     "qt_theme_manager_init",
-                    f"Qt-Theme-Manager initialized with " f"{len(self.qt_themes_available)} themes",
+                    f"Qt-Theme-Manager initialized with {len(self.qt_themes_available)} themes",
                 )
             except ImportError:
                 self.logger_system.warning("Qt-Theme-Manager not available, using fallback themes")
@@ -758,22 +756,16 @@ class IntegratedThemeManager(QObject):
                 return True
 
             if self.is_windows:
-                self.logger_system.warning(
-                    "Windows safety mode: skipping stylesheet application to avoid Qt crash"
-                )
+                self.logger_system.warning("Windows safety mode: skipping stylesheet application to avoid Qt crash")
                 return True
 
             app = QApplication.instance()
 
             if app and hasattr(app, "setStyleSheet"):
                 style_length = len(style_sheet)
-                self.logger_system.info(
-                    f"Applying stylesheet to QApplication (length={style_length} characters)"
-                )
+                self.logger_system.info(f"Applying stylesheet to QApplication (length={style_length} characters)")
                 app.setStyleSheet(style_sheet)
-                self.logger_system.info(
-                    f"Style sheet applied to QApplication: {style_length} characters"
-                )
+                self.logger_system.info(f"Style sheet applied to QApplication: {style_length} characters")
                 return True
 
             # QApplicationが利用できない場合はメインウィンドウへの遅延適用を試みる
@@ -786,9 +778,7 @@ class IntegratedThemeManager(QObject):
                             f"Applying stylesheet to main window as fallback (length={style_length} characters)"
                         )
                         self.main_window.setStyleSheet(style_sheet)
-                        self.logger_system.info(
-                            f"Style sheet applied to main window: {style_length} characters"
-                        )
+                        self.logger_system.info(f"Style sheet applied to main window: {style_length} characters")
                     except Exception as e:
                         self.logger_system.error(f"Failed to apply style sheet to main window: {e}")
 

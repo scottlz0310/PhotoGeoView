@@ -1169,8 +1169,7 @@ class EXIFPanel(QWidget):
                 error_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 error_label.setWordWrap(True)
                 error_label.setStyleSheet(
-                    f"color: {self._get_color('error', '#e74c3c')};"
-                    "font-weight: bold; font-size: 14px; padding: 15px;"
+                    f"color: {self._get_color('error', '#e74c3c')};font-weight: bold; font-size: 14px; padding: 15px;"
                 )
                 self.integrated_layout.addWidget(error_label)
             else:

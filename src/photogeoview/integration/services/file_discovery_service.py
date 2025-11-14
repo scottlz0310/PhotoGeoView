@@ -1109,7 +1109,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "performance_warning",
-                f"遅いスキャン検出: {duration:.2f}秒 (閾値: {SLOW_SCAN_THRESHOLD}秒) - " f"ファイル数: {total_files}",
+                f"遅いスキャン検出: {duration:.2f}秒 (閾値: {SLOW_SCAN_THRESHOLD}秒) - ファイル数: {total_files}",
                 level="WARNING",
             )
 
@@ -1778,7 +1778,7 @@ class FileDiscoveryService:
                     self.logger_system.log_ai_operation(
                         AIComponent.KIRO,
                         "async_batch_complete",
-                        f"バッチ処理完了: {batch_duration:.2f}秒, " f"発見ファイル数: {total_found}個",
+                        f"バッチ処理完了: {batch_duration:.2f}秒, 発見ファイル数: {total_found}個",
                         level="DEBUG",
                     )
 
@@ -2186,8 +2186,7 @@ class FileDiscoveryService:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "cache_performance_warning",
-                    f"キャッシュヒット率が低いです: {overall_hit_rate:.1%}。"
-                    "キャッシュサイズの増加を検討してください。",
+                    f"キャッシュヒット率が低いです: {overall_hit_rate:.1%}。キャッシュサイズの増加を検討してください。",
                     level="WARNING",
                 )
 
@@ -2197,7 +2196,7 @@ class FileDiscoveryService:
                 self.logger_system.log_ai_operation(
                     AIComponent.KIRO,
                     "cache_memory_warning",
-                    f"キャッシュメモリ使用量が多いです: {total_memory_mb:.1f}MB。" "クリーンアップを実行します。",
+                    f"キャッシュメモリ使用量が多いです: {total_memory_mb:.1f}MB。クリーンアップを実行します。",
                     level="WARNING",
                 )
 
@@ -2207,7 +2206,7 @@ class FileDiscoveryService:
             self.logger_system.log_ai_operation(
                 AIComponent.KIRO,
                 "cache_optimization_complete",
-                f"キャッシュ最適化完了 - ヒット率: {overall_hit_rate:.1%}, " f"メモリ使用量: {total_memory_mb:.1f}MB",
+                f"キャッシュ最適化完了 - ヒット率: {overall_hit_rate:.1%}, メモリ使用量: {total_memory_mb:.1f}MB",
             )
 
         except Exception as e:
