@@ -99,11 +99,27 @@ PhotoGeoView/
 
 ## 📖 Migration from PySide6
 
-This project is a complete rewrite of the original PySide6-based PhotoGeoView with modern web technologies. See the migration documentation for details:
+This project is a complete rewrite of the original PySide6-based PhotoGeoView with modern web technologies.
 
-- [ANALYSIS_INDEX_jp.md](./ANALYSIS_INDEX_jp.md) - Migration analysis overview
-- [CODEBASE_ANALYSIS_jp.md](./CODEBASE_ANALYSIS_jp.md) - Detailed codebase analysis
-- [MIGRATION_QUICK_START_jp.md](./MIGRATION_QUICK_START_jp.md) - Quick start guide
+### 📚 Migration Documentation (Japanese)
+
+**必読！実装前にこれらのドキュメントを確認してください:**
+
+1. **[ANALYSIS_INDEX_jp.md](./ANALYSIS_INDEX_jp.md)** - 移行分析の概要
+   - なぜElectronに移行するのか
+   - 技術スタック比較
+   - 意思決定フレームワーク
+
+2. **[CODEBASE_ANALYSIS_jp.md](./CODEBASE_ANALYSIS_jp.md)** - 詳細なコードベース分析
+   - 既存アーキテクチャの問題点
+   - 技術的な利点・欠点
+   - 実装ロードマップ
+
+3. **[MIGRATION_QUICK_START_jp.md](./MIGRATION_QUICK_START_jp.md)** - クイックスタートガイド ⭐ 重要
+   - フェーズごとの実装手順（具体的なコード例付き）
+   - 技術スタックマッピング（PySide6 → Electron + TypeScript）
+   - 依存関係リスト（最新バージョン）
+   - リスク軽減戦略
 
 ### Why the Migration?
 
