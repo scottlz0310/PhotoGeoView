@@ -1,6 +1,8 @@
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { BrowserWindow, app } from 'electron'
+import { BrowserWindow, app, ipcMain } from 'electron'
+import { IPC_CHANNELS } from '../types/ipc'
+import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 
 function createWindow(): void {
   // Create the browser window.
@@ -36,6 +38,42 @@ function createWindow(): void {
   }
 }
 
+// Register IPC handlers
+function registerIpcHandlers(): void {
+  // File System handlers
+  ipcMain.handle(IPC_CHANNELS.GET_DIRECTORY_CONTENTS, async (_event, request) => {
+    return await getDirectoryContents(request)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.GET_FILE_INFO, async (_event, request) => {
+    return await getFileInfo(request)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SELECT_DIRECTORY, async () => {
+    return await selectDirectory()
+  })
+
+  // Window handlers
+  ipcMain.on(IPC_CHANNELS.MINIMIZE_WINDOW, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    window?.minimize()
+  })
+
+  ipcMain.on(IPC_CHANNELS.MAXIMIZE_WINDOW, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    if (window?.isMaximized()) {
+      window.unmaximize()
+    } else {
+      window?.maximize()
+    }
+  })
+
+  ipcMain.on(IPC_CHANNELS.CLOSE_WINDOW, (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    window?.close()
+  })
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -49,6 +87,9 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  // Register IPC handlers
+  registerIpcHandlers()
 
   createWindow()
 

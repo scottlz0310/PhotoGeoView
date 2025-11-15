@@ -1,10 +1,20 @@
 import { electronAPI } from '@electron-toolkit/preload'
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
+import { IPC_CHANNELS, type IpcApi } from '../types/ipc'
 
 // Custom APIs for renderer
-const api = {
-  // Add your custom APIs here
-  // Example: getFiles: () => ipcRenderer.invoke('get-files')
+const api: IpcApi = {
+  // File System
+  getDirectoryContents: (request) =>
+    ipcRenderer.invoke(IPC_CHANNELS.GET_DIRECTORY_CONTENTS, request),
+  getFileInfo: (request) => ipcRenderer.invoke(IPC_CHANNELS.GET_FILE_INFO, request),
+  readImageMetadata: (request) => ipcRenderer.invoke(IPC_CHANNELS.READ_IMAGE_METADATA, request),
+  selectDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SELECT_DIRECTORY),
+
+  // Window
+  minimizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MINIMIZE_WINDOW),
+  maximizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MAXIMIZE_WINDOW),
+  closeWindow: () => ipcRenderer.send(IPC_CHANNELS.CLOSE_WINDOW),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
