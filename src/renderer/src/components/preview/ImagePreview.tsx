@@ -1,12 +1,14 @@
 import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import { Progress } from '@renderer/components/ui/progress'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@renderer/components/ui/tooltip'
-import { Minus, Plus, RotateCw, ZoomIn } from 'lucide-react'
+import { Loader2, Minus, Plus, RotateCw, ZoomIn } from 'lucide-react'
+import { useState } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { toast } from 'sonner'
 
@@ -15,6 +17,7 @@ interface ImagePreviewProps {
 }
 
 export function ImagePreview({ filePath }: ImagePreviewProps) {
+  const [imageLoading, setImageLoading] = useState(false)
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
   const isElectron = !!(window as any).api
 
@@ -143,11 +146,23 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
                   wrapperClass="!w-full !h-full"
                   contentClass="!w-full !h-full flex items-center justify-center"
                 >
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/50 backdrop-blur-sm gap-4">
+                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                      <div className="w-1/3">
+                        <Progress value={undefined} className="h-2" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">Loading image...</p>
+                    </div>
+                  )}
                   <img
                     src={imageUrl}
                     alt={filePath.split('/').pop() || 'Preview'}
                     className="max-w-full max-h-full object-contain"
+                    onLoadStart={() => setImageLoading(true)}
+                    onLoad={() => setImageLoading(false)}
                     onError={(e) => {
+                      setImageLoading(false)
                       console.error('Failed to load image:', filePath)
                       toast.error('Failed to Load Image', {
                         description: `Could not load: ${filePath.split('/').pop()}`,

@@ -1,5 +1,6 @@
 import type { FileEntry } from '@/types/ipc'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import { Progress } from '@renderer/components/ui/progress'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -145,7 +146,11 @@ interface ThumbnailItemProps {
 }
 
 function ThumbnailItem({ file, isSelected, onClick }: ThumbnailItemProps) {
-  const { data: result, isLoading } = useQuery({
+  const {
+    data: result,
+    isLoading,
+    fetchStatus,
+  } = useQuery({
     queryKey: ['thumbnail', file.path],
     queryFn: async () => {
       // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
@@ -160,6 +165,7 @@ function ThumbnailItem({ file, isSelected, onClick }: ThumbnailItemProps) {
   })
 
   const thumbnail = result?.success ? result.data.thumbnail : null
+  const showProgress = isLoading && fetchStatus === 'fetching'
 
   return (
     <button
@@ -171,9 +177,12 @@ function ThumbnailItem({ file, isSelected, onClick }: ThumbnailItemProps) {
         ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border'}
       `}
     >
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+      {showProgress && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="w-3/4">
+            <Progress value={undefined} className="h-1" />
+          </div>
         </div>
       )}
 

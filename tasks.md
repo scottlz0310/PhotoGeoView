@@ -509,7 +509,7 @@ interface LayoutState {
 - [ ] Dropdown Menu
 - [x] Tooltip - ImagePreviewとFileBrowserボタンに実装完了
 - [ ] Tabs
-- [ ] Progress（ローディングバー）
+- [x] Progress（ローディングバー）- ThumbnailGridとImagePreviewに実装完了
 - [x] Toast（通知）- Sonnerで実装完了、システムテーマ追随機能付き
 
 #### 3.3.2 カスタムコンポーネント
