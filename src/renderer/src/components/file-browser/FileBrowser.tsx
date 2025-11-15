@@ -2,6 +2,12 @@ import type { FileEntry } from '@/types/ipc'
 import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { Input } from '@renderer/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, FolderOpen, Home } from 'lucide-react'
@@ -122,78 +128,102 @@ export function FileBrowser() {
   }, [error])
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <div className="flex items-center justify-between mb-4">
-          <CardTitle>File Browser</CardTitle>
-          <Button onClick={handleSelectDirectory} size="sm">
-            <FolderOpen className="h-4 w-4 mr-2" />
-            Select Folder
-          </Button>
-        </div>
-
-        {currentPath && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToHomeDirectory}>
-                <Home className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={goToParentDirectory}
-                disabled={!currentPath || currentPath === '/'}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Input value={currentPath} readOnly className="flex-1 text-sm" />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={imageOnly}
-                  onChange={(e) => setImageOnly(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Show images only
-              </label>
-            </div>
+    <TooltipProvider>
+      <Card className="h-full flex flex-col">
+        <CardHeader>
+          <div className="flex items-center justify-between mb-4">
+            <CardTitle>File Browser</CardTitle>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={handleSelectDirectory} size="sm">
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Select Folder
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Open folder selection dialog</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        )}
-      </CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto">
-        {!isElectron ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-2">Running in Browser Mode</p>
-              <p className="text-sm text-muted-foreground">
-                File system access is only available in the Electron desktop app.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Please run: <code className="bg-muted px-2 py-1 rounded">pnpm dev</code>
-              </p>
+          {currentPath && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={goToHomeDirectory}>
+                      <Home className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Go to Home Directory</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={goToParentDirectory}
+                      disabled={!currentPath || currentPath === '/'}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Go to Parent Directory</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Input value={currentPath} readOnly className="flex-1 text-sm" />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={imageOnly}
+                    onChange={(e) => setImageOnly(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  Show images only
+                </label>
+              </div>
             </div>
-          </div>
-        ) : !currentPath ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Select a folder to browse</p>
+          )}
+        </CardHeader>
+
+        <CardContent className="flex-1 overflow-y-auto">
+          {!isElectron ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-2">Running in Browser Mode</p>
+                <p className="text-sm text-muted-foreground">
+                  File system access is only available in the Electron desktop app.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Please run: <code className="bg-muted px-2 py-1 rounded">pnpm dev</code>
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <FileList
-            files={files}
-            onFileDoubleClick={handleFileDoubleClick}
-            isLoading={isLoading}
-            error={error as Error | null}
-          />
-        )}
-      </CardContent>
-    </Card>
+          ) : !currentPath ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <FolderOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">Select a folder to browse</p>
+              </div>
+            </div>
+          ) : (
+            <FileList
+              files={files}
+              onFileDoubleClick={handleFileDoubleClick}
+              isLoading={isLoading}
+              error={error as Error | null}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }

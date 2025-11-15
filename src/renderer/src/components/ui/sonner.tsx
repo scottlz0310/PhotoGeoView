@@ -7,7 +7,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   // Detect system theme and listen for changes
   const [theme, setTheme] = useState<'light' | 'dark'>(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   )
 
   useEffect(() => {

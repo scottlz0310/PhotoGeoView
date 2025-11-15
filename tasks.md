@@ -507,7 +507,7 @@ interface LayoutState {
 #### ✅ 3.3.1 shadcn/ui追加コンポーネント（一部完了）
 - [ ] Dialog（モーダル）
 - [ ] Dropdown Menu
-- [ ] Tooltip
+- [x] Tooltip - ImagePreviewとFileBrowserボタンに実装完了
 - [ ] Tabs
 - [ ] Progress（ローディングバー）
 - [x] Toast（通知）- Sonnerで実装完了、システムテーマ追随機能付き
