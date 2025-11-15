@@ -36,7 +36,7 @@ function App(): JSX.Element {
             <div>
               <p className="text-foreground mb-4 font-medium">Tech Stack:</p>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="text-lg">⚡ Electron {process.versions.electron}</li>
+                <li className="text-lg">⚡ Electron</li>
                 <li className="text-lg">⚛️ React 19</li>
                 <li className="text-lg">🔷 TypeScript 5.7+</li>
                 <li className="text-lg">🚀 Vite 6</li>
