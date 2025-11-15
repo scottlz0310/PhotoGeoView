@@ -13,10 +13,10 @@
   - ✅ 基本的なファイルブラウザーUI
 - 🚧 **Phase 2**: コア機能実装 (進行中)
   - ✅ 2.1 画像処理ライブラリ (sharp, exifreader)
+  - ✅ 2.2 画像プレビュー (react-zoom-pan-pinch)
   - ✅ 2.3 サムネイルグリッド
   - ✅ 2.4 EXIF表示パネル
-  - 🔄 2.2 画像プレビュー (次)
-  - ⏳ 2.5 マップ統合
+  - 🔄 2.5 マップ統合 (次)
 - ⏳ **Phase 3**: UI完成
 - ⏳ **Phase 4**: テストと仕上げ
 
@@ -237,24 +237,25 @@
 - [x] IPCチャネル追加（image:generateThumbnail, image:readExif）
 - [x] Preloadスクリプト更新
 
-### 2.2 画像プレビュー機能
+### ✅ 2.2 画像プレビュー機能
 
-#### 2.2.1 画像ビューアーコンポーネント
-- [ ] `ImagePreview.tsx` 作成
-- [ ] フル解像度画像読み込み
-- [ ] React 19 Suspense活用
-- [ ] TanStack Queryでキャッシング
+#### ✅ 2.2.1 画像ビューアーコンポーネント
+- [x] `ImagePreview.tsx` 作成
+- [x] フル解像度画像読み込み（file:// URLプロトコル）
+- [x] Electron環境検出とフォールバック
+- [x] エラーハンドリング
 
-#### 2.2.2 ズーム/パン機能
-- [ ] react-zoom-pan-pinch インストール
+#### ✅ 2.2.2 ズーム/パン機能
+- [x] react-zoom-pan-pinch インストール
   ```bash
   pnpm add react-zoom-pan-pinch
   ```
-- [ ] ズームコントロール実装
-- [ ] パンジェスチャー対応
-- [ ] リセット機能
+- [x] ズームコントロール実装（Zoom In/Out, Reset, Fit to Screen）
+- [x] パンジェスチャー対応（TransformWrapper/Component）
+- [x] ダブルクリックでリセット機能
+- [x] コントロールボタンUI（shadcn/ui Button、Lucide icons）
 
-#### 2.2.3 画像回転
+#### 2.2.3 画像回転（オプション - 未実装）
 - [ ] sharp経由で回転処理
 - [ ] UI回転ボタン
 - [ ] EXIF Orientation対応

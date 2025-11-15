@@ -1,5 +1,6 @@
 import { ExifPanel } from '@renderer/components/exif/ExifPanel'
 import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
+import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
@@ -45,9 +46,10 @@ function App(): JSX.Element {
       </header>
 
       <main className="flex-1 overflow-hidden p-4">
-        <div className="h-full grid grid-cols-3 gap-4">
+        <div className="h-full grid grid-rows-2 grid-cols-2 gap-4">
           <FileBrowser />
           <ThumbnailGrid files={files} currentPath={currentPath} />
+          <ImagePreview filePath={selectedFile} />
           <ExifPanel filePath={selectedFile} />
         </div>
       </main>
