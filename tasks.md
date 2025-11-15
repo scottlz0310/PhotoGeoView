@@ -13,9 +13,9 @@
   - ✅ 基本的なファイルブラウザーUI
 - 🚧 **Phase 2**: コア機能実装 (進行中)
   - ✅ 2.1 画像処理ライブラリ (sharp, exifreader)
+  - ✅ 2.3 サムネイルグリッド
   - ✅ 2.4 EXIF表示パネル
-  - 🔄 2.3 サムネイルグリッド (次)
-  - ⏳ 2.2 画像プレビュー
+  - 🔄 2.2 画像プレビュー (次)
   - ⏳ 2.5 マップ統合
 - ⏳ **Phase 3**: UI完成
 - ⏳ **Phase 4**: テストと仕上げ
@@ -259,25 +259,26 @@
 - [ ] UI回転ボタン
 - [ ] EXIF Orientation対応
 
-### 2.3 サムネイル生成システム
+### ✅ 2.3 サムネイル生成システム
 
 **参照**: MIGRATION_QUICK_START_jp.md 第203-207行
 
-#### 2.3.1 高速サムネイル生成
-- [ ] sharpでサムネイル生成（最速）
-- [ ] キャッシュディレクトリ設定
-- [ ] TanStack Query キャッシング戦略
-- [ ] Web Worker並列処理（検討）
+#### ✅ 2.3.1 高速サムネイル生成
+- [x] sharpでサムネイル生成（150x150px）
+- [x] TanStack Query キャッシング戦略（10分staleTime、30分gcTime）
+- [x] Base64エンコードでレンダラーに転送
 
-#### 2.3.2 サムネイルグリッド
-- [ ] `ThumbnailGrid.tsx` 作成
-- [ ] @tanstack/react-virtual インストール
+#### ✅ 2.3.2 サムネイルグリッド
+- [x] `ThumbnailGrid.tsx` 作成
+- [x] @tanstack/react-virtual インストール
   ```bash
   pnpm add @tanstack/react-virtual
   ```
-- [ ] 仮想スクロール実装（大量画像対応）
-- [ ] 遅延読み込み
-- [ ] グリッドレイアウト（TailwindCSS Grid）
+- [x] 仮想スクロール実装（大量画像対応、overscan=5）
+- [x] 遅延読み込み（lazy loading）
+- [x] グリッドレイアウト（4カラムTailwindCSS Grid）
+- [x] 選択状態の視覚的フィードバック
+- [x] ローディングスピナー表示
 
 ### ✅ 2.4 EXIF表示パネル
 
