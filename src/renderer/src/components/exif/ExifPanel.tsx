@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/u
 import { Separator } from '@renderer/components/ui/separator'
 import { useQuery } from '@tanstack/react-query'
 import { Camera, MapPin, Settings } from 'lucide-react'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 interface ExifPanelProps {
   filePath: string | null
@@ -28,6 +30,15 @@ export function ExifPanel({ filePath }: ExifPanelProps) {
   })
 
   const exifData = result?.success ? result.data.exif : null
+
+  // Show error toast when EXIF read fails
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to Read EXIF Data', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      })
+    }
+  }, [error])
 
   if (!filePath) {
     return (

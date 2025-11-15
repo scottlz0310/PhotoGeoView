@@ -2,6 +2,7 @@ import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { Minus, Plus, RotateCw, ZoomIn } from 'lucide-react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
+import { toast } from 'sonner'
 
 interface ImagePreviewProps {
   filePath: string | null
@@ -114,6 +115,9 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
                   className="max-w-full max-h-full object-contain"
                   onError={(e) => {
                     console.error('Failed to load image:', filePath)
+                    toast.error('Failed to Load Image', {
+                      description: `Could not load: ${filePath.split('/').pop()}`,
+                    })
                     ;(e.target as HTMLImageElement).style.display = 'none'
                   }}
                 />

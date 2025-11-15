@@ -1,6 +1,7 @@
 import type { ExifData } from '@/types/ipc'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import 'leaflet/dist/leaflet.css'
 
 interface PhotoMapProps {
@@ -33,6 +34,9 @@ export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
         })
         .catch((err) => {
           console.error('Failed to initialize Leaflet icons:', err)
+          toast.error('Map Initialization Failed', {
+            description: 'Could not load map marker icons',
+          })
         })
     }
   }, [isClient, iconFixed])
@@ -145,7 +149,11 @@ function DynamicMap({
       })
       .catch((err) => {
         console.error('Failed to load react-leaflet:', err)
-        setError(err.message || 'Failed to load map components')
+        const errorMsg = err.message || 'Failed to load map components'
+        setError(errorMsg)
+        toast.error('Map Loading Failed', {
+          description: errorMsg,
+        })
       })
   }, [])
 

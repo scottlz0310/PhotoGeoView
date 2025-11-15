@@ -3,6 +3,7 @@ import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
 import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
+import { Toaster } from '@renderer/components/ui/sonner'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { Camera } from 'lucide-react'
@@ -48,66 +49,69 @@ function App(): JSX.Element {
   const exifData = exifResult?.success ? exifResult.data.exif : null
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      <header className="flex-shrink-0 border-b bg-card px-6 py-4">
-        <div className="flex items-center gap-3">
-          <Camera className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-purple-900 bg-clip-text text-transparent">
-              PhotoGeoView
-            </h1>
-            <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
+    <>
+      <Toaster />
+      <div className="h-screen flex flex-col bg-background">
+        <header className="flex-shrink-0 border-b bg-card px-6 py-4">
+          <div className="flex items-center gap-3">
+            <Camera className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-purple-900 bg-clip-text text-transparent">
+                PhotoGeoView
+              </h1>
+              <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex-1 overflow-hidden p-4">
-        <PanelGroup direction="horizontal" className="h-full gap-4">
-          {/* Left Panel: File Browser and Thumbnail Grid */}
-          <Panel defaultSize={25} minSize={15}>
-            <PanelGroup direction="vertical" className="gap-4">
-              {/* Top: File Browser */}
-              <Panel defaultSize={40} minSize={20}>
-                <FileBrowser />
-              </Panel>
+        <main className="flex-1 overflow-hidden p-4">
+          <PanelGroup direction="horizontal" className="h-full gap-4">
+            {/* Left Panel: File Browser and Thumbnail Grid */}
+            <Panel defaultSize={25} minSize={15}>
+              <PanelGroup direction="vertical" className="gap-4">
+                {/* Top: File Browser */}
+                <Panel defaultSize={40} minSize={20}>
+                  <FileBrowser />
+                </Panel>
 
-              <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+                <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
 
-              {/* Bottom: Thumbnail Grid */}
-              <Panel defaultSize={60} minSize={30}>
-                <ThumbnailGrid files={files} currentPath={currentPath} />
-              </Panel>
-            </PanelGroup>
-          </Panel>
+                {/* Bottom: Thumbnail Grid */}
+                <Panel defaultSize={60} minSize={30}>
+                  <ThumbnailGrid files={files} currentPath={currentPath} />
+                </Panel>
+              </PanelGroup>
+            </Panel>
 
-          <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+            <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
 
-          {/* Middle Panel: EXIF Info */}
-          <Panel defaultSize={20} minSize={15}>
-            <ExifPanel filePath={selectedFile} />
-          </Panel>
+            {/* Middle Panel: EXIF Info */}
+            <Panel defaultSize={20} minSize={15}>
+              <ExifPanel filePath={selectedFile} />
+            </Panel>
 
-          <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+            <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
 
-          {/* Right Panel: Image Preview and Map */}
-          <Panel defaultSize={55} minSize={30}>
-            <PanelGroup direction="vertical" className="gap-4">
-              {/* Top: Image Preview */}
-              <Panel defaultSize={60} minSize={30}>
-                <ImagePreview filePath={selectedFile} />
-              </Panel>
+            {/* Right Panel: Image Preview and Map */}
+            <Panel defaultSize={55} minSize={30}>
+              <PanelGroup direction="vertical" className="gap-4">
+                {/* Top: Image Preview */}
+                <Panel defaultSize={60} minSize={30}>
+                  <ImagePreview filePath={selectedFile} />
+                </Panel>
 
-              <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+                <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
 
-              {/* Bottom: Map */}
-              <Panel defaultSize={40} minSize={20}>
-                <PhotoMap exifData={exifData} filePath={selectedFile} />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-        </PanelGroup>
-      </main>
-    </div>
+                {/* Bottom: Map */}
+                <Panel defaultSize={40} minSize={20}>
+                  <PhotoMap exifData={exifData} filePath={selectedFile} />
+                </Panel>
+              </PanelGroup>
+            </Panel>
+          </PanelGroup>
+        </main>
+      </div>
+    </>
   )
 }
 

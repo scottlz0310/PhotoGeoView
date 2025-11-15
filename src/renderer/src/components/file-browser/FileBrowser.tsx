@@ -6,6 +6,7 @@ import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, FolderOpen, Home } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { FileList } from './FileList'
 
 export function FileBrowser() {
@@ -40,14 +41,29 @@ export function FileBrowser() {
 
   const handleSelectDirectory = async () => {
     if (!isElectron) {
-      alert('This feature is only available in the Electron app. Please use the desktop version.')
+      toast.error('Electron Required', {
+        description: 'This feature is only available in the Electron app.',
+      })
       return
     }
-    // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
-    const result = await (window as any).api.selectDirectory()
-    if (result.success && result.data) {
-      setCurrentPath(result.data)
-      clearSelectedFiles()
+    try {
+      // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
+      const result = await (window as any).api.selectDirectory()
+      if (result.success && result.data) {
+        setCurrentPath(result.data)
+        clearSelectedFiles()
+        toast.success('Folder Selected', {
+          description: `Opened: ${result.data}`,
+        })
+      } else if (result.error) {
+        toast.error('Failed to Select Folder', {
+          description: result.error.message,
+        })
+      }
+    } catch (error) {
+      toast.error('Error', {
+        description: error instanceof Error ? error.message : 'Failed to select directory',
+      })
     }
   }
 
@@ -68,11 +84,24 @@ export function FileBrowser() {
   }
 
   const goToHomeDirectory = async () => {
-    // On Linux/Mac, home is ~, on Windows it's typically C:\Users\username
-    const homeDir = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
-    if (homeDir) {
-      setCurrentPath(homeDir)
-      clearSelectedFiles()
+    try {
+      // On Linux/Mac, home is ~, on Windows it's typically C:\Users\username
+      const homeDir = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
+      if (homeDir) {
+        setCurrentPath(homeDir)
+        clearSelectedFiles()
+        toast.success('Home Directory', {
+          description: `Navigated to: ${homeDir}`,
+        })
+      } else {
+        toast.error('Home Directory Not Found', {
+          description: 'Could not determine home directory path',
+        })
+      }
+    } catch (error) {
+      toast.error('Navigation Error', {
+        description: error instanceof Error ? error.message : 'Failed to navigate to home',
+      })
     }
   }
 
@@ -82,6 +111,15 @@ export function FileBrowser() {
       refetch()
     }
   }, [currentPath, refetch])
+
+  // Show error toast when query fails
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to Load Directory', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      })
+    }
+  }, [error])
 
   return (
     <Card className="h-full flex flex-col">
