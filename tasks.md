@@ -11,12 +11,13 @@
   - ✅ TailwindCSS v4, shadcn/ui, Zustand, TanStack Query
   - ✅ Type-safe IPC通信
   - ✅ 基本的なファイルブラウザーUI
-- 🚧 **Phase 2**: コア機能実装 (進行中)
+- ✅ **Phase 2**: コア機能実装 (完了!)
   - ✅ 2.1 画像処理ライブラリ (sharp, exifreader)
   - ✅ 2.2 画像プレビュー (react-zoom-pan-pinch)
   - ✅ 2.3 サムネイルグリッド
   - ✅ 2.4 EXIF表示パネル
-  - 🔄 2.5 マップ統合 (次)
+  - ✅ 2.5 マップ統合 (React Leaflet)
+  - 🔄 2.6 統合テスト (次)
 - ⏳ **Phase 3**: UI完成
 - ⏳ **Phase 4**: テストと仕上げ
 
@@ -303,32 +304,28 @@
 - [x] ローディング・エラー状態
 - [x] ブラウザ環境検出とフォールバック
 
-### 2.5 マップ統合
+### ✅ 2.5 マップ統合
 
 **参照**: MIGRATION_QUICK_START_jp.md 第233-268行
 
-#### 2.5.1 React Leaflet セットアップ
-- [ ] React Leaflet インストール
+#### ✅ 2.5.1 React Leaflet セットアップ
+- [x] React Leaflet インストール
   ```bash
   pnpm add react-leaflet leaflet
   pnpm add -D @types/leaflet
   ```
-- [ ] Leaflet CSS追加
-- [ ] 基本マップコンポーネント作成
+- [x] Leaflet CSS追加（index.css）
+- [x] 基本マップコンポーネント作成
 
-#### 2.5.2 型安全なマップコンポーネント
-- [ ] `PhotoMap.tsx` 作成（TypeScript型付き）
-  ```typescript
-  interface MapProps {
-    center: LatLngExpression;
-    markers: Array<{ position: LatLngExpression; metadata: PhotoMetadata }>;
-  }
-  ```
-- [ ] マーカー表示
-- [ ] ポップアップ情報
-- [ ] カスタムマーカーアイコン（shadcn/ui）
+#### ✅ 2.5.2 型安全なマップコンポーネント
+- [x] `PhotoMap.tsx` 作成（TypeScript型付き）
+- [x] マーカー表示（EXIF GPS座標）
+- [x] ポップアップ情報（ファイル名、座標、高度）
+- [x] OpenStreetMapタイル統合
+- [x] GPS情報がない場合のフォールバック表示
+- [x] App.tsxへの統合完了
 
-#### 2.5.3 マーカークラスタリング
+#### 2.5.3 マーカークラスタリング（オプション - 未実装）
 - [ ] react-leaflet-markercluster インストール
   ```bash
   pnpm add react-leaflet-markercluster
@@ -634,7 +631,46 @@
 - IPC通信の基盤が完成
 - 次はPhase 1.3（基本ファイルブラウザーUI実装）
 
+#### 2025-11-15 セッション 5
+**完了項目**:
+- ✅ Phase 2.5: マップ統合完了
+  - React Leaflet & Leaflet インストール
+  - Leaflet CSS追加（index.css）
+  - PhotoMapコンポーネント作成
+  - マーカー表示とポップアップ実装
+  - GPS座標からの地図表示
+  - App.tsxへの統合
+  - 動的インポートによるSSR問題の解決
+  - MapUpdaterコンポーネントで地図中心の自動更新実装
+  - TypeScript型チェック合格
+  - Biome linter合格
+
+**技術的メモ**:
+- Leafletのデフォルトマーカーアイコン問題をCDN URLで解決
+- ESモジュール環境での動的インポート使用（`import()`）
+- `useMap`フックで地図インスタンスにアクセスし、位置変更時に自動更新
+- OpenStreetMapタイルを使用
+- GPS情報がない画像に対するフォールバック表示を実装
+- PhotoMapはExifPanelと連携してEXIF GPSデータを表示
+
+**実装された機能**:
+- 画像のGPS座標を地図上にマーカー表示
+- ポップアップでファイル名、緯度、経度、高度を表示
+- GPS情報がない場合の適切なメッセージ表示
+- レスポンシブなマップレイアウト
+- 画像選択時の地図中心の自動更新（MapUpdaterコンポーネント）
+
+**解決した課題**:
+- ❌ → ✅ `require is not defined` エラー（動的インポートで解決）
+- ❌ → ✅ `this._getIconUrl is not a function` エラー（Leaflet初期化順序の修正）
+- ❌ → ✅ 地図の中心が自動更新されない問題（MapUpdaterコンポーネント追加）
+
+**次回への引き継ぎ**:
+- 開発サーバーは起動中（バックグラウンド）
+- Phase 2コア機能実装が完了
+- 次はPhase 2.6（統合テスト）またはPhase 3（UI完成）
+
 ---
 
 **最終更新**: 2025-11-15
-**次回レビュー予定**: Phase 1完了時
+**次回レビュー予定**: Phase 2完了時
