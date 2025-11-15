@@ -1,5 +1,6 @@
 import { ExifPanel } from '@renderer/components/exif/ExifPanel'
 import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
+import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { useAppStore } from '@renderer/stores/appStore'
@@ -31,6 +32,20 @@ function App(): JSX.Element {
 
   const files = result?.success ? result.data.entries : []
 
+  // Fetch EXIF data for the selected file for PhotoMap
+  const { data: exifResult } = useQuery({
+    queryKey: ['exif-for-map', selectedFile],
+    queryFn: async () => {
+      if (!selectedFile || !isElectron) return null
+      // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
+      return await (window as any).api.readExif({ path: selectedFile })
+    },
+    enabled: !!selectedFile && isElectron,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  const exifData = exifResult?.success ? exifResult.data.exif : null
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <header className="flex-shrink-0 border-b bg-card px-6 py-4">
@@ -46,11 +61,16 @@ function App(): JSX.Element {
       </header>
 
       <main className="flex-1 overflow-hidden p-4">
-        <div className="h-full grid grid-rows-2 grid-cols-2 gap-4">
+        <div className="h-full grid grid-rows-2 grid-cols-3 gap-4">
           <FileBrowser />
           <ThumbnailGrid files={files} currentPath={currentPath} />
-          <ImagePreview filePath={selectedFile} />
-          <ExifPanel filePath={selectedFile} />
+          <div className="flex flex-col gap-4">
+            <ExifPanel filePath={selectedFile} />
+            <PhotoMap exifData={exifData} filePath={selectedFile} />
+          </div>
+          <div className="col-span-2">
+            <ImagePreview filePath={selectedFile} />
+          </div>
         </div>
       </main>
     </div>
