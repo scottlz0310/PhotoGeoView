@@ -6,6 +6,7 @@ import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { Camera } from 'lucide-react'
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App(): JSX.Element {
   const { selectedFiles, currentPath } = useAppStore()
@@ -61,17 +62,50 @@ function App(): JSX.Element {
       </header>
 
       <main className="flex-1 overflow-hidden p-4">
-        <div className="h-full grid grid-rows-2 grid-cols-3 gap-4">
-          <FileBrowser />
-          <ThumbnailGrid files={files} currentPath={currentPath} />
-          <div className="flex flex-col gap-4">
+        <PanelGroup direction="horizontal" className="h-full gap-4">
+          {/* Left Panel: File Browser and Thumbnail Grid */}
+          <Panel defaultSize={25} minSize={15}>
+            <PanelGroup direction="vertical" className="gap-4">
+              {/* Top: File Browser */}
+              <Panel defaultSize={40} minSize={20}>
+                <FileBrowser />
+              </Panel>
+
+              <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+
+              {/* Bottom: Thumbnail Grid */}
+              <Panel defaultSize={60} minSize={30}>
+                <ThumbnailGrid files={files} currentPath={currentPath} />
+              </Panel>
+            </PanelGroup>
+          </Panel>
+
+          <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+
+          {/* Middle Panel: EXIF Info */}
+          <Panel defaultSize={20} minSize={15}>
             <ExifPanel filePath={selectedFile} />
-            <PhotoMap exifData={exifData} filePath={selectedFile} />
-          </div>
-          <div className="col-span-2">
-            <ImagePreview filePath={selectedFile} />
-          </div>
-        </div>
+          </Panel>
+
+          <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+
+          {/* Right Panel: Image Preview and Map */}
+          <Panel defaultSize={55} minSize={30}>
+            <PanelGroup direction="vertical" className="gap-4">
+              {/* Top: Image Preview */}
+              <Panel defaultSize={60} minSize={30}>
+                <ImagePreview filePath={selectedFile} />
+              </Panel>
+
+              <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+
+              {/* Bottom: Map */}
+              <Panel defaultSize={40} minSize={20}>
+                <PhotoMap exifData={exifData} filePath={selectedFile} />
+              </Panel>
+            </PanelGroup>
+          </Panel>
+        </PanelGroup>
       </main>
     </div>
   )
