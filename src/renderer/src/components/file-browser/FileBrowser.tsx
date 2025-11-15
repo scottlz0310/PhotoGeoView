@@ -10,14 +10,15 @@ import {
 } from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, FolderOpen, Home } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ChevronLeft, FolderOpen, Home, Search, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { FileList } from './FileList'
 
 export function FileBrowser() {
   const { currentPath, setCurrentPath, clearSelectedFiles } = useAppStore()
   const [imageOnly, setImageOnly] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Check if running in Electron environment
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
@@ -44,6 +45,15 @@ export function FileBrowser() {
   })
 
   const files = result?.success ? result.data.entries : []
+
+  // Filter files based on search query
+  const filteredFiles = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return files
+    }
+    const query = searchQuery.toLowerCase()
+    return files.filter((file) => file.name.toLowerCase().includes(query))
+  }, [files, searchQuery])
 
   const handleSelectDirectory = async () => {
     if (!isElectron) {
@@ -178,6 +188,35 @@ export function FileBrowser() {
                 <Input value={currentPath} readOnly className="flex-1 text-sm" />
               </div>
 
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search files..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-9"
+                />
+                {searchQuery && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Clear search</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+
               <div className="flex items-center gap-2">
                 <label className="flex items-center gap-2 text-sm">
                   <input
@@ -188,6 +227,11 @@ export function FileBrowser() {
                   />
                   Show images only
                 </label>
+                {searchQuery && (
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {filteredFiles.length} result{filteredFiles.length !== 1 ? 's' : ''}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -214,9 +258,25 @@ export function FileBrowser() {
                 <p className="text-muted-foreground">Select a folder to browse</p>
               </div>
             </div>
+          ) : filteredFiles.length === 0 && searchQuery ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground mb-2">No files found</p>
+                <p className="text-sm text-muted-foreground">No files match "{searchQuery}"</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setSearchQuery('')}
+                >
+                  Clear search
+                </Button>
+              </div>
+            </div>
           ) : (
             <FileList
-              files={files}
+              files={filteredFiles}
               onFileDoubleClick={handleFileDoubleClick}
               isLoading={isLoading}
               error={error as Error | null}
