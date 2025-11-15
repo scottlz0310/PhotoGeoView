@@ -41,8 +41,8 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
     )
   }
 
-  // Convert file path to file:// URL for Electron
-  const imageUrl = `file://${filePath}`
+  // Convert file path to local-file:// URL for Electron custom protocol
+  const imageUrl = `local-file://${filePath}`
 
   return (
     <Card className="h-full flex flex-col">

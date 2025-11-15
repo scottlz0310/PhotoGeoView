@@ -1,6 +1,7 @@
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { BrowserWindow, app, ipcMain } from 'electron'
+import { BrowserWindow, app, ipcMain, protocol } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif } from './handlers/imageProcessing'
@@ -84,12 +85,48 @@ function registerIpcHandlers(): void {
   })
 }
 
+// Register custom protocol for loading local files
+function registerLocalFileProtocol(): void {
+  protocol.registerBufferProtocol('local-file', async (request, callback) => {
+    try {
+      // Remove 'local-file://' prefix to get the actual file path
+      const filePath = decodeURIComponent(request.url.replace('local-file://', ''))
+      const data = await readFile(filePath)
+
+      // Determine MIME type based on file extension
+      const ext = filePath.split('.').pop()?.toLowerCase()
+      const mimeTypes: Record<string, string> = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        webp: 'image/webp',
+        bmp: 'image/bmp',
+        svg: 'image/svg+xml',
+        tiff: 'image/tiff',
+        tif: 'image/tiff',
+      }
+
+      callback({
+        mimeType: mimeTypes[ext || ''] || 'application/octet-stream',
+        data,
+      })
+    } catch (error) {
+      console.error('Failed to load local file:', error)
+      callback({ error: -2 }) // net::ERR_FAILED
+    }
+  })
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.photogeoview')
+
+  // Register custom protocol for local file access
+  registerLocalFileProtocol()
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
