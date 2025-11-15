@@ -469,6 +469,11 @@ interface LayoutState {
 
 **参照**: 元のQt 16テーマシステム
 
+**現状**:
+- アプリ本体は常にライトテーマ（TailwindCSS v4のデフォルト）
+- トースト通知のみシステムテーマ（`prefers-color-scheme`）に追随
+- 完全なテーマシステムは未実装
+
 #### 3.2.1 TailwindCSS テーマ設定
 - [ ] CSS変数定義
   ```css
@@ -499,13 +504,13 @@ interface LayoutState {
 
 ### 3.3 追加UIコンポーネント
 
-#### 3.3.1 shadcn/ui追加コンポーネント
+#### ✅ 3.3.1 shadcn/ui追加コンポーネント（一部完了）
 - [ ] Dialog（モーダル）
 - [ ] Dropdown Menu
 - [ ] Tooltip
 - [ ] Tabs
 - [ ] Progress（ローディングバー）
-- [ ] Toast（通知）
+- [x] Toast（通知）- Sonnerで実装完了、システムテーマ追随機能付き
 
 #### 3.3.2 カスタムコンポーネント
 - [ ] ファイル情報カード

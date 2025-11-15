@@ -1,11 +1,24 @@
 import { CircleCheck, Info, LoaderCircle, OctagonX, TriangleAlert } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Toaster as Sonner } from 'sonner'
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Detect system theme
-  const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  // Detect system theme and listen for changes
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+  )
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? 'dark' : 'light')
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   return (
     <Sonner
