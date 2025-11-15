@@ -57,41 +57,50 @@ export async function readExif(request: ReadExifRequest): Promise<Result<ReadExi
   try {
     const validated = ReadExifRequestSchema.parse(request)
 
-    // Read EXIF data using exifreader
-    const tags = await ExifReader.load(validated.path, { expanded: true })
+    // Read EXIF data using exifreader (without expanded mode for better compatibility)
+    const tags = await ExifReader.load(validated.path)
+
+    // Helper function to safely convert to number
+    const toNumber = (val: unknown): number | undefined => {
+      if (typeof val === 'number') return val
+      if (typeof val === 'string') {
+        const num = Number.parseFloat(val)
+        return Number.isNaN(num) ? undefined : num
+      }
+      return undefined
+    }
 
     // Extract relevant EXIF data
     const exifData: ReadExifResponse['exif'] = {
       camera: {
-        make: tags.exif?.Make?.description,
-        model: tags.exif?.Model?.description,
-        lens: tags.exif?.LensModel?.description,
+        make: tags.Make?.description,
+        model: tags.Model?.description,
+        lens: tags.LensModel?.description,
       },
       exposure: {
-        iso: Array.isArray(tags.exif?.ISOSpeedRatings?.value)
-          ? tags.exif?.ISOSpeedRatings?.value[0]
-          : tags.exif?.ISOSpeedRatings?.value,
-        aperture: Array.isArray(tags.exif?.FNumber?.value)
-          ? tags.exif?.FNumber?.value[0]
-          : tags.exif?.FNumber?.value,
-        shutterSpeed: tags.exif?.ExposureTime?.description,
-        focalLength: Array.isArray(tags.exif?.FocalLength?.value)
-          ? tags.exif?.FocalLength?.value[0]
-          : tags.exif?.FocalLength?.value,
+        iso: toNumber(tags.ISOSpeedRatings?.value),
+        aperture: toNumber(tags.FNumber?.value),
+        shutterSpeed: tags.ExposureTime?.description,
+        focalLength: toNumber(tags.FocalLength?.value),
       },
       gps:
-        tags.gps?.Latitude !== undefined && tags.gps?.Longitude !== undefined
+        tags.GPSLatitude !== undefined && tags.GPSLongitude !== undefined
           ? {
-              latitude: tags.gps.Latitude,
-              longitude: tags.gps.Longitude,
-              altitude: tags.gps.Altitude,
+              latitude: toNumber(tags.GPSLatitude.description) || 0,
+              longitude: toNumber(tags.GPSLongitude.description) || 0,
+              altitude: toNumber(tags.GPSAltitude?.description),
             }
           : undefined,
-      timestamp: tags.exif?.DateTimeOriginal?.description
-        ? new Date(tags.exif.DateTimeOriginal.description).getTime()
+      timestamp: tags.DateTimeOriginal?.description
+        ? new Date(
+            String(tags.DateTimeOriginal.description).replace(
+              /^(\d{4}):(\d{2}):(\d{2})/,
+              '$1-$2-$3'
+            )
+          ).getTime()
         : undefined,
-      width: tags.file?.['Image Width']?.value,
-      height: tags.file?.['Image Height']?.value,
+      width: toNumber(tags['Image Width']?.value) || toNumber(tags.PixelXDimension?.value),
+      height: toNumber(tags['Image Height']?.value) || toNumber(tags.PixelYDimension?.value),
     }
 
     // Validate the extracted data
