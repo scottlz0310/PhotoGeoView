@@ -3,6 +3,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { BrowserWindow, app, ipcMain } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
+import { generateThumbnail, readExif } from './handlers/imageProcessing'
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,6 +52,15 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.SELECT_DIRECTORY, async () => {
     return await selectDirectory()
+  })
+
+  // Image Processing handlers
+  ipcMain.handle(IPC_CHANNELS.GENERATE_THUMBNAIL, async (_event, request) => {
+    return await generateThumbnail(request)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.READ_EXIF, async (_event, request) => {
+    return await readExif(request)
   })
 
   // Window handlers

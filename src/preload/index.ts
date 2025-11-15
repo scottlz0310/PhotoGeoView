@@ -11,6 +11,10 @@ const api: IpcApi = {
   readImageMetadata: (request) => ipcRenderer.invoke(IPC_CHANNELS.READ_IMAGE_METADATA, request),
   selectDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SELECT_DIRECTORY),
 
+  // Image Processing
+  generateThumbnail: (request) => ipcRenderer.invoke(IPC_CHANNELS.GENERATE_THUMBNAIL, request),
+  readExif: (request) => ipcRenderer.invoke(IPC_CHANNELS.READ_EXIF, request),
+
   // Window
   minimizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MINIMIZE_WINDOW),
   maximizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MAXIMIZE_WINDOW),

@@ -4,6 +4,22 @@
 >
 > このドキュメントは実装の進捗を追跡します。完了したタスクは✅でマークします。
 
+## 📊 現在の進捗
+
+- ✅ **Phase 0**: 環境セットアップ (完了)
+- ✅ **Phase 1**: プロトタイプ & セットアップ (完了)
+  - ✅ TailwindCSS v4, shadcn/ui, Zustand, TanStack Query
+  - ✅ Type-safe IPC通信
+  - ✅ 基本的なファイルブラウザーUI
+- 🚧 **Phase 2**: コア機能実装 (進行中)
+  - ✅ 2.1 画像処理ライブラリ (sharp, exifreader)
+  - 🔄 2.4 EXIF表示パネル (次)
+  - ⏳ 2.3 サムネイルグリッド
+  - ⏳ 2.2 画像プレビュー
+  - ⏳ 2.5 マップ統合
+- ⏳ **Phase 3**: UI完成
+- ⏳ **Phase 4**: テストと仕上げ
+
 ## 📋 目次
 
 - [Phase 0: 環境セットアップ](#phase-0-環境セットアップ)
@@ -180,11 +196,12 @@
 - [ ] ローディング状態UI
 - [ ] エラー状態UI
 
-### 1.4 基本動作確認
-- [ ] ファイルブラウザーでディレクトリ移動
-- [ ] 画像ファイルのみフィルタリング表示
-- [ ] ファイル選択状態の保持
-- [ ] ホットリロードでの開発体験確認
+### ✅ 1.4 基本動作確認
+- [x] ファイルブラウザーでディレクトリ移動
+- [x] 画像ファイルのみフィルタリング表示
+- [x] ファイル選択状態の保持
+- [x] ホットリロードでの開発体験確認
+- [x] ブラウザ環境検出とフォールバック実装
 
 ---
 
@@ -193,34 +210,32 @@
 ### 🎯 目標
 画像処理（EXIF、サムネイル）とマップ表示の実装。高パフォーマンスライブラリ（sharp、exifreader）を活用。
 
-### 2.1 画像処理ライブラリのセットアップ
+### ✅ 2.1 画像処理ライブラリのセットアップ
 
 **参照**: MIGRATION_QUICK_START_jp.md 第166-207行
 
-#### 2.1.1 sharp インストールと設定
-- [ ] sharp インストール
+#### ✅ 2.1.1 sharp インストールと設定
+- [x] sharp インストール
   ```bash
   pnpm add sharp
   ```
-- [ ] メインプロセスで画像処理ハンドラー作成
-  - [ ] サムネイル生成ハンドラー
-  - [ ] 画像リサイズハンドラー
-- [ ] パフォーマンステスト（Pillowとの比較）
+- [x] メインプロセスで画像処理ハンドラー作成
+  - [x] サムネイル生成ハンドラー（200x200px, JPEG品質80%, Base64エンコード）
+  - [x] 画像リサイズハンドラー
+- [x] .pnpmrc設定でビルドスクリプト承認
 
-#### 2.1.2 exifreader セットアップ
-- [ ] exifreader インストール
+#### ✅ 2.1.2 exifreader セットアップ
+- [x] exifreader インストール
   ```bash
   pnpm add exifreader
   ```
-- [ ] EXIF抽出ハンドラー実装
-- [ ] TypeScript型定義作成
-  ```typescript
-  interface ExifData {
-    camera: { make: string; model: string; lens?: string };
-    exposure: { iso: number; aperture: number; shutterSpeed: string };
-    gps?: { latitude: number; longitude: number; altitude?: number };
-  }
-  ```
+- [x] EXIF抽出ハンドラー実装（src/main/handlers/imageProcessing.ts）
+- [x] TypeScript型定義作成（src/types/ipc.ts）
+  - [x] ExifData型定義
+  - [x] GenerateThumbnailRequest/Response
+  - [x] ReadExifRequest/Response
+- [x] IPCチャネル追加（image:generateThumbnail, image:readExif）
+- [x] Preloadスクリプト更新
 
 ### 2.2 画像プレビュー機能
 

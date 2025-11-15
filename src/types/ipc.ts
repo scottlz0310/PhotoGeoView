@@ -11,6 +11,10 @@ export const IPC_CHANNELS = {
   READ_IMAGE_METADATA: 'fs:readImageMetadata',
   SELECT_DIRECTORY: 'fs:selectDirectory',
 
+  // Image Processing
+  GENERATE_THUMBNAIL: 'image:generateThumbnail',
+  READ_EXIF: 'image:readExif',
+
   // Window
   MINIMIZE_WINDOW: 'window:minimize',
   MAXIMIZE_WINDOW: 'window:maximize',
@@ -104,6 +108,40 @@ export const ReadImageMetadataResponseSchema = z.object({
 
 export type ReadImageMetadataResponse = z.infer<typeof ReadImageMetadataResponseSchema>
 
+// Thumbnail Generation Request
+export const GenerateThumbnailRequestSchema = z.object({
+  path: z.string(),
+  width: z.number().optional().default(200),
+  height: z.number().optional().default(200),
+})
+
+export type GenerateThumbnailRequest = z.infer<typeof GenerateThumbnailRequestSchema>
+
+// Thumbnail Generation Response
+export const GenerateThumbnailResponseSchema = z.object({
+  path: z.string(),
+  thumbnail: z.string(), // Base64 encoded image
+  width: z.number(),
+  height: z.number(),
+})
+
+export type GenerateThumbnailResponse = z.infer<typeof GenerateThumbnailResponseSchema>
+
+// Read EXIF Request
+export const ReadExifRequestSchema = z.object({
+  path: z.string(),
+})
+
+export type ReadExifRequest = z.infer<typeof ReadExifRequestSchema>
+
+// Read EXIF Response
+export const ReadExifResponseSchema = z.object({
+  path: z.string(),
+  exif: ExifDataSchema,
+})
+
+export type ReadExifResponse = z.infer<typeof ReadExifResponseSchema>
+
 // ============================================================================
 // Result Type Pattern for Error Handling
 // ============================================================================
@@ -135,6 +173,12 @@ export interface IpcApi {
     request: ReadImageMetadataRequest
   ) => Promise<Result<ReadImageMetadataResponse>>
   selectDirectory: () => Promise<Result<string | null>>
+
+  // Image Processing
+  generateThumbnail: (
+    request: GenerateThumbnailRequest
+  ) => Promise<Result<GenerateThumbnailResponse>>
+  readExif: (request: ReadExifRequest) => Promise<Result<ReadExifResponse>>
 
   // Window
   minimizeWindow: () => void
