@@ -1,4 +1,12 @@
 import type { FileEntry } from '@/types/ipc'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@renderer/components/ui/breadcrumb'
 import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { Input } from '@renderer/components/ui/input'
@@ -54,6 +62,21 @@ export function FileBrowser() {
     const query = searchQuery.toLowerCase()
     return files.filter((file) => file.name.toLowerCase().includes(query))
   }, [files, searchQuery])
+
+  // Parse current path into breadcrumb segments
+  const pathSegments = useMemo(() => {
+    if (!currentPath) return []
+    const segments = currentPath.split('/').filter(Boolean)
+    return segments.map((segment, index) => ({
+      name: segment,
+      path: `/${segments.slice(0, index + 1).join('/')}`,
+    }))
+  }, [currentPath])
+
+  const handleBreadcrumbClick = (path: string) => {
+    setCurrentPath(path)
+    clearSelectedFiles()
+  }
 
   const handleSelectDirectory = async () => {
     if (!isElectron) {
@@ -158,6 +181,7 @@ export function FileBrowser() {
 
           {currentPath && (
             <div className="space-y-3">
+              {/* Navigation Buttons */}
               <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -185,8 +209,38 @@ export function FileBrowser() {
                     <p>Go to Parent Directory</p>
                   </TooltipContent>
                 </Tooltip>
-                <Input value={currentPath} readOnly className="flex-1 text-sm" />
               </div>
+
+              {/* Breadcrumb Path */}
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink
+                      onClick={() => handleBreadcrumbClick('/')}
+                      className="cursor-pointer"
+                    >
+                      Root
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {pathSegments.map((segment, index) => (
+                    <span key={segment.path} className="flex items-center">
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        {index === pathSegments.length - 1 ? (
+                          <BreadcrumbPage>{segment.name}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink
+                            onClick={() => handleBreadcrumbClick(segment.path)}
+                            className="cursor-pointer"
+                          >
+                            {segment.name}
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                    </span>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
 
               {/* Search Bar */}
               <div className="relative">
