@@ -360,7 +360,81 @@
   - 中央: EXIF情報
   - 右: 画像プレビュー + マップ
 
-#### 3.1.2 レイアウトカスタマイズ（将来実装予定）
+#### 3.1.2 パネル表示・非表示コントロール（将来実装予定）
+**優先度**: 高
+**概要**: 各コンポーネントに表示・非表示ボタンを配置し、必要なパネルだけを表示してワークスペースを最適化
+
+実装案:
+- [ ] パネルヘッダーにコントロールボタン追加
+  - [ ] 最小化/復元ボタン（右上に配置）
+  - [ ] 閉じる/再表示ボタン
+  - [ ] アイコン: `Minimize2`, `Maximize2`, `X`, `Eye`, `EyeOff` (lucide-react)
+- [ ] パネル表示状態の管理
+  - [ ] Zustandストアに各パネルの表示状態を保存
+  - [ ] パネルID: `fileBrowser`, `thumbnailGrid`, `exifPanel`, `imagePreview`, `mapView`
+- [ ] クイックトグル機能
+  - [ ] ツールバーに「表示パネル」メニュー
+  - [ ] チェックボックスで各パネルのON/OFF切り替え
+  - [ ] キーボードショートカット（例: `Ctrl+1`～`Ctrl+5`）
+- [ ] パネルが非表示の場合の処理
+  - [ ] `react-resizable-panels`の`collapsible`プロパティ使用
+  - [ ] 最小化時は細いバー（16px程度）に縮小
+  - [ ] 再展開ボタン表示
+- [ ] ワンクリック最大化
+  - [ ] 任意のパネルを全画面表示
+  - [ ] 他のパネルを一時的に非表示
+  - [ ] 「元に戻す」ボタンで復元
+
+UXフロー例:
+1. 画像プレビューに集中したい
+   → 他のパネルの最小化ボタンをクリック
+   → 画像プレビューが画面の大部分を占める
+2. マップを詳しく見たい
+   → マップの最大化ボタンをクリック
+   → マップが全画面表示、他は最小化
+3. 元に戻す
+   → ツールバーの「レイアウトリセット」ボタン
+   → すべてのパネルがデフォルトサイズに復元
+
+技術的実装:
+```typescript
+// Zustand store
+interface LayoutState {
+  panels: {
+    fileBrowser: { visible: boolean; size: number }
+    thumbnailGrid: { visible: boolean; size: number }
+    exifPanel: { visible: boolean; size: number }
+    imagePreview: { visible: boolean; size: number }
+    mapView: { visible: boolean; size: number }
+  }
+  togglePanel: (panelId: string) => void
+  maximizePanel: (panelId: string) => void
+  resetLayout: () => void
+}
+
+// Panel Header Component
+<CardHeader>
+  <div className="flex items-center justify-between">
+    <CardTitle>Image Preview</CardTitle>
+    <div className="flex gap-1">
+      <Button size="icon" variant="ghost" onClick={onMinimize}>
+        <Minimize2 className="h-4 w-4" />
+      </Button>
+      <Button size="icon" variant="ghost" onClick={onMaximize}>
+        <Maximize2 className="h-4 w-4" />
+      </Button>
+    </div>
+  </div>
+</CardHeader>
+```
+
+利点:
+- ユーザーが作業フローに合わせて画面を最適化
+- マルチタスクでの使い勝手向上
+- 小さい画面でも効率的に作業可能
+- 集中モード（単一パネル表示）をワンクリックで実現
+
+#### 3.1.3 レイアウトプリセット（将来実装予定）
 **優先度**: 中
 **概要**: ユーザーがパネル配置をカスタマイズできる機能
 
@@ -386,7 +460,7 @@
   - `@dnd-kit`でドラッグ&ドロップ
   - グリッドベースのレイアウトシステム
 
-#### 3.1.3 ナビゲーション
+#### 3.1.4 ナビゲーション
 - [ ] ブレッドクラムバー（shadcn/ui Breadcrumb）
 - [ ] 履歴管理（前後移動）
 - [ ] キーボードショートカット
