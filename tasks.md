@@ -60,19 +60,21 @@
 - `@theme`でCSS変数定義
 - `@tailwindcss/postcss`プラグイン必須
 
-#### 1.1.2 shadcn/ui セットアップ
-- [ ] shadcn/ui CLI インストール
+#### ✅ 1.1.2 shadcn/ui セットアップ
+- [x] shadcn/ui CLI インストール & マニュアル設定
   ```bash
-  pnpm dlx shadcn@latest init
+  pnpm add class-variance-authority clsx tailwind-merge lucide-react
   ```
-- [ ] components.json 設定
-- [ ] 基本コンポーネントインストール
-  - [ ] Button
-  - [ ] Card
-  - [ ] Input
-  - [ ] Separator
-- [ ] Lucide React アイコン追加
-- [ ] 動作確認（サンプルコンポーネント表示）
+- [x] components.json 設定（Electronプロジェクト用にマニュアル作成）
+- [x] 基本コンポーネントインストール
+  - [x] Button
+  - [x] Card
+  - [x] Input
+  - [x] Separator
+- [x] Lucide React アイコン追加
+- [x] 動作確認（サンプルコンポーネント表示）
+- [x] TypeScriptパスエイリアス修正（`@renderer` → `src/renderer/src`）
+- [x] cn()ユーティリティ関数作成
 
 #### 1.1.3 状態管理・データフェッチング
 - [ ] Zustand インストール
@@ -461,15 +463,15 @@
 | Phase | タスク数 | 完了 | 進捗率 |
 |-------|---------|-----|--------|
 | Phase 0 | 12 | 12 | 100% ✅ |
-| Phase 1 | 25 | 1 | 4% |
+| Phase 1 | 25 | 9 | 36% |
 | Phase 2 | 35 | 0 | 0% |
 | Phase 3 | 30 | 0 | 0% |
 | Phase 4 | 25 | 0 | 0% |
-| **合計** | **127** | **13** | **10.2%** |
+| **合計** | **127** | **21** | **16.5%** |
 
 ### 現在のフォーカス
 
-**🎯 Phase 1.1.2: shadcn/ui セットアップ** - 次のステップ
+**🎯 Phase 1.1.3: 状態管理・データフェッチング** - 次のステップ
 
 ---
 
@@ -491,14 +493,15 @@
 ### 次回セッション時のTODO
 1. ✅ ~~Phase 0.2 完了（開発環境確認）~~ → 完了
 2. ✅ ~~Phase 1.1.1 開始（TailwindCSS v4セットアップ）~~ → 完了
-3. 🎯 **Phase 1.1.2: shadcn/ui セットアップ** ← 次はここから
-   - shadcn/ui CLI インストール & 初期化
-   - 基本コンポーネントのインストール (Button, Card, Input, Separator)
-   - Lucide React アイコン追加
+3. ✅ ~~Phase 1.1.2: shadcn/ui セットアップ~~ → 完了
+4. 🎯 **Phase 1.1.3: 状態管理・データフェッチング** ← 次はここから
+   - Zustand インストール
+   - TanStack Query v5 インストール
+   - 基本的なストア作成
 
 ### 📝 セッション記録
 
-#### 2025-11-15 セッション
+#### 2025-11-15 セッション 1
 **完了項目**:
 - ✅ Phase 0.2: 開発環境確認完了
   - pnpm dev 起動成功（WSL2でのElectron起動確認）
@@ -518,6 +521,27 @@
 **次回への引き継ぎ**:
 - 開発サーバーは起動中（バックグラウンド）
 - 次はshadcn/uiのセットアップから開始
+
+#### 2025-11-15 セッション 2
+**完了項目**:
+- ✅ Phase 1.1.2: shadcn/ui セットアップ完了
+  - shadcn/ui基本依存関係インストール
+  - cn()ユーティリティ関数作成
+  - components.json マニュアル設定（Electronプロジェクト対応）
+  - 基本コンポーネントインストール（Button, Card, Input, Separator）
+  - Lucide React アイコン統合
+  - App.tsxでコンポーネントデモ作成
+
+**技術的メモ**:
+- shadcn/ui CLIはElectronプロジェクト構造を自動検出できないため、マニュアル設定が必要
+- TypeScriptパスエイリアス: `@renderer` → `src/renderer/src` に修正
+- Viteエイリアス設定も同様に修正
+- shadcn/uiコンポーネントパスを`src/renderer/src/components/ui`に移動
+- Biomeの自動フォーマット・インポート順序修正が動作
+
+**次回への引き継ぎ**:
+- 開発サーバーは起動中（バックグラウンド）
+- 次は状態管理（Zustand + TanStack Query）のセットアップ
 
 ---
 

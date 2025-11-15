@@ -1,54 +1,124 @@
+import { Button } from '@renderer/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@renderer/components/ui/card'
+import { Input } from '@renderer/components/ui/input'
+import { Separator } from '@renderer/components/ui/separator'
+import { Camera, FolderOpen, Image as ImageIcon, MapPin } from 'lucide-react'
 import { useState } from 'react'
 
 function App(): JSX.Element {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
       <header className="mb-12 text-center">
-        <h1 className="text-5xl font-bold bg-gradient-to-br from-purple-600 to-purple-900 bg-clip-text text-transparent mb-4">
-          PhotoGeoView
-        </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400">
-          Modern Photo Geo-Tagging Application
-        </p>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <Camera className="h-12 w-12 text-primary" />
+          <h1 className="text-5xl font-bold bg-gradient-to-br from-purple-600 to-purple-900 bg-clip-text text-transparent">
+            PhotoGeoView
+          </h1>
+        </div>
+        <p className="text-xl text-muted-foreground">Modern Photo Geo-Tagging Application</p>
       </header>
 
-      <main className="w-full max-w-4xl">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 shadow-lg">
-          <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-6">
-            Welcome to PhotoGeoView 2.0
-          </h2>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">Built with:</p>
-          <ul className="space-y-2 mb-8 text-gray-800 dark:text-gray-200">
-            <li className="text-lg">⚡ Electron {process.versions.electron}</li>
-            <li className="text-lg">⚛️ React 19</li>
-            <li className="text-lg">🔷 TypeScript 5.7+</li>
-            <li className="text-lg">🚀 Vite 6</li>
-            <li className="text-lg">🎨 TailwindCSS v4</li>
-          </ul>
+      <main className="w-full max-w-4xl space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl">Welcome to PhotoGeoView 2.0</CardTitle>
+            <CardDescription>Built with modern web technologies</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <p className="text-foreground mb-4 font-medium">Tech Stack:</p>
+              <ul className="space-y-2 text-muted-foreground">
+                <li className="text-lg">⚡ Electron {process.versions.electron}</li>
+                <li className="text-lg">⚛️ React 19</li>
+                <li className="text-lg">🔷 TypeScript 5.7+</li>
+                <li className="text-lg">🚀 Vite 6</li>
+                <li className="text-lg">🎨 TailwindCSS v4</li>
+                <li className="text-lg">🧩 shadcn/ui</li>
+              </ul>
+            </div>
 
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 mb-6">
-            <button
-              type="button"
-              onClick={() => setCount((count) => count + 1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors"
-            >
-              Count is {count}
-            </button>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">
-              Click the button to test React state
-            </p>
-          </div>
+            <Separator />
 
-          <p className="text-lg bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 rounded-lg p-4 text-center">
-            ✨ Ready for AI-driven development with TypeScript
-          </p>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Component Demo</h3>
+              <div className="flex gap-3">
+                <Button variant="default" onClick={() => setCount((count) => count + 1)}>
+                  Count is {count}
+                </Button>
+                <Button variant="outline">
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Open Folder
+                </Button>
+                <Button variant="secondary">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Show Map
+                </Button>
+              </div>
+
+              <Input placeholder="Search photos..." className="max-w-sm" />
+            </div>
+
+            <Separator />
+
+            <div className="bg-muted rounded-lg p-4 text-center">
+              <p className="text-lg font-medium text-muted-foreground">
+                ✨ Ready for AI-driven development with TypeScript
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Photos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Browse and manage your photo collection
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Geolocation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">View photos on an interactive map</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                EXIF Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Explore detailed photo metadata</p>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
-      <footer className="mt-12 text-sm text-gray-500 dark:text-gray-400">
-        <p>🤖 Generated with Claude Code | Built with modern tech stack</p>
+      <footer className="mt-12 text-sm text-muted-foreground">
+        <p>Built with modern tech stack</p>
       </footer>
     </div>
   )

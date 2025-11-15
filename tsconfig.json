@@ -17,7 +17,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@main/*": ["./src/main/*"],
-      "@renderer/*": ["./src/renderer/*"],
+      "@renderer/*": ["./src/renderer/src/*"],
       "@preload/*": ["./src/preload/*"]
     }
   },
