@@ -8,11 +8,13 @@ import {
 } from '@renderer/components/ui/card'
 import { Input } from '@renderer/components/ui/input'
 import { Separator } from '@renderer/components/ui/separator'
+import { useAppStore } from '@renderer/stores/appStore'
 import { Camera, FolderOpen, Image as ImageIcon, MapPin } from 'lucide-react'
 import { useState } from 'react'
 
 function App(): JSX.Element {
   const [count, setCount] = useState(0)
+  const { isSidebarOpen, toggleSidebar, theme, setTheme } = useAppStore()
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
@@ -49,21 +51,27 @@ function App(): JSX.Element {
 
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Component Demo</h3>
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <Button variant="default" onClick={() => setCount((count) => count + 1)}>
                   Count is {count}
                 </Button>
-                <Button variant="outline">
+                <Button variant="outline" onClick={toggleSidebar}>
                   <FolderOpen className="h-4 w-4 mr-2" />
-                  Open Folder
+                  Toggle Sidebar: {isSidebarOpen ? 'Open' : 'Closed'}
                 </Button>
-                <Button variant="secondary">
+                <Button
+                  variant="secondary"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                >
                   <MapPin className="h-4 w-4 mr-2" />
-                  Show Map
+                  Theme: {theme}
                 </Button>
               </div>
 
               <Input placeholder="Search photos..." className="max-w-sm" />
+              <p className="text-sm text-muted-foreground">
+                State management demo using Zustand - try clicking the buttons above!
+              </p>
             </div>
 
             <Separator />

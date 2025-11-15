@@ -76,28 +76,37 @@
 - [x] TypeScriptパスエイリアス修正（`@renderer` → `src/renderer/src`）
 - [x] cn()ユーティリティ関数作成
 
-#### 1.1.3 状態管理・データフェッチング
-- [ ] Zustand インストール
+#### ✅ 1.1.3 状態管理・データフェッチング
+- [x] Zustand インストール
   ```bash
   pnpm add zustand
   ```
-- [ ] TanStack Query v5 インストール
+- [x] TanStack Query v5 インストール
   ```bash
-  pnpm add @tanstack/react-query
+  pnpm add @tanstack/react-query @tanstack/react-query-devtools
   ```
-- [ ] 基本的なストア作成（例: appStore.ts）
-- [ ] QueryClient設定
+- [x] 基本的なストア作成（appStore.ts）
+  - [x] ディレクトリパス管理
+  - [x] ファイル選択状態
+  - [x] UI状態（サイドバー）
+  - [x] テーマ設定
+  - [x] Zustand devtools統合
+- [x] QueryClient設定
+  - [x] キャッシング戦略設定
+  - [x] リトライ設定
+  - [x] React Query Devtools追加
+- [x] App.tsxでストア動作確認
 
-#### 1.1.4 ユーティリティライブラリ
-- [ ] date-fns インストール
+#### ✅ 1.1.4 ユーティリティライブラリ
+- [x] date-fns インストール
   ```bash
   pnpm add date-fns
   ```
-- [ ] clsx, tailwind-merge インストール（クラス名管理）
+- [x] clsx, tailwind-merge インストール（クラス名管理）
   ```bash
   pnpm add clsx tailwind-merge
   ```
-- [ ] cn() ユーティリティ関数作成
+- [x] cn() ユーティリティ関数作成（Phase 1.1.2で完了）
 
 ### 1.2 型安全なIPC通信の設計
 
@@ -463,15 +472,15 @@
 | Phase | タスク数 | 完了 | 進捗率 |
 |-------|---------|-----|--------|
 | Phase 0 | 12 | 12 | 100% ✅ |
-| Phase 1 | 25 | 9 | 36% |
+| Phase 1 | 25 | 16 | 64% |
 | Phase 2 | 35 | 0 | 0% |
 | Phase 3 | 30 | 0 | 0% |
 | Phase 4 | 25 | 0 | 0% |
-| **合計** | **127** | **21** | **16.5%** |
+| **合計** | **127** | **28** | **22.0%** |
 
 ### 現在のフォーカス
 
-**🎯 Phase 1.1.3: 状態管理・データフェッチング** - 次のステップ
+**🎯 Phase 1.2: 型安全なIPC通信の設計** - 次のステップ
 
 ---
 
@@ -494,10 +503,11 @@
 1. ✅ ~~Phase 0.2 完了（開発環境確認）~~ → 完了
 2. ✅ ~~Phase 1.1.1 開始（TailwindCSS v4セットアップ）~~ → 完了
 3. ✅ ~~Phase 1.1.2: shadcn/ui セットアップ~~ → 完了
-4. 🎯 **Phase 1.1.3: 状態管理・データフェッチング** ← 次はここから
-   - Zustand インストール
-   - TanStack Query v5 インストール
-   - 基本的なストア作成
+4. ✅ ~~Phase 1.1.3-1.1.4: 状態管理・データフェッチング・ユーティリティ~~ → 完了
+5. 🎯 **Phase 1.2: 型安全なIPC通信の設計** ← 次はここから
+   - IPC型定義作成（src/types/ipc.ts）
+   - Zodスキーマ追加
+   - メインプロセスハンドラー実装
 
 ### 📝 セッション記録
 
@@ -531,17 +541,41 @@
   - 基本コンポーネントインストール（Button, Card, Input, Separator）
   - Lucide React アイコン統合
   - App.tsxでコンポーネントデモ作成
+  - CSS変数とprocess参照の修正
 
 **技術的メモ**:
 - shadcn/ui CLIはElectronプロジェクト構造を自動検出できないため、マニュアル設定が必要
 - TypeScriptパスエイリアス: `@renderer` → `src/renderer/src` に修正
 - Viteエイリアス設定も同様に修正
 - shadcn/uiコンポーネントパスを`src/renderer/src/components/ui`に移動
+- TailwindCSS v4の`@theme`とshadcn/uiのCSS変数を`@layer base`で統合
+- レンダラープロセスで`process`オブジェクトは使用不可
 - Biomeの自動フォーマット・インポート順序修正が動作
+
+#### 2025-11-15 セッション 3
+**完了項目**:
+- ✅ Phase 1.1.3: 状態管理・データフェッチング完了
+  - Zustand インストールと設定
+  - appStore作成（ディレクトリパス、ファイル選択、UI状態、テーマ）
+  - Zustand devtools統合
+  - TanStack Query v5 インストール
+  - QueryClient設定（キャッシング、リトライ戦略）
+  - React Query Devtools追加
+  - App.tsxでストア動作確認
+
+- ✅ Phase 1.1.4: ユーティリティライブラリ完了
+  - date-fns インストール
+
+**技術的メモ**:
+- Zustandストアは正常に動作（状態更新、読み取り確認済み）
+- QueryClientProviderをmain.tsxに追加
+- ストアのdevtoolsでデバッグ可能
+- 実際のUI連携（サイドバー、テーマ切り替え）は後のフェーズで実装予定
 
 **次回への引き継ぎ**:
 - 開発サーバーは起動中（バックグラウンド）
-- 次は状態管理（Zustand + TanStack Query）のセットアップ
+- Phase 1.1完了（UI依存関係セットアップ）
+- 次はPhase 1.2（型安全なIPC通信の設計）
 
 ---
 
