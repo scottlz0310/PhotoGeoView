@@ -92,7 +92,8 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
 
   // Convert file path to local-file:// URL for Electron custom protocol
   // Add imageKey as timestamp to bust cache after rotation
-  const imageUrl = `local-file://${filePath}?t=${imageKey}`
+  // Use encodeURI for the path to properly handle special characters while preserving slashes
+  const imageUrl = filePath ? `local-file://${encodeURI(filePath)}?t=${imageKey}` : ''
 
   return (
     <TooltipProvider>

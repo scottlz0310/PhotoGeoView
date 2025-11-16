@@ -106,7 +106,8 @@ function registerLocalFileProtocol(): void {
     try {
       // Remove 'local-file://' prefix and query parameters to get the actual file path
       const urlWithoutProtocol = request.url.replace('local-file://', '')
-      const filePath = decodeURIComponent(urlWithoutProtocol.split('?')[0])
+      // Use decodeURI instead of decodeURIComponent to preserve path separators
+      const filePath = decodeURI(urlWithoutProtocol.split('?')[0])
       const data = await readFile(filePath)
 
       // Determine MIME type based on file extension
