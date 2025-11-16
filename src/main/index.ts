@@ -6,6 +6,19 @@ import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
 
+// Register custom protocol scheme as privileged before app is ready
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'local-file',
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      bypassCSP: false,
+      corsEnabled: false,
+    },
+  },
+])
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -107,12 +120,18 @@ function registerLocalFileProtocol(): void {
       // Remove 'local-file://' prefix and query parameters to get the actual file path
       const urlWithoutProtocol = request.url.replace('local-file://', '')
       // Use decodeURI instead of decodeURIComponent to preserve path separators
-      const filePath = decodeURI(urlWithoutProtocol.split('?')[0])
+      let filePath = decodeURI(urlWithoutProtocol.split('?')[0])
+
+      // Handle Windows file URLs: ///C:/path -> C:/path (remove leading slashes)
+      if (filePath.startsWith('/') && /^\/[A-Za-z]:/.test(filePath)) {
+        filePath = filePath.substring(1) // Remove leading /
+      }
 
       console.log('=== Local File Protocol Debug ===')
       console.log('Original URL:', request.url)
       console.log('URL without protocol:', urlWithoutProtocol)
       console.log('Decoded file path:', filePath)
+      console.log('Final file path:', filePath)
       console.log('=================================')
 
       const data = await readFile(filePath)
