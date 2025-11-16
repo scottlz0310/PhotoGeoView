@@ -21,6 +21,7 @@
   - ✅ 2.6 統合テスト
 - 🔄 **Phase 3**: UI完成 (進行中)
   - ✅ 3.1.1 リサイズ可能なレイアウト
+  - ✅ 3.1.2 パネル表示・非表示コントロール
   - ✅ 3.1.4 ブレッドクラムバー
   - ✅ 3.1.4 ナビゲーション履歴
   - ✅ 3.1.4 キーボードショートカット
@@ -376,79 +377,69 @@
   - 中央: EXIF情報
   - 右: 画像プレビュー + マップ
 
-#### 3.1.2 パネル表示・非表示コントロール（将来実装予定）
-**優先度**: 高
+#### ✅ 3.1.2 パネル表示・非表示コントロール（完了）
+**優先度**: 高（必須機能）
 **概要**: 各コンポーネントに表示・非表示ボタンを配置し、必要なパネルだけを表示してワークスペースを最適化
 
-実装案:
-- [ ] パネルヘッダーにコントロールボタン追加
-  - [ ] 最小化/復元ボタン（右上に配置）
-  - [ ] 閉じる/再表示ボタン
-  - [ ] アイコン: `Minimize2`, `Maximize2`, `X`, `Eye`, `EyeOff` (lucide-react)
-- [ ] パネル表示状態の管理
-  - [ ] Zustandストアに各パネルの表示状態を保存
-  - [ ] パネルID: `fileBrowser`, `thumbnailGrid`, `exifPanel`, `imagePreview`, `mapView`
-- [ ] クイックトグル機能
-  - [ ] ツールバーに「表示パネル」メニュー
-  - [ ] チェックボックスで各パネルのON/OFF切り替え
-  - [ ] キーボードショートカット（例: `Ctrl+1`～`Ctrl+5`）
-- [ ] パネルが非表示の場合の処理
-  - [ ] `react-resizable-panels`の`collapsible`プロパティ使用
-  - [ ] 最小化時は細いバー（16px程度）に縮小
-  - [ ] 再展開ボタン表示
-- [ ] ワンクリック最大化
-  - [ ] 任意のパネルを全画面表示
-  - [ ] 他のパネルを一時的に非表示
-  - [ ] 「元に戻す」ボタンで復元
+実装完了:
+- [x] パネルヘッダーにコントロールボタン追加
+  - [x] 最小化ボタン（各パネルのヘッダーに配置）
+  - [x] ImagePreviewはフローティングアイコンに統合
+  - [x] アイコン: `Minimize2` (lucide-react)
+  - [x] Tooltip表示（"Collapse panel"）
+- [x] パネル表示状態の管理
+  - [x] Zustandストアに各パネルの表示状態を保存
+  - [x] パネルID: `fileBrowser`, `thumbnailGrid`, `exifPanel`, `imagePreview`, `mapView`
+  - [x] `togglePanel` アクション実装
+  - [x] `setPanelVisibility` アクション実装
+- [x] クイックトグル機能
+  - [x] ヘッダーに「Panels」ドロップダウンメニュー追加
+  - [x] チェックボックスで各パネルのON/OFF切り替え
+  - [x] Eye アイコン使用
+- [x] パネルが非表示の場合の処理
+  - [x] 条件付きレンダリングで完全に非表示
+  - [x] `react-resizable-panels`のPanelResizeHandleも非表示
+- [x] UI改善
+  - [x] Reset Zoom アイコンを Maximize2 に変更（Rotate Right との差別化）
+  - [x] ImagePreview のコントロールをフローティングアイコンに統合
+  - [x] セパレーターでコントロールをグループ分け
+  - [x] z-index 問題の解決（Leaflet マップ）
 
-UXフロー例:
-1. 画像プレビューに集中したい
-   → 他のパネルの最小化ボタンをクリック
-   → 画像プレビューが画面の大部分を占める
-2. マップを詳しく見たい
-   → マップの最大化ボタンをクリック
-   → マップが全画面表示、他は最小化
-3. 元に戻す
-   → ツールバーの「レイアウトリセット」ボタン
-   → すべてのパネルがデフォルトサイズに復元
+実装詳細:
+- Zustand `appStore.ts`: `panelVisibility` 状態管理
+- 各パネルコンポーネント: `Minimize2` ボタンと `TooltipProvider` 追加
+- `App.tsx`: ヘッダーに `Panels` ドロップダウンメニュー追加
+- `index.css`: Leaflet マップの z-index を 0 に制限
 
 技術的実装:
 ```typescript
-// Zustand store
-interface LayoutState {
-  panels: {
-    fileBrowser: { visible: boolean; size: number }
-    thumbnailGrid: { visible: boolean; size: number }
-    exifPanel: { visible: boolean; size: number }
-    imagePreview: { visible: boolean; size: number }
-    mapView: { visible: boolean; size: number }
-  }
-  togglePanel: (panelId: string) => void
-  maximizePanel: (panelId: string) => void
-  resetLayout: () => void
+// Zustand store (appStore.ts)
+panelVisibility: {
+  fileBrowser: boolean
+  thumbnailGrid: boolean
+  exifPanel: boolean
+  imagePreview: boolean
+  mapView: boolean
 }
+togglePanel: (panelId: keyof AppState['panelVisibility']) => void
+setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolean) => void
 
-// Panel Header Component
-<CardHeader>
-  <div className="flex items-center justify-between">
-    <CardTitle>Image Preview</CardTitle>
-    <div className="flex gap-1">
-      <Button size="icon" variant="ghost" onClick={onMinimize}>
-        <Minimize2 className="h-4 w-4" />
-      </Button>
-      <Button size="icon" variant="ghost" onClick={onMaximize}>
-        <Maximize2 className="h-4 w-4" />
-      </Button>
-    </div>
-  </div>
-</CardHeader>
+// 条件付きレンダリング (App.tsx)
+{panelVisibility.fileBrowser && (
+  <>
+    <Panel defaultSize={40} minSize={20}>
+      <FileBrowser />
+    </Panel>
+    <PanelResizeHandle />
+  </>
+)}
 ```
 
 利点:
 - ユーザーが作業フローに合わせて画面を最適化
 - マルチタスクでの使い勝手向上
 - 小さい画面でも効率的に作業可能
-- 集中モード（単一パネル表示）をワンクリックで実現
+- ヘッダーのドロップダウンメニューで一元管理
 
 #### 3.1.3 レイアウトプリセット（将来実装予定）
 **優先度**: 中
@@ -652,9 +643,9 @@ interface LayoutState {
 | Phase 0 | 12 | 12 | 100% ✅ |
 | Phase 1 | 25 | 25 | 100% ✅ |
 | Phase 2 | 41 | 41 | 100% ✅ |
-| Phase 3 | 30 | 11 | 37% 🔄 |
+| Phase 3 | 30 | 12 | 40% 🔄 |
 | Phase 4 | 25 | 5 | 20% 🔄 |
-| **合計** | **133** | **94** | **70.7%** |
+| **合計** | **133** | **95** | **71.4%** |
 
 ### 現在のフォーカス
 

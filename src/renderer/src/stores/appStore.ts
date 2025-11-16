@@ -47,6 +47,17 @@ interface AppState {
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
 
+  // Panel visibility state
+  panelVisibility: {
+    fileBrowser: boolean
+    thumbnailGrid: boolean
+    exifPanel: boolean
+    imagePreview: boolean
+    mapView: boolean
+  }
+  togglePanel: (panelId: keyof AppState['panelVisibility']) => void
+  setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolean) => void
+
   // Theme
   theme: 'light' | 'dark' | 'system'
   setTheme: (theme: 'light' | 'dark' | 'system') => void
@@ -67,6 +78,13 @@ export const useAppStore = create<AppState>()(
         dateTo: null,
         hasGPS: null,
         cameraModels: [],
+      },
+      panelVisibility: {
+        fileBrowser: true,
+        thumbnailGrid: true,
+        exifPanel: true,
+        imagePreview: true,
+        mapView: true,
       },
 
       // Actions
@@ -180,6 +198,23 @@ export const useAppStore = create<AppState>()(
 
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setSidebarOpen: (open) => set({ isSidebarOpen: open }),
+
+      // Panel visibility actions
+      togglePanel: (panelId) =>
+        set((state) => ({
+          panelVisibility: {
+            ...state.panelVisibility,
+            [panelId]: !state.panelVisibility[panelId],
+          },
+        })),
+
+      setPanelVisibility: (panelId, visible) =>
+        set((state) => ({
+          panelVisibility: {
+            ...state.panelVisibility,
+            [panelId]: visible,
+          },
+        })),
 
       setTheme: (theme) => set({ theme }),
     }),

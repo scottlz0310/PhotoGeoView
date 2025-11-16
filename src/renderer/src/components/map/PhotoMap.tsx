@@ -1,5 +1,14 @@
 import type { ExifData } from '@/types/ipc'
+import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@renderer/components/ui/tooltip'
+import { useAppStore } from '@renderer/stores/appStore'
+import { Minimize2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import 'leaflet/dist/leaflet.css'
@@ -10,6 +19,7 @@ interface PhotoMapProps {
 }
 
 export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
+  const { togglePanel } = useAppStore()
   const [isClient, setIsClient] = useState(false)
   const [iconFixed, setIconFixed] = useState(false)
 
@@ -89,14 +99,32 @@ export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
   const position: [number, number] = [latitude, longitude]
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex-shrink-0">
-        <CardTitle>Map</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden p-0">
-        <DynamicMap position={position} filePath={filePath} exifData={exifData} />
-      </CardContent>
-    </Card>
+    <TooltipProvider>
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <CardTitle>Map</CardTitle>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => togglePanel('mapView')}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Collapse panel</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <DynamicMap position={position} filePath={filePath} exifData={exifData} />
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }
 

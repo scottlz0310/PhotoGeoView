@@ -7,8 +7,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@renderer/components/ui/tooltip'
+import { useAppStore } from '@renderer/stores/appStore'
 import { useQueryClient } from '@tanstack/react-query'
-import { Loader2, Minus, Plus, RotateCcw, RotateCw, ZoomIn } from 'lucide-react'
+import { Loader2, Maximize2, Minimize2, Minus, Plus, RotateCcw, RotateCw, ZoomIn } from 'lucide-react'
 import { useState } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { toast } from 'sonner'
@@ -18,6 +19,7 @@ interface ImagePreviewProps {
 }
 
 export function ImagePreview({ filePath }: ImagePreviewProps) {
+  const { togglePanel } = useAppStore()
   const [imageLoading, setImageLoading] = useState(false)
   const [isRotating, setIsRotating] = useState(false)
   const [imageKey, setImageKey] = useState(0) // Force re-render after rotation
@@ -93,12 +95,12 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
   const imageUrl = `local-file://${filePath}?t=${imageKey}`
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex-shrink-0">
-        <CardTitle>Image Preview</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden p-0">
-        <TooltipProvider>
+    <TooltipProvider>
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex-shrink-0">
+          <CardTitle>Image Preview</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden p-0">
           <TransformWrapper
             initialScale={1}
             minScale={0.1}
@@ -111,6 +113,26 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
               <>
                 {/* Control buttons */}
                 <div className="absolute top-20 right-6 z-10 flex flex-col gap-2">
+                  {/* Panel collapse button */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => togglePanel('imagePreview')}
+                        className="shadow-lg"
+                      >
+                        <Minimize2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Collapse Panel</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {/* Separator */}
+                  <div className="h-px bg-border my-1" />
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -151,7 +173,7 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
                         onClick={() => resetTransform()}
                         className="shadow-lg"
                       >
-                        <RotateCw className="h-4 w-4" />
+                        <Maximize2 className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">
@@ -251,8 +273,8 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
               </>
             )}
           </TransformWrapper>
-        </TooltipProvider>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   )
 }

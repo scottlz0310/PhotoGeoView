@@ -19,7 +19,7 @@ import {
 } from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ArrowRight, ChevronLeft, FolderOpen, Home, Search, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, FolderOpen, Home, Minimize2, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { FileList } from './FileList'
@@ -34,6 +34,7 @@ export function FileBrowser() {
     goForward,
     clearSelectedFiles,
     filters,
+    togglePanel,
   } = useAppStore()
   const [imageOnly, setImageOnly] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -202,17 +203,33 @@ export function FileBrowser() {
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
             <CardTitle>File Browser</CardTitle>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button onClick={handleSelectDirectory} size="sm">
-                  <FolderOpen className="h-4 w-4 mr-2" />
-                  Select Folder
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Open folder selection dialog</p>
-              </TooltipContent>
-            </Tooltip>
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleSelectDirectory} size="sm">
+                    <FolderOpen className="h-4 w-4 mr-2" />
+                    Select Folder
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Open folder selection dialog</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => togglePanel('fileBrowser')}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Minimize2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Collapse panel</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
           {currentPath && (

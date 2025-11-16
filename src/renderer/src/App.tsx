@@ -5,18 +5,26 @@ import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { Button } from '@renderer/components/ui/button'
 import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@renderer/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover'
 import { Toaster } from '@renderer/components/ui/sonner'
 import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
 import { useKeyboardShortcuts } from '@renderer/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { Camera, Keyboard } from 'lucide-react'
+import { Camera, Eye, Keyboard } from 'lucide-react'
 import { useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App(): JSX.Element {
-  const { selectedFiles, currentPath } = useAppStore()
+  const { selectedFiles, currentPath, panelVisibility, togglePanel } = useAppStore()
   // Get the first selected file for EXIF display
   const selectedFile = selectedFiles.length > 0 ? selectedFiles[0] : null
 
@@ -108,17 +116,62 @@ function App(): JSX.Element {
                 <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
               </div>
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Keyboard className="h-4 w-4" />
-                  Shortcuts
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <KeyboardShortcutsHelp />
-              </PopoverContent>
-            </Popover>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Eye className="h-4 w-4" />
+                    Panels
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Toggle Panels</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuCheckboxItem
+                    checked={panelVisibility.fileBrowser}
+                    onCheckedChange={() => togglePanel('fileBrowser')}
+                  >
+                    File Browser
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={panelVisibility.thumbnailGrid}
+                    onCheckedChange={() => togglePanel('thumbnailGrid')}
+                  >
+                    Thumbnail Grid
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={panelVisibility.exifPanel}
+                    onCheckedChange={() => togglePanel('exifPanel')}
+                  >
+                    EXIF Panel
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={panelVisibility.imagePreview}
+                    onCheckedChange={() => togglePanel('imagePreview')}
+                  >
+                    Image Preview
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={panelVisibility.mapView}
+                    onCheckedChange={() => togglePanel('mapView')}
+                  >
+                    Map View
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Keyboard className="h-4 w-4" />
+                    Shortcuts
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <KeyboardShortcutsHelp />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </header>
 
@@ -128,42 +181,55 @@ function App(): JSX.Element {
             <Panel defaultSize={25} minSize={15}>
               <PanelGroup direction="vertical" className="gap-4">
                 {/* Top: File Browser */}
-                <Panel defaultSize={40} minSize={20}>
-                  <FileBrowser />
-                </Panel>
-
-                <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+                {panelVisibility.fileBrowser && (
+                  <>
+                    <Panel defaultSize={40} minSize={20} collapsible collapsedSize={5}>
+                      <FileBrowser />
+                    </Panel>
+                    <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+                  </>
+                )}
 
                 {/* Bottom: Thumbnail Grid */}
-                <Panel defaultSize={60} minSize={30}>
-                  <ThumbnailGrid files={files} currentPath={currentPath} />
-                </Panel>
+                {panelVisibility.thumbnailGrid && (
+                  <Panel defaultSize={60} minSize={30} collapsible collapsedSize={5}>
+                    <ThumbnailGrid files={files} currentPath={currentPath} />
+                  </Panel>
+                )}
               </PanelGroup>
             </Panel>
 
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
 
             {/* Middle Panel: EXIF Info */}
-            <Panel defaultSize={20} minSize={15}>
-              <ExifPanel filePath={selectedFile} />
-            </Panel>
-
-            <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+            {panelVisibility.exifPanel && (
+              <>
+                <Panel defaultSize={20} minSize={15} collapsible collapsedSize={3}>
+                  <ExifPanel filePath={selectedFile} />
+                </Panel>
+                <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+              </>
+            )}
 
             {/* Right Panel: Image Preview and Map */}
             <Panel defaultSize={55} minSize={30}>
               <PanelGroup direction="vertical" className="gap-4">
                 {/* Top: Image Preview */}
-                <Panel defaultSize={60} minSize={30}>
-                  <ImagePreview filePath={selectedFile} />
-                </Panel>
-
-                <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+                {panelVisibility.imagePreview && (
+                  <>
+                    <Panel defaultSize={60} minSize={30} collapsible collapsedSize={5}>
+                      <ImagePreview filePath={selectedFile} />
+                    </Panel>
+                    <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
+                  </>
+                )}
 
                 {/* Bottom: Map */}
-                <Panel defaultSize={40} minSize={20}>
-                  <PhotoMap exifData={exifData} filePath={selectedFile} />
-                </Panel>
+                {panelVisibility.mapView && (
+                  <Panel defaultSize={40} minSize={20} collapsible collapsedSize={5}>
+                    <PhotoMap exifData={exifData} filePath={selectedFile} />
+                  </Panel>
+                )}
               </PanelGroup>
             </Panel>
           </PanelGroup>

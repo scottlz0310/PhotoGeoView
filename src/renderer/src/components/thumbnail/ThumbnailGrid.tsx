@@ -1,10 +1,17 @@
 import type { FileEntry } from '@/types/ipc'
+import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { Progress } from '@renderer/components/ui/progress'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Image as ImageIcon, Loader2 } from 'lucide-react'
+import { Image as ImageIcon, Loader2, Minimize2 } from 'lucide-react'
 import { useRef } from 'react'
 
 interface ThumbnailGridProps {
@@ -13,7 +20,7 @@ interface ThumbnailGridProps {
 }
 
 export function ThumbnailGrid({ files, currentPath }: ThumbnailGridProps) {
-  const { selectedFiles, setSelectedFiles } = useAppStore()
+  const { selectedFiles, setSelectedFiles, togglePanel } = useAppStore()
   const parentRef = useRef<HTMLDivElement>(null)
 
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
@@ -90,11 +97,28 @@ export function ThumbnailGrid({ files, currentPath }: ThumbnailGridProps) {
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>Thumbnails ({imageFiles.length})</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
+    <TooltipProvider>
+      <Card className="h-full flex flex-col">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Thumbnails ({imageFiles.length})</CardTitle>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => togglePanel('thumbnailGrid')}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Collapse panel</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden">
         <div ref={parentRef} className="h-full overflow-auto">
           <div
             style={{
@@ -136,6 +160,7 @@ export function ThumbnailGrid({ files, currentPath }: ThumbnailGridProps) {
         </div>
       </CardContent>
     </Card>
+    </TooltipProvider>
   )
 }
 

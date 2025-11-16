@@ -1,8 +1,16 @@
 import { Badge } from '@renderer/components/ui/badge'
+import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { Separator } from '@renderer/components/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@renderer/components/ui/tooltip'
+import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { Camera, MapPin, Settings } from 'lucide-react'
+import { Camera, MapPin, Minimize2, Settings } from 'lucide-react'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 
@@ -11,6 +19,7 @@ interface ExifPanelProps {
 }
 
 export function ExifPanel({ filePath }: ExifPanelProps) {
+  const { togglePanel } = useAppStore()
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
   const isElectron = !!(window as any).api
 
@@ -114,11 +123,28 @@ export function ExifPanel({ filePath }: ExifPanelProps) {
   }
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>EXIF Information</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <TooltipProvider>
+      <Card className="h-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>EXIF Information</CardTitle>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => togglePanel('exifPanel')}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Collapse panel</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
         {/* Camera Information */}
         {exifData.camera && (
           <>
@@ -243,5 +269,6 @@ export function ExifPanel({ filePath }: ExifPanelProps) {
         </div>
       </CardContent>
     </Card>
+    </TooltipProvider>
   )
 }
