@@ -26,7 +26,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run pre-commit checks (via Lefthook)
-        run: pnpm lefthook run pre-commit
+        run: pnpm lefthook run --force pre-commit
         env:
           LEFTHOOK: 0  # Disable in CI to avoid git hooks
 
@@ -49,7 +49,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run tests with coverage (via Lefthook pre-push)
-        run: pnpm lefthook run pre-push
+        run: pnpm lefthook run --force pre-push
         env:
           LEFTHOOK: 0  # Disable in CI to avoid git hooks
 

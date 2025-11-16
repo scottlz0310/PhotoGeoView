@@ -184,10 +184,9 @@ describe('ThumbnailGrid', () => {
     })
 
     it('should render thumbnail items as buttons', async () => {
-      const { container } = render(
-        <ThumbnailGrid files={mockImageFiles} currentPath="/photos" />,
-        { wrapper: createWrapper() }
-      )
+      const { container } = render(<ThumbnailGrid files={mockImageFiles} currentPath="/photos" />, {
+        wrapper: createWrapper(),
+      })
 
       await waitFor(() => {
         const buttons = container.querySelectorAll('button[type="button"]')
@@ -342,14 +341,11 @@ describe('ThumbnailGrid', () => {
 
   describe('Loading State', () => {
     it('should show loading state while thumbnail is generating', async () => {
-      vi.mocked(window.api.generateThumbnail).mockImplementation(
-        () => new Promise(() => {}) as any
-      )
+      vi.mocked(window.api.generateThumbnail).mockImplementation(() => new Promise(() => {}) as any)
 
-      const { container } = render(
-        <ThumbnailGrid files={mockImageFiles} currentPath="/photos" />,
-        { wrapper: createWrapper() }
-      )
+      const { container } = render(<ThumbnailGrid files={mockImageFiles} currentPath="/photos" />, {
+        wrapper: createWrapper(),
+      })
 
       await waitFor(() => {
         const loader = container.querySelector('.animate-spin')
@@ -364,10 +360,9 @@ describe('ThumbnailGrid', () => {
         success: false,
       } as any)
 
-      const { container } = render(
-        <ThumbnailGrid files={mockImageFiles} currentPath="/photos" />,
-        { wrapper: createWrapper() }
-      )
+      const { container } = render(<ThumbnailGrid files={mockImageFiles} currentPath="/photos" />, {
+        wrapper: createWrapper(),
+      })
 
       await waitFor(() => {
         // Should show ImageIcon when no thumbnail is available
@@ -379,10 +374,9 @@ describe('ThumbnailGrid', () => {
 
   describe('Virtual Scrolling', () => {
     it('should render virtual scroll container', () => {
-      const { container } = render(
-        <ThumbnailGrid files={mockImageFiles} currentPath="/photos" />,
-        { wrapper: createWrapper() }
-      )
+      const { container } = render(<ThumbnailGrid files={mockImageFiles} currentPath="/photos" />, {
+        wrapper: createWrapper(),
+      })
 
       const scrollContainer = container.querySelector('.h-full.overflow-auto')
       expect(scrollContainer).toBeInTheDocument()

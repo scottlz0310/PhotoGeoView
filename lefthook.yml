@@ -3,18 +3,16 @@
 
 pre-commit:
   parallel: true
+  skip_empty_source_files: false
   commands:
-    biome-check:
-      glob: "*.{ts,tsx,js,jsx,json,md}"
-      run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
-    biome-format:
-      glob: "*.{ts,tsx,js,jsx,json,md}"
-      run: pnpm biome format --write --no-errors-on-unmatched {staged_files}
+    biome-lint:
+      run: pnpm biome check --write .
     typecheck:
       run: pnpm typecheck
 
 pre-push:
   parallel: true
+  skip_empty_source_files: false
   commands:
     test-with-coverage:
       run: pnpm vitest run --coverage

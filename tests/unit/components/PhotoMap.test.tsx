@@ -24,9 +24,7 @@ vi.mock('react-leaflet', () => ({
   Marker: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="marker">{children}</div>
   ),
-  Popup: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="popup">{children}</div>
-  ),
+  Popup: ({ children }: { children: React.ReactNode }) => <div data-testid="popup">{children}</div>,
   useMap: () => ({
     setView: vi.fn(),
   }),
@@ -76,7 +74,9 @@ describe('PhotoMap', () => {
       render(<PhotoMap exifData={null} filePath={null} />)
 
       expect(screen.getByText('Map')).toBeInTheDocument()
-      expect(screen.getByText('Select an image to view its location on the map')).toBeInTheDocument()
+      expect(
+        screen.getByText('Select an image to view its location on the map')
+      ).toBeInTheDocument()
     })
 
     it('should display message when GPS data is not available', () => {
@@ -99,7 +99,9 @@ describe('PhotoMap', () => {
     })
 
     it('should not display map when GPS data is missing', () => {
-      const { container } = render(<PhotoMap exifData={mockExifDataWithoutGPS} filePath="/photos/test.jpg" />)
+      const { container } = render(
+        <PhotoMap exifData={mockExifDataWithoutGPS} filePath="/photos/test.jpg" />
+      )
 
       expect(container.querySelector('[data-testid="map-container"]')).not.toBeInTheDocument()
     })
@@ -113,7 +115,9 @@ describe('PhotoMap', () => {
     })
 
     it('should accept exifData with GPS coordinates', () => {
-      const { container } = render(<PhotoMap exifData={mockExifDataWithGPS} filePath="/photos/test.jpg" />)
+      const { container } = render(
+        <PhotoMap exifData={mockExifDataWithGPS} filePath="/photos/test.jpg" />
+      )
 
       // Component should render without errors
       expect(container.querySelector('.h-full')).toBeInTheDocument()
