@@ -27,8 +27,6 @@ jobs:
 
       - name: Run pre-commit checks (via Lefthook)
         run: pnpm lefthook run --force pre-commit
-        env:
-          LEFTHOOK: 0  # Disable in CI to avoid git hooks
 
   test:
     name: Unit Tests & Coverage
@@ -50,8 +48,6 @@ jobs:
 
       - name: Run tests with coverage (via Lefthook pre-push)
         run: pnpm lefthook run --force pre-push
-        env:
-          LEFTHOOK: 0  # Disable in CI to avoid git hooks
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
