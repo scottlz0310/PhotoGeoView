@@ -7,7 +7,7 @@
 - [ ] 80% テストカバレッジ
 - [x] TypeScript strict mode
 - [x] セキュリティチェック通過
-- [ ] CI/CD オールグリーン
+- [x] CI/CD オールグリーン
 
 ---
 
