@@ -80,8 +80,11 @@
 
 ---
 
-## Phase 4: CI/CD強化 ⏳
+## Phase 4: CI/CD強化 🟡
 
+- [x] Pre-commit hooks 導入 (husky + lint-staged)
+  - [x] Biome linter/formatter 自動実行
+  - [x] TypeScript 型チェック
 - [ ] Codecov/Coveralls 統合
 - [ ] カバレッジバッジ追加
 - [ ] キャッシュ最適化

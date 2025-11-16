@@ -1,0 +1,20 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    biome-check:
+      glob: "*.{ts,tsx,js,jsx,json,md}"
+      run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
+    biome-format:
+      glob: "*.{ts,tsx,js,jsx,json,md}"
+      run: pnpm biome format --write --no-errors-on-unmatched {staged_files}
+    typecheck:
+      run: pnpm typecheck
+
+pre-push:
+  parallel: true
+  commands:
+    test:
+      run: pnpm test run
