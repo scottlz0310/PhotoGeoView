@@ -96,15 +96,22 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
 
   // Convert file path to local-file:// URL for Electron custom protocol
   // Add imageKey as timestamp to bust cache after rotation
-  // Convert Windows backslashes to forward slashes for URL compatibility
-  const normalizedPath = filePath ? filePath.replace(/\\/g, '/') : ''
-  const imageUrl = normalizedPath ? `local-file://${encodeURI(normalizedPath)}?t=${imageKey}` : ''
-
+  // For Windows paths (C:\...), convert to file URL format with triple slash
+  // For Unix paths (/...), use as-is
+  let imageUrl = ''
   if (filePath) {
+    // Check if it's a Windows absolute path (e.g., C:\... or D:\...)
+    if (/^[A-Za-z]:/.test(filePath)) {
+      // Windows path: convert C:\path to /C:/path format for URL
+      const normalizedPath = filePath.replace(/\\/g, '/')
+      imageUrl = `local-file:///${normalizedPath}?t=${imageKey}`
+    } else {
+      // Unix path or relative path
+      imageUrl = `local-file://${filePath}?t=${imageKey}`
+    }
+
     console.log('=== ImagePreview URL Generation ===')
     console.log('Original file path:', filePath)
-    console.log('Normalized path:', normalizedPath)
-    console.log('Encoded URI:', encodeURI(normalizedPath))
     console.log('Final image URL:', imageUrl)
     console.log('===================================')
   }
