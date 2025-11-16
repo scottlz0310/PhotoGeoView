@@ -127,13 +127,6 @@ function registerLocalFileProtocol(): void {
         filePath = filePath.substring(1) // Remove leading /
       }
 
-      console.log('=== Local File Protocol Debug ===')
-      console.log('Original URL:', request.url)
-      console.log('URL without protocol:', urlWithoutProtocol)
-      console.log('Decoded file path:', filePath)
-      console.log('Final file path:', filePath)
-      console.log('=================================')
-
       const data = await readFile(filePath)
 
       // Determine MIME type based on file extension

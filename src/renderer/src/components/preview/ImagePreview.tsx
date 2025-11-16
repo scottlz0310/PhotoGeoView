@@ -19,10 +19,6 @@ interface ImagePreviewProps {
 }
 
 export function ImagePreview({ filePath }: ImagePreviewProps) {
-  console.log('=== ImagePreview Component ===')
-  console.log('filePath prop:', filePath)
-  console.log('==============================')
-
   const { togglePanel } = useAppStore()
   const [imageLoading, setImageLoading] = useState(false)
   const [isRotating, setIsRotating] = useState(false)
@@ -109,11 +105,6 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
       // Unix path or relative path
       imageUrl = `local-file://${filePath}?t=${imageKey}`
     }
-
-    console.log('=== ImagePreview URL Generation ===')
-    console.log('Original file path:', filePath)
-    console.log('Final image URL:', imageUrl)
-    console.log('===================================')
   }
 
   return (
