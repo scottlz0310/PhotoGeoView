@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { BrowserWindow, app, ipcMain, protocol } from 'electron'
+import { BrowserWindow, app, ipcMain, nativeTheme, protocol } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
@@ -86,6 +86,17 @@ function registerIpcHandlers(): void {
   ipcMain.on(IPC_CHANNELS.CLOSE_WINDOW, (event) => {
     const window = BrowserWindow.fromWebContents(event.sender)
     window?.close()
+  })
+
+  // Theme handlers
+  ipcMain.handle(IPC_CHANNELS.GET_SYSTEM_THEME, () => {
+    return {
+      success: true,
+      data: {
+        shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
+        themeSource: nativeTheme.themeSource,
+      },
+    }
   })
 }
 

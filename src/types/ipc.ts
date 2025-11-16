@@ -20,6 +20,9 @@ export const IPC_CHANNELS = {
   MINIMIZE_WINDOW: 'window:minimize',
   MAXIMIZE_WINDOW: 'window:maximize',
   CLOSE_WINDOW: 'window:close',
+
+  // Theme
+  GET_SYSTEM_THEME: 'theme:getSystemTheme',
 } as const
 
 // ============================================================================
@@ -182,6 +185,11 @@ export const failure = <E = Error>(error: E): Result<never, E> => ({
 // IPC API Type Definition (for preload script)
 // ============================================================================
 
+export interface SystemTheme {
+  shouldUseDarkColors: boolean
+  themeSource: 'system' | 'light' | 'dark'
+}
+
 export interface IpcApi {
   // File System
   getDirectoryContents: (
@@ -204,4 +212,7 @@ export interface IpcApi {
   minimizeWindow: () => void
   maximizeWindow: () => void
   closeWindow: () => void
+
+  // Theme
+  getSystemTheme: () => Promise<Result<SystemTheme>>
 }

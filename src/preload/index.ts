@@ -20,6 +20,9 @@ const api: IpcApi = {
   minimizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MINIMIZE_WINDOW),
   maximizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MAXIMIZE_WINDOW),
   closeWindow: () => ipcRenderer.send(IPC_CHANNELS.CLOSE_WINDOW),
+
+  // Theme
+  getSystemTheme: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SYSTEM_THEME),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

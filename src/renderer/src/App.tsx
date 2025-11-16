@@ -20,7 +20,7 @@ import { useKeyboardShortcuts } from '@renderer/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
 import { Camera, Eye, Keyboard } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App(): JSX.Element {
@@ -31,6 +31,34 @@ function App(): JSX.Element {
   // Fetch directory contents for thumbnail grid
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
   const isElectron = !!(window as any).api
+
+  // Apply system theme on mount and watch for changes
+  useEffect(() => {
+    const applySystemTheme = () => {
+      // Use browser's matchMedia instead of Electron's nativeTheme
+      // This works correctly even in WSL2 environment
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+      // Apply theme based on system preference
+      document.documentElement.classList.toggle('dark', isDark)
+    }
+
+    // Apply on mount
+    applySystemTheme()
+
+    // Watch for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleThemeChange = () => applySystemTheme()
+
+    // Modern browsers
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleThemeChange)
+      return () => mediaQuery.removeEventListener('change', handleThemeChange)
+    }
+    // Legacy browsers
+    mediaQuery.addListener(handleThemeChange)
+    return () => mediaQuery.removeListener(handleThemeChange)
+  }, [])
 
   const { data: result } = useQuery({
     queryKey: ['directory-contents-for-thumbnails', currentPath],
