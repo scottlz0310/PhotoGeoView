@@ -3,10 +3,16 @@ import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
 import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
+import { Button } from '@renderer/components/ui/button'
+import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
+import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover'
 import { Toaster } from '@renderer/components/ui/sonner'
+import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
+import { useKeyboardShortcuts } from '@renderer/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { Camera } from 'lucide-react'
+import { Camera, Keyboard } from 'lucide-react'
+import { useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App(): JSX.Element {
@@ -34,6 +40,45 @@ function App(): JSX.Element {
 
   const files = result?.success ? result.data.entries : []
 
+  // Image navigation with keyboard shortcuts
+  const { selectNext, selectPrevious, selectFirst, selectLast, clearSelection } =
+    useImageNavigation(files)
+
+  // Define keyboard shortcuts
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'ArrowRight',
+        handler: selectNext,
+        description: 'Next image',
+      },
+      {
+        key: 'ArrowLeft',
+        handler: selectPrevious,
+        description: 'Previous image',
+      },
+      {
+        key: 'Home',
+        handler: selectFirst,
+        description: 'First image',
+      },
+      {
+        key: 'End',
+        handler: selectLast,
+        description: 'Last image',
+      },
+      {
+        key: 'Escape',
+        handler: clearSelection,
+        description: 'Clear selection',
+      },
+    ],
+    [selectNext, selectPrevious, selectFirst, selectLast, clearSelection]
+  )
+
+  // Register keyboard shortcuts
+  useKeyboardShortcuts(shortcuts, files.length > 0)
+
   // Fetch EXIF data for the selected file for PhotoMap
   const { data: exifResult } = useQuery({
     queryKey: ['exif-for-map', selectedFile],
@@ -53,14 +98,27 @@ function App(): JSX.Element {
       <Toaster />
       <div className="h-screen flex flex-col bg-background">
         <header className="flex-shrink-0 border-b bg-card px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Camera className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-purple-900 bg-clip-text text-transparent">
-                PhotoGeoView
-              </h1>
-              <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Camera className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-purple-900 bg-clip-text text-transparent">
+                  PhotoGeoView
+                </h1>
+                <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
+              </div>
             </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Keyboard className="h-4 w-4" />
+                  Shortcuts
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <KeyboardShortcutsHelp />
+              </PopoverContent>
+            </Popover>
           </div>
         </header>
 
