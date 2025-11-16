@@ -80,6 +80,7 @@ function App(): JSX.Element {
   useKeyboardShortcuts(shortcuts, files.length > 0)
 
   // Fetch EXIF data for the selected file for PhotoMap
+  // Note: staleTime removed to ensure fresh data after image rotation
   const { data: exifResult } = useQuery({
     queryKey: ['exif-for-map', selectedFile],
     queryFn: async () => {
@@ -88,7 +89,6 @@ function App(): JSX.Element {
       return await (window as any).api.readExif({ path: selectedFile })
     },
     enabled: !!selectedFile && isElectron,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   const exifData = exifResult?.success ? exifResult.data.exif : null

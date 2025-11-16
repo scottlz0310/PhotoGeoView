@@ -7,7 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@renderer/components/ui/tooltip'
-import { Loader2, Minus, Plus, RotateCw, ZoomIn } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Loader2, Minus, Plus, RotateCcw, RotateCw, ZoomIn } from 'lucide-react'
 import { useState } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { toast } from 'sonner'
@@ -18,8 +19,44 @@ interface ImagePreviewProps {
 
 export function ImagePreview({ filePath }: ImagePreviewProps) {
   const [imageLoading, setImageLoading] = useState(false)
+  const [isRotating, setIsRotating] = useState(false)
+  const [imageKey, setImageKey] = useState(0) // Force re-render after rotation
+  const queryClient = useQueryClient()
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
   const isElectron = !!(window as any).api
+
+  const handleRotate = async (angle: 90 | 180 | 270 | -90) => {
+    if (!filePath || isRotating) return
+
+    setIsRotating(true)
+    try {
+      // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
+      const result = await (window as any).api.rotateImage({ path: filePath, angle })
+
+      if (result.success) {
+        // Force image reload by changing key
+        setImageKey((prev) => prev + 1)
+
+        // Invalidate EXIF cache to force reload
+        await queryClient.invalidateQueries({ queryKey: ['exif-for-map', filePath] })
+        await queryClient.invalidateQueries({ queryKey: ['exif-data', filePath] })
+
+        toast.success('Image Rotated', {
+          description: `Rotated ${angle > 0 ? angle : 360 + angle}° clockwise`,
+        })
+      } else {
+        toast.error('Rotation Failed', {
+          description: result.error?.message || 'Failed to rotate image',
+        })
+      }
+    } catch (error) {
+      toast.error('Rotation Error', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+      })
+    } finally {
+      setIsRotating(false)
+    }
+  }
 
   if (!filePath) {
     return (
@@ -52,7 +89,8 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
   }
 
   // Convert file path to local-file:// URL for Electron custom protocol
-  const imageUrl = `local-file://${filePath}`
+  // Add imageKey as timestamp to bust cache after rotation
+  const imageUrl = `local-file://${filePath}?t=${imageKey}`
 
   return (
     <Card className="h-full flex flex-col">
@@ -139,6 +177,44 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
                       <p>Fit to Screen</p>
                     </TooltipContent>
                   </Tooltip>
+
+                  {/* Separator */}
+                  <div className="h-px bg-border my-1" />
+
+                  {/* Rotation controls */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => handleRotate(-90)}
+                        disabled={isRotating}
+                        className="shadow-lg"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Rotate Left (90°)</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => handleRotate(90)}
+                        disabled={isRotating}
+                        className="shadow-lg"
+                      >
+                        <RotateCw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>Rotate Right (90°)</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
 
                 {/* Image container */}
@@ -156,6 +232,7 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
                     </div>
                   )}
                   <img
+                    key={`${filePath}-${imageKey}`}
                     src={imageUrl}
                     alt={filePath.split('/').pop() || 'Preview'}
                     className="max-w-full max-h-full object-contain"

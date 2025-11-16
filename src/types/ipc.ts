@@ -14,6 +14,7 @@ export const IPC_CHANNELS = {
   // Image Processing
   GENERATE_THUMBNAIL: 'image:generateThumbnail',
   READ_EXIF: 'image:readExif',
+  ROTATE_IMAGE: 'image:rotateImage',
 
   // Window
   MINIMIZE_WINDOW: 'window:minimize',
@@ -142,6 +143,24 @@ export const ReadExifResponseSchema = z.object({
 
 export type ReadExifResponse = z.infer<typeof ReadExifResponseSchema>
 
+// Rotate Image Request
+export const RotateImageRequestSchema = z.object({
+  path: z.string(),
+  angle: z.number().refine((val) => [90, 180, 270, -90].includes(val), {
+    message: 'Angle must be 90, 180, 270, or -90',
+  }),
+})
+
+export type RotateImageRequest = z.infer<typeof RotateImageRequestSchema>
+
+// Rotate Image Response
+export const RotateImageResponseSchema = z.object({
+  path: z.string(),
+  success: z.boolean(),
+})
+
+export type RotateImageResponse = z.infer<typeof RotateImageResponseSchema>
+
 // ============================================================================
 // Result Type Pattern for Error Handling
 // ============================================================================
@@ -179,6 +198,7 @@ export interface IpcApi {
     request: GenerateThumbnailRequest
   ) => Promise<Result<GenerateThumbnailResponse>>
   readExif: (request: ReadExifRequest) => Promise<Result<ReadExifResponse>>
+  rotateImage: (request: RotateImageRequest) => Promise<Result<RotateImageResponse>>
 
   // Window
   minimizeWindow: () => void

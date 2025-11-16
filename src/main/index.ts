@@ -4,7 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { BrowserWindow, app, ipcMain, protocol } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
-import { generateThumbnail, readExif } from './handlers/imageProcessing'
+import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
 
 function createWindow(): void {
   // Create the browser window.
@@ -64,6 +64,10 @@ function registerIpcHandlers(): void {
     return await readExif(request)
   })
 
+  ipcMain.handle(IPC_CHANNELS.ROTATE_IMAGE, async (_event, request) => {
+    return await rotateImage(request)
+  })
+
   // Window handlers
   ipcMain.on(IPC_CHANNELS.MINIMIZE_WINDOW, (event) => {
     const window = BrowserWindow.fromWebContents(event.sender)
@@ -89,8 +93,9 @@ function registerIpcHandlers(): void {
 function registerLocalFileProtocol(): void {
   protocol.registerBufferProtocol('local-file', async (request, callback) => {
     try {
-      // Remove 'local-file://' prefix to get the actual file path
-      const filePath = decodeURIComponent(request.url.replace('local-file://', ''))
+      // Remove 'local-file://' prefix and query parameters to get the actual file path
+      const urlWithoutProtocol = request.url.replace('local-file://', '')
+      const filePath = decodeURIComponent(urlWithoutProtocol.split('?')[0])
       const data = await readFile(filePath)
 
       // Determine MIME type based on file extension

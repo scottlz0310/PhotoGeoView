@@ -14,6 +14,7 @@ const api: IpcApi = {
   // Image Processing
   generateThumbnail: (request) => ipcRenderer.invoke(IPC_CHANNELS.GENERATE_THUMBNAIL, request),
   readExif: (request) => ipcRenderer.invoke(IPC_CHANNELS.READ_EXIF, request),
+  rotateImage: (request) => ipcRenderer.invoke(IPC_CHANNELS.ROTATE_IMAGE, request),
 
   // Window
   minimizeWindow: () => ipcRenderer.send(IPC_CHANNELS.MINIMIZE_WINDOW),
