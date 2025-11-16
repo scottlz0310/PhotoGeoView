@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
+export interface FileFilters {
+  // Date range filter
+  dateFrom: Date | null
+  dateTo: Date | null
+
+  // GPS filter
+  hasGPS: boolean | null // null = all, true = with GPS, false = without GPS
+
+  // Camera model filter
+  cameraModels: string[] // empty = all models
+}
+
 interface AppState {
   // Current directory path
   currentPath: string
@@ -22,6 +34,14 @@ interface AppState {
   removeSelectedFile: (file: string) => void
   clearSelectedFiles: () => void
 
+  // Filters
+  filters: FileFilters
+  setDateFilter: (from: Date | null, to: Date | null) => void
+  setGPSFilter: (hasGPS: boolean | null) => void
+  toggleCameraModel: (model: string) => void
+  clearCameraModels: () => void
+  resetFilters: () => void
+
   // UI state
   isSidebarOpen: boolean
   toggleSidebar: () => void
@@ -42,6 +62,12 @@ export const useAppStore = create<AppState>()(
       selectedFiles: [],
       isSidebarOpen: true,
       theme: 'system',
+      filters: {
+        dateFrom: null,
+        dateTo: null,
+        hasGPS: null,
+        cameraModels: [],
+      },
 
       // Actions
       setCurrentPath: (path) => set({ currentPath: path }),
@@ -115,6 +141,42 @@ export const useAppStore = create<AppState>()(
           selectedFiles: state.selectedFiles.filter((f) => f !== file),
         })),
       clearSelectedFiles: () => set({ selectedFiles: [] }),
+
+      // Filter actions
+      setDateFilter: (from, to) =>
+        set((state) => ({
+          filters: { ...state.filters, dateFrom: from, dateTo: to },
+        })),
+
+      setGPSFilter: (hasGPS) =>
+        set((state) => ({
+          filters: { ...state.filters, hasGPS },
+        })),
+
+      toggleCameraModel: (model) =>
+        set((state) => {
+          const models = state.filters.cameraModels
+          const index = models.indexOf(model)
+          const newModels = index === -1 ? [...models, model] : models.filter((m) => m !== model)
+          return {
+            filters: { ...state.filters, cameraModels: newModels },
+          }
+        }),
+
+      clearCameraModels: () =>
+        set((state) => ({
+          filters: { ...state.filters, cameraModels: [] },
+        })),
+
+      resetFilters: () =>
+        set({
+          filters: {
+            dateFrom: null,
+            dateTo: null,
+            hasGPS: null,
+            cameraModels: [],
+          },
+        }),
 
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setSidebarOpen: (open) => set({ isSidebarOpen: open }),

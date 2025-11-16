@@ -1,4 +1,5 @@
 import type { FileEntry } from '@/types/ipc'
+import { FileFilters } from '@renderer/components/filters/FileFilters'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -32,6 +33,7 @@ export function FileBrowser() {
     goBack,
     goForward,
     clearSelectedFiles,
+    filters,
   } = useAppStore()
   const [imageOnly, setImageOnly] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,14 +64,40 @@ export function FileBrowser() {
 
   const files = result?.success ? result.data.entries : []
 
-  // Filter files based on search query
+  // Filter files based on search query and filters
   const filteredFiles = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return files
+    let filtered = files
+
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter((file) => file.name.toLowerCase().includes(query))
     }
-    const query = searchQuery.toLowerCase()
-    return files.filter((file) => file.name.toLowerCase().includes(query))
-  }, [files, searchQuery])
+
+    // Apply date range filter
+    if (filters.dateFrom || filters.dateTo) {
+      filtered = filtered.filter((file) => {
+        if (!file.modifiedTime) return false
+
+        const fileDate = new Date(file.modifiedTime)
+
+        if (filters.dateFrom && fileDate < filters.dateFrom) {
+          return false
+        }
+        if (filters.dateTo) {
+          // Set end of day for dateTo
+          const endOfDay = new Date(filters.dateTo)
+          endOfDay.setHours(23, 59, 59, 999)
+          if (fileDate > endOfDay) {
+            return false
+          }
+        }
+        return true
+      })
+    }
+
+    return filtered
+  }, [files, searchQuery, filters])
 
   // Parse current path into breadcrumb segments
   const pathSegments = useMemo(() => {
@@ -277,33 +305,37 @@ export function FileBrowser() {
                 </BreadcrumbList>
               </Breadcrumb>
 
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Search files..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-9"
-                />
-                {searchQuery && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                        onClick={() => setSearchQuery('')}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Clear search</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+              {/* Search Bar and Filters */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search files..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-9"
+                  />
+                  {searchQuery && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                          onClick={() => setSearchQuery('')}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Clear search</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+
+                <FileFilters availableCameraModels={[]} />
               </div>
 
               <div className="flex items-center gap-2">
@@ -316,9 +348,9 @@ export function FileBrowser() {
                   />
                   Show images only
                 </label>
-                {searchQuery && (
+                {(searchQuery || filters.dateFrom || filters.dateTo) && (
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {filteredFiles.length} result{filteredFiles.length !== 1 ? 's' : ''}
+                    {filteredFiles.length} of {files.length} file{files.length !== 1 ? 's' : ''}
                   </span>
                 )}
               </div>
