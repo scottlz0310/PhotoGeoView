@@ -25,11 +25,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Biome lint
-        run: pnpm lint
-
-      - name: Run TypeScript type check
-        run: pnpm typecheck
+      - name: Run pre-commit checks (via Lefthook)
+        run: pnpm lefthook run pre-commit
+        env:
+          LEFTHOOK: 0  # Disable in CI to avoid git hooks
 
   test:
     name: Unit Tests & Coverage
@@ -49,8 +48,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests with coverage
-        run: pnpm test -- run --coverage
+      - name: Run tests with coverage (via Lefthook pre-push)
+        run: pnpm lefthook run pre-push
+        env:
+          LEFTHOOK: 0  # Disable in CI to avoid git hooks
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4

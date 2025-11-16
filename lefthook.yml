@@ -16,5 +16,5 @@ pre-commit:
 pre-push:
   parallel: true
   commands:
-    test:
-      run: pnpm test run
+    test-with-coverage:
+      run: pnpm vitest run --coverage
