@@ -1,7 +1,16 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "ignore": ["out/", "dist/", "node_modules/", ".vscode/", ".qt-analysis/", ".claude/", ".venv/"]
+    "ignore": [
+      "out/",
+      "dist/",
+      "node_modules/",
+      ".vscode/",
+      ".qt-analysis/",
+      ".claude/",
+      ".venv/",
+      "coverage/"
+    ]
   },
   "organizeImports": {
     "enabled": true
