@@ -39,8 +39,16 @@ function App(): JSX.Element {
       // This works correctly even in WSL2 environment
       const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
+      console.log('=== Theme Detection Debug ===')
+      console.log('System prefers dark mode:', isDark)
+      console.log('Current HTML classes:', document.documentElement.className)
+
       // Apply theme based on system preference
       document.documentElement.classList.toggle('dark', isDark)
+
+      console.log('After toggle HTML classes:', document.documentElement.className)
+      console.log('Background color:', window.getComputedStyle(document.documentElement).getPropertyValue('--background'))
+      console.log('=============================')
     }
 
     // Apply on mount
