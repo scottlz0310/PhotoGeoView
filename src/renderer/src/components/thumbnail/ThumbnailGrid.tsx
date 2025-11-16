@@ -104,11 +104,7 @@ export function ThumbnailGrid({ files, currentPath }: ThumbnailGridProps) {
             <CardTitle>Thumbnails ({imageFiles.length})</CardTitle>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  onClick={() => togglePanel('thumbnailGrid')}
-                  size="icon"
-                  variant="ghost"
-                >
+                <Button onClick={() => togglePanel('thumbnailGrid')} size="icon" variant="ghost">
                   <Minimize2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -119,47 +115,47 @@ export function ThumbnailGrid({ files, currentPath }: ThumbnailGridProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
-        <div ref={parentRef} className="h-full overflow-auto">
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
-            }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const startIdx = virtualRow.index * 4
-              const rowImages = imageFiles.slice(startIdx, startIdx + 4)
+          <div ref={parentRef} className="h-full overflow-auto">
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const startIdx = virtualRow.index * 4
+                const rowImages = imageFiles.slice(startIdx, startIdx + 4)
 
-              return (
-                <div
-                  key={virtualRow.key}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  <div className="grid grid-cols-4 gap-2 p-2">
-                    {rowImages.map((file) => (
-                      <ThumbnailItem
-                        key={file.path}
-                        file={file}
-                        isSelected={selectedFiles.includes(file.path)}
-                        onClick={(e) => handleThumbnailClick(file.path, e)}
-                      />
-                    ))}
+                return (
+                  <div
+                    key={virtualRow.key}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="grid grid-cols-4 gap-2 p-2">
+                      {rowImages.map((file) => (
+                        <ThumbnailItem
+                          key={file.path}
+                          file={file}
+                          isSelected={selectedFiles.includes(file.path)}
+                          onClick={(e) => handleThumbnailClick(file.path, e)}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
     </TooltipProvider>
   )
 }

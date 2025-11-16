@@ -9,7 +9,16 @@ import {
 } from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQueryClient } from '@tanstack/react-query'
-import { Loader2, Maximize2, Minimize2, Minus, Plus, RotateCcw, RotateCw, ZoomIn } from 'lucide-react'
+import {
+  Loader2,
+  Maximize2,
+  Minimize2,
+  Minus,
+  Plus,
+  RotateCcw,
+  RotateCw,
+  ZoomIn,
+} from 'lucide-react'
 import { useState } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { toast } from 'sonner'

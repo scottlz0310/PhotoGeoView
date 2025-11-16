@@ -106,11 +106,7 @@ export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
             <CardTitle>Map</CardTitle>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  onClick={() => togglePanel('mapView')}
-                  size="icon"
-                  variant="ghost"
-                >
+                <Button onClick={() => togglePanel('mapView')} size="icon" variant="ghost">
                   <Minimize2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>

@@ -19,7 +19,16 @@ import {
 } from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, ArrowRight, ChevronLeft, FolderOpen, Home, Minimize2, Search, X } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  FolderOpen,
+  Home,
+  Minimize2,
+  Search,
+  X,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { FileList } from './FileList'
@@ -217,11 +226,7 @@ export function FileBrowser() {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => togglePanel('fileBrowser')}
-                    size="icon"
-                    variant="ghost"
-                  >
+                  <Button onClick={() => togglePanel('fileBrowser')} size="icon" variant="ghost">
                     <Minimize2 className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>

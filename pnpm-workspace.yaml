@@ -1,0 +1,6 @@
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - electron
+  - esbuild
+  - exifreader
+  - sharp

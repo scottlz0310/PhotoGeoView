@@ -4,7 +4,6 @@ import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { Button } from '@renderer/components/ui/button'
-import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -13,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@renderer/components/ui/dropdown-menu'
+import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
 import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover'
 import { Toaster } from '@renderer/components/ui/sonner'
 import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
