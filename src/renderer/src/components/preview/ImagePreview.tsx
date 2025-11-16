@@ -19,6 +19,10 @@ interface ImagePreviewProps {
 }
 
 export function ImagePreview({ filePath }: ImagePreviewProps) {
+  console.log('=== ImagePreview Component ===')
+  console.log('filePath prop:', filePath)
+  console.log('==============================')
+
   const { togglePanel } = useAppStore()
   const [imageLoading, setImageLoading] = useState(false)
   const [isRotating, setIsRotating] = useState(false)
@@ -94,6 +98,14 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
   // Add imageKey as timestamp to bust cache after rotation
   // Use encodeURI for the path to properly handle special characters while preserving slashes
   const imageUrl = filePath ? `local-file://${encodeURI(filePath)}?t=${imageKey}` : ''
+
+  if (filePath) {
+    console.log('=== ImagePreview URL Generation ===')
+    console.log('Original file path:', filePath)
+    console.log('Encoded URI:', encodeURI(filePath))
+    console.log('Final image URL:', imageUrl)
+    console.log('===================================')
+  }
 
   return (
     <TooltipProvider>
