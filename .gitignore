@@ -27,6 +27,7 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+*-output.txt
 
 # Misc
 *.tsbuildinfo
