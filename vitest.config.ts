@@ -13,7 +13,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      include: ['src/renderer/src/**/*.ts', 'src/renderer/src/**/*.tsx', 'src/types/**/*.ts'],
       exclude: [
         'node_modules/**',
         'out/**',
@@ -22,12 +22,15 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.*',
         '**/main.tsx',
+        'src/main/**',
+        'src/preload/**',
+        'src/renderer/src/components/ui/**', // Exclude shadcn/ui components (3rd party)
       ],
       thresholds: {
-        lines: 5,
-        functions: 5,
-        branches: 5,
-        statements: 5,
+        lines: 20,
+        functions: 20,
+        branches: 20,
+        statements: 20,
       },
     },
   },

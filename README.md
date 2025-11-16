@@ -2,6 +2,7 @@
 
 > Modern photo geo-tagging application built with Electron, TypeScript, and React 19
 
+[![CI](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml/badge.svg?branch=electron-migration)](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml)
 [![Electron](https://img.shields.io/badge/Electron-33+-blue.svg)](https://www.electronjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
@@ -75,6 +76,18 @@ PhotoGeoView/
 ├── tsconfig.json       # TypeScript configuration
 └── biome.json          # Biome configuration
 ```
+
+## 📊 Quality & Testing
+
+**Current Status:**
+- ✅ Test Coverage: 20.12%
+- ✅ CI/CD: All checks passing
+- ⏳ TypeScript Strict Mode: In progress
+- ⏳ Target Coverage: 80%
+
+**Quality Roadmap:**
+- 📋 [Quality Roadmap](./QUALITY_ROADMAP.md) - Comprehensive quality improvement plan
+- ✅ [Quality Checklist](./QUALITY_CHECKLIST.md) - Track progress towards quality goals
 
 ## 🔧 Development
 
