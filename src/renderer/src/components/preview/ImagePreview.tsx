@@ -96,13 +96,15 @@ export function ImagePreview({ filePath }: ImagePreviewProps) {
 
   // Convert file path to local-file:// URL for Electron custom protocol
   // Add imageKey as timestamp to bust cache after rotation
-  // Use encodeURI for the path to properly handle special characters while preserving slashes
-  const imageUrl = filePath ? `local-file://${encodeURI(filePath)}?t=${imageKey}` : ''
+  // Convert Windows backslashes to forward slashes for URL compatibility
+  const normalizedPath = filePath ? filePath.replace(/\\/g, '/') : ''
+  const imageUrl = normalizedPath ? `local-file://${encodeURI(normalizedPath)}?t=${imageKey}` : ''
 
   if (filePath) {
     console.log('=== ImagePreview URL Generation ===')
     console.log('Original file path:', filePath)
-    console.log('Encoded URI:', encodeURI(filePath))
+    console.log('Normalized path:', normalizedPath)
+    console.log('Encoded URI:', encodeURI(normalizedPath))
     console.log('Final image URL:', imageUrl)
     console.log('===================================')
   }
