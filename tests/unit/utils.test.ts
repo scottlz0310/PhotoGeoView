@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
 import { cn } from '@renderer/lib/utils'
+import { describe, expect, it } from 'vitest'
 
 describe('Utils', () => {
   describe('cn (class name utility)', () => {

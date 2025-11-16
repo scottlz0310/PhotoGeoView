@@ -1,6 +1,6 @@
-import { test, expect, type Page, _electron as electron } from '@playwright/test'
-import { ElectronApplication } from '@playwright/test'
 import * as path from 'node:path'
+import { type Page, _electron as electron, expect, test } from '@playwright/test'
+import type { ElectronApplication } from '@playwright/test'
 
 let electronApp: ElectronApplication
 let page: Page

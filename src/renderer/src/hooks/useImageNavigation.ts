@@ -1,6 +1,6 @@
-import type { FileEntry } from '../../../types/ipc'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useCallback } from 'react'
+import type { FileEntry } from '../../../types/ipc'
 
 /**
  * Custom hook for navigating between images using arrow keys

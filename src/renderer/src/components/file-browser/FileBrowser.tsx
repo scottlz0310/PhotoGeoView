@@ -18,13 +18,21 @@ import {
 } from '@renderer/components/ui/tooltip'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, FolderOpen, Home, Search, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronLeft, FolderOpen, Home, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { FileList } from './FileList'
 
 export function FileBrowser() {
-  const { currentPath, setCurrentPath, clearSelectedFiles } = useAppStore()
+  const {
+    currentPath,
+    navigateToPath,
+    canGoBack,
+    canGoForward,
+    goBack,
+    goForward,
+    clearSelectedFiles,
+  } = useAppStore()
   const [imageOnly, setImageOnly] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -74,7 +82,7 @@ export function FileBrowser() {
   }, [currentPath])
 
   const handleBreadcrumbClick = (path: string) => {
-    setCurrentPath(path)
+    navigateToPath(path)
     clearSelectedFiles()
   }
 
@@ -89,7 +97,7 @@ export function FileBrowser() {
       // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
       const result = await (window as any).api.selectDirectory()
       if (result.success && result.data) {
-        setCurrentPath(result.data)
+        navigateToPath(result.data)
         clearSelectedFiles()
         toast.success('Folder Selected', {
           description: `Opened: ${result.data}`,
@@ -108,7 +116,7 @@ export function FileBrowser() {
 
   const handleFileDoubleClick = (file: FileEntry) => {
     if (file.isDirectory) {
-      setCurrentPath(file.path)
+      navigateToPath(file.path)
       clearSelectedFiles()
     }
   }
@@ -117,7 +125,7 @@ export function FileBrowser() {
     if (!currentPath) return
     const parentPath = currentPath.split('/').slice(0, -1).join('/')
     if (parentPath) {
-      setCurrentPath(parentPath)
+      navigateToPath(parentPath)
       clearSelectedFiles()
     }
   }
@@ -127,7 +135,7 @@ export function FileBrowser() {
       // On Linux/Mac, home is ~, on Windows it's typically C:\Users\username
       const homeDir = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME
       if (homeDir) {
-        setCurrentPath(homeDir)
+        navigateToPath(homeDir)
         clearSelectedFiles()
         toast.success('Home Directory', {
           description: `Navigated to: ${homeDir}`,
@@ -183,6 +191,33 @@ export function FileBrowser() {
             <div className="space-y-3">
               {/* Navigation Buttons */}
               <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" onClick={goBack} disabled={!canGoBack()}>
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Go Back</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={goForward}
+                      disabled={!canGoForward()}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Go Forward</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" onClick={goToHomeDirectory}>
