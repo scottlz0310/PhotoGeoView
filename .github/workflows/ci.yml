@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [electron-migration]
+    branches: [main]
   pull_request:
-    branches: [electron-migration]
+    branches: [main]
 
 jobs:
   lint-and-typecheck:
