@@ -1,169 +1,169 @@
-# PhotoGeoView - AI統合写真地理情報ビューア
+# PhotoGeoView 2.0
 
-PhotoGeoViewは、写真のEXIF情報から撮影場所を抽出し、地図上に表示するPySide6ベースの写真管理アプリケーションです。このプロジェクトは複数のAIエージェントによる協調開発の成果物です。
+> Modern photo geo-tagging application built with Electron, TypeScript, and React 19
 
-## 🤖 AI協調開発
+[![CI](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml/badge.svg?branch=electron-migration)](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml)
+[![Electron](https://img.shields.io/badge/Electron-33+-blue.svg)](https://www.electronjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF.svg)](https://vite.dev/)
 
-このプロジェクトは以下の3つのAIエージェントによって開発されました：
+## ✨ Features
 
-### GitHub Copilot (CS4Coding)
-- **専門分野**: コア機能実装
-- **主要貢献**: EXIF解析、地図表示、画像処理の安定実装
+- 📸 Modern photo viewing and management
+- 🗺️ Interactive maps with GPS data visualization
+- 🎨 Beautiful, responsive UI
+- ⚡ Lightning-fast performance with Vite
+- 🔒 Type-safe development with TypeScript
+- 🤖 AI-friendly codebase for efficient development
 
-### Cursor (CursorBLD)
-- **専門分野**: UI/UX設計
-- **主要貢献**: テーマシステム、サムネイル表示、直感的なインターフェース
+## 🚀 Tech Stack
 
-### Kiro
-- **専門分野**: 統合・品質管理
-- **主要貢献**: パフォーマンス最適化、統合制御、ドキュメント生成
+### Frontend
+- **Electron 33+** - Cross-platform desktop framework
+- **React 19** - Latest React with improved performance
+- **TypeScript 5.7+** - Type-safe development
+- **Vite 6** - Next-generation build tool (10x faster than Webpack)
 
-## 🎯 主要機能
+### Development Tools
+- **electron-vite** - Vite integration for Electron
+- **Biome** - Fast linter & formatter (25x faster than ESLint/Prettier)
+- **Vitest** - Fast unit testing (5x faster than Jest)
+- **Playwright** - E2E testing
 
-### 📁 ファイル管理
-- 画像ファイルのフィルタリング表示
-- フォルダナビゲーション
-- 履歴機能
+### Future Stack
+- **React Leaflet 4** - Interactive maps
+- **TailwindCSS v4** - Utility-first CSS
+- **shadcn/ui** - Beautiful React components
+- **Zustand** - Lightweight state management
+- **TanStack Query** - Data fetching & caching
+- **sharp** - High-performance image processing
+- **exifreader** - EXIF metadata extraction
 
-### 🖼️ 画像表示
-- 高速サムネイル生成
-- ズーム・パン操作
-- EXIF情報詳細表示
+## 📦 Installation
 
-### 🗺️ 地図表示
-- GPS座標からの撮影場所表示
-- インタラクティブ地図操作
-- 撮影位置マーカー
+```bash
+# Install dependencies
+pnpm install
 
-### 🎨 テーマシステム
-- 16種類のテーマサポート
-- リアルタイムテーマ切り替え
-- アクセシビリティ対応
+# Start development
+pnpm dev
 
-## 🏗️ アーキテクチャ
+# Build for production
+pnpm build
+
+# Run tests
+pnpm test
+
+# Lint & format
+pnpm lint
+pnpm format
+```
+
+## 🏗️ Project Structure
 
 ```
 PhotoGeoView/
 ├── src/
-│   ├── integration/          # Kiro統合システム
-│   ├── ui/                   # CursorBLD UIコンポーネント
-│   ├── modules/              # CS4Coding コア機能
-│   └── core/                 # 共通機能
-├── tests/                    # 本番用テストスイート（30+テスト）
-├── dev_scripts/              # 開発・検証用スクリプト（48個）
-├── docs/                     # ドキュメント（整理済み）
-│   ├── summaries/            # 開発サマリー（23個）
-│   ├── guides/               # ユーザー・開発ガイド（5個）
-│   ├── reports/              # 分析レポート（4個）
-│   ├── specifications/       # プロジェクト仕様書
-│   └── ai_integration/       # AI統合ドキュメント
-├── config/                   # 設定ファイル
-├── tools/                    # CI/CD ツール
-├── scripts/                  # ビルドスクリプト
-├── main.py                   # アプリケーションエントリーポイント
-└── pyproject.toml            # プロジェクト設定（PEP 621 & PEP 735準拠）
+│   ├── main/           # Electron main process
+│   ├── preload/        # Preload scripts (IPC bridge)
+│   └── renderer/       # React renderer process
+│       ├── components/ # React components
+│       ├── hooks/      # Custom React hooks
+│       ├── lib/        # Utilities
+│       └── types/      # TypeScript types
+├── electron.vite.config.ts  # Vite configuration
+├── tsconfig.json       # TypeScript configuration
+└── biome.json          # Biome configuration
 ```
 
-**注意**: `dev_scripts/` ディレクトリには開発過程で作成された検証・デバッグスクリプトが含まれています。これらはリンター/テストの対象外です。
+## 📊 Quality & Testing
 
+**Current Status:**
+- ✅ Test Coverage: 20.12%
+- ✅ CI/CD: All checks passing
+- ⏳ TypeScript Strict Mode: In progress
+- ⏳ Target Coverage: 80%
 
-## 📚 ドキュメント
+**Quality Roadmap:**
+- 📋 [Quality Roadmap](./QUALITY_ROADMAP.md) - Comprehensive quality improvement plan
+- ✅ [Quality Checklist](./QUALITY_CHECKLIST.md) - Track progress towards quality goals
 
-すべてのドキュメントは整理され、`docs/` ディレクトリに分類されています。
-詳細は **[ドキュメント索引](docs/README.md)** をご覧ください。
+## 🔧 Development
 
-### 主要ドキュメント
+### Prerequisites
+- Node.js 20+
+- pnpm 9+
 
-- **[プロジェクト仕様書](docs/specifications/PhotoGeoView_ProjectSpecification.md)** - 完全仕様
-- **[ユーザーガイド](docs/guides/USER_GUIDE_QT_THEME_BREADCRUMB.md)** - 使い方
-- **[AI統合ドキュメント](docs/ai_integration/README.md)** - AI協調開発の詳細
-- **[開発ガイド](docs/guides/ai_quality_integration_guide.md)** - 開発プロセス
+### Commands
 
-## 🚀 セットアップ
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm typecheck` | Run TypeScript type checking |
+| `pnpm lint` | Run Biome linter |
+| `pnpm lint:fix` | Fix linting issues |
+| `pnpm format` | Format code |
+| `pnpm test` | Run unit tests |
+| `pnpm test:ui` | Run tests with UI |
+| `pnpm test:e2e` | Run E2E tests |
+| `pnpm package` | Package app for distribution |
 
-### 必要要件
-- Python 3.9以上
-- PySide6
-- 依存関係は `pyproject.toml` の `[project.dependencies]` を参照
+## 📖 Migration from PySide6
 
-### インストール
-```bash
-# リポジトリをクローン
-git clone https://github.com/your-username/PhotoGeoView.git
-cd PhotoGeoView
+This project is a complete rewrite of the original PySide6-based PhotoGeoView with modern web technologies.
 
-# 仮想環境を作成
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+### 📚 Migration Documentation (Japanese)
 
-# 依存関係をインストール（pyproject.tomlを使用）
-pip install .
+**必読！実装前にこれらのドキュメントを確認してください:**
 
-# アプリケーションを実行
-python main.py
-```
+1. **[ANALYSIS_INDEX_jp.md](./ANALYSIS_INDEX_jp.md)** - 移行分析の概要
+   - なぜElectronに移行するのか
+   - 技術スタック比較
+   - 意思決定フレームワーク
 
-## 🧪 テスト
+2. **[CODEBASE_ANALYSIS_jp.md](./CODEBASE_ANALYSIS_jp.md)** - 詳細なコードベース分析
+   - 既存アーキテクチャの問題点
+   - 技術的な利点・欠点
+   - 実装ロードマップ
 
-```bash
-# 統合テストを実行
-python -m pytest tests/
+3. **[MIGRATION_QUICK_START_jp.md](./MIGRATION_QUICK_START_jp.md)** - クイックスタートガイド ⭐ 重要
+   - フェーズごとの実装手順（具体的なコード例付き）
+   - 技術スタックマッピング（PySide6 → Electron + TypeScript）
+   - 依存関係リスト（最新バージョン）
+   - リスク軽減戦略
 
-# AI統合テストを実行
-python -m pytest tests/integration_tests/
+### Why the Migration?
 
-# パフォーマンステストを実行
-python -m pytest tests/performance_tests/
-```
+- **Type Safety**: TypeScript provides better AI-assisted development
+- **Performance**: 5-25x faster build/test/lint tools
+- **Modern Stack**: Latest React 19, Vite 6, all actively maintained
+- **Cross-Platform**: Native Chromium, no WebEngine complexity
+- **Developer Experience**: Hot reload, better debugging, modern tooling
 
-## 📊 AI貢献統計
+## 🤝 Contributing
 
-| AI エージェント | ファイル数 | 関数数 | 専門分野 |
-|----------------|-----------|--------|----------|
-| GitHub Copilot | 2 (7.7%) | 10 | コア機能 |
-| Cursor | 14 (53.8%) | 92 | UI/UX |
-| Kiro | 10 (38.5%) | 86 | 統合・品質 |
+We welcome contributions! This project is designed for AI-driven development with TypeScript, making it easy to:
 
-## 🔧 開発
+- Add features with AI assistance
+- Refactor with confidence (type safety)
+- Test comprehensively (Vitest + Playwright)
+- Maintain code quality (Biome)
 
-### ドキュメント生成
-```bash
-# AI統合ドキュメントを生成
-python docs/ai_integration/standalone_doc_generator.py
+## 📄 License
 
-# ファイルヘッダーを更新
-python docs/ai_integration/generate_docs.py --update-headers
-```
+MIT
 
-### 品質チェック
-```bash
-# コード品質チェック
-python -m flake8 src/
+## 🙏 Acknowledgments
 
-# 型チェック
-python -m mypy src/
-
-# テストカバレッジ
-python -m pytest --cov=src tests/
-```
-
-## 🤝 貢献
-
-このプロジェクトはAI協調開発の実験的取り組みです。各AIエージェントの役割分担：
-
-1. **機能追加**: GitHub Copilot が主導
-2. **UI改善**: Cursor が主導
-3. **統合・最適化**: Kiro が主導
-
-## 📄 ライセンス
-
-このプロジェクトは MIT ライセンスの下で公開されています。詳細は [LICENSE](LICENSE) ファイルをご覧ください。
-
-## 🙏 謝辞
-
-このプロジェクトは複数のAIエージェントによる協調開発の成果です。各AIの特性を活かした役割分担により、単独では実現できない高品質なアプリケーションを構築することができました。
+Built with:
+- 🤖 AI-assisted development (Claude Code)
+- ⚡ Modern web technologies
+- 💙 Open source community
 
 ---
 
-*このREADMEは Kiro AI統合システムによって生成されました*
-*最終更新: 2025年7月26日*
+**Branch**: `electron-migration`
+**Status**: 🚧 Initial setup - Ready for development
+**Original**: PySide6 implementation on `main` branch

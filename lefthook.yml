@@ -1,0 +1,18 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  skip_empty_source_files: false
+  commands:
+    biome-lint:
+      run: pnpm biome check --write .
+    typecheck:
+      run: pnpm typecheck
+
+pre-push:
+  parallel: true
+  skip_empty_source_files: false
+  commands:
+    test-with-coverage:
+      run: pnpm vitest run --coverage
