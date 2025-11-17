@@ -41,7 +41,12 @@
     },
     {
       "description": "Surface runtime-sensitive Electron stack updates",
-      "matchPackagePatterns": ["^electron$", "^electron-builder$", "^electron-vite$", "^@electron-toolkit/"],
+      "matchPackagePatterns": [
+        "^electron$",
+        "^electron-builder$",
+        "^electron-vite$",
+        "^@electron-toolkit/"
+      ],
       "matchUpdateTypes": ["minor", "major"],
       "labels": ["dependencies", "needs-manual-verification"],
       "stabilityDays": 5,
@@ -64,7 +69,13 @@
     },
     {
       "description": "Group Testing Library + Vitest ecosystem",
-      "matchPackagePatterns": ["^@testing-library/", "^vitest$", "^@vitest/", "^@playwright/", "^@types/jest"],
+      "matchPackagePatterns": [
+        "^@testing-library/",
+        "^vitest$",
+        "^@vitest/",
+        "^@playwright/",
+        "^@types/jest"
+      ],
       "groupName": "testing stack",
       "matchDepTypes": ["devDependencies"],
       "matchManagers": ["npm"],
@@ -79,7 +90,15 @@
     },
     {
       "description": "Keep tooling in sync",
-      "matchPackagePatterns": ["^@biomejs/", "^@playwright/", "lefthook", "^typescript$", "^vite$", "^vitest$", "^@vitest/"],
+      "matchPackagePatterns": [
+        "^@biomejs/",
+        "^@playwright/",
+        "lefthook",
+        "^typescript$",
+        "^vite$",
+        "^vitest$",
+        "^@vitest/"
+      ],
       "matchDepTypes": ["devDependencies"],
       "groupName": "build-tooling",
       "matchManagers": ["npm"],
@@ -97,7 +116,9 @@
     {
       "description": "Keep pnpm CLI version in CI updated",
       "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["pnpm/action-setup@v[\\d.]+[\\s\\S]*?version:\\s+(?<currentValue>\\d+(?:\\.\\d+)*)"],
+      "matchStrings": [
+        "pnpm/action-setup@v[\\d.]+[\\s\\S]*?version:\\s+(?<currentValue>\\d+(?:\\.\\d+)*)"
+      ],
       "datasourceTemplate": "npm",
       "depNameTemplate": "pnpm"
     }
