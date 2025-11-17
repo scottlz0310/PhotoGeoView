@@ -1,0 +1,14 @@
+{
+  "image_processing": {
+    "high_quality_exif": true,
+    "detailed_metadata": true,
+    "gps_precision": "high",
+    "error_recovery": "robust"
+  },
+  "map_integration": {
+    "folium_version": "latest",
+    "marker_clustering": true,
+    "offline_tiles": false,
+    "custom_markers": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "Kiro Error Recovery",
+  "description": "Kiroがエラーで停止した際を検出し、自動的に復帰処理を実行する",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "logs/kiro.log",
+      "logs/error.log",
+      "logs/errors.log",
+      "config/kiro_config.json",
+      "main.py"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Kiroのログファイルやエラーログを監視し、エラーによる停止を検出した場合は以下を実行してください：\n1. エラーの種類と原因を分析\n2. 設定ファイルの整合性をチェック\n3. 必要に応じて設定の修復やリセット\n4. Kiroプロセスの再起動\n5. 復帰後の動作確認とログ記録\nエラーパターンに応じた適切な復帰手順を選択し、安全な自動復帰を実現してください。"
+  }
+}

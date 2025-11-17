@@ -1,0 +1,51 @@
+{
+  "environment": "production",
+  "performance": {
+    "max_parallel_jobs": 4,
+    "memory_limit_mb": 4096,
+    "timeout_seconds": 3600,
+    "cache_enabled": true,
+    "cache_ttl_hours": 24,
+    "incremental_checks": false,
+    "file_change_detection": true
+  },
+  "logging": {
+    "level": "INFO",
+    "file_rotation": true,
+    "max_file_size_mb": 100,
+    "backup_count": 5,
+    "structured_logging": true,
+    "performance_metrics": true,
+    "error_tracking": true,
+    "log_retention_days": 30
+  },
+  "scalability": {
+    "large_codebase_mode": false,
+    "file_count_threshold": 10000,
+    "line_count_threshold": 1000000,
+    "batch_processing": false,
+    "batch_size": 100,
+    "distributed_execution": false,
+    "worker_nodes": []
+  },
+  "monitoring": {
+    "metrics_enabled": true,
+    "health_checks": true,
+    "performance_tracking": true,
+    "resource_monitoring": true,
+    "alert_thresholds": {
+      "memory_usage_percent": 80.0,
+      "cpu_usage_percent": 90.0,
+      "disk_usage_percent": 85.0,
+      "execution_time_minutes": 30.0
+    },
+    "notification_channels": []
+  },
+  "generated_at": "2025-07-30T12:25:00.736802",
+  "system_info": {
+    "cpu_count": 24,
+    "memory_gb": 15.18,
+    "disk_space_gb": 946.91,
+    "platform": "linux"
+  }
+}

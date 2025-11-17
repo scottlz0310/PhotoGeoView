@@ -1,0 +1,89 @@
+# AI統合品質保証 Pre-commit設定
+#
+# AI貢献者:
+# - Kiro: Pre-commit設定・品質チェック統合
+#
+# 作成者: Kiro AI統合システム
+# 更新日: 2025年11月3日 (Ruff + Mypy移行)
+
+repos:
+  # Ruff - リンティングとフォーマット (black, isort, flake8の代替)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      # Linter
+      - id: ruff
+        args: [--fix]
+      # Formatter
+      - id: ruff-format
+
+  # 型チェック
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-Pillow, types-psutil, types-toml]
+        args: [--config-file=pyproject.toml]
+        exclude: ^(tools/ci/|scripts/ci\.py|tools/ci_integration\.py)
+
+  # セキュリティチェック
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
+        args: [-r, src/]
+        exclude: tests/
+
+  # 基本的なチェック
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: debug-statements
+      - id: check-docstring-first
+
+  # AI統合品質チェック
+  - repo: local
+    hooks:
+      - id: ai-quality-check
+        name: AI統合品質チェック
+        entry: python tools/ai_quality_checker.py
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [--fail-on-critical]
+
+      - id: ai-documentation-check
+        name: AIドキュメント整合性チェック
+        entry: python docs/ai_integration/standalone_doc_generator.py
+        language: system
+        files: ^src/.*\.py$
+        pass_filenames: false
+
+      - id: performance-regression-check
+        name: パフォーマンス回帰チェック
+        entry: python tests/performance_tests/performance_regression_detector.py
+        language: system
+        files: ^src/.*\.py$
+        pass_filenames: false
+        args: [--iterations=3]
+
+# CI設定
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [ai-quality-check, ai-documentation-check, performance-regression-check]
+  submodules: false

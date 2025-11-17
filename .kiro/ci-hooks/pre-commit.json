@@ -1,0 +1,8 @@
+{
+  "hook_type": "pre-commit",
+  "checks": [
+    "code_quality"
+  ],
+  "installed_at": "2025-07-30T23:15:47.312789",
+  "timeout": 300
+}

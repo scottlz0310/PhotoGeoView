@@ -1,0 +1,2 @@
+# This file ensures the reports directory is tracked by Git
+# GitHub Actions workflows expect this directory to exist for uploading artifacts

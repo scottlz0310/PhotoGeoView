@@ -1,0 +1,18 @@
+[
+  {
+    "path": "demo_data/sample_image_1.jpg",
+    "size": 1024000,
+    "thumb_path": "demo_data/thumb_1.jpg",
+    "name": "Sample Image 1",
+    "created": "2024-01-01 10:00:00",
+    "modified": "2024-01-01 10:00:00"
+  },
+  {
+    "path": "demo_data/sample_image_2.jpg",
+    "size": 2048000,
+    "thumb_path": "demo_data/thumb_2.jpg",
+    "name": "Sample Image 2",
+    "created": "2024-01-02 11:00:00",
+    "modified": "2024-01-02 11:00:00"
+  }
+]

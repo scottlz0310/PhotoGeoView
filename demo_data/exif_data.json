@@ -1,0 +1,17 @@
+[
+  {
+    "image_path": "demo_data/sample_image_3.jpg",
+    "make": "Canon",
+    "model": "EOS R5",
+    "lens": "RF 24-70mm F2.8 L IS USM",
+    "focal_length": 50.0,
+    "f_number": 2.8,
+    "exposure_time": "1/125",
+    "iso_speed": 400,
+    "gps_lat": 35.6762,
+    "gps_lon": 139.6503,
+    "gps_alt": 10.5,
+    "image_width": 8192,
+    "image_height": 5464
+  }
+]

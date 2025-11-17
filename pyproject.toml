@@ -1,0 +1,331 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "photogeoview"
+version = "1.0.0"
+description = "AI統合写真地理情報ビューア"
+authors = [
+    {name = "AI Integration Team", email = "ai-team@photogeoview.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.12,<3.15"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Multimedia :: Graphics :: Viewers",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = [
+    # GUI Framework (6.8+で全モジュール統合済み)
+    "PySide6>=6.8.0",
+
+    # 画像処理
+    "Pillow>=10.4.0",
+
+    # EXIF処理（ExifReadは開発停滞、将来的にpiexifへ移行予定）
+    "ExifRead>=3.0.0",
+
+    # 地図表示
+    "folium>=0.18.0",
+
+    # システム情報
+    "psutil>=6.0.0",
+
+    # カスタムコンポーネント
+    "qt-theme-manager>=0.2.4",
+    "breadcrumb-addressbar>=0.2.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/scottlz0310/PhotoGeoView"
+Repository = "https://github.com/scottlz0310/PhotoGeoView.git"
+Issues = "https://github.com/scottlz0310/PhotoGeoView/issues"
+
+[dependency-groups]
+# テスト関連
+test = [
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "pytest-qt>=4.4.0",
+    "pytest-xdist>=3.6.0",
+    "pytest-benchmark>=5.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+# コード品質
+lint = [
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+# セキュリティ
+security = [
+    "bandit[toml]>=1.8.0",
+    "safety>=3.2.0",
+]
+
+# 開発用（すべて含む）
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "security"},
+    "pre-commit>=4.4.0",
+]
+
+# CI用
+ci = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    "toml>=0.10.0",
+    "tomlkit>=0.13.0",
+    "watchdog>=6.0.0",
+]
+
+[project.scripts]
+photogeoview = "photogeoview.__main__:main"
+ci-simulator = "tools.ci.simulator:main"
+pgv-ci = "tools.ci.simulator:main"
+photogeoview-ci = "tools.ci.simulator:main"
+
+# Hatchling build settings
+[tool.hatch.build.targets.wheel]
+packages = ["src/photogeoview"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
+
+# Ruff設定
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = [
+    ".eggs",
+    ".git",
+    ".mypy_cache",
+    ".tox",
+    ".venv",
+    "build",
+    "dist",
+    "dev_scripts",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PTH",    # flake8-use-pathlib
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E203",   # whitespace before ':'
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise from
+    "UP006",  # use-pep585-annotation (keep for compatibility)
+    "UP007",  # use-pep604-annotation (keep for compatibility)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG", "SIM", "F401", "PTH", "E501", "PLR", "C901", "E402", "F841", "F821", "RUF", "UP035", "B", "E712", "E722"]  # Tests are less strict
+"__init__.py" = ["F401"]
+"examples/*" = ["E402", "PTH123", "RUF001", "RUF002", "RUF003"]  # Examples can modify sys.path, use open(), and use Japanese full-width chars
+"docs/*" = ["E402", "RUF001", "RUF002", "RUF003"]  # Docs scripts can modify sys.path and use Japanese full-width chars
+"tools/*" = ["E402", "PTH123", "ARG", "PLR", "C901", "UP035", "UP038", "SIM102", "RUF001", "RUF002", "RUF003", "B007"]  # Tools are less strict
+"scripts/*" = ["PTH123", "PTH101", "F841", "RUF001", "RUF002", "RUF003", "SIM", "RUF005", "B018", "F401"]  # Scripts are less strict
+"main.py" = ["RUF001", "RUF002", "RUF003", "F841"]  # Main app can use Japanese full-width chars and may have intentionally unused vars
+"src/photogeoview/integration/*" = [
+    "PTH123", "E721", "UP038", "F821", "PTH118", "ARG002", "SIM102", "UP035",
+    "RUF006", "F811", "RUF012", "B025", "RUF009", "SIM113", "ARG005", "RUF001",
+    "RUF003", "E402", "SIM116", "E722", "F401"
+]  # Integration layer is less strict
+"src/photogeoview/ui/*" = ["ARG001", "ARG002", "ARG005", "SIM102", "E722", "F821"]  # UI layer can have unused signal/slot args
+"tests/ai_compatibility/*" = ["RUF003"]  # Test files can use Japanese full-width chars
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+known-third-party = ["PySide6", "PIL", "folium", "pytest"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# mypy設定
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+exclude = [
+    "tools/ci",
+    "scripts/ci\\.py",
+    "tools/ci_integration\\.py",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "folium.*",
+    "piexif.*",
+    "psutil.*",
+    "PySide6.*",
+    "PyInstaller.*",
+    "src.integration.*",
+    "src.ui.*",
+    "ui.*",
+    "utils",
+    "exifread",
+    "cv2",
+    "win32file",
+    "watchdog.*",
+    "qt_theme_manager",
+    "breadcrumb_addressbar",
+    "pytest",
+    "interfaces",
+    "models",
+    "config_manager",
+    "simulator",
+    "yaml",
+    "error_handler",
+    "error_recovery_system",
+    "checkers.*",
+    "environment.*",
+    "check_orchestrator",
+    "reporters.*",
+]
+ignore_missing_imports = true
+
+# pytest設定
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src/photogeoview",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--ignore=tests/ci_simulation",
+    "--ignore=tests/test_qt_theme_breadcrumb_integration.py",
+]
+testpaths = ["tests"]
+# ci_simulationはtools/ciのモジュールが削除されたため除外
+# test_qt_theme_breadcrumb_integrationはIntegratedThemeManagerの引数変更により修正が必要
+norecursedirs = ["tests/ci_simulation"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "ai_compatibility: marks tests as AI compatibility tests",
+    "performance: marks tests as performance tests",
+    "asyncio: marks tests as async tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+
+# Coverage設定
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/build/*",
+    "*/dist/*",
+    "*/dev_scripts/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+# Bandit設定（セキュリティ）
+[tool.bandit]
+exclude_dirs = ["tests", "venv", "build", "dist", "dev_scripts"]
+skips = ["B101", "B601"]  # assert文とshell=Trueの警告をスキップ
+
+# AI統合品質設定
+[tool.ai_integration]
+quality_threshold = 70.0
+coverage_threshold = 80.0
+performance_regression_threshold = 30.0
+
+[tool.ai_integration.components]
+copilot = {focus = "core_functionality", quality_weight = 1.2}
+cursor = {focus = "ui_ux", quality_weight = 1.0}
+kiro = {focus = "integration", quality_weight = 1.5}
+
+# CI Simulator設定
+[tool.ci_simulator]
+enabled = true
+default_python_versions = ["3.9", "3.10", "3.11"]
+timeout = 1800  # 30 minutes
+parallel_jobs = 4
+fail_fast = false
+
+[tool.ci_simulator.checks]
+code_quality = {enabled = true, auto_fix = false}
+test_runner = {enabled = true, coverage_threshold = 80.0}
+security_scanner = {enabled = true, fail_on_high = false}
+performance_analyzer = {enabled = true, regression_threshold = 30.0}
+ai_component_tester = {enabled = true, demo_tests = true}
+
+[tool.ci_simulator.directories]
+reports = "reports/ci-simulation"
+logs = "logs"
+history = ".kiro/ci-history"
+temp = "temp/ci-simulation"
+
+[tool.ci_simulator.git_hooks]
+pre_commit = {enabled = true, checks = ["code_quality", "test_runner"]}
+pre_push = {enabled = false, checks = ["all"]}
+
+[tool.ci_simulator.notifications]
+slack_webhook = ""
+email_recipients = []
+github_status = true

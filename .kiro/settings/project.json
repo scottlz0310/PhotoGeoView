@@ -1,0 +1,77 @@
+{
+    "project": {
+        "name": "PhotoGeoView AI Integration",
+        "version": "1.0.0",
+        "description": "Multi-AI integrated photo management application with geographic information display",
+        "type": "ai-integration"
+    },
+    "ai_agents": {
+        "copilot": {
+            "branch": "CS4Coding",
+            "focus_areas": [
+                "core_functionality",
+                "exif_parsing",
+                "map_integration"
+            ],
+            "primary_files": [
+                "src/modules/image_loader.py",
+                "src/modules/exif_parser.py",
+                "src/modules/map_viewer.py",
+                "src/core/controller.py"
+            ]
+        },
+        "cursor": {
+            "branch": "CursorBLD",
+            "focus_areas": [
+                "ui_design",
+                "theme_system",
+                "user_experience"
+            ],
+            "primary_files": [
+                "src/ui/main_window.py",
+                "src/ui/theme_manager.py",
+                "src/ui/thumbnail_grid.py",
+                "src/ui/folder_navigator.py"
+            ]
+        },
+        "kiro": {
+            "branch": "ai-integration-main",
+            "focus_areas": [
+                "architecture",
+                "integration",
+                "quality_assurance"
+            ],
+            "primary_files": [
+                ".kiro/specs/",
+                ".kiro/steering/",
+                "tests/integration_tests/",
+                "docs/integration_plan.md"
+            ]
+        }
+    },
+    "integration": {
+        "strategy": "hybrid_best_of_breed",
+        "ui_base": "cursor",
+        "functionality_base": "copilot",
+        "architecture_lead": "kiro",
+        "testing_approach": "comprehensive_integration"
+    },
+    "development": {
+        "python_path": "./venv/bin/python",
+        "test_framework": "pytest",
+        "formatter": "black",
+        "linter": "pylint",
+        "type_checker": "strict"
+    },
+    "monitoring": {
+        "ignore_paths": ["cache/", "logs/", "__pycache__/", ".pytest_cache/"],
+        "focus_extensions": [".py", ".json", ".md"],
+        "auto_test_on_save": true
+    },
+    "quality": {
+        "code_coverage_target": 90,
+        "performance_baseline": "maintain_or_improve",
+        "documentation_completeness": "required",
+        "accessibility_compliance": "wcag_2.1_aa"
+    }
+}
