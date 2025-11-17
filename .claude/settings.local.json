@@ -2,19 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(pnpm:*)",
-      "Bash(pnpm typecheck:*)",
-      "Bash(pnpm lint:fix:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm add:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(git remote:*)",
+      "Bash(git:*)",
       "mcp__github__get_commit",
       "mcp__github__list_pull_requests",
-      "Bash(gh run list:*)",
-      "Bash(gh run view:*)",
-      "Bash(gh run watch:*)"
+      "mcp__github__create_pull_request",
+      "mcp__github__merge_pull_request",
+      "mcp__github__get_repository",
+      "mcp__github__list_branches",
+      "mcp__github__create_branch",
+      "mcp__github__get_branch",
+      "mcp__github__update_branch",
+      "mcp__github__list_commits",
+      "Bash(gh:*)"
     ],
     "deny": [],
     "ask": []
