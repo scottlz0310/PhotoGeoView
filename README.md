@@ -1,6 +1,6 @@
 # PhotoGeoView 2.0
 
-> Modern photo geo-tagging application built with Electron, TypeScript, and React 19
+> 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
 
 [![CI](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml/badge.svg?branch=electron-migration)](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml)
 [![Electron](https://img.shields.io/badge/Electron-33+-blue.svg)](https://www.electronjs.org/)

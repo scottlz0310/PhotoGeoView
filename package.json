@@ -1,7 +1,7 @@
 {
   "name": "photogeoview",
   "version": "2.0.0",
-  "description": "Modern photo geo-tagging application built with Electron, TypeScript, and React",
+  "description": "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。",
   "main": "./out/main/index.js",
   "author": "PhotoGeoView Team",
   "license": "MIT",
