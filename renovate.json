@@ -1,1 +1,121 @@
-{\n  "$schema": "https://docs.renovatebot.com/renovate-schema.json",\n  "extends": [\n    "config:recommended",\n    ":semanticCommits",\n    ":dependencyDashboard",\n    "group:monorepos"\n  ],\n  "baseBranches": ["main"],\n  "timezone": "Asia/Tokyo",\n  "dependencyDashboardTitle": "Renovate Dependency Dashboard (PhotoGeoView)",\n  "dependencyDashboardAutoclose": true,\n  "labels": ["dependencies", "renovate"],\n  "rangeStrategy": "replace",\n  "rebaseWhen": "behind-base-branch",\n  "prConcurrentLimit": 8,\n  "prHourlyLimit": 2,\n  "lockFileMaintenance": {\n    "enabled": true\n  },\n  "packageRules": [\n    {\n      "description": "Automerge safe devDependency patches/minors once CI passes",\n      "matchDepTypes": ["devDependencies"],\n      "matchUpdateTypes": ["patch", "minor", "digest"],\n      "automerge": true,\n      "automergeType": "branch",\n      "platformAutomerge": true,\n      "requiredStatusChecks": [\n        "Lint & Type Check",\n        "Unit Tests & Coverage",\n        "Build (ubuntu-latest)",\n        "Build (windows-latest)",\n        "Build (macos-latest)"\n      ]\n    },\n    {\n      "description": "Surface runtime-sensitive Electron stack updates",\n      "matchPackagePatterns": [\n        "^electron$",\n        "^electron-builder$",\n        "^electron-vite$",\n        "^@electron-toolkit/"\n      ],\n      "matchUpdateTypes": ["minor", "major"],\n      "labels": ["dependencies", "needs-manual-verification"],\n      "stabilityDays": 5,\n      "separateMajorMinor": true\n    },\n    {\n      "description": "Group Radix UI updates together",\n      "matchPackagePatterns": ["^@radix-ui/"],\n      "groupName": "radix-ui suite",\n      "groupSlug": "radix-ui",\n      "matchDepTypes": ["dependencies", "devDependencies"],\n      "separateMajorMinor": true\n    },\n    {\n      "description": "Group TanStack packages",\n      "matchPackagePatterns": ["^@tanstack/"],\n      "groupName": "tanstack",\n      "matchDepTypes": ["dependencies", "devDependencies"],\n      "separateMajorMinor": true\n    },\n    {\n      "description": "Group Testing Library + Vitest ecosystem",\n      "matchPackagePatterns": [\n        "^@testing-library/",\n        "^vitest$",\n        "^@vitest/",\n        "^@playwright/",\n        "^@types/jest"\n      ],\n      "groupName": "testing stack",\n      "matchDepTypes": ["devDependencies"],\n      "matchManagers": ["npm"],\n      "separateMajorMinor": true\n    },\n    {\n      "description": "Treat sharp, leaflets, and imaging libs cautiously",\n      "matchPackagePatterns": ["^sharp$", "^leaflet$", "^react-leaflet$", "^react-zoom-pan-pinch$"],\n      "labels": ["dependencies", "needs-manual-verification"],\n      "stabilityDays": 3,\n      "separateMajorMinor": true\n    },\n    {\n      "description": "Keep tooling in sync",\n      "matchPackagePatterns": [\n        "^@biomejs/",\n        "^@playwright/",\n        "lefthook",\n        "^typescript$",\n        "^vite$",\n        "^vitest$",\n        "^@vitest/"\n      ],\n      "matchDepTypes": ["devDependencies"],\n      "groupName": "build-tooling",\n      "matchManagers": ["npm"],\n      "separateMinorPatch": true\n    }\n  ],\n  "regexManagers": [\n    {\n      "description": "Pin Node.js version used in GitHub Actions",\n      "fileMatch": ["^\.github/workflows/.*\.ya?ml$"],\n      "matchStrings": ["node-version:\s*['"]?(?<currentValue>\\d+(?:\\.\\d+)*)['"]?"],\n      "depNameTemplate": "node",\n      "datasourceTemplate": "node"\n    },\n    {\n      "description": "Keep pnpm CLI version in CI updated",\n      "fileMatch": ["^\.github/workflows/.*\.ya?ml$"],\n      "matchStrings": [\n        "pnpm/action-setup@v[\\d.]+[\s\\S]*?version:\s+(?<currentValue>\\d+(?:\\.\\d+)*)"\n      ],\n      "datasourceTemplate": "npm",\n      "depNameTemplate": "pnpm"\n    }\n  ]\n}
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":dependencyDashboard",
+    "group:monorepos"
+  ],
+  "baseBranches": ["main"],
+  "timezone": "Asia/Tokyo",
+  "dependencyDashboardTitle": "Renovate Dependency Dashboard (PhotoGeoView)",
+  "dependencyDashboardAutoclose": true,
+  "labels": ["dependencies", "renovate"],
+  "rangeStrategy": "replace",
+  "rebaseWhen": "behind-base-branch",
+  "prConcurrentLimit": 8,
+  "prHourlyLimit": 2,
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Automerge safe devDependency patches/minors once CI passes",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor", "digest"],
+      "automerge": true,
+      "automergeType": "branch",
+      "platformAutomerge": true,
+      "requiredStatusChecks": [
+        "Lint & Type Check",
+        "Unit Tests & Coverage",
+        "Build (ubuntu-latest)",
+        "Build (windows-latest)",
+        "Build (macos-latest)"
+      ]
+    },
+    {
+      "description": "Surface runtime-sensitive Electron stack updates",
+      "matchPackagePatterns": [
+        "^electron$",
+        "^electron-builder$",
+        "^electron-vite$",
+        "^@electron-toolkit/"
+      ],
+      "matchUpdateTypes": ["minor", "major"],
+      "labels": ["dependencies", "needs-manual-verification"],
+      "stabilityDays": 5,
+      "separateMajorMinor": true
+    },
+    {
+      "description": "Group Radix UI updates together",
+      "matchPackagePatterns": ["^@radix-ui/"],
+      "groupName": "radix-ui suite",
+      "groupSlug": "radix-ui",
+      "matchDepTypes": ["dependencies", "devDependencies"],
+      "separateMajorMinor": true
+    },
+    {
+      "description": "Group TanStack packages",
+      "matchPackagePatterns": ["^@tanstack/"],
+      "groupName": "tanstack",
+      "matchDepTypes": ["dependencies", "devDependencies"],
+      "separateMajorMinor": true
+    },
+    {
+      "description": "Group Testing Library + Vitest ecosystem",
+      "matchPackagePatterns": [
+        "^@testing-library/",
+        "^vitest$",
+        "^@vitest/",
+        "^@playwright/",
+        "^@types/jest"
+      ],
+      "groupName": "testing stack",
+      "matchDepTypes": ["devDependencies"],
+      "matchManagers": ["npm"],
+      "separateMajorMinor": true
+    },
+    {
+      "description": "Treat sharp, leaflets, and imaging libs cautiously",
+      "matchPackagePatterns": ["^sharp$", "^leaflet$", "^react-leaflet$", "^react-zoom-pan-pinch$"],
+      "labels": ["dependencies", "needs-manual-verification"],
+      "stabilityDays": 3,
+      "separateMajorMinor": true
+    },
+    {
+      "description": "Keep tooling in sync",
+      "matchPackagePatterns": [
+        "^@biomejs/",
+        "^@playwright/",
+        "lefthook",
+        "^typescript$",
+        "^vite$",
+        "^vitest$",
+        "^@vitest/"
+      ],
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "build-tooling",
+      "matchManagers": ["npm"],
+      "separateMinorPatch": true
+    }
+  ],
+  "regexManagers": [
+    {
+      "description": "Pin Node.js version used in GitHub Actions",
+      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": ["node-version:\\s*['\"]?(?<currentValue>\\d+(?:\\.\\d+)*)['\"]?"],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node"
+    },
+    {
+      "description": "Keep pnpm CLI version in CI updated",
+      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "pnpm/action-setup@v[\\d.]+[\\s\\S]*?version:\\s+(?<currentValue>\\d+(?:\\.\\d+)*)"
+      ],
+      "datasourceTemplate": "npm",
+      "depNameTemplate": "pnpm"
+    }
+  ]
+}
