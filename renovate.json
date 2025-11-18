@@ -39,23 +39,20 @@
       ],
       "matchUpdateTypes": ["minor", "major"],
       "labels": ["dependencies", "needs-manual-verification"],
-      "stabilityDays": 5,
-      "separateMajorMinor": true
+      "stabilityDays": 5
     },
     {
       "description": "Group Radix UI updates together",
       "matchPackagePatterns": ["^@radix-ui/"],
       "groupName": "radix-ui suite",
       "groupSlug": "radix-ui",
-      "matchDepTypes": ["dependencies", "devDependencies"],
-      "separateMajorMinor": true
+      "matchDepTypes": ["dependencies", "devDependencies"]
     },
     {
       "description": "Group TanStack packages",
       "matchPackagePatterns": ["^@tanstack/"],
       "groupName": "tanstack",
-      "matchDepTypes": ["dependencies", "devDependencies"],
-      "separateMajorMinor": true
+      "matchDepTypes": ["dependencies", "devDependencies"]
     },
     {
       "description": "Group Testing Library + Vitest ecosystem",
@@ -68,15 +65,13 @@
       ],
       "groupName": "testing stack",
       "matchDepTypes": ["devDependencies"],
-      "matchManagers": ["npm"],
-      "separateMajorMinor": true
+      "matchManagers": ["npm"]
     },
     {
       "description": "Treat sharp, leaflets, and imaging libs cautiously",
       "matchPackagePatterns": ["^sharp$", "^leaflet$", "^react-leaflet$", "^react-zoom-pan-pinch$"],
       "labels": ["dependencies", "needs-manual-verification"],
-      "stabilityDays": 3,
-      "separateMajorMinor": true
+      "stabilityDays": 3
     },
     {
       "description": "Keep tooling in sync",
