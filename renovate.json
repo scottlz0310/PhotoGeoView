@@ -9,7 +9,6 @@
   ],
   "baseBranches": ["main"],
   "timezone": "Asia/Tokyo",
-  "schedule": ["after 9pm on sunday", "before 6am on friday"],
   "dependencyDashboardTitle": "Renovate Dependency Dashboard (PhotoGeoView)",
   "dependencyDashboardAutoclose": true,
   "labels": ["dependencies", "renovate"],
@@ -20,7 +19,6 @@
   "postUpdateOptions": ["pnpmDedupe"],
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 5am on monday"],
     "commitMessageSuffix": "lock-file"
   },
   "packageRules": [
