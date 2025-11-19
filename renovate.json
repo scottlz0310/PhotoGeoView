@@ -3,6 +3,7 @@
   "extends": ["config:recommended", ":semanticCommits", ":dependencyDashboard", "group:monorepos"],
   "baseBranches": ["main"],
   "timezone": "Asia/Tokyo",
+  "schedule": ["on monday"],
   "dependencyDashboardTitle": "Renovate Dependency Dashboard (PhotoGeoView)",
   "dependencyDashboardAutoclose": true,
   "labels": ["dependencies", "renovate"],
