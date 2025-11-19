@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { BrowserWindow, app, ipcMain, nativeTheme, protocol } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, protocol } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'

@@ -1,10 +1,10 @@
-import type { FileEntry } from '@/types/ipc'
 import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
 import { useAppStore } from '@renderer/stores/appStore'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { FileEntry } from '@/types/ipc'
 
 // Mock toast
 vi.mock('sonner', () => ({
@@ -25,13 +25,14 @@ vi.mock('@renderer/components/file-browser/FileList', () => ({
   }) => (
     <div data-testid="file-list">
       {files.map((file) => (
-        <div
+        <button
           key={file.path}
+          type="button"
           data-testid={`file-item-${file.name}`}
           onDoubleClick={() => onFileDoubleClick(file)}
         >
           {file.name}
-        </div>
+        </button>
       ))}
     </div>
   ),
@@ -557,7 +558,7 @@ describe('FileBrowser', () => {
 
   describe('Panel Controls', () => {
     it('should toggle panel when collapse button is clicked', async () => {
-      const user = userEvent.setup()
+      const _user = userEvent.setup()
       render(<FileBrowser />, { wrapper: createWrapper() })
 
       const { container } = render(<FileBrowser />, { wrapper: createWrapper() })

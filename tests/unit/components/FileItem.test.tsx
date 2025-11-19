@@ -1,9 +1,9 @@
-import type { FileEntry } from '@/types/ipc'
 import { FileItem } from '@renderer/components/file-browser/FileItem'
 import { useAppStore } from '@renderer/stores/appStore'
 import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { FileEntry } from '@/types/ipc'
 
 describe('FileItem', () => {
   const mockImageFile: FileEntry = {
@@ -215,7 +215,7 @@ describe('FileItem', () => {
     it('should apply selected style when file is selected', () => {
       useAppStore.setState({ selectedFiles: [mockImageFile.path] })
 
-      const { container } = render(<FileItem file={mockImageFile} />)
+      render(<FileItem file={mockImageFile} />)
 
       const fileItem = screen.getByRole('button')
       expect(fileItem).toHaveClass('bg-primary/10')
@@ -225,7 +225,7 @@ describe('FileItem', () => {
     it('should not apply selected style when file is not selected', () => {
       useAppStore.setState({ selectedFiles: ['/other/file.jpg'] })
 
-      const { container } = render(<FileItem file={mockImageFile} />)
+      render(<FileItem file={mockImageFile} />)
 
       const fileItem = screen.getByRole('button')
       expect(fileItem).not.toHaveClass('bg-primary/10')

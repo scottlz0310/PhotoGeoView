@@ -1,4 +1,3 @@
-import type { FileEntry } from '@/types/ipc'
 import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { Progress } from '@renderer/components/ui/progress'
@@ -13,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Image as ImageIcon, Loader2, Minimize2 } from 'lucide-react'
 import { useRef } from 'react'
+import type { FileEntry } from '@/types/ipc'
 
 interface ThumbnailGridProps {
   files: FileEntry[]

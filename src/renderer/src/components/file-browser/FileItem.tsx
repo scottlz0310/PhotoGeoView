@@ -1,8 +1,8 @@
-import type { FileEntry } from '@/types/ipc'
 import { cn } from '@renderer/lib/utils'
 import { useAppStore } from '@renderer/stores/appStore'
 import { format } from 'date-fns'
 import { File, Folder, Image } from 'lucide-react'
+import type { FileEntry } from '@/types/ipc'
 
 interface FileItemProps {
   file: FileEntry

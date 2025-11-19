@@ -1,8 +1,8 @@
-import type { FileEntry } from '@/types/ipc'
 import { useFileFilters, useUniqueCameraModels } from '@renderer/hooks/useFileFilters'
 import type { FileFilters } from '@renderer/stores/appStore'
 import { renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { FileEntry } from '@/types/ipc'
 
 describe('useFileFilters', () => {
   const mockFiles: FileEntry[] = [

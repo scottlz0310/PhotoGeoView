@@ -1,4 +1,3 @@
-import type { ExifData } from '@/types/ipc'
 import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import {
@@ -11,6 +10,7 @@ import { useAppStore } from '@renderer/stores/appStore'
 import { Minimize2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import type { ExifData } from '@/types/ipc'
 import 'leaflet/dist/leaflet.css'
 
 interface PhotoMapProps {
@@ -33,7 +33,6 @@ export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
       // Use CDN URLs for marker icons
       import('leaflet')
         .then((L) => {
-          // biome-ignore lint/performance/noDelete: Required for Leaflet icon fix
           delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
           L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -125,17 +124,9 @@ export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
 }
 
 // Component to update map center when position changes
-function MapUpdater({ position }: { position: [number, number] }) {
-  // biome-ignore lint/suspicious/noExplicitAny: Dynamic import requires any type
-  const [useMap, setUseMap] = useState<any>(null)
-
-  useEffect(() => {
-    import('react-leaflet').then((module) => {
-      setUseMap(() => module.useMap)
-    })
-  }, [])
-
-  const map = useMap ? useMap() : null
+// biome-ignore lint/suspicious/noExplicitAny: react-leaflet useMap is from dynamic import
+function MapUpdater({ position, useMapHook }: { position: [number, number]; useMapHook: any }) {
+  const map = useMapHook()
 
   useEffect(() => {
     if (map) {
@@ -169,6 +160,7 @@ function DynamicMap({
           TileLayer: module.TileLayer,
           Marker: module.Marker,
           Popup: module.Popup,
+          useMap: module.useMap,
         })
       })
       .catch((err) => {
@@ -198,7 +190,7 @@ function DynamicMap({
     )
   }
 
-  const { MapContainer, TileLayer, Marker, Popup } = Components
+  const { MapContainer, TileLayer, Marker, Popup, useMap } = Components
   const altitude = exifData.gps?.altitude
 
   return (
@@ -208,7 +200,7 @@ function DynamicMap({
       scrollWheelZoom={true}
       style={{ height: '100%', width: '100%', minHeight: '300px' }}
     >
-      <MapUpdater position={position} />
+      <MapUpdater position={position} useMapHook={useMap} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

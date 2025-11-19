@@ -1,4 +1,3 @@
-import type { FileEntry } from '@/types/ipc'
 import { FileFilters } from '@renderer/components/filters/FileFilters'
 import {
   Breadcrumb,
@@ -31,6 +30,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import type { FileEntry } from '@/types/ipc'
 import { FileList } from './FileList'
 
 export function FileBrowser() {

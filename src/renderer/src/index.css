@@ -84,7 +84,8 @@
 
 :root {
   /* App-specific variables */
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+  font-family:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
     "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -99,7 +100,7 @@ body {
 
 /* Fix Leaflet map z-index to prevent it from covering dropdowns */
 .leaflet-container {
-  z-index: 0 !important;
+  z-index: 0;
 }
 
 .leaflet-pane,
@@ -109,14 +110,14 @@ body {
 .leaflet-marker-pane,
 .leaflet-tooltip-pane,
 .leaflet-popup-pane {
-  z-index: auto !important;
+  z-index: auto;
 }
 
 /* Ensure popups and tooltips are visible */
 .leaflet-popup-pane {
-  z-index: 10 !important;
+  z-index: 10;
 }
 
 .leaflet-tooltip-pane {
-  z-index: 10 !important;
+  z-index: 10;
 }

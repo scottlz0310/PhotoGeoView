@@ -1,7 +1,7 @@
-import type { FileEntry } from '@/types/ipc'
 import { FileList } from '@renderer/components/file-browser/FileList'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { FileEntry } from '@/types/ipc'
 
 describe('FileList', () => {
   const mockFiles: FileEntry[] = [

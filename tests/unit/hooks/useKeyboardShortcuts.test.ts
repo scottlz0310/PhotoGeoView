@@ -1,6 +1,6 @@
 import {
-  type KeyboardShortcut,
   getShortcutDisplay,
+  type KeyboardShortcut,
   useKeyboardShortcuts,
 } from '@renderer/hooks/useKeyboardShortcuts'
 import { renderHook } from '@testing-library/react'

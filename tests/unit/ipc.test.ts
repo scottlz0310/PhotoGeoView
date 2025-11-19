@@ -1,6 +1,8 @@
+import { describe, expect, it } from 'vitest'
 import {
   ExifDataSchema,
   FileEntrySchema,
+  failure,
   GenerateThumbnailRequestSchema,
   GenerateThumbnailResponseSchema,
   GetDirectoryContentsRequestSchema,
@@ -12,10 +14,8 @@ import {
   ReadImageMetadataResponseSchema,
   RotateImageRequestSchema,
   RotateImageResponseSchema,
-  failure,
   success,
 } from '@/types/ipc'
-import { describe, expect, it } from 'vitest'
 
 describe('IPC Type Validation', () => {
   describe('FileEntrySchema', () => {

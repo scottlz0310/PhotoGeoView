@@ -56,7 +56,7 @@ describe('AppStore', () => {
 
   describe('Path Management', () => {
     it('should set current path', () => {
-      const { setCurrentPath, currentPath } = useAppStore.getState()
+      const { setCurrentPath } = useAppStore.getState()
       setCurrentPath('/test/path')
       expect(useAppStore.getState().currentPath).toBe('/test/path')
     })
@@ -82,7 +82,7 @@ describe('AppStore', () => {
     })
 
     it('should allow going back and forward', () => {
-      const { navigateToPath, goBack, goForward, canGoBack, canGoForward } = useAppStore.getState()
+      const { navigateToPath } = useAppStore.getState()
 
       navigateToPath('/path1')
       navigateToPath('/path2')

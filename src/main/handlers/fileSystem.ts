@@ -3,13 +3,13 @@ import path from 'node:path'
 import { dialog } from 'electron'
 import {
   type FileEntry,
+  failure,
   type GetDirectoryContentsRequest,
   GetDirectoryContentsRequestSchema,
   type GetDirectoryContentsResponse,
   type GetFileInfoRequest,
   GetFileInfoRequestSchema,
   type Result,
-  failure,
   success,
 } from '../../types/ipc'
 

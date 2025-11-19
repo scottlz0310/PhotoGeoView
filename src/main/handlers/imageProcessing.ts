@@ -1,3 +1,5 @@
+import ExifReader from 'exifreader'
+import sharp from 'sharp'
 import type {
   GenerateThumbnailRequest,
   GenerateThumbnailResponse,
@@ -9,14 +11,12 @@ import type {
 } from '@/types/ipc'
 import {
   ExifDataSchema,
+  failure,
   GenerateThumbnailRequestSchema,
   ReadExifRequestSchema,
   RotateImageRequestSchema,
-  failure,
   success,
 } from '@/types/ipc'
-import ExifReader from 'exifreader'
-import sharp from 'sharp'
 
 /**
  * Generate a thumbnail for an image using sharp

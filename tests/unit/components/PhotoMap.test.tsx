@@ -1,8 +1,8 @@
-import type { ExifData } from '@/types/ipc'
 import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { useAppStore } from '@renderer/stores/appStore'
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ExifData } from '@/types/ipc'
 
 // Mock leaflet and react-leaflet
 vi.mock('leaflet', () => ({

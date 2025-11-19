@@ -1,8 +1,8 @@
-import type { FileEntry } from '@/types/ipc'
 import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
 import { useAppStore } from '@renderer/stores/appStore'
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
+import type { FileEntry } from '@/types/ipc'
 
 describe('useImageNavigation', () => {
   const mockFiles: FileEntry[] = [
