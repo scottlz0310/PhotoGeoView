@@ -123,16 +123,37 @@ export function PhotoMap({ exifData, filePath }: PhotoMapProps) {
   )
 }
 
-// Component to update map center when position changes
+// Component to update map center when position changes and handle resizing
 // biome-ignore lint/suspicious/noExplicitAny: react-leaflet useMap is from dynamic import
 function MapUpdater({ position, useMapHook }: { position: [number, number]; useMapHook: any }) {
   const map = useMapHook()
 
+  // Update view when position changes
   useEffect(() => {
     if (map) {
       map.setView(position, 13)
     }
   }, [map, position])
+
+  // Handle map resizing
+  useEffect(() => {
+    if (!map) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Invalidate size to force Leaflet to redraw when container size changes
+      map.invalidateSize()
+    })
+
+    // Observe the map container
+    const container = map.getContainer()
+    if (container) {
+      resizeObserver.observe(container)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [map])
 
   return null
 }
