@@ -53,3 +53,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEBUG: electron-builder
+
+      - name: List output files
+        run: ls -R dist || echo "dist directory not found"
+        if: always()
