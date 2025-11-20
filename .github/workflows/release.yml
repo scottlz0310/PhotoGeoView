@@ -40,6 +40,16 @@ jobs:
       - name: Publish App
         # macOS: identity=null to skip code signing
         # Windows: no signing configured, will produce unsigned exe
-        run: pnpm package --config.mac.identity=null --publish always
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            pnpm package --win --config.mac.identity=null --publish always
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            pnpm package --mac --config.mac.identity=null --publish always
+          else
+            pnpm package --linux --config.mac.identity=null --publish always
+          fi
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
