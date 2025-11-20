@@ -30,6 +30,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
@@ -52,9 +54,18 @@ jobs:
       - name: Package App
         # Skip signing for now on macOS/Windows to avoid errors without certs
         # On macOS, identity=null disables code signing
-        run: pnpm package --config.mac.identity=null
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            pnpm package --win --config.mac.identity=null
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            pnpm package --mac --config.mac.identity=null
+          else
+            pnpm package --linux --config.mac.identity=null
+          fi
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
