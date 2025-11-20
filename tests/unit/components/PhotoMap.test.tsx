@@ -5,16 +5,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ExifData } from '@/types/ipc'
 
 // Mock leaflet and react-leaflet
-vi.mock('leaflet', () => ({
-  default: {
-    Icon: {
-      Default: {
-        prototype: {},
-        mergeOptions: vi.fn(),
-      },
+vi.mock('leaflet', () => {
+  const Icon = {
+    Default: {
+      prototype: {},
+      mergeOptions: vi.fn(),
     },
-  },
-}))
+  }
+  return {
+    default: {
+      Icon,
+    },
+    Icon,
+  }
+})
 
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }: { children: React.ReactNode }) => (

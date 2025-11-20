@@ -24,9 +24,15 @@ import { useEffect, useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App() {
-  const { selectedFiles, currentPath, panelVisibility, togglePanel } = useAppStore()
+  const { selectedFiles, currentPath, panelVisibility, togglePanel, initializeFromStore } =
+    useAppStore()
   // Get the first selected file for EXIF display
   const selectedFile = selectedFiles.length > 0 ? selectedFiles[0] : null
+
+  // Initialize store from persisted settings
+  useEffect(() => {
+    initializeFromStore()
+  }, [initializeFromStore])
 
   // Check if selected file is an image (simple extension check)
   const isImageFile = useMemo(() => {

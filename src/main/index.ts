@@ -5,6 +5,7 @@ import { app, BrowserWindow, ipcMain, nativeTheme, protocol } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
+import { getStore, registerStoreHandlers } from './handlers/store'
 
 // Register custom protocol scheme as privileged before app is ready
 protocol.registerSchemesAsPrivileged([
@@ -20,10 +21,15 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 function createWindow(): void {
+  const store = getStore()
+  const bounds = store.get('windowBounds')
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
     show: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -37,6 +43,15 @@ function createWindow(): void {
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
+
+  // Save window bounds on resize/move
+  const saveBounds = () => {
+    const bounds = mainWindow.getBounds()
+    store.set('windowBounds', bounds)
+  }
+
+  mainWindow.on('resize', saveBounds)
+  mainWindow.on('move', saveBounds)
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     // Open external links in the default browser
@@ -67,6 +82,9 @@ function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.SELECT_DIRECTORY, async () => {
     return await selectDirectory()
   })
+
+  // Store handlers
+  registerStoreHandlers()
 
   // Image Processing handlers
   ipcMain.handle(IPC_CHANNELS.GENERATE_THUMBNAIL, async (_event, request) => {

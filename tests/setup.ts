@@ -19,6 +19,8 @@ Object.defineProperty(window, 'api', {
     minimize: vi.fn(),
     maximize: vi.fn(),
     close: vi.fn(),
+    getStoreValue: vi.fn(),
+    setStoreValue: vi.fn(),
   },
   writable: true,
 })

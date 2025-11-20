@@ -23,6 +23,10 @@ export const IPC_CHANNELS = {
 
   // Theme
   GET_SYSTEM_THEME: 'theme:getSystemTheme',
+
+  // Store
+  GET_STORE_VALUE: 'store:get',
+  SET_STORE_VALUE: 'store:set',
 } as const
 
 // ============================================================================
@@ -215,4 +219,8 @@ export interface IpcApi {
 
   // Theme
   getSystemTheme: () => Promise<Result<SystemTheme>>
+
+  // Store
+  getStoreValue: <T>(key: string) => Promise<T>
+  setStoreValue: <T>(key: string, value: T) => Promise<void>
 }

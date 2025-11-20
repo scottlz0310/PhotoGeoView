@@ -59,8 +59,11 @@ interface AppState {
   setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolean) => void
 
   // Theme
-  theme: 'light' | 'dark' | 'system'
-  setTheme: (theme: 'light' | 'dark' | 'system') => void
+  theme: 'system' | 'light' | 'dark'
+  setTheme: (theme: 'system' | 'light' | 'dark') => void
+
+  // Initialization
+  initializeFromStore: () => Promise<void>
 }
 
 export const useAppStore = create<AppState>()(
@@ -201,22 +204,52 @@ export const useAppStore = create<AppState>()(
 
       // Panel visibility actions
       togglePanel: (panelId) =>
-        set((state) => ({
-          panelVisibility: {
+        set((state) => {
+          const newVisibility = {
             ...state.panelVisibility,
             [panelId]: !state.panelVisibility[panelId],
-          },
-        })),
+          }
+          // Persist to store
+          // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
+          const api = (window as any).api
+          if (api) {
+            api.setStoreValue('panelVisibility', newVisibility)
+          }
+          return { panelVisibility: newVisibility }
+        }),
 
       setPanelVisibility: (panelId, visible) =>
-        set((state) => ({
-          panelVisibility: {
+        set((state) => {
+          const newVisibility = {
             ...state.panelVisibility,
             [panelId]: visible,
-          },
-        })),
+          }
+          // Persist to store
+          // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
+          const api = (window as any).api
+          if (api) {
+            api.setStoreValue('panelVisibility', newVisibility)
+          }
+          return { panelVisibility: newVisibility }
+        }),
 
       setTheme: (theme) => set({ theme }),
+
+      // Initialize store from persisted settings
+      initializeFromStore: async () => {
+        // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
+        const api = (window as any).api
+        if (!api) return
+
+        try {
+          const panelVisibility = await api.getStoreValue('panelVisibility')
+          if (panelVisibility) {
+            set({ panelVisibility })
+          }
+        } catch (error) {
+          console.error('Failed to load settings from store:', error)
+        }
+      },
     }),
     { name: 'AppStore' }
   )
