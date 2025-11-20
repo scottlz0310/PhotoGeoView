@@ -33,6 +33,7 @@ coverage/
 *.tsbuildinfo
 .cache/
 builder-cache/
+$dir/
 
 # Auto-generated entries from templates
 !gradle/wrapper/gradle-wrapper.jar
