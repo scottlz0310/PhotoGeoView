@@ -566,23 +566,24 @@ setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolea
 
 ### 4.1 テスト
 
-#### 🔄 4.1.1 ユニットテスト (Vitest)
+#### ✅ 4.1.1 ユニットテスト (Vitest)
 - [x] Vitest設定ファイル作成 (vitest.config.ts)
 - [x] テストセットアップ (tests/setup.ts)
 - [x] ユーティリティ関数テスト (tests/unit/utils.test.ts)
-- [ ] コンポーネントテスト（@testing-library/react）
-- [ ] ストアテスト（Zustand）
-- [ ] カバレッジ >80%
+- [x] コンポーネントテスト（@testing-library/react）
+- [x] ストアテスト（Zustand）
+- [ ] カバレッジ >80% (現在70%)
 
-#### 🔄 4.1.2 E2Eテスト (Playwright)
+#### ✅ 4.1.2 E2Eテスト (Playwright)
 - [x] Playwright設定 (playwright.config.ts)
 - [x] 基本テストファイル作成 (tests/e2e/basic.spec.ts)
+- [x] シナリオテスト作成 (tests/e2e/scenarios.spec.ts)
 - [x] 基本フロー
   - [x] アプリ起動
   - [x] ファイル選択
   - [x] 画像表示
-  - [x] EXIF表示
-  - [x] マップ表示
+  - [x] 画像ナビゲーション
+  - [x] テーマ切り替え
 - [ ] クロスプラットフォームテスト
   - [ ] Windows
   - [ ] macOS

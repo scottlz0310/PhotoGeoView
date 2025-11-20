@@ -2,8 +2,7 @@
 # https://github.com/evilmartians/lefthook
 
 pre-commit:
-  parallel: true
-  skip_empty_source_files: false
+  parallel: false
   commands:
     biome-lint:
       run: pnpm biome check --write .
@@ -12,7 +11,6 @@ pre-commit:
 
 pre-push:
   parallel: true
-  skip_empty_source_files: false
   commands:
     test-with-coverage:
       run: pnpm vitest run --coverage
