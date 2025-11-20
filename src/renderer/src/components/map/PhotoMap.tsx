@@ -170,22 +170,36 @@ function DynamicMap({
 }) {
   // biome-ignore lint/suspicious/noExplicitAny: Dynamic import requires any type
   const [Components, setComponents] = useState<any>(null)
+  // biome-ignore lint/suspicious/noExplicitAny: Leaflet icon type
+  const [customIcon, setCustomIcon] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Dynamically import react-leaflet components
-    import('react-leaflet')
-      .then((module) => {
+    // Dynamically import react-leaflet components and leaflet
+    Promise.all([import('react-leaflet'), import('leaflet')])
+      .then(([reactLeaflet, L]) => {
         setComponents({
-          MapContainer: module.MapContainer,
-          TileLayer: module.TileLayer,
-          Marker: module.Marker,
-          Popup: module.Popup,
-          useMap: module.useMap,
+          MapContainer: reactLeaflet.MapContainer,
+          TileLayer: reactLeaflet.TileLayer,
+          Marker: reactLeaflet.Marker,
+          Popup: reactLeaflet.Popup,
+          useMap: reactLeaflet.useMap,
         })
+
+        // Create custom icon explicitly to avoid issues with default icon
+        const icon = L.icon({
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        })
+        setCustomIcon(icon)
       })
       .catch((err) => {
-        console.error('Failed to load react-leaflet:', err)
+        console.error('Failed to load map components:', err)
         const errorMsg = err.message || 'Failed to load map components'
         setError(errorMsg)
         toast.error('Map Loading Failed', {
@@ -226,18 +240,20 @@ function DynamicMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={position}>
-        <Popup>
-          <div className="text-sm">
-            <p className="font-semibold mb-1">{filePath.split('/').pop() || 'Photo Location'}</p>
-            <p className="text-xs text-muted-foreground">Latitude: {position[0].toFixed(6)}</p>
-            <p className="text-xs text-muted-foreground">Longitude: {position[1].toFixed(6)}</p>
-            {altitude !== undefined && (
-              <p className="text-xs text-muted-foreground">Altitude: {altitude.toFixed(1)}m</p>
-            )}
-          </div>
-        </Popup>
-      </Marker>
+      {customIcon && (
+        <Marker position={position} icon={customIcon}>
+          <Popup>
+            <div className="text-sm">
+              <p className="font-semibold mb-1">{filePath.split('/').pop() || 'Photo Location'}</p>
+              <p className="text-xs text-muted-foreground">Latitude: {position[0].toFixed(6)}</p>
+              <p className="text-xs text-muted-foreground">Longitude: {position[1].toFixed(6)}</p>
+              {altitude !== undefined && (
+                <p className="text-xs text-muted-foreground">Altitude: {altitude.toFixed(1)}m</p>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      )}
     </MapContainer>
   )
 }
