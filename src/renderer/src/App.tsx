@@ -1,6 +1,7 @@
 import { ExifPanel } from '@renderer/components/exif/ExifPanel'
 import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
 import { PhotoMap } from '@renderer/components/map/PhotoMap'
+import { ModeToggle } from '@renderer/components/mode-toggle'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { Button } from '@renderer/components/ui/button'
@@ -46,34 +47,6 @@ function App() {
   // Fetch directory contents for thumbnail grid
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
   const isElectron = !!(window as any).api
-
-  // Apply system theme on mount and watch for changes
-  useEffect(() => {
-    const applySystemTheme = () => {
-      // Use browser's matchMedia instead of Electron's nativeTheme
-      // This works correctly in native Windows/macOS/Linux environments
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-
-      // Apply theme based on system preference
-      document.documentElement.classList.toggle('dark', isDark)
-    }
-
-    // Apply on mount
-    applySystemTheme()
-
-    // Watch for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleThemeChange = () => applySystemTheme()
-
-    // Modern browsers
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleThemeChange)
-      return () => mediaQuery.removeEventListener('change', handleThemeChange)
-    }
-    // Legacy browsers
-    mediaQuery.addListener(handleThemeChange)
-    return () => mediaQuery.removeListener(handleThemeChange)
-  }, [])
 
   const { data: result } = useQuery({
     queryKey: ['directory-contents-for-thumbnails', currentPath],
@@ -160,6 +133,7 @@ function App() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <ModeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2">

@@ -654,7 +654,7 @@ setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolea
   - 設定メニューの実装
 - [x] **パネル・スライダー位置の永続化** [優先度: 高]
   - `electron-store` または `localStorage` を使用してレイアウト状態を保存
-- [ ] **テーマ切替機能** [優先度: 中]
+- [x] **テーマ切替機能** [優先度: 中]
   - システム追随だけでなく、明示的なLight/Dark切り替えUIを追加
 - [ ] **自動更新機能** [優先度: 中]
   - GitHub Releaseを確認するロジックの実装
