@@ -48,7 +48,8 @@
       {
         "provider": "github",
         "owner": "scottlz0310",
-        "repo": "PhotoGeoView"
+        "repo": "PhotoGeoView",
+        "releaseType": "release"
       }
     ]
   },
