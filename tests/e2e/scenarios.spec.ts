@@ -6,7 +6,7 @@ let electronApp: ElectronApplication
 let page: Page
 
 // IPC Channel Names (copied from src/types/ipc.ts to avoid import issues)
-const IPC_CHANNELS = {
+const _IPC_CHANNELS = {
   GET_DIRECTORY_CONTENTS: 'fs:getDirectoryContents',
   SELECT_DIRECTORY: 'fs:selectDirectory',
   GENERATE_THUMBNAIL: 'image:generateThumbnail',
@@ -111,7 +111,7 @@ test.describe('PhotoGeoView E2E Scenarios', () => {
       // Mock local-file protocol to serve a dummy image
       try {
         protocol.unhandle('local-file')
-      } catch (e) {
+      } catch (_e) {
         // Ignore if not handled
       }
       protocol.handle('local-file', () => {
