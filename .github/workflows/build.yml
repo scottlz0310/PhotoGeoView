@@ -56,11 +56,11 @@ jobs:
         # On macOS, identity=null disables code signing
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            pnpm package --win --config.mac.identity=null
+            pnpm package --win --config.mac.identity=null --publish never
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac --config.mac.identity=null
+            pnpm package --mac --config.mac.identity=null --publish never
           else
-            pnpm package --linux --config.mac.identity=null
+            pnpm package --linux --config.mac.identity=null --publish never
           fi
         shell: bash
         env:
