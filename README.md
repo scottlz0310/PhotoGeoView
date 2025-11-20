@@ -2,7 +2,7 @@
 
 > 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
 
-[![CI](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml/badge.svg?branch=electron-migration)](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml)
+[![CI](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml)
 [![Electron](https://img.shields.io/badge/Electron-33+-blue.svg)](https://www.electronjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
@@ -24,23 +24,33 @@
 - **React 19** - Latest React with improved performance
 - **TypeScript 5.7+** - Type-safe development
 - **Vite 6** - Next-generation build tool (10x faster than Webpack)
-
-### Development Tools
-- **electron-vite** - Vite integration for Electron
-- **Biome** - Fast linter & formatter (25x faster than ESLint/Prettier)
-- **Vitest** - Fast unit testing (5x faster than Jest)
-- **Playwright** - E2E testing
-
-### Future Stack
 - **React Leaflet 4** - Interactive maps
 - **TailwindCSS v4** - Utility-first CSS
 - **shadcn/ui** - Beautiful React components
 - **Zustand** - Lightweight state management
 - **TanStack Query** - Data fetching & caching
+
+### Core Features
+
 - **sharp** - High-performance image processing
 - **exifreader** - EXIF metadata extraction
 
-## 📦 Installation
+### Development Tools
+
+- **electron-vite** - Vite integration for Electron
+- **Biome** - Fast linter & formatter (25x faster than ESLint/Prettier)
+- **Vitest** - Fast unit testing (5x faster than Jest)
+- **Playwright** - E2E testing
+
+## 📥 Download
+
+Latest release is available on [GitHub Releases](https://github.com/scottlz0310/PhotoGeoView/releases).
+
+- **Windows**: Download `.exe` installer
+- **macOS**: Download `.dmg` image
+- **Linux**: Download `.AppImage`
+
+## 📦 Development Setup
 
 ```bash
 # Install dependencies
