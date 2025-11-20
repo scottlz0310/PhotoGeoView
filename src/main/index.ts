@@ -131,7 +131,11 @@ function registerLocalFileProtocol(): void {
       filePath = decodeURIComponent(filePath)
 
       // Handle Windows file URLs: /C:/path -> C:/path
-      if (process.platform === 'win32' && filePath.startsWith('/') && /^\/[A-Za-z]:/.test(filePath)) {
+      if (
+        process.platform === 'win32' &&
+        filePath.startsWith('/') &&
+        /^\/[A-Za-z]:/.test(filePath)
+      ) {
         filePath = filePath.substring(1)
       }
 

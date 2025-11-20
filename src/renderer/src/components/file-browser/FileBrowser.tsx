@@ -114,11 +114,11 @@ export function FileBrowser() {
   // Parse current path into breadcrumb segments
   const pathSegments = useMemo(() => {
     if (!currentPath) return []
-    
+
     // Normalize path separators to forward slashes for consistent handling
     const normalizedPath = currentPath.replace(/\\/g, '/')
     const segments = normalizedPath.split('/').filter(Boolean)
-    
+
     // Check if it's a Windows path (starts with drive letter)
     const isWindowsPath = /^[a-zA-Z]:/.test(normalizedPath)
 
@@ -126,7 +126,7 @@ export function FileBrowser() {
       // Reconstruct path
       const pathPrefix = isWindowsPath ? '' : '/'
       const segmentPath = pathPrefix + segments.slice(0, index + 1).join('/')
-      
+
       return {
         name: segment,
         path: segmentPath,
@@ -176,35 +176,35 @@ export function FileBrowser() {
 
   const goToParentDirectory = () => {
     if (!currentPath) return
-    
+
     const normalizedPath = currentPath.replace(/\\/g, '/')
     const segments = normalizedPath.split('/').filter(Boolean)
-    
+
     if (segments.length === 0) return
 
     const isWindowsPath = /^[a-zA-Z]:/.test(normalizedPath)
-    
+
     // If it's a Windows drive root (e.g. C: or C:/), we can't go up
     if (isWindowsPath && segments.length === 1) return
-    
+
     // If it's a Unix root subdir (e.g. /usr), going up means going to /
     if (!isWindowsPath && segments.length === 1) {
-        navigateToPath('/')
-        clearSelectedFiles()
-        return
+      navigateToPath('/')
+      clearSelectedFiles()
+      return
     }
 
     const parentSegments = segments.slice(0, -1)
     const pathPrefix = isWindowsPath ? '' : '/'
     const parentPath = pathPrefix + parentSegments.join('/')
-    
+
     if (parentPath) {
       navigateToPath(parentPath)
       clearSelectedFiles()
     } else if (!isWindowsPath) {
-        // Fallback for Unix root
-        navigateToPath('/')
-        clearSelectedFiles()
+      // Fallback for Unix root
+      navigateToPath('/')
+      clearSelectedFiles()
     }
   }
 
