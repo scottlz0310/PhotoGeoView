@@ -21,10 +21,12 @@ import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
   ChevronLeft,
   FolderOpen,
   Home,
   Minimize2,
+  RotateCw,
   Search,
   X,
 } from 'lucide-react'
@@ -112,11 +114,24 @@ export function FileBrowser() {
   // Parse current path into breadcrumb segments
   const pathSegments = useMemo(() => {
     if (!currentPath) return []
-    const segments = currentPath.split('/').filter(Boolean)
-    return segments.map((segment, index) => ({
-      name: segment,
-      path: `/${segments.slice(0, index + 1).join('/')}`,
-    }))
+    
+    // Normalize path separators to forward slashes for consistent handling
+    const normalizedPath = currentPath.replace(/\\/g, '/')
+    const segments = normalizedPath.split('/').filter(Boolean)
+    
+    // Check if it's a Windows path (starts with drive letter)
+    const isWindowsPath = /^[a-zA-Z]:/.test(normalizedPath)
+
+    return segments.map((segment, index) => {
+      // Reconstruct path
+      const pathPrefix = isWindowsPath ? '' : '/'
+      const segmentPath = pathPrefix + segments.slice(0, index + 1).join('/')
+      
+      return {
+        name: segment,
+        path: segmentPath,
+      }
+    })
   }, [currentPath])
 
   const handleBreadcrumbClick = (path: string) => {
@@ -161,10 +176,35 @@ export function FileBrowser() {
 
   const goToParentDirectory = () => {
     if (!currentPath) return
-    const parentPath = currentPath.split('/').slice(0, -1).join('/')
+    
+    const normalizedPath = currentPath.replace(/\\/g, '/')
+    const segments = normalizedPath.split('/').filter(Boolean)
+    
+    if (segments.length === 0) return
+
+    const isWindowsPath = /^[a-zA-Z]:/.test(normalizedPath)
+    
+    // If it's a Windows drive root (e.g. C: or C:/), we can't go up
+    if (isWindowsPath && segments.length === 1) return
+    
+    // If it's a Unix root subdir (e.g. /usr), going up means going to /
+    if (!isWindowsPath && segments.length === 1) {
+        navigateToPath('/')
+        clearSelectedFiles()
+        return
+    }
+
+    const parentSegments = segments.slice(0, -1)
+    const pathPrefix = isWindowsPath ? '' : '/'
+    const parentPath = pathPrefix + parentSegments.join('/')
+    
     if (parentPath) {
       navigateToPath(parentPath)
       clearSelectedFiles()
+    } else if (!isWindowsPath) {
+        // Fallback for Unix root
+        navigateToPath('/')
+        clearSelectedFiles()
     }
   }
 
@@ -265,6 +305,38 @@ export function FileBrowser() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Go Forward</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={goToParentDirectory}
+                      disabled={!currentPath || currentPath === '/'}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Up to Parent Directory</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => refetch()}
+                      disabled={isLoading}
+                    >
+                      <RotateCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh</p>
                   </TooltipContent>
                 </Tooltip>
 

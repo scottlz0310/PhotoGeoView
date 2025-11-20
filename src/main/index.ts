@@ -115,16 +115,24 @@ function registerIpcHandlers(): void {
 
 // Register custom protocol for loading local files
 function registerLocalFileProtocol(): void {
-  protocol.registerBufferProtocol('local-file', async (request, callback) => {
+  protocol.handle('local-file', async (request) => {
     try {
-      // Remove 'local-file://' prefix and query parameters to get the actual file path
-      const urlWithoutProtocol = request.url.replace('local-file://', '')
-      // Use decodeURI instead of decodeURIComponent to preserve path separators
-      let filePath = decodeURI(urlWithoutProtocol.split('?')[0])
+      const url = request.url
+      // Remove 'local-file://' prefix
+      let filePath = url.replace('local-file://', '')
 
-      // Handle Windows file URLs: ///C:/path -> C:/path (remove leading slashes)
-      if (filePath.startsWith('/') && /^\/[A-Za-z]:/.test(filePath)) {
-        filePath = filePath.substring(1) // Remove leading /
+      // Remove query parameters
+      const queryIndex = filePath.indexOf('?')
+      if (queryIndex !== -1) {
+        filePath = filePath.substring(0, queryIndex)
+      }
+
+      // Decode URI components
+      filePath = decodeURIComponent(filePath)
+
+      // Handle Windows file URLs: /C:/path -> C:/path
+      if (process.platform === 'win32' && filePath.startsWith('/') && /^\/[A-Za-z]:/.test(filePath)) {
+        filePath = filePath.substring(1)
       }
 
       const data = await readFile(filePath)
@@ -143,13 +151,12 @@ function registerLocalFileProtocol(): void {
         tif: 'image/tiff',
       }
 
-      callback({
-        mimeType: mimeTypes[ext || ''] || 'application/octet-stream',
-        data,
+      return new Response(data, {
+        headers: { 'Content-Type': mimeTypes[ext || ''] || 'application/octet-stream' },
       })
     } catch (error) {
-      console.error('Failed to load local file:', error)
-      callback({ error: -2 }) // net::ERR_FAILED
+      console.error('Failed to load local file:', request.url, error)
+      return new Response('Not Found', { status: 404 })
     }
   })
 }

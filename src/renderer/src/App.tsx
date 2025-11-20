@@ -28,6 +28,15 @@ function App() {
   // Get the first selected file for EXIF display
   const selectedFile = selectedFiles.length > 0 ? selectedFiles[0] : null
 
+  // Check if selected file is an image (simple extension check)
+  const isImageFile = useMemo(() => {
+    if (!selectedFile) return false
+    const ext = selectedFile.split('.').pop()?.toLowerCase()
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif'].includes(ext || '')
+  }, [selectedFile])
+
+  const previewFile = isImageFile ? selectedFile : null
+
   // Fetch directory contents for thumbnail grid
   // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
   const isElectron = !!(window as any).api
@@ -118,13 +127,13 @@ function App() {
   // Fetch EXIF data for the selected file for PhotoMap
   // Note: staleTime removed to ensure fresh data after image rotation
   const { data: exifResult } = useQuery({
-    queryKey: ['exif-for-map', selectedFile],
+    queryKey: ['exif-for-map', previewFile],
     queryFn: async () => {
-      if (!selectedFile || !isElectron) return null
+      if (!previewFile || !isElectron) return null
       // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
-      return await (window as any).api.readExif({ path: selectedFile })
+      return await (window as any).api.readExif({ path: previewFile })
     },
-    enabled: !!selectedFile && isElectron,
+    enabled: !!previewFile && isElectron,
   })
 
   const exifData = exifResult?.success ? exifResult.data.exif : null
@@ -233,7 +242,7 @@ function App() {
             {panelVisibility.exifPanel && (
               <>
                 <Panel defaultSize={20} minSize={15} collapsible collapsedSize={3}>
-                  <ExifPanel filePath={selectedFile} />
+                  <ExifPanel filePath={previewFile} />
                 </Panel>
                 <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
               </>
@@ -246,7 +255,7 @@ function App() {
                 {panelVisibility.imagePreview && (
                   <>
                     <Panel defaultSize={60} minSize={30} collapsible collapsedSize={5}>
-                      <ImagePreview filePath={selectedFile} />
+                      <ImagePreview filePath={previewFile} />
                     </Panel>
                     <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
                   </>
@@ -255,7 +264,7 @@ function App() {
                 {/* Bottom: Map */}
                 {panelVisibility.mapView && (
                   <Panel defaultSize={40} minSize={20} collapsible collapsedSize={5}>
-                    <PhotoMap exifData={exifData} filePath={selectedFile} />
+                    <PhotoMap exifData={exifData} filePath={previewFile} />
                   </Panel>
                 )}
               </PanelGroup>
