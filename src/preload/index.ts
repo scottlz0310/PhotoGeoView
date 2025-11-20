@@ -27,6 +27,21 @@ const api: IpcApi = {
   // Store
   getStoreValue: (key) => ipcRenderer.invoke(IPC_CHANNELS.GET_STORE_VALUE, key),
   setStoreValue: (key, value) => ipcRenderer.invoke(IPC_CHANNELS.SET_STORE_VALUE, key, value),
+
+  // Updater
+  checkForUpdates: () => ipcRenderer.invoke(IPC_CHANNELS.CHECK_FOR_UPDATES),
+  downloadUpdate: () => ipcRenderer.invoke(IPC_CHANNELS.DOWNLOAD_UPDATE),
+  quitAndInstall: () => ipcRenderer.invoke(IPC_CHANNELS.QUIT_AND_INSTALL),
+  onUpdateAvailable: (callback) =>
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_AVAILABLE, (_, info) => callback(info)),
+  onUpdateNotAvailable: (callback) =>
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_NOT_AVAILABLE, (_, info) => callback(info)),
+  onUpdateDownloaded: (callback) =>
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_DOWNLOADED, (_, info) => callback(info)),
+  onDownloadProgress: (callback) =>
+    ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_, progress) => callback(progress)),
+  onUpdateError: (callback) =>
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_ERROR, (_, error) => callback(error)),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

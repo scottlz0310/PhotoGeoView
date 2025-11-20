@@ -6,6 +6,7 @@ import { IPC_CHANNELS } from '../types/ipc'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
 import { getStore, registerStoreHandlers } from './handlers/store'
+import { setupAutoUpdater } from './handlers/updater'
 
 // Register custom protocol scheme as privileged before app is ready
 protocol.registerSchemesAsPrivileged([
@@ -24,6 +25,27 @@ function createWindow(): void {
   const store = getStore()
   const bounds = store.get('windowBounds')
 
+  // Create splash window
+  const splashWindow = new BrowserWindow({
+    width: 400,
+    height: 300,
+    frame: false,
+    alwaysOnTop: true,
+    transparent: true,
+    resizable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  })
+
+  // Load splash screen
+  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+    splashWindow.loadURL(`${process.env.ELECTRON_RENDERER_URL}/splash.html`)
+  } else {
+    splashWindow.loadFile(join(__dirname, '../renderer/splash.html'))
+  }
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: bounds.width,
@@ -41,8 +63,12 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
+    splashWindow.destroy()
     mainWindow.show()
   })
+
+  // Setup Auto Updater
+  setupAutoUpdater(mainWindow)
 
   // Save window bounds on resize/move
   const saveBounds = () => {

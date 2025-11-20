@@ -39,7 +39,14 @@
     },
     "linux": {
       "target": "AppImage"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "scottlz0310",
+        "repo": "PhotoGeoView"
+      }
+    ]
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -60,6 +67,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "electron-store": "^11.0.2",
+    "electron-updater": "^6.6.2",
     "exifreader": "^4.32.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.554.0",

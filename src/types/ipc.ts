@@ -27,6 +27,16 @@ export const IPC_CHANNELS = {
   // Store
   GET_STORE_VALUE: 'store:get',
   SET_STORE_VALUE: 'store:set',
+
+  // Updater
+  CHECK_FOR_UPDATES: 'updater:checkForUpdates',
+  DOWNLOAD_UPDATE: 'updater:downloadUpdate',
+  QUIT_AND_INSTALL: 'updater:quitAndInstall',
+  UPDATE_AVAILABLE: 'updater:updateAvailable',
+  UPDATE_NOT_AVAILABLE: 'updater:updateNotAvailable',
+  UPDATE_DOWNLOADED: 'updater:updateDownloaded',
+  UPDATE_ERROR: 'updater:error',
+  DOWNLOAD_PROGRESS: 'updater:downloadProgress',
 } as const
 
 // ============================================================================
@@ -221,6 +231,22 @@ export interface IpcApi {
   getSystemTheme: () => Promise<Result<SystemTheme>>
 
   // Store
-  getStoreValue: <T>(key: string) => Promise<T>
-  setStoreValue: <T>(key: string, value: T) => Promise<void>
+  // biome-ignore lint/suspicious/noExplicitAny: Value can be any type
+  getStoreValue: (key: string) => Promise<any>
+  // biome-ignore lint/suspicious/noExplicitAny: Value can be any type
+  setStoreValue: (key: string, value: any) => Promise<void>
+
+  // Updater
+  checkForUpdates: () => Promise<void>
+  downloadUpdate: () => Promise<void>
+  quitAndInstall: () => Promise<void>
+  // biome-ignore lint/suspicious/noExplicitAny: Event callback types
+  onUpdateAvailable: (callback: (info: any) => void) => void
+  // biome-ignore lint/suspicious/noExplicitAny: Event callback types
+  onUpdateNotAvailable: (callback: (info: any) => void) => void
+  // biome-ignore lint/suspicious/noExplicitAny: Event callback types
+  onUpdateDownloaded: (callback: (info: any) => void) => void
+  // biome-ignore lint/suspicious/noExplicitAny: Event callback types
+  onDownloadProgress: (callback: (progress: any) => void) => void
+  onUpdateError: (callback: (error: string) => void) => void
 }
