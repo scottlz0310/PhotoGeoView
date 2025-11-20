@@ -84,6 +84,9 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
 
+      - name: Build application
+        run: pnpm build
+
       - name: Run E2E tests
         run: xvfb-run --auto-servernum -- pnpm test:e2e
         env:
