@@ -1,32 +1,20 @@
 import { ExifPanel } from '@renderer/components/exif/ExifPanel'
 import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
 import { PhotoMap } from '@renderer/components/map/PhotoMap'
-import { ModeToggle } from '@renderer/components/mode-toggle'
+import { MenuBar } from '@renderer/components/MenuBar'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
-import { Button } from '@renderer/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@renderer/components/ui/dropdown-menu'
-import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
-import { Popover, PopoverContent, PopoverTrigger } from '@renderer/components/ui/popover'
 import { Toaster } from '@renderer/components/ui/sonner'
 import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
 import { useKeyboardShortcuts } from '@renderer/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
-import { Camera, Eye, Keyboard } from 'lucide-react'
+import { Camera } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App() {
-  const { selectedFiles, currentPath, panelVisibility, togglePanel, initializeFromStore } =
-    useAppStore()
+  const { selectedFiles, currentPath, panelVisibility, initializeFromStore } = useAppStore()
   // Get the first selected file for EXIF display
   const selectedFile = selectedFiles.length > 0 ? selectedFiles[0] : null
 
@@ -132,63 +120,7 @@ function App() {
                 <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <ModeToggle />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Eye className="h-4 w-4" />
-                    Panels
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Toggle Panels</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuCheckboxItem
-                    checked={panelVisibility.fileBrowser}
-                    onCheckedChange={() => togglePanel('fileBrowser')}
-                  >
-                    File Browser
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={panelVisibility.thumbnailGrid}
-                    onCheckedChange={() => togglePanel('thumbnailGrid')}
-                  >
-                    Thumbnail Grid
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={panelVisibility.exifPanel}
-                    onCheckedChange={() => togglePanel('exifPanel')}
-                  >
-                    EXIF Panel
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={panelVisibility.imagePreview}
-                    onCheckedChange={() => togglePanel('imagePreview')}
-                  >
-                    Image Preview
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuCheckboxItem
-                    checked={panelVisibility.mapView}
-                    onCheckedChange={() => togglePanel('mapView')}
-                  >
-                    Map View
-                  </DropdownMenuCheckboxItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Keyboard className="h-4 w-4" />
-                    Shortcuts
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <KeyboardShortcutsHelp />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <MenuBar />
           </div>
         </header>
 

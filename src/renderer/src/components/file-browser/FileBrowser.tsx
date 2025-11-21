@@ -139,34 +139,6 @@ export function FileBrowser() {
     clearSelectedFiles()
   }
 
-  const handleSelectDirectory = async () => {
-    if (!isElectron) {
-      toast.error('Electron Required', {
-        description: 'This feature is only available in the Electron app.',
-      })
-      return
-    }
-    try {
-      // biome-ignore lint/suspicious/noExplicitAny: Type definition issue, will be fixed later
-      const result = await (window as any).api.selectDirectory()
-      if (result.success && result.data) {
-        navigateToPath(result.data)
-        clearSelectedFiles()
-        toast.success('Folder Selected', {
-          description: `Opened: ${result.data}`,
-        })
-      } else if (result.error) {
-        toast.error('Failed to Select Folder', {
-          description: result.error.message,
-        })
-      }
-    } catch (error) {
-      toast.error('Error', {
-        description: error instanceof Error ? error.message : 'Failed to select directory',
-      })
-    }
-  }
-
   const handleFileDoubleClick = (file: FileEntry) => {
     if (file.isDirectory) {
       navigateToPath(file.path)
@@ -252,29 +224,16 @@ export function FileBrowser() {
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
             <CardTitle>File Browser</CardTitle>
-            <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={handleSelectDirectory} size="sm">
-                    <FolderOpen className="h-4 w-4 mr-2" />
-                    Select Folder
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Open folder selection dialog</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button onClick={() => togglePanel('fileBrowser')} size="icon" variant="ghost">
-                    <Minimize2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Collapse panel</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button onClick={() => togglePanel('fileBrowser')} size="icon" variant="ghost">
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Collapse panel</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {currentPath && (
