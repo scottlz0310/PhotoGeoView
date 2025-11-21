@@ -1,4 +1,4 @@
-# PhotoGeoView 2.0
+# PhotoGeoView 2.1
 
 > 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
 
@@ -12,10 +12,21 @@
 
 - 📸 Modern photo viewing and management
 - 🗺️ Interactive maps with GPS data visualization
-- 🎨 Beautiful, responsive UI
+- 🎨 Beautiful, responsive UI with layout presets
+- 🌐 Internationalization (English / 日本語)
 - ⚡ Lightning-fast performance with Vite
 - 🔒 Type-safe development with TypeScript
 - 🤖 AI-friendly codebase for efficient development
+
+## 🆕 What's New in 2.1
+
+- **Menu Bar**: Organized File/View/Settings/Help menus
+- **Status Bar**: Compact EXIF info display (camera, exposure, GPS, etc.)
+- **Layout Presets**: Default, Preview Focus, Map Focus, Compact
+- **i18n Support**: Switch between English and Japanese
+- **File Association**: Double-click images to open in PhotoGeoView
+
+See [CHANGELOG.md](./CHANGELOG.md) for full details.
 
 ## 🚀 Tech Stack
 
@@ -29,6 +40,7 @@
 - **shadcn/ui** - Beautiful React components
 - **Zustand** - Lightweight state management
 - **TanStack Query** - Data fetching & caching
+- **i18next** - Internationalization
 
 ### Core Features
 
@@ -80,8 +92,11 @@ PhotoGeoView/
 │   └── renderer/       # React renderer process
 │       ├── components/ # React components
 │       ├── hooks/      # Custom React hooks
+│       ├── i18n/       # Internationalization
 │       ├── lib/        # Utilities
-│       └── types/      # TypeScript types
+│       └── stores/     # Zustand stores
+├── docs/               # Documentation
+├── tests/              # Test files
 ├── electron.vite.config.ts  # Vite configuration
 ├── tsconfig.json       # TypeScript configuration
 └── biome.json          # Biome configuration
@@ -90,14 +105,10 @@ PhotoGeoView/
 ## 📊 Quality & Testing
 
 **Current Status:**
-- ✅ Test Coverage: 20.12%
+- ✅ Test Coverage: 63%
+- ✅ Unit Tests: 316 passing
+- ✅ E2E Tests: 9 passing
 - ✅ CI/CD: All checks passing
-- ⏳ TypeScript Strict Mode: In progress
-- ⏳ Target Coverage: 80%
-
-**Quality Roadmap:**
-- 📋 [Quality Roadmap](./QUALITY_ROADMAP.md) - Comprehensive quality improvement plan
-- ✅ [Quality Checklist](./QUALITY_CHECKLIST.md) - Track progress towards quality goals
 
 ## 🔧 Development
 
@@ -120,29 +131,17 @@ PhotoGeoView/
 | `pnpm test:e2e` | Run E2E tests |
 | `pnpm package` | Package app for distribution |
 
-## 📖 Migration from PySide6
+## 📖 Documentation
+
+### Migration from PySide6
 
 This project is a complete rewrite of the original PySide6-based PhotoGeoView with modern web technologies.
 
-### 📚 Migration Documentation (Japanese)
+**Migration Documentation (Japanese):**
 
-**必読！実装前にこれらのドキュメントを確認してください:**
-
-1. **[ANALYSIS_INDEX_jp.md](./ANALYSIS_INDEX_jp.md)** - 移行分析の概要
-   - なぜElectronに移行するのか
-   - 技術スタック比較
-   - 意思決定フレームワーク
-
-2. **[CODEBASE_ANALYSIS_jp.md](./CODEBASE_ANALYSIS_jp.md)** - 詳細なコードベース分析
-   - 既存アーキテクチャの問題点
-   - 技術的な利点・欠点
-   - 実装ロードマップ
-
-3. **[MIGRATION_QUICK_START_jp.md](./MIGRATION_QUICK_START_jp.md)** - クイックスタートガイド ⭐ 重要
-   - フェーズごとの実装手順（具体的なコード例付き）
-   - 技術スタックマッピング（PySide6 → Electron + TypeScript）
-   - 依存関係リスト（最新バージョン）
-   - リスク軽減戦略
+1. **[ANALYSIS_INDEX_jp.md](./docs/ANALYSIS_INDEX_jp.md)** - 移行分析の概要
+2. **[CODEBASE_ANALYSIS_jp.md](./docs/CODEBASE_ANALYSIS_jp.md)** - 詳細なコードベース分析
+3. **[MIGRATION_QUICK_START_jp.md](./docs/MIGRATION_QUICK_START_jp.md)** - クイックスタートガイド
 
 ### Why the Migration?
 
@@ -171,9 +170,3 @@ Built with:
 - 🤖 AI-assisted development (Claude Code)
 - ⚡ Modern web technologies
 - 💙 Open source community
-
----
-
-**Branch**: `electron-migration`
-**Status**: 🚧 Initial setup - Ready for development
-**Original**: PySide6 implementation on `main` branch
