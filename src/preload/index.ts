@@ -24,6 +24,9 @@ const api: IpcApi = {
   // Theme
   getSystemTheme: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SYSTEM_THEME),
 
+  // App
+  getInitialFile: () => ipcRenderer.invoke(IPC_CHANNELS.GET_INITIAL_FILE),
+
   // Store
   getStoreValue: (key) => ipcRenderer.invoke(IPC_CHANNELS.GET_STORE_VALUE, key),
   setStoreValue: (key, value) => ipcRenderer.invoke(IPC_CHANNELS.SET_STORE_VALUE, key, value),

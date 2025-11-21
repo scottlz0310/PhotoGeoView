@@ -15,14 +15,34 @@ import { useEffect, useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 function App() {
-  const { selectedFiles, currentPath, panelVisibility, initializeFromStore } = useAppStore()
+  const {
+    selectedFiles,
+    currentPath,
+    panelVisibility,
+    initializeFromStore,
+    setSelectedFiles,
+    navigateToPath,
+  } = useAppStore()
   // Get the first selected file for EXIF display
   const selectedFile = selectedFiles.length > 0 ? selectedFiles[0] : null
 
-  // Initialize store from persisted settings
+  // Initialize store from persisted settings and handle initial file
   useEffect(() => {
-    initializeFromStore()
-  }, [initializeFromStore])
+    const init = async () => {
+      await initializeFromStore()
+      // Check for initial file from command line
+      // biome-ignore lint/suspicious/noExplicitAny: Electron API
+      const api = (window as any).api
+      if (api) {
+        const result = await api.getInitialFile()
+        if (result.success && result.data) {
+          navigateToPath(result.data.dirPath)
+          setSelectedFiles([result.data.filePath])
+        }
+      }
+    }
+    init()
+  }, [initializeFromStore, navigateToPath, setSelectedFiles])
 
   // Check if selected file is an image (simple extension check)
   const isImageFile = useMemo(() => {

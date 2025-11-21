@@ -35,6 +35,42 @@
     "files": [
       "out/**/*"
     ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "jpg",
+          "jpeg"
+        ],
+        "name": "JPEG Image",
+        "description": "JPEG Image File",
+        "mimeType": "image/jpeg",
+        "role": "Viewer"
+      },
+      {
+        "ext": "png",
+        "name": "PNG Image",
+        "description": "PNG Image File",
+        "mimeType": "image/png",
+        "role": "Viewer"
+      },
+      {
+        "ext": [
+          "tif",
+          "tiff"
+        ],
+        "name": "TIFF Image",
+        "description": "TIFF Image File",
+        "mimeType": "image/tiff",
+        "role": "Viewer"
+      },
+      {
+        "ext": "webp",
+        "name": "WebP Image",
+        "description": "WebP Image File",
+        "mimeType": "image/webp",
+        "role": "Viewer"
+      }
+    ],
     "win": {
       "target": "nsis"
     },

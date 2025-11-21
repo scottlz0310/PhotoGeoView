@@ -1,12 +1,41 @@
+import { existsSync, statSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { app, BrowserWindow, ipcMain, nativeTheme, protocol } from 'electron'
 import { IPC_CHANNELS } from '../types/ipc'
+
+// Store the file path passed as argument
+let initialFilePath: string | null = null
+
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
 import { getStore, registerStoreHandlers } from './handlers/store'
 import { setupAutoUpdater } from './handlers/updater'
+
+// Parse command line arguments to get initial file path
+function parseCommandLineArgs(): void {
+  const args = process.argv.slice(is.dev ? 2 : 1)
+  for (const arg of args) {
+    // Skip flags
+    if (arg.startsWith('-')) continue
+    // Check if it's a valid file path
+    if (existsSync(arg)) {
+      const stat = statSync(arg)
+      if (stat.isFile()) {
+        const ext = arg.split('.').pop()?.toLowerCase()
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif']
+        if (ext && imageExts.includes(ext)) {
+          initialFilePath = arg
+          break
+        }
+      }
+    }
+  }
+}
+
+// Parse args early
+parseCommandLineArgs()
 
 // Register custom protocol scheme as privileged before app is ready
 protocol.registerSchemesAsPrivileged([
@@ -154,6 +183,20 @@ function registerIpcHandlers(): void {
         themeSource: nativeTheme.themeSource,
       },
     }
+  })
+
+  // Initial file path handler
+  ipcMain.handle(IPC_CHANNELS.GET_INITIAL_FILE, () => {
+    if (initialFilePath) {
+      return {
+        success: true,
+        data: {
+          filePath: initialFilePath,
+          dirPath: dirname(initialFilePath),
+        },
+      }
+    }
+    return { success: false, data: null }
   })
 }
 

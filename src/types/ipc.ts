@@ -24,6 +24,9 @@ export const IPC_CHANNELS = {
   // Theme
   GET_SYSTEM_THEME: 'theme:getSystemTheme',
 
+  // App
+  GET_INITIAL_FILE: 'app:getInitialFile',
+
   // Store
   GET_STORE_VALUE: 'store:get',
   SET_STORE_VALUE: 'store:set',
@@ -229,6 +232,9 @@ export interface IpcApi {
 
   // Theme
   getSystemTheme: () => Promise<Result<SystemTheme>>
+
+  // App
+  getInitialFile: () => Promise<Result<{ filePath: string; dirPath: string } | null>>
 
   // Store
   // biome-ignore lint/suspicious/noExplicitAny: Value can be any type

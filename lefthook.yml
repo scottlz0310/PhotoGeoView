@@ -5,7 +5,7 @@ pre-commit:
   parallel: false
   commands:
     biome-lint:
-      run: pnpm biome check --write .
+      run: pnpm biome check --write . && git add -u
     typecheck:
       run: pnpm typecheck
 
