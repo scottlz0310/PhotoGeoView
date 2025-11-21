@@ -1,7 +1,7 @@
 import { ExifPanel } from '@renderer/components/exif/ExifPanel'
 import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
-import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { MenuBar } from '@renderer/components/MenuBar'
+import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { Toaster } from '@renderer/components/ui/sonner'

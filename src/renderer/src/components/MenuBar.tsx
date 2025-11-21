@@ -1,7 +1,14 @@
-import { useAppStore } from '@renderer/stores/appStore'
-import { useTheme } from 'next-themes'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@renderer/components/ui/dialog'
+import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
 import {
   Menubar,
+  MenubarCheckboxItem,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
@@ -11,16 +18,9 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger,
-  MenubarCheckboxItem,
 } from '@renderer/components/ui/menubar'
-import { KeyboardShortcutsHelp } from '@renderer/components/ui/keyboard-hint'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@renderer/components/ui/dialog'
+import { useAppStore } from '@renderer/stores/appStore'
+import { useTheme } from 'next-themes'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -89,16 +89,10 @@ export function MenuBar() {
             <MenubarSub>
               <MenubarSubTrigger>Theme</MenubarSubTrigger>
               <MenubarSubContent>
-                <MenubarCheckboxItem
-                  checked={theme === 'light'}
-                  onClick={() => setTheme('light')}
-                >
+                <MenubarCheckboxItem checked={theme === 'light'} onClick={() => setTheme('light')}>
                   Light
                 </MenubarCheckboxItem>
-                <MenubarCheckboxItem
-                  checked={theme === 'dark'}
-                  onClick={() => setTheme('dark')}
-                >
+                <MenubarCheckboxItem checked={theme === 'dark'} onClick={() => setTheme('dark')}>
                   Dark
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
@@ -152,12 +146,8 @@ export function MenuBar() {
         <MenubarMenu>
           <MenubarTrigger>Settings</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem disabled>
-              Panel Layout...
-            </MenubarItem>
-            <MenubarItem disabled>
-              File Associations...
-            </MenubarItem>
+            <MenubarItem disabled>Panel Layout...</MenubarItem>
+            <MenubarItem disabled>File Associations...</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
 
@@ -170,13 +160,9 @@ export function MenuBar() {
               <MenubarShortcut>?</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem onClick={handleCheckUpdate}>
-              Check for Updates...
-            </MenubarItem>
+            <MenubarItem onClick={handleCheckUpdate}>Check for Updates...</MenubarItem>
             <MenubarSeparator />
-            <MenubarItem onClick={() => setShowAbout(true)}>
-              About PhotoGeoView
-            </MenubarItem>
+            <MenubarItem onClick={() => setShowAbout(true)}>About PhotoGeoView</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -196,12 +182,12 @@ export function MenuBar() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>About PhotoGeoView</DialogTitle>
-            <DialogDescription>
-              Photo Geo-Tagging Application
-            </DialogDescription>
+            <DialogDescription>Photo Geo-Tagging Application</DialogDescription>
           </DialogHeader>
           <div className="space-y-2 text-sm">
-            <p><strong>Version:</strong> 2.1.0</p>
+            <p>
+              <strong>Version:</strong> 2.1.0
+            </p>
             <p className="text-muted-foreground">
               A desktop application for viewing photos with their geographic information.
             </p>
