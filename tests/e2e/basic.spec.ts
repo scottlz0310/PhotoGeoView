@@ -35,19 +35,23 @@ test.describe('PhotoGeoView Basic Flow', () => {
   })
 
   test('should display main UI components', async () => {
-    // Check for File Browser
-    // Note: The text might be different depending on the exact UI implementation
-    // Based on the codebase, it seems to be "File Browser" in the sidebar or header
-    // If not found, we might need to check the DOM
-    // Let's check for the "Select Folder" button which is definitely there
-    await expect(page.locator('button:has-text("Select Folder")')).toBeVisible()
-
     // Check for header
     await expect(page.locator('h1:has-text("PhotoGeoView")')).toBeVisible()
+
+    // Check for menu bar items
+    await expect(page.locator('button[role="menuitem"]:has-text("File")')).toBeVisible()
+    await expect(page.locator('button[role="menuitem"]:has-text("View")')).toBeVisible()
+    await expect(page.locator('button[role="menuitem"]:has-text("Settings")')).toBeVisible()
+    await expect(page.locator('button[role="menuitem"]:has-text("Help")')).toBeVisible()
   })
 
-  test('should have Select Folder button', async () => {
-    await expect(page.locator('button:has-text("Select Folder")')).toBeVisible()
+  test('should have File menu with Open Folder option', async () => {
+    // Click File menu
+    await page.click('button[role="menuitem"]:has-text("File")')
+    // Check for Open Folder menu item
+    await expect(page.locator('[role="menuitem"]:has-text("Open Folder")')).toBeVisible()
+    // Close menu by clicking elsewhere
+    await page.keyboard.press('Escape')
   })
 
   test('should show browser mode message when no path selected', async () => {
@@ -61,29 +65,5 @@ test.describe('File Browser Navigation', () => {
   test('should enable navigation buttons after selecting folder', async () => {
     // Note: This test would need a real folder selection
     // In a real E2E test, you might mock the file dialog or use a test folder
-  })
-})
-
-test.describe('Image Display', () => {
-  test.skip('should display thumbnail grid when images are present', async () => {
-    // This test requires actual image files
-    // Skip for now as it needs test data setup
-  })
-
-  test.skip('should show image preview on selection', async () => {
-    // This test requires actual image files
-    // Skip for now as it needs test data setup
-  })
-})
-
-test.describe('EXIF and Map', () => {
-  test.skip('should display EXIF information for selected image', async () => {
-    // This test requires actual image files with EXIF data
-    // Skip for now as it needs test data setup
-  })
-
-  test.skip('should show map with GPS coordinates', async () => {
-    // This test requires actual image files with GPS data
-    // Skip for now as it needs test data setup
   })
 })
