@@ -168,38 +168,7 @@ describe('FileBrowser', () => {
     })
   })
 
-  describe('Folder Selection', () => {
-    it('should render Select Folder button', () => {
-      render(<FileBrowser />, { wrapper: createWrapper() })
-
-      expect(screen.getByText('Select Folder')).toBeInTheDocument()
-    })
-
-    it('should call selectDirectory API when Select Folder is clicked', async () => {
-      const user = userEvent.setup()
-      render(<FileBrowser />, { wrapper: createWrapper() })
-
-      const selectButton = screen.getByText('Select Folder')
-      await user.click(selectButton)
-
-      await waitFor(() => {
-        expect(window.api.selectDirectory).toHaveBeenCalled()
-      })
-    })
-
-    it('should update currentPath when folder is selected', async () => {
-      const user = userEvent.setup()
-      render(<FileBrowser />, { wrapper: createWrapper() })
-
-      const selectButton = screen.getByText('Select Folder')
-      await user.click(selectButton)
-
-      await waitFor(() => {
-        const state = useAppStore.getState()
-        expect(state.currentPath).toBe('/selected/folder')
-      })
-    })
-  })
+  // Note: Folder selection functionality moved to MenuBar component
 
   describe('File List Display', () => {
     it('should display files when path is set', async () => {
@@ -538,35 +507,15 @@ describe('FileBrowser', () => {
       })
     })
 
-    it('should handle folder selection error', async () => {
-      const user = userEvent.setup()
-      vi.mocked(window.api.selectDirectory).mockResolvedValue({
-        success: false,
-        error: { message: 'Permission denied' },
-      } as any)
-
-      render(<FileBrowser />, { wrapper: createWrapper() })
-
-      const selectButton = screen.getByText('Select Folder')
-      await user.click(selectButton)
-
-      await waitFor(() => {
-        expect(window.api.selectDirectory).toHaveBeenCalled()
-      })
-    })
   })
 
   describe('Panel Controls', () => {
-    it('should toggle panel when collapse button is clicked', async () => {
-      const _user = userEvent.setup()
-      render(<FileBrowser />, { wrapper: createWrapper() })
-
+    it('should have collapse button', async () => {
       const { container } = render(<FileBrowser />, { wrapper: createWrapper() })
 
       // Find collapse button (Minimize2 icon button)
       const buttons = container.querySelectorAll('button')
-      // Collapse button is after Select Folder button
-      expect(buttons.length).toBeGreaterThan(1)
+      expect(buttons.length).toBeGreaterThanOrEqual(1)
     })
   })
 })

@@ -58,6 +58,16 @@ interface AppState {
   togglePanel: (panelId: keyof AppState['panelVisibility']) => void
   setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolean) => void
 
+  // Status bar items visibility
+  statusBarItems: {
+    camera: boolean
+    exposure: boolean
+    gps: boolean
+    datetime: boolean
+    dimensions: boolean
+  }
+  toggleStatusBarItem: (itemId: keyof AppState['statusBarItems']) => void
+
   // Theme
   theme: 'system' | 'light' | 'dark'
   setTheme: (theme: 'system' | 'light' | 'dark') => void
@@ -85,9 +95,16 @@ export const useAppStore = create<AppState>()(
       panelVisibility: {
         fileBrowser: true,
         thumbnailGrid: true,
-        exifPanel: true,
+        exifPanel: false, // Deprecated: replaced by status bar
         imagePreview: true,
         mapView: true,
+      },
+      statusBarItems: {
+        camera: true,
+        exposure: true,
+        gps: true,
+        datetime: true,
+        dimensions: true,
       },
 
       // Actions
@@ -233,6 +250,22 @@ export const useAppStore = create<AppState>()(
           return { panelVisibility: newVisibility }
         }),
 
+      // Status bar item visibility actions
+      toggleStatusBarItem: (itemId) =>
+        set((state) => {
+          const newItems = {
+            ...state.statusBarItems,
+            [itemId]: !state.statusBarItems[itemId],
+          }
+          // Persist to store
+          // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
+          const api = (window as any).api
+          if (api) {
+            api.setStoreValue('statusBarItems', newItems)
+          }
+          return { statusBarItems: newItems }
+        }),
+
       setTheme: (theme) => set({ theme }),
 
       // Initialize store from persisted settings
@@ -245,6 +278,10 @@ export const useAppStore = create<AppState>()(
           const panelVisibility = await api.getStoreValue('panelVisibility')
           if (panelVisibility) {
             set({ panelVisibility })
+          }
+          const statusBarItems = await api.getStoreValue('statusBarItems')
+          if (statusBarItems) {
+            set({ statusBarItems })
           }
         } catch (error) {
           console.error('Failed to load settings from store:', error)

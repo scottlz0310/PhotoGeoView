@@ -25,7 +25,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 export function MenuBar() {
-  const { panelVisibility, togglePanel, navigateToPath, clearSelectedFiles } = useAppStore()
+  const { panelVisibility, togglePanel, statusBarItems, toggleStatusBarItem, navigateToPath, clearSelectedFiles } = useAppStore()
   const { theme, setTheme } = useTheme()
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
@@ -136,6 +136,42 @@ export function MenuBar() {
                   onClick={() => togglePanel('mapView')}
                 >
                   Map View
+                </MenubarCheckboxItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarSub>
+              <MenubarSubTrigger>Status Bar Info</MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarCheckboxItem
+                  checked={statusBarItems.camera}
+                  onClick={() => toggleStatusBarItem('camera')}
+                >
+                  Camera
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={statusBarItems.exposure}
+                  onClick={() => toggleStatusBarItem('exposure')}
+                >
+                  Exposure
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={statusBarItems.gps}
+                  onClick={() => toggleStatusBarItem('gps')}
+                >
+                  GPS
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={statusBarItems.datetime}
+                  onClick={() => toggleStatusBarItem('datetime')}
+                >
+                  Date/Time
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={statusBarItems.dimensions}
+                  onClick={() => toggleStatusBarItem('dimensions')}
+                >
+                  Dimensions
                 </MenubarCheckboxItem>
               </MenubarSubContent>
             </MenubarSub>

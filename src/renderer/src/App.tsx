@@ -3,6 +3,7 @@ import { FileBrowser } from '@renderer/components/file-browser/FileBrowser'
 import { MenuBar } from '@renderer/components/MenuBar'
 import { PhotoMap } from '@renderer/components/map/PhotoMap'
 import { ImagePreview } from '@renderer/components/preview/ImagePreview'
+import { StatusBar } from '@renderer/components/StatusBar'
 import { ThumbnailGrid } from '@renderer/components/thumbnail/ThumbnailGrid'
 import { Toaster } from '@renderer/components/ui/sonner'
 import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
@@ -183,6 +184,8 @@ function App() {
             </Panel>
           </PanelGroup>
         </main>
+
+        <StatusBar filePath={previewFile} />
       </div>
     </>
   )
