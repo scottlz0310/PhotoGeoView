@@ -9,13 +9,43 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Release on ${{ matrix.os }}
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    name: Build on ${{ matrix.os }}
+    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            platform: win
+            artifact_ext: exe
+          - os: macos-latest
+            platform: mac
+            artifact_ext: dmg
+          - os: ubuntu-latest
+            platform: linux
+            artifact_ext: AppImage
 
     steps:
       - uses: actions/checkout@v6
@@ -37,22 +67,30 @@ jobs:
       - name: Build App
         run: pnpm build
 
-      - name: Publish App
-        # macOS: identity=null to skip code signing
-        # Windows: no signing configured, will produce unsigned exe
+      - name: Package App
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            pnpm package --win --config.mac.identity=null --publish always
+            pnpm package --win --config.mac.identity=null
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac --config.mac.identity=null --publish always
+            pnpm package --mac --config.mac.identity=null
           else
-            pnpm package --linux --config.mac.identity=null --publish always
+            pnpm package --linux --config.mac.identity=null
           fi
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEBUG: electron-builder
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
+            dist/*.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List output files
         run: ls -R dist || echo "dist directory not found"
