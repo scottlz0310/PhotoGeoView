@@ -25,7 +25,14 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 export function MenuBar() {
-  const { panelVisibility, togglePanel, statusBarItems, toggleStatusBarItem, navigateToPath, clearSelectedFiles } = useAppStore()
+  const {
+    panelVisibility,
+    togglePanel,
+    statusBarItems,
+    toggleStatusBarItem,
+    navigateToPath,
+    clearSelectedFiles,
+  } = useAppStore()
   const { theme, setTheme } = useTheme()
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showAbout, setShowAbout] = useState(false)

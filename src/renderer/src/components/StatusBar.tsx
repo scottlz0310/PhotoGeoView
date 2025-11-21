@@ -1,12 +1,12 @@
-import { useAppStore } from '@renderer/stores/appStore'
-import { useQuery } from '@tanstack/react-query'
-import { Camera, Clock, MapPin, Aperture } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@renderer/components/ui/tooltip'
+import { useAppStore } from '@renderer/stores/appStore'
+import { useQuery } from '@tanstack/react-query'
+import { Aperture, Camera, Clock, MapPin } from 'lucide-react'
 
 interface StatusBarProps {
   filePath: string | null
@@ -59,7 +59,9 @@ export function StatusBar({ filePath }: StatusBarProps) {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Camera: {exifData.camera.make} {exifData.camera.model}</p>
+                    <p>
+                      Camera: {exifData.camera.make} {exifData.camera.model}
+                    </p>
                     {exifData.camera.lens && <p>Lens: {exifData.camera.lens}</p>}
                   </TooltipContent>
                 </Tooltip>
@@ -80,7 +82,9 @@ export function StatusBar({ filePath }: StatusBarProps) {
                     <p>Aperture: f/{exifData.exposure.aperture}</p>
                     <p>Shutter: {exifData.exposure.shutterSpeed}</p>
                     <p>ISO: {exifData.exposure.iso}</p>
-                    {exifData.exposure.focalLength && <p>Focal: {exifData.exposure.focalLength}mm</p>}
+                    {exifData.exposure.focalLength && (
+                      <p>Focal: {exifData.exposure.focalLength}mm</p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               )}
@@ -119,7 +123,9 @@ export function StatusBar({ filePath }: StatusBarProps) {
 
               {/* Dimensions */}
               {statusBarItems.dimensions && exifData.width && exifData.height && (
-                <span>{exifData.width} × {exifData.height}</span>
+                <span>
+                  {exifData.width} × {exifData.height}
+                </span>
               )}
             </>
           )}

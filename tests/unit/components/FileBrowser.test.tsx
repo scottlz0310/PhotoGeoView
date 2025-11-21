@@ -506,7 +506,6 @@ describe('FileBrowser', () => {
         expect(window.api.getDirectoryContents).toHaveBeenCalled()
       })
     })
-
   })
 
   describe('Panel Controls', () => {
