@@ -1,6 +1,6 @@
 {
   "name": "photogeoview",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。",
   "main": "./out/main/index.js",
   "author": "PhotoGeoView Team",
@@ -150,7 +150,7 @@
     "autoprefixer": "^10.4.22",
     "cross-env": "^10.1.0",
     "electron": "^39.2.1",
-    "electron-builder": "26.0.12",
+    "electron-builder": "24.13.3",
     "electron-vite": "^4.0.1",
     "happy-dom": "^20.0.10",
     "postcss": "^8.5.6",
