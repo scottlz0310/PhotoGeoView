@@ -70,11 +70,11 @@ jobs:
       - name: Package App
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            pnpm package --win --config.mac.identity=null --publish never
+            npx electron-builder --win nsis --config.mac.identity=null
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac --config.mac.identity=null --publish never
+            npx electron-builder --mac dmg --config.mac.identity=null
           else
-            pnpm package --linux --config.mac.identity=null --publish never
+            npx electron-builder --linux AppImage
           fi
         shell: bash
         env:
