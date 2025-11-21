@@ -67,31 +67,19 @@ jobs:
       - name: Build App
         run: pnpm build
 
-      - name: Package App
+      - name: Package and Publish
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            npx electron-builder --win nsis --config.mac.identity=null
+            pnpm package --win --config.mac.identity=null --publish always
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            npx electron-builder --mac dmg --config.mac.identity=null
+            pnpm package --mac --config.mac.identity=null --publish always
           else
-            npx electron-builder --linux AppImage
+            pnpm package --linux --config.mac.identity=null --publish always
           fi
         shell: bash
         env:
           DEBUG: electron-builder
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: |
-            dist/**/*.exe
-            dist/**/*.dmg
-            dist/**/*.AppImage
-            dist/**/*.yml
-            dist/**/*.blockmap
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List output files
