@@ -10,6 +10,7 @@ import { useImageNavigation } from '@renderer/hooks/useImageNavigation'
 import { useKeyboardShortcuts } from '@renderer/hooks/useKeyboardShortcuts'
 import { useAppStore } from '@renderer/stores/appStore'
 import { useQuery } from '@tanstack/react-query'
+import i18n from 'i18next'
 import { Camera } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
@@ -19,12 +20,35 @@ function App() {
     selectedFiles,
     currentPath,
     panelVisibility,
+    layoutPreset,
+    language,
     initializeFromStore,
     setSelectedFiles,
     navigateToPath,
   } = useAppStore()
+
+  // Layout sizes based on preset
+  const layoutSizes = useMemo(() => {
+    switch (layoutPreset) {
+      case 'preview-focus':
+        return { left: 20, right: 80, preview: 75, map: 25 }
+      case 'map-focus':
+        return { left: 20, right: 80, preview: 40, map: 60 }
+      case 'compact':
+        return { left: 30, right: 70, preview: 60, map: 40 }
+      default:
+        return { left: 25, right: 75, preview: 60, map: 40 }
+    }
+  }, [layoutPreset])
   // Get the first selected file for EXIF display
   const selectedFile = selectedFiles.length > 0 ? selectedFiles[0] : null
+
+  // Sync i18n language with store
+  useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language)
+    }
+  }, [language])
 
   // Initialize store from persisted settings and handle initial file
   useEffect(() => {
@@ -146,9 +170,9 @@ function App() {
         </header>
 
         <main className="flex-1 overflow-hidden p-4">
-          <PanelGroup direction="horizontal" className="h-full gap-4">
+          <PanelGroup key={layoutPreset} direction="horizontal" className="h-full gap-4">
             {/* Left Panel: File Browser and Thumbnail Grid */}
-            <Panel defaultSize={25} minSize={15}>
+            <Panel defaultSize={layoutSizes.left} minSize={15}>
               <PanelGroup direction="vertical" className="gap-4">
                 {/* Top: File Browser */}
                 {panelVisibility.fileBrowser && (
@@ -182,12 +206,17 @@ function App() {
             )}
 
             {/* Right Panel: Image Preview and Map */}
-            <Panel defaultSize={55} minSize={30}>
+            <Panel defaultSize={layoutSizes.right} minSize={30}>
               <PanelGroup direction="vertical" className="gap-4">
                 {/* Top: Image Preview */}
                 {panelVisibility.imagePreview && (
                   <>
-                    <Panel defaultSize={60} minSize={30} collapsible collapsedSize={5}>
+                    <Panel
+                      defaultSize={layoutSizes.preview}
+                      minSize={20}
+                      collapsible
+                      collapsedSize={5}
+                    >
                       <ImagePreview filePath={previewFile} />
                     </Panel>
                     <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
@@ -196,7 +225,7 @@ function App() {
 
                 {/* Bottom: Map */}
                 {panelVisibility.mapView && (
-                  <Panel defaultSize={40} minSize={20} collapsible collapsedSize={5}>
+                  <Panel defaultSize={layoutSizes.map} minSize={20} collapsible collapsedSize={5}>
                     <PhotoMap exifData={exifData} filePath={previewFile} />
                   </Panel>
                 )}

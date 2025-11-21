@@ -20,16 +20,23 @@ import {
   MenubarTrigger,
 } from '@renderer/components/ui/menubar'
 import { useAppStore } from '@renderer/stores/appStore'
+import i18n from 'i18next'
 import { useTheme } from 'next-themes'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 export function MenuBar() {
+  const { t } = useTranslation()
   const {
     panelVisibility,
     togglePanel,
     statusBarItems,
     toggleStatusBarItem,
+    layoutPreset,
+    setLayoutPreset,
+    language,
+    setLanguage,
     navigateToPath,
     clearSelectedFiles,
   } = useAppStore()
@@ -70,20 +77,25 @@ export function MenuBar() {
     }
   }
 
+  const handleLanguageChange = (lang: 'en' | 'ja') => {
+    setLanguage(lang)
+    i18n.changeLanguage(lang)
+  }
+
   return (
     <>
       <Menubar className="border-none bg-transparent">
         {/* File Menu */}
         <MenubarMenu>
-          <MenubarTrigger>File</MenubarTrigger>
+          <MenubarTrigger>{t('menu.file')}</MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={handleOpenFolder}>
-              Open Folder
+              {t('menu.openFolder')}
               <MenubarShortcut>Ctrl+O</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
             <MenubarItem onClick={handleExit}>
-              Exit
+              {t('menu.exit')}
               <MenubarShortcut>Alt+F4</MenubarShortcut>
             </MenubarItem>
           </MenubarContent>
@@ -91,94 +103,94 @@ export function MenuBar() {
 
         {/* View Menu */}
         <MenubarMenu>
-          <MenubarTrigger>View</MenubarTrigger>
+          <MenubarTrigger>{t('menu.view')}</MenubarTrigger>
           <MenubarContent>
             <MenubarSub>
-              <MenubarSubTrigger>Theme</MenubarSubTrigger>
+              <MenubarSubTrigger>{t('menu.theme')}</MenubarSubTrigger>
               <MenubarSubContent>
                 <MenubarCheckboxItem checked={theme === 'light'} onClick={() => setTheme('light')}>
-                  Light
+                  {t('menu.light')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem checked={theme === 'dark'} onClick={() => setTheme('dark')}>
-                  Dark
+                  {t('menu.dark')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={theme === 'system'}
                   onClick={() => setTheme('system')}
                 >
-                  System
+                  {t('menu.system')}
                 </MenubarCheckboxItem>
               </MenubarSubContent>
             </MenubarSub>
             <MenubarSeparator />
             <MenubarSub>
-              <MenubarSubTrigger>Panels</MenubarSubTrigger>
+              <MenubarSubTrigger>{t('menu.panels')}</MenubarSubTrigger>
               <MenubarSubContent>
                 <MenubarCheckboxItem
                   checked={panelVisibility.fileBrowser}
                   onClick={() => togglePanel('fileBrowser')}
                 >
-                  File Browser
+                  {t('menu.fileBrowser')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={panelVisibility.thumbnailGrid}
                   onClick={() => togglePanel('thumbnailGrid')}
                 >
-                  Thumbnail Grid
+                  {t('menu.thumbnailGrid')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={panelVisibility.exifPanel}
                   onClick={() => togglePanel('exifPanel')}
                 >
-                  EXIF Panel
+                  {t('menu.exifPanel')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={panelVisibility.imagePreview}
                   onClick={() => togglePanel('imagePreview')}
                 >
-                  Image Preview
+                  {t('menu.imagePreview')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={panelVisibility.mapView}
                   onClick={() => togglePanel('mapView')}
                 >
-                  Map View
+                  {t('menu.mapView')}
                 </MenubarCheckboxItem>
               </MenubarSubContent>
             </MenubarSub>
             <MenubarSeparator />
             <MenubarSub>
-              <MenubarSubTrigger>Status Bar Info</MenubarSubTrigger>
+              <MenubarSubTrigger>{t('menu.statusBarInfo')}</MenubarSubTrigger>
               <MenubarSubContent>
                 <MenubarCheckboxItem
                   checked={statusBarItems.camera}
                   onClick={() => toggleStatusBarItem('camera')}
                 >
-                  Camera
+                  {t('menu.camera')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={statusBarItems.exposure}
                   onClick={() => toggleStatusBarItem('exposure')}
                 >
-                  Exposure
+                  {t('menu.exposure')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={statusBarItems.gps}
                   onClick={() => toggleStatusBarItem('gps')}
                 >
-                  GPS
+                  {t('menu.gps')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={statusBarItems.datetime}
                   onClick={() => toggleStatusBarItem('datetime')}
                 >
-                  Date/Time
+                  {t('menu.datetime')}
                 </MenubarCheckboxItem>
                 <MenubarCheckboxItem
                   checked={statusBarItems.dimensions}
                   onClick={() => toggleStatusBarItem('dimensions')}
                 >
-                  Dimensions
+                  {t('menu.dimensions')}
                 </MenubarCheckboxItem>
               </MenubarSubContent>
             </MenubarSub>
@@ -187,25 +199,70 @@ export function MenuBar() {
 
         {/* Settings Menu */}
         <MenubarMenu>
-          <MenubarTrigger>Settings</MenubarTrigger>
+          <MenubarTrigger>{t('menu.settings')}</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem disabled>Panel Layout...</MenubarItem>
-            <MenubarItem disabled>File Associations...</MenubarItem>
+            <MenubarSub>
+              <MenubarSubTrigger>{t('menu.layout')}</MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarCheckboxItem
+                  checked={layoutPreset === 'default'}
+                  onClick={() => setLayoutPreset('default')}
+                >
+                  {t('menu.layoutDefault')}
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={layoutPreset === 'preview-focus'}
+                  onClick={() => setLayoutPreset('preview-focus')}
+                >
+                  {t('menu.layoutPreviewFocus')}
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={layoutPreset === 'map-focus'}
+                  onClick={() => setLayoutPreset('map-focus')}
+                >
+                  {t('menu.layoutMapFocus')}
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={layoutPreset === 'compact'}
+                  onClick={() => setLayoutPreset('compact')}
+                >
+                  {t('menu.layoutCompact')}
+                </MenubarCheckboxItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarSub>
+              <MenubarSubTrigger>Language / 言語</MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarCheckboxItem
+                  checked={language === 'en'}
+                  onClick={() => handleLanguageChange('en')}
+                >
+                  English
+                </MenubarCheckboxItem>
+                <MenubarCheckboxItem
+                  checked={language === 'ja'}
+                  onClick={() => handleLanguageChange('ja')}
+                >
+                  日本語
+                </MenubarCheckboxItem>
+              </MenubarSubContent>
+            </MenubarSub>
           </MenubarContent>
         </MenubarMenu>
 
         {/* Help Menu */}
         <MenubarMenu>
-          <MenubarTrigger>Help</MenubarTrigger>
+          <MenubarTrigger>{t('menu.help')}</MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={() => setShowShortcuts(true)}>
-              Keyboard Shortcuts
+              {t('menu.keyboardShortcuts')}
               <MenubarShortcut>?</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem onClick={handleCheckUpdate}>Check for Updates...</MenubarItem>
+            <MenubarItem onClick={handleCheckUpdate}>{t('menu.checkForUpdates')}</MenubarItem>
             <MenubarSeparator />
-            <MenubarItem onClick={() => setShowAbout(true)}>About PhotoGeoView</MenubarItem>
+            <MenubarItem onClick={() => setShowAbout(true)}>{t('menu.about')}</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -214,7 +271,7 @@ export function MenuBar() {
       <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Keyboard Shortcuts</DialogTitle>
+            <DialogTitle>{t('dialog.shortcuts')}</DialogTitle>
           </DialogHeader>
           <KeyboardShortcutsHelp />
         </DialogContent>
@@ -224,16 +281,14 @@ export function MenuBar() {
       <Dialog open={showAbout} onOpenChange={setShowAbout}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>About PhotoGeoView</DialogTitle>
-            <DialogDescription>Photo Geo-Tagging Application</DialogDescription>
+            <DialogTitle>{t('dialog.aboutTitle')}</DialogTitle>
+            <DialogDescription>{t('dialog.aboutDesc')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2 text-sm">
             <p>
-              <strong>Version:</strong> 2.1.0
+              <strong>{t('dialog.version')}:</strong> 2.1.0
             </p>
-            <p className="text-muted-foreground">
-              A desktop application for viewing photos with their geographic information.
-            </p>
+            <p className="text-muted-foreground">{t('dialog.aboutDesc')}</p>
           </div>
         </DialogContent>
       </Dialog>

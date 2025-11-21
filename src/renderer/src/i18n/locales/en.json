@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "PhotoGeoView",
+    "subtitle": "Photo Geo-Tagging Application"
+  },
+  "menu": {
+    "file": "File",
+    "openFolder": "Open Folder",
+    "exit": "Exit",
+    "view": "View",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "panels": "Panels",
+    "fileBrowser": "File Browser",
+    "thumbnailGrid": "Thumbnail Grid",
+    "exifPanel": "EXIF Panel",
+    "imagePreview": "Image Preview",
+    "mapView": "Map View",
+    "statusBarInfo": "Status Bar Info",
+    "camera": "Camera",
+    "exposure": "Exposure",
+    "gps": "GPS",
+    "datetime": "Date/Time",
+    "dimensions": "Dimensions",
+    "settings": "Settings",
+    "layout": "Layout",
+    "layoutDefault": "Default",
+    "layoutPreviewFocus": "Preview Focus",
+    "layoutMapFocus": "Map Focus",
+    "layoutCompact": "Compact",
+    "help": "Help",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "checkForUpdates": "Check for Updates...",
+    "about": "About PhotoGeoView"
+  },
+  "panel": {
+    "fileBrowser": "File Browser",
+    "collapse": "Collapse panel",
+    "selectFolder": "Select a folder to browse",
+    "browserMode": "Running in Browser Mode",
+    "browserModeDesc": "File system access is only available in the Electron desktop app."
+  },
+  "statusBar": {
+    "noImageSelected": "No image selected"
+  },
+  "dialog": {
+    "shortcuts": "Keyboard Shortcuts",
+    "aboutTitle": "About PhotoGeoView",
+    "aboutDesc": "Photo Geo-Tagging Application",
+    "version": "Version"
+  }
+}

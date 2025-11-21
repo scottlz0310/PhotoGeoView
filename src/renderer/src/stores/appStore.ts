@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
+export type LayoutPreset = 'default' | 'preview-focus' | 'map-focus' | 'compact'
+export type Language = 'en' | 'ja'
+
 export interface FileFilters {
   // Date range filter
   dateFrom: Date | null
@@ -72,6 +75,14 @@ interface AppState {
   theme: 'system' | 'light' | 'dark'
   setTheme: (theme: 'system' | 'light' | 'dark') => void
 
+  // Layout preset
+  layoutPreset: LayoutPreset
+  setLayoutPreset: (preset: LayoutPreset) => void
+
+  // Language
+  language: Language
+  setLanguage: (lang: Language) => void
+
   // Initialization
   initializeFromStore: () => Promise<void>
 }
@@ -106,6 +117,8 @@ export const useAppStore = create<AppState>()(
         datetime: true,
         dimensions: true,
       },
+      layoutPreset: 'default',
+      language: 'en',
 
       // Actions
       setCurrentPath: (path) => set({ currentPath: path }),
@@ -268,6 +281,26 @@ export const useAppStore = create<AppState>()(
 
       setTheme: (theme) => set({ theme }),
 
+      // Layout preset action
+      setLayoutPreset: (preset) => {
+        // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
+        const api = (window as any).api
+        if (api) {
+          api.setStoreValue('layoutPreset', preset)
+        }
+        set({ layoutPreset: preset })
+      },
+
+      // Language action
+      setLanguage: (lang) => {
+        // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
+        const api = (window as any).api
+        if (api) {
+          api.setStoreValue('language', lang)
+        }
+        set({ language: lang })
+      },
+
       // Initialize store from persisted settings
       initializeFromStore: async () => {
         // biome-ignore lint/suspicious/noExplicitAny: Type definition issue
@@ -282,6 +315,14 @@ export const useAppStore = create<AppState>()(
           const statusBarItems = await api.getStoreValue('statusBarItems')
           if (statusBarItems) {
             set({ statusBarItems })
+          }
+          const layoutPreset = await api.getStoreValue('layoutPreset')
+          if (layoutPreset) {
+            set({ layoutPreset })
+          }
+          const language = await api.getStoreValue('language')
+          if (language) {
+            set({ language })
           }
         } catch (error) {
           console.error('Failed to load settings from store:', error)

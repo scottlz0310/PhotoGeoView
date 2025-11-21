@@ -1,0 +1,54 @@
+{
+  "app": {
+    "title": "PhotoGeoView",
+    "subtitle": "写真位置情報ビューア"
+  },
+  "menu": {
+    "file": "ファイル",
+    "openFolder": "フォルダを開く",
+    "exit": "終了",
+    "view": "表示",
+    "theme": "テーマ",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム",
+    "panels": "パネル",
+    "fileBrowser": "ファイルブラウザ",
+    "thumbnailGrid": "サムネイル",
+    "exifPanel": "EXIF情報",
+    "imagePreview": "画像プレビュー",
+    "mapView": "地図",
+    "statusBarInfo": "ステータスバー表示",
+    "camera": "カメラ",
+    "exposure": "露出",
+    "gps": "GPS",
+    "datetime": "日時",
+    "dimensions": "サイズ",
+    "settings": "設定",
+    "layout": "レイアウト",
+    "layoutDefault": "標準",
+    "layoutPreviewFocus": "プレビュー重視",
+    "layoutMapFocus": "地図重視",
+    "layoutCompact": "コンパクト",
+    "help": "ヘルプ",
+    "keyboardShortcuts": "キーボードショートカット",
+    "checkForUpdates": "更新を確認...",
+    "about": "PhotoGeoViewについて"
+  },
+  "panel": {
+    "fileBrowser": "ファイルブラウザ",
+    "collapse": "パネルを折りたたむ",
+    "selectFolder": "フォルダを選択してください",
+    "browserMode": "ブラウザモードで実行中",
+    "browserModeDesc": "ファイルシステムへのアクセスはElectronアプリでのみ利用可能です。"
+  },
+  "statusBar": {
+    "noImageSelected": "画像が選択されていません"
+  },
+  "dialog": {
+    "shortcuts": "キーボードショートカット",
+    "aboutTitle": "PhotoGeoViewについて",
+    "aboutDesc": "写真位置情報ビューア",
+    "version": "バージョン"
+  }
+}
