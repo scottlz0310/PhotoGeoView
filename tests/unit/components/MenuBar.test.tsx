@@ -100,7 +100,7 @@ const mockApi = {
   checkForUpdates: vi.fn(),
   downloadUpdate: vi.fn(),
   quitAndInstall: vi.fn(),
-  getAppVersion: vi.fn().mockResolvedValue('2.1.7'),
+  getAppVersion: vi.fn().mockResolvedValue('2.1.8'),
   setStoreValue: vi.fn(),
   getStoreValue: vi.fn(),
   onUpdateAvailable: vi.fn((callback) => {
@@ -308,7 +308,7 @@ describe('MenuBar', () => {
 
   describe('App Version', () => {
     it('should fetch and display app version on mount', async () => {
-      mockApi.getAppVersion.mockResolvedValue('2.1.7')
+      mockApi.getAppVersion.mockResolvedValue('2.1.8')
 
       renderWithProviders(<MenuBar />)
 
