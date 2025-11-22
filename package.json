@@ -1,6 +1,6 @@
 {
   "name": "photogeoview",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。",
   "main": "./out/main/index.js",
   "author": "PhotoGeoView Team",
@@ -78,7 +78,8 @@
       "target": "dmg"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "fileAssociations": []
     },
     "publish": [
       {
