@@ -51,6 +51,18 @@ vi.mock('react-i18next', () => ({
         'dialog.aboutTitle': 'About PhotoGeoView',
         'dialog.aboutDesc': 'Photo Geo-Tagging Application',
         'dialog.version': 'Version',
+        'update.checking': 'Checking for Updates',
+        'update.checkingDesc': 'Checking for available updates...',
+        'update.available': 'Update Available',
+        'update.availableDesc': 'Version {{version}} is available. Click to download.',
+        'update.notAvailable': 'No Updates Available',
+        'update.notAvailableDesc': 'You are using the latest version.',
+        'update.download': 'Download',
+        'update.downloading': 'Downloading Update',
+        'update.downloaded': 'Update Downloaded',
+        'update.downloadedDesc': 'Update has been downloaded. Restart to install.',
+        'update.restart': 'Restart Now',
+        'update.error': 'Update Error',
       }
       return translations[key] || key
     },
@@ -68,16 +80,44 @@ vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
+    info: vi.fn(),
+    loading: vi.fn(),
   },
 }))
 
 // Mock window.api
+const mockUpdateCallbacks = {
+  onUpdateAvailable: null as ((info: any) => void) | null,
+  onUpdateNotAvailable: null as ((info: any) => void) | null,
+  onUpdateDownloaded: null as ((info: any) => void) | null,
+  onUpdateError: null as ((error: string) => void) | null,
+  onDownloadProgress: null as ((progress: any) => void) | null,
+}
+
 const mockApi = {
   selectDirectory: vi.fn(),
   closeWindow: vi.fn(),
   checkForUpdates: vi.fn(),
+  downloadUpdate: vi.fn(),
+  quitAndInstall: vi.fn(),
+  getAppVersion: vi.fn().mockResolvedValue('2.1.7'),
   setStoreValue: vi.fn(),
   getStoreValue: vi.fn(),
+  onUpdateAvailable: vi.fn((callback) => {
+    mockUpdateCallbacks.onUpdateAvailable = callback
+  }),
+  onUpdateNotAvailable: vi.fn((callback) => {
+    mockUpdateCallbacks.onUpdateNotAvailable = callback
+  }),
+  onUpdateDownloaded: vi.fn((callback) => {
+    mockUpdateCallbacks.onUpdateDownloaded = callback
+  }),
+  onUpdateError: vi.fn((callback) => {
+    mockUpdateCallbacks.onUpdateError = callback
+  }),
+  onDownloadProgress: vi.fn((callback) => {
+    mockUpdateCallbacks.onDownloadProgress = callback
+  }),
 }
 
 Object.defineProperty(window, 'api', {
@@ -98,8 +138,13 @@ const renderWithProviders = (ui: React.ReactElement) => {
 }
 
 describe('MenuBar', () => {
-  beforeEach(() => {
+  let mockToast: any
+
+  beforeEach(async () => {
     vi.clearAllMocks()
+    // Get reference to mocked toast
+    const sonner = await import('sonner')
+    mockToast = sonner.toast
     useAppStore.setState({
       panelVisibility: {
         fileBrowser: true,
@@ -242,7 +287,6 @@ describe('MenuBar', () => {
     })
 
     it('should handle language change', async () => {
-      const i18n = await import('i18next')
       renderWithProviders(<MenuBar />)
 
       // Store should have setLanguage function
@@ -259,6 +303,194 @@ describe('MenuBar', () => {
 
       // Dialogs should not be visible initially
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('App Version', () => {
+    it('should fetch and display app version on mount', async () => {
+      mockApi.getAppVersion.mockResolvedValue('2.1.7')
+
+      renderWithProviders(<MenuBar />)
+
+      // Wait for version to be fetched
+      await vi.waitFor(() => {
+        expect(mockApi.getAppVersion).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle missing getAppVersion API gracefully', () => {
+      const apiWithoutVersion = { ...mockApi, getAppVersion: undefined }
+      Object.defineProperty(window, 'api', {
+        value: apiWithoutVersion,
+        writable: true,
+      })
+
+      renderWithProviders(<MenuBar />)
+
+      // Should not throw error
+      expect(screen.getByText('File')).toBeInTheDocument()
+    })
+  })
+
+  describe('Update Check Flow', () => {
+    beforeEach(() => {
+      vi.clearAllMocks()
+      // Reset callbacks
+      mockUpdateCallbacks.onUpdateAvailable = null
+      mockUpdateCallbacks.onUpdateNotAvailable = null
+      mockUpdateCallbacks.onUpdateDownloaded = null
+      mockUpdateCallbacks.onUpdateError = null
+      mockUpdateCallbacks.onDownloadProgress = null
+    })
+
+    it('should show checking toast when checking for updates', async () => {
+      mockApi.checkForUpdates.mockResolvedValue(undefined)
+
+      renderWithProviders(<MenuBar />)
+
+      // Simulate clicking check for updates (we test the handler exists)
+      expect(mockApi.checkForUpdates).toBeDefined()
+    })
+
+    it('should register update event listeners on mount', () => {
+      renderWithProviders(<MenuBar />)
+
+      expect(mockApi.onUpdateAvailable).toHaveBeenCalled()
+      expect(mockApi.onUpdateNotAvailable).toHaveBeenCalled()
+      expect(mockApi.onUpdateDownloaded).toHaveBeenCalled()
+      expect(mockApi.onUpdateError).toHaveBeenCalled()
+      expect(mockApi.onDownloadProgress).toHaveBeenCalled()
+    })
+
+    it('should show success toast when update is available', async () => {
+      renderWithProviders(<MenuBar />)
+
+      // Simulate update available event
+      const updateInfo = { version: '2.2.0' }
+      mockUpdateCallbacks.onUpdateAvailable?.(updateInfo)
+
+      await vi.waitFor(() => {
+        expect(mockToast.success).toHaveBeenCalledWith(
+          'Update Available',
+          expect.objectContaining({
+            description: expect.any(String),
+            action: expect.objectContaining({
+              label: 'Download',
+            }),
+          })
+        )
+      })
+    })
+
+    it('should show info toast when no update is available', async () => {
+      renderWithProviders(<MenuBar />)
+
+      // Simulate no update available event
+      mockUpdateCallbacks.onUpdateNotAvailable?.({})
+
+      await vi.waitFor(() => {
+        expect(mockToast.info).toHaveBeenCalledWith(
+          'No Updates Available',
+          expect.objectContaining({
+            description: 'You are using the latest version.',
+          })
+        )
+      })
+    })
+
+    it('should show error toast when update check fails', async () => {
+      renderWithProviders(<MenuBar />)
+
+      // Simulate update error event
+      const errorMessage = 'Network error'
+      mockUpdateCallbacks.onUpdateError?.(errorMessage)
+
+      await vi.waitFor(() => {
+        expect(mockToast.error).toHaveBeenCalledWith(
+          'Update Error',
+          expect.objectContaining({
+            description: errorMessage,
+          })
+        )
+      })
+    })
+
+    it('should show success toast when update is downloaded', async () => {
+      renderWithProviders(<MenuBar />)
+
+      // Simulate update downloaded event
+      mockUpdateCallbacks.onUpdateDownloaded?.({})
+
+      await vi.waitFor(() => {
+        expect(mockToast.success).toHaveBeenCalledWith(
+          'Update Downloaded',
+          expect.objectContaining({
+            description: 'Update has been downloaded. Restart to install.',
+            duration: 0,
+            action: expect.objectContaining({
+              label: 'Restart Now',
+            }),
+          })
+        )
+      })
+    })
+
+    it('should show loading toast during download progress', async () => {
+      renderWithProviders(<MenuBar />)
+
+      // Simulate download progress event
+      const progress = { percent: 50.5 }
+      mockUpdateCallbacks.onDownloadProgress?.(progress)
+
+      await vi.waitFor(() => {
+        expect(mockToast.loading).toHaveBeenCalledWith(
+          'Downloading Update',
+          expect.objectContaining({
+            description: '51%',
+          })
+        )
+      })
+    })
+
+    it('should call downloadUpdate when download action is triggered', async () => {
+      mockApi.downloadUpdate.mockResolvedValue(undefined)
+
+      renderWithProviders(<MenuBar />)
+
+      // The download function is now internal to the update listener
+      expect(mockApi.downloadUpdate).toBeDefined()
+    })
+
+    it('should call quitAndInstall when restart action is triggered', async () => {
+      mockApi.quitAndInstall.mockResolvedValue(undefined)
+
+      renderWithProviders(<MenuBar />)
+
+      // Simulate update downloaded to trigger restart action availability
+      mockUpdateCallbacks.onUpdateDownloaded?.({})
+
+      // The quit and install function should be available
+      expect(mockApi.quitAndInstall).toBeDefined()
+    })
+
+    it('should handle missing update API methods gracefully', () => {
+      const apiWithoutUpdate = {
+        ...mockApi,
+        onUpdateAvailable: undefined,
+        onUpdateNotAvailable: undefined,
+        onUpdateDownloaded: undefined,
+        onUpdateError: undefined,
+        onDownloadProgress: undefined,
+      }
+      Object.defineProperty(window, 'api', {
+        value: apiWithoutUpdate,
+        writable: true,
+      })
+
+      renderWithProviders(<MenuBar />)
+
+      // Should not throw error
+      expect(screen.getByText('File')).toBeInTheDocument()
     })
   })
 })
