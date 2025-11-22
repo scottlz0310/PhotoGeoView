@@ -26,6 +26,7 @@ const api: IpcApi = {
 
   // App
   getInitialFile: () => ipcRenderer.invoke(IPC_CHANNELS.GET_INITIAL_FILE),
+  getAppVersion: () => ipcRenderer.invoke(IPC_CHANNELS.GET_APP_VERSION),
 
   // Store
   getStoreValue: (key) => ipcRenderer.invoke(IPC_CHANNELS.GET_STORE_VALUE, key),

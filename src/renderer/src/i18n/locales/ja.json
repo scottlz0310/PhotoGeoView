@@ -50,5 +50,20 @@
     "aboutTitle": "PhotoGeoViewについて",
     "aboutDesc": "写真位置情報ビューア",
     "version": "バージョン"
+  },
+  "update": {
+    "checking": "更新を確認中",
+    "checkingDesc": "利用可能な更新を確認しています...",
+    "available": "更新が利用可能です",
+    "availableDesc": "バージョン {{version}} が利用可能です。クリックしてダウンロードしてください。",
+    "notAvailable": "更新はありません",
+    "notAvailableDesc": "最新バージョンを使用しています。",
+    "download": "ダウンロード",
+    "downloading": "更新をダウンロード中",
+    "downloaded": "更新をダウンロードしました",
+    "downloadedDesc": "更新がダウンロードされました。再起動してインストールしてください。",
+    "restart": "今すぐ再起動",
+    "error": "更新エラー",
+    "errorDesc": "更新の確認中にエラーが発生しました。"
   }
 }

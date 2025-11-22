@@ -50,5 +50,20 @@
     "aboutTitle": "About PhotoGeoView",
     "aboutDesc": "Photo Geo-Tagging Application",
     "version": "Version"
+  },
+  "update": {
+    "checking": "Checking for Updates",
+    "checkingDesc": "Checking for available updates...",
+    "available": "Update Available",
+    "availableDesc": "Version {{version}} is available. Click to download.",
+    "notAvailable": "No Updates Available",
+    "notAvailableDesc": "You are using the latest version.",
+    "download": "Download",
+    "downloading": "Downloading Update",
+    "downloaded": "Update Downloaded",
+    "downloadedDesc": "Update has been downloaded. Restart to install.",
+    "restart": "Restart Now",
+    "error": "Update Error",
+    "errorDesc": "An error occurred while checking for updates."
   }
 }

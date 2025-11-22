@@ -198,6 +198,11 @@ function registerIpcHandlers(): void {
     }
     return { success: false, data: null }
   })
+
+  // App version handler
+  ipcMain.handle(IPC_CHANNELS.GET_APP_VERSION, () => {
+    return app.getVersion()
+  })
 }
 
 // Register custom protocol for loading local files

@@ -26,6 +26,7 @@ export const IPC_CHANNELS = {
 
   // App
   GET_INITIAL_FILE: 'app:getInitialFile',
+  GET_APP_VERSION: 'app:getVersion',
 
   // Store
   GET_STORE_VALUE: 'store:get',
@@ -235,6 +236,7 @@ export interface IpcApi {
 
   // App
   getInitialFile: () => Promise<Result<{ filePath: string; dirPath: string } | null>>
+  getAppVersion: () => Promise<string>
 
   // Store
   // biome-ignore lint/suspicious/noExplicitAny: Value can be any type

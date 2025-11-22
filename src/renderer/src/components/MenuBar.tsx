@@ -22,7 +22,7 @@ import {
 import { useAppStore } from '@renderer/stores/appStore'
 import i18n from 'i18next'
 import { useTheme } from 'next-themes'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -43,9 +43,74 @@ export function MenuBar() {
   const { theme, setTheme } = useTheme()
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
+  const [appVersion, setAppVersion] = useState<string>('...')
 
   // biome-ignore lint/suspicious/noExplicitAny: Electron API
   const api = (window as any).api
+
+  // Fetch app version on mount
+  useEffect(() => {
+    if (api?.getAppVersion) {
+      api.getAppVersion().then((version: string) => {
+        setAppVersion(version)
+      })
+    }
+  }, [api])
+
+  // Setup update event listeners
+  useEffect(() => {
+    if (!api) return
+
+    const handleDownloadUpdate = async () => {
+      await api.downloadUpdate()
+    }
+
+    const handleUpdateAvailable = (info: { version: string }) => {
+      toast.success(t('update.available'), {
+        description: t('update.availableDesc', { version: info.version }),
+        duration: 10000,
+        action: {
+          label: t('update.download'),
+          onClick: () => handleDownloadUpdate(),
+        },
+      })
+    }
+
+    const handleUpdateNotAvailable = () => {
+      toast.info(t('update.notAvailable'), {
+        description: t('update.notAvailableDesc'),
+      })
+    }
+
+    const handleUpdateDownloaded = () => {
+      toast.success(t('update.downloaded'), {
+        description: t('update.downloadedDesc'),
+        duration: 0,
+        action: {
+          label: t('update.restart'),
+          onClick: () => api.quitAndInstall(),
+        },
+      })
+    }
+
+    const handleUpdateError = (error: string) => {
+      toast.error(t('update.error'), {
+        description: error,
+      })
+    }
+
+    const handleDownloadProgress = (progress: { percent: number }) => {
+      toast.loading(t('update.downloading'), {
+        description: `${Math.round(progress.percent)}%`,
+      })
+    }
+
+    api.onUpdateAvailable?.(handleUpdateAvailable)
+    api.onUpdateNotAvailable?.(handleUpdateNotAvailable)
+    api.onUpdateDownloaded?.(handleUpdateDownloaded)
+    api.onUpdateError?.(handleUpdateError)
+    api.onDownloadProgress?.(handleDownloadProgress)
+  }, [api, t])
 
   const handleOpenFolder = async () => {
     if (!api) return
@@ -73,6 +138,9 @@ export function MenuBar() {
 
   const handleCheckUpdate = async () => {
     if (api) {
+      toast.info(t('update.checking'), {
+        description: t('update.checkingDesc'),
+      })
       await api.checkForUpdates()
     }
   }
@@ -286,7 +354,7 @@ export function MenuBar() {
           </DialogHeader>
           <div className="space-y-2 text-sm">
             <p>
-              <strong>{t('dialog.version')}:</strong> 2.1.0
+              <strong>{t('dialog.version')}:</strong> {appVersion}
             </p>
             <p className="text-muted-foreground">{t('dialog.aboutDesc')}</p>
           </div>

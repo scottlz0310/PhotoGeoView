@@ -13,7 +13,8 @@
       "mcp__github__get_branch",
       "mcp__github__update_branch",
       "mcp__github__list_commits",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "mcp__github__get_release_by_tag"
     ],
     "deny": [],
     "ask": []
