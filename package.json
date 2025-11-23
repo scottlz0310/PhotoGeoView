@@ -11,6 +11,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev",
+    "dev:wsl": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev --host",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit",
