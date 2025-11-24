@@ -46,6 +46,11 @@ const api: IpcApi = {
     ipcRenderer.on(IPC_CHANNELS.DOWNLOAD_PROGRESS, (_, progress) => callback(progress)),
   onUpdateError: (callback) =>
     ipcRenderer.on(IPC_CHANNELS.UPDATE_ERROR, (_, error) => callback(error)),
+
+  // Context Menu
+  showContextMenu: (request) => ipcRenderer.invoke(IPC_CHANNELS.SHOW_CONTEXT_MENU, request),
+  onMenuRefresh: (callback) => ipcRenderer.on('menu:refresh', () => callback()),
+  onMenuGoUp: (callback) => ipcRenderer.on('menu:go-up', () => callback()),
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

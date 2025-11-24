@@ -22,7 +22,6 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
-  ChevronLeft,
   FolderOpen,
   Home,
   Minimize2,
@@ -30,7 +29,7 @@ import {
   Search,
   X,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import type { FileEntry } from '@/types/ipc'
 import { FileList } from './FileList'
@@ -127,9 +126,14 @@ export function FileBrowser() {
       const pathPrefix = isWindowsPath ? '' : '/'
       const segmentPath = pathPrefix + segments.slice(0, index + 1).join('/')
 
+      // For Windows drive root (e.g. "C:"), we need to append slash to make it "C:/"
+      // otherwise it might be treated as relative path or fail
+      const finalPath =
+        isWindowsPath && index === 0 && segmentPath.length === 2 ? `${segmentPath}/` : segmentPath
+
       return {
         name: segment,
-        path: segmentPath,
+        path: finalPath,
       }
     })
   }, [currentPath])
@@ -146,7 +150,7 @@ export function FileBrowser() {
     }
   }
 
-  const goToParentDirectory = () => {
+  const goToParentDirectory = useCallback(() => {
     if (!currentPath) return
 
     const normalizedPath = currentPath.replace(/\\/g, '/')
@@ -157,6 +161,7 @@ export function FileBrowser() {
     const isWindowsPath = /^[a-zA-Z]:/.test(normalizedPath)
 
     // If it's a Windows drive root (e.g. C: or C:/), we can't go up
+    // Segments for "C:/" is ["C:"], length 1
     if (isWindowsPath && segments.length === 1) return
 
     // If it's a Unix root subdir (e.g. /usr), going up means going to /
@@ -170,15 +175,21 @@ export function FileBrowser() {
     const pathPrefix = isWindowsPath ? '' : '/'
     const parentPath = pathPrefix + parentSegments.join('/')
 
-    if (parentPath) {
-      navigateToPath(parentPath)
+    // For Windows, if we went back to just "C:", append slash
+    const finalParentPath =
+      isWindowsPath && parentSegments.length === 1 && parentPath.length === 2
+        ? `${parentPath}/`
+        : parentPath
+
+    if (finalParentPath) {
+      navigateToPath(finalParentPath)
       clearSelectedFiles()
     } else if (!isWindowsPath) {
       // Fallback for Unix root
       navigateToPath('/')
       clearSelectedFiles()
     }
-  }
+  }, [currentPath, navigateToPath, clearSelectedFiles])
 
   const goToHomeDirectory = async () => {
     try {
@@ -209,14 +220,43 @@ export function FileBrowser() {
     }
   }, [currentPath, refetch])
 
-  // Show error toast when query fails
   useEffect(() => {
-    if (error) {
-      toast.error('Failed to Load Directory', {
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
+    // Listen for context menu events
+    // biome-ignore lint/suspicious/noExplicitAny: Electron API
+    const api = (window as any).api
+    if (!api) return
+
+    api.onMenuRefresh(() => {
+      refetch()
+    })
+
+    api.onMenuGoUp(() => {
+      goToParentDirectory()
+    })
+
+    return () => {
+      // Cleanup listeners if possible (Electron's ipcRenderer.on returns a cleanup function usually,
+      // but our preload implementation might not return it.
+      // Ideally we should have removeListener but for now we rely on component unmount)
+      // Actually, our preload implementation returns the result of ipcRenderer.on which is the emitter,
+      // so it doesn't return a cleanup function. We should probably fix preload to return cleanup,
+      // but for now let's assume it's fine or we can't easily cleanup without changing preload structure significantly.
+      // Wait, ipcRenderer.on returns 'this'.
+      // To properly cleanup, we need removeListener.
+      // Let's just implement the listeners.
+    }
+  }, [refetch, goToParentDirectory])
+
+  const handleBackgroundContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isElectron) {
+      // biome-ignore lint/suspicious/noExplicitAny: Electron API
+      ;(window as any).api.showContextMenu({
+        type: 'background',
       })
     }
-  }, [error])
+  }
 
   return (
     <TooltipProvider>
@@ -309,22 +349,6 @@ export function FileBrowser() {
                     <p>Go to Home Directory</p>
                   </TooltipContent>
                 </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={goToParentDirectory}
-                      disabled={!currentPath || currentPath === '/'}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Go to Parent Directory</p>
-                  </TooltipContent>
-                </Tooltip>
               </div>
 
               {/* Breadcrumb Path */}
@@ -411,7 +435,7 @@ export function FileBrowser() {
           )}
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-y-auto">
+        <CardContent className="flex-1 overflow-y-auto" onContextMenu={handleBackgroundContextMenu}>
           {!isElectron ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.9] - 2025-11-24
+
+### Fixed
+- **Breadcrumb**: Fixed issue where Windows drive roots (e.g., `C:`) were not displaying or navigating correctly.
+- **Context Menu**: Added native context menu for files, folders, and background in the file browser.
+- **UI**: Removed redundant "Parent Folder" (`<`) button from navigation toolbar.
+
 ## [2.1.8] - 2025-11-22
 
 ### Added

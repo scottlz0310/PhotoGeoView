@@ -41,6 +41,9 @@ export const IPC_CHANNELS = {
   UPDATE_DOWNLOADED: 'updater:updateDownloaded',
   UPDATE_ERROR: 'updater:error',
   DOWNLOAD_PROGRESS: 'updater:downloadProgress',
+
+  // Context Menu
+  SHOW_CONTEXT_MENU: 'context-menu:show',
 } as const
 
 // ============================================================================
@@ -182,6 +185,14 @@ export const RotateImageResponseSchema = z.object({
 
 export type RotateImageResponse = z.infer<typeof RotateImageResponseSchema>
 
+// Context Menu Request
+export const ShowContextMenuRequestSchema = z.object({
+  type: z.enum(['file', 'folder', 'background']),
+  path: z.string().optional(),
+})
+
+export type ShowContextMenuRequest = z.infer<typeof ShowContextMenuRequestSchema>
+
 // ============================================================================
 // Result Type Pattern for Error Handling
 // ============================================================================
@@ -257,4 +268,9 @@ export interface IpcApi {
   // biome-ignore lint/suspicious/noExplicitAny: Event callback types
   onDownloadProgress: (callback: (progress: any) => void) => void
   onUpdateError: (callback: (error: string) => void) => void
+
+  // Context Menu
+  showContextMenu: (request: ShowContextMenuRequest) => Promise<Result<void>>
+  onMenuRefresh: (callback: () => void) => void
+  onMenuGoUp: (callback: () => void) => void
 }

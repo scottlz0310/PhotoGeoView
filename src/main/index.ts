@@ -8,6 +8,7 @@ import { IPC_CHANNELS } from '../types/ipc'
 // Store the file path passed as argument
 let initialFilePath: string | null = null
 
+import { showContextMenu } from './handlers/contextMenu'
 import { getDirectoryContents, getFileInfo, selectDirectory } from './handlers/fileSystem'
 import { generateThumbnail, readExif, rotateImage } from './handlers/imageProcessing'
 import { getStore, registerStoreHandlers } from './handlers/store'
@@ -152,6 +153,11 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.ROTATE_IMAGE, async (_event, request) => {
     return await rotateImage(request)
+  })
+
+  // Context Menu
+  ipcMain.handle(IPC_CHANNELS.SHOW_CONTEXT_MENU, async (_event, request) => {
+    return await showContextMenu(request)
   })
 
   // Window handlers

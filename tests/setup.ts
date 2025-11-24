@@ -21,6 +21,9 @@ Object.defineProperty(window, 'api', {
     close: vi.fn(),
     getStoreValue: vi.fn(),
     setStoreValue: vi.fn(),
+    showContextMenu: vi.fn(),
+    onMenuRefresh: vi.fn().mockImplementation(() => () => {}),
+    onMenuGoUp: vi.fn().mockImplementation(() => () => {}),
   },
   writable: true,
 })

@@ -66,6 +66,18 @@ export function FileItem({ file, onDoubleClick }: FileItemProps) {
           handleClick(e as unknown as React.MouseEvent)
         }
       }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        // biome-ignore lint/suspicious/noExplicitAny: Electron API
+        const api = (window as any).api
+        if (api) {
+          api.showContextMenu({
+            type: file.isDirectory ? 'folder' : 'file',
+            path: file.path,
+          })
+        }
+      }}
     >
       <div className="flex-shrink-0">{getIcon()}</div>
       <div className="flex-1 min-w-0">
