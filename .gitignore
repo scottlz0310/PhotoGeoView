@@ -227,3 +227,10 @@ yarn-error.log*
 .vscode/launch.json
 .vscode/settings.json
 .vscode/tasks.json
+
+# Auto-generated entries from templates
+**/data/
+**/logs/
+.docker/
+.dockerignore
+docker-compose.override.yml
