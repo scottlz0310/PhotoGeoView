@@ -80,3 +80,39 @@ jobs:
             dist/*.rpm
             dist/*.zip
           if-no-files-found: warn
+
+  build-windows-docker:
+    name: Build Windows Installer (Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t photogeoview-builder .
+
+      - name: Run build in Docker
+        run: docker run --name photogeoview-build photogeoview-builder
+
+      - name: Extract build artifacts
+        run: docker cp photogeoview-build:/app/dist ./dist
+
+      - name: Clean up container
+        run: docker rm photogeoview-build
+
+      - name: List output files
+        run: ls -R dist || echo "dist directory not found"
+
+      - name: Upload Windows Installer
+        uses: actions/upload-artifact@v5
+        with:
+          name: PhotoGeoView-windows-docker
+          path: |
+            dist/*.exe
+            dist/*.exe.blockmap
+          if-no-files-found: error
