@@ -131,6 +131,50 @@ PhotoGeoView/
 | `pnpm test:e2e` | Run E2E tests |
 | `pnpm package` | Package app for distribution |
 
+### Building for Windows
+
+**Important**: Building for Windows requires administrator privileges or Windows Developer Mode enabled.
+
+#### Option 1: Run as Administrator
+
+1. Open PowerShell as Administrator
+2. Navigate to project directory
+3. Run build command:
+
+```powershell
+pnpm package -- --win --publish never
+```
+
+#### Option 2: Enable Windows Developer Mode
+
+1. Go to **Settings** → **Privacy & Security** → **For developers**
+2. Turn on **Developer Mode**
+3. Build with normal PowerShell
+
+## 🔧 Troubleshooting
+
+### Sharp Module Error
+
+If you encounter the following error when launching the app:
+
+```
+Error: Could not load the "sharp" module using the win32-x64 runtime
+```
+
+This is caused by incomplete uninstallation leaving old files behind. Run the cleanup script before reinstalling:
+
+```powershell
+.\scripts\cleanup-photogeoview.ps1
+```
+
+To keep user data (settings, cache):
+
+```powershell
+.\scripts\cleanup-photogeoview.ps1 -KeepUserData
+```
+
+For more troubleshooting information, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
 ## 📖 Documentation
 
 ### Migration from PySide6

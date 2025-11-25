@@ -166,5 +166,8 @@
     "overrides": {
       "glob": ">=11.1.0"
     }
+  },
+  "optionalDependencies": {
+    "@img/sharp-libvips-win32-x64": "^1.2.4"
   }
 }
