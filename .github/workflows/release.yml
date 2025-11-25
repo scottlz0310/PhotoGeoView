@@ -29,7 +29,44 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build:
+  build-windows:
+    name: Build Windows Installer (Docker)
+    needs: create-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t photogeoview-builder .
+
+      - name: Run build in Docker
+        run: docker run --name photogeoview-build photogeoview-builder
+
+      - name: Extract build artifacts
+        run: docker cp photogeoview-build:/app/dist ./dist
+
+      - name: Clean up container
+        run: docker rm photogeoview-build
+
+      - name: List output files
+        run: ls -R dist || echo "dist directory not found"
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.exe
+            dist/*.exe.blockmap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-unix:
     name: Build on ${{ matrix.os }}
     needs: create-release
     runs-on: ${{ matrix.os }}
@@ -37,9 +74,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
-            platform: win
-            artifact_ext: exe
           - os: macos-latest
             platform: mac
             artifact_ext: dmg
@@ -69,9 +103,7 @@ jobs:
 
       - name: Package and Publish
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            pnpm package --win --config.mac.identity=null --publish always
-          elif [ "$RUNNER_OS" == "macOS" ]; then
+          if [ "$RUNNER_OS" == "macOS" ]; then
             pnpm package --mac --config.mac.identity=null --publish always
           else
             pnpm package --linux --config.mac.identity=null --publish always

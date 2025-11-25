@@ -35,6 +35,13 @@ coverage/
 builder-cache/
 $dir/
 
+# Docker build outputs
+dist-docker/
+docker-build-log.txt
+docker-wine-build.log
+build-cache/
+cache/
+
 # Auto-generated entries from templates
 !gradle/wrapper/gradle-wrapper.jar
 $RECYCLE.BIN/

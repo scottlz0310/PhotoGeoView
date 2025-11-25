@@ -10,11 +10,11 @@
   "rangeStrategy": "replace",
   "rebaseWhen": "behind-base-branch",
   "prConcurrentLimit": 8,
-  "prHourlyLimit": 2,
-  "lockFileMaintenance": {
-    "enabled": true
-  },
   "packageRules": [
+    {
+      "matchPackageNames": ["electron-builder"],
+      "allowedVersions": "<26 || >=26.1.0"
+    },
     {
       "description": "Automerge safe devDependency patches/minors once CI passes",
       "matchDepTypes": ["devDependencies"],
