@@ -234,3 +234,6 @@ yarn-error.log*
 .docker/
 .dockerignore
 docker-compose.override.yml
+
+# Auto-generated entries from templates
+.pyrightcache/
