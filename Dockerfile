@@ -1,7 +1,7 @@
 # Dockerfile for building Electron app with electron-builder
 # Cross-compile Windows installer on Linux using Wine
 
-FROM node:24-bookworm-slim
+FROM node:24.11.1-bookworm-slim
 
 # Install system dependencies (Wine for Windows builds)
 RUN dpkg --add-architecture i386 \
