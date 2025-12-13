@@ -1,112 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":semanticCommits", ":dependencyDashboard", "group:monorepos"],
-  "baseBranches": ["main"],
-  "timezone": "Asia/Tokyo",
-  "schedule": ["on monday"],
-  "dependencyDashboardTitle": "Renovate Dependency Dashboard (PhotoGeoView)",
-  "dependencyDashboardAutoclose": true,
-  "labels": ["dependencies", "renovate"],
-  "rangeStrategy": "replace",
-  "rebaseWhen": "behind-base-branch",
-  "prConcurrentLimit": 8,
-  "packageRules": [
-    {
-      "matchPackageNames": ["electron-builder"],
-      "allowedVersions": "<26 || >=26.1.0"
-    },
-    {
-      "description": "Automerge safe devDependency patches/minors once CI passes",
-      "matchDepTypes": ["devDependencies"],
-      "matchUpdateTypes": ["patch", "minor", "digest"],
-      "automerge": true,
-      "automergeType": "branch",
-      "platformAutomerge": true,
-      "requiredStatusChecks": [
-        "Lint & Type Check",
-        "Unit Tests & Coverage",
-        "Build (ubuntu-latest)",
-        "Build (windows-latest)",
-        "Build (macos-latest)"
-      ]
-    },
-    {
-      "description": "Surface runtime-sensitive Electron stack updates",
-      "matchPackagePatterns": [
-        "^electron$",
-        "^electron-builder$",
-        "^electron-vite$",
-        "^@electron-toolkit/"
-      ],
-      "matchUpdateTypes": ["minor", "major"],
-      "labels": ["dependencies", "needs-manual-verification"],
-      "stabilityDays": 5
-    },
-    {
-      "description": "Group Radix UI updates together",
-      "matchPackagePatterns": ["^@radix-ui/"],
-      "groupName": "radix-ui suite",
-      "groupSlug": "radix-ui",
-      "matchDepTypes": ["dependencies", "devDependencies"]
-    },
-    {
-      "description": "Group TanStack packages",
-      "matchPackagePatterns": ["^@tanstack/"],
-      "groupName": "tanstack",
-      "matchDepTypes": ["dependencies", "devDependencies"]
-    },
-    {
-      "description": "Group Testing Library + Vitest ecosystem",
-      "matchPackagePatterns": [
-        "^@testing-library/",
-        "^vitest$",
-        "^@vitest/",
-        "^@playwright/",
-        "^@types/jest"
-      ],
-      "groupName": "testing stack",
-      "matchDepTypes": ["devDependencies"],
-      "matchManagers": ["npm"]
-    },
-    {
-      "description": "Treat sharp, leaflets, and imaging libs cautiously",
-      "matchPackagePatterns": ["^sharp$", "^leaflet$", "^react-leaflet$", "^react-zoom-pan-pinch$"],
-      "labels": ["dependencies", "needs-manual-verification"],
-      "stabilityDays": 3
-    },
-    {
-      "description": "Keep tooling in sync",
-      "matchPackagePatterns": [
-        "^@biomejs/",
-        "^@playwright/",
-        "lefthook",
-        "^typescript$",
-        "^vite$",
-        "^vitest$",
-        "^@vitest/"
-      ],
-      "matchDepTypes": ["devDependencies"],
-      "groupName": "build-tooling",
-      "matchManagers": ["npm"],
-      "separateMinorPatch": true
-    }
-  ],
-  "regexManagers": [
-    {
-      "description": "Pin Node.js version used in GitHub Actions",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["node-version:\\s*['\"]?(?<currentValue>\\d+(?:\\.\\d+)*)['\"]?"],
-      "depNameTemplate": "node",
-      "datasourceTemplate": "node"
-    },
-    {
-      "description": "Keep pnpm CLI version in CI updated",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": [
-        "pnpm/action-setup@v[\\d.]+[\\s\\S]*?version:\\s+(?<currentValue>\\d+(?:\\.\\d+)*)"
-      ],
-      "datasourceTemplate": "npm",
-      "depNameTemplate": "pnpm"
-    }
+  "extends": [
+    "github>scottlz0310/renovate-config//presets/default",
+    "github>scottlz0310/renovate-config//presets/languages/nodejs",
+    "github>scottlz0310/renovate-config//presets/languages/typescript",
+    "github>scottlz0310/renovate-config//presets/languages/docker",
+    "github>scottlz0310/renovate-config//presets/options/automerge",
+    "github>scottlz0310/renovate-config//presets/options/security"
   ]
 }
