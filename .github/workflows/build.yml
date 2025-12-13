@@ -68,7 +68,7 @@ jobs:
           DEBUG: electron-builder
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: PhotoGeoView-${{ matrix.os }}
           path: |
@@ -109,7 +109,7 @@ jobs:
         run: ls -R dist || echo "dist directory not found"
 
       - name: Upload Windows Installer
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: PhotoGeoView-windows-docker
           path: |
