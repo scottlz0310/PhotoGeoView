@@ -4,6 +4,7 @@
 FROM node:24.11.1-bookworm-slim
 
 # Install system dependencies (Wine for Windows builds)
+# python3 is required by electron-builder 26+ for native module rebuilding
 RUN dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -13,6 +14,7 @@ RUN dpkg --add-architecture i386 \
     wine32 \
     wine64 \
     curl \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm (via corepack)
