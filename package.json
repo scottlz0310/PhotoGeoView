@@ -116,7 +116,7 @@
     "exifreader": "^4.32.0",
     "i18next": "^25.6.3",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.556.0",
+    "lucide-react": "^0.561.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
