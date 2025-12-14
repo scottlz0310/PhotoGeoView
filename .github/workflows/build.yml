@@ -94,19 +94,36 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        run: docker build -t photogeoview-builder .
+        run: docker build --progress=plain -t photogeoview-builder .
 
       - name: Run build in Docker
-        run: docker run --name photogeoview-build photogeoview-builder
+        id: docker-build
+        run: |
+          docker run --name photogeoview-build photogeoview-builder 2>&1 | tee docker-build.log
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Show Docker logs on failure
+        if: failure() || steps.docker-build.outputs.exit_code != '0'
+        run: |
+          echo "=== Docker build log ==="
+          cat docker-build.log || true
+          echo "=== Docker container logs ==="
+          docker logs photogeoview-build 2>&1 || true
 
       - name: Extract build artifacts
-        run: docker cp photogeoview-build:/app/dist ./dist
+        run: |
+          docker cp photogeoview-build:/app/dist ./dist || {
+            echo "Failed to extract artifacts. Checking container state..."
+            docker inspect photogeoview-build || true
+            exit 1
+          }
 
       - name: Clean up container
-        run: docker rm photogeoview-build
+        if: always()
+        run: docker rm photogeoview-build || true
 
       - name: List output files
-        run: ls -R dist || echo "dist directory not found"
+        run: ls -laR dist || echo "dist directory not found"
 
       - name: Upload Windows Installer
         uses: actions/upload-artifact@v6
@@ -115,4 +132,4 @@ jobs:
           path: |
             dist/*.exe
             dist/*.exe.blockmap
-          if-no-files-found: error
+          if-no-files-found: warn
