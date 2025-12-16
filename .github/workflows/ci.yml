@@ -85,7 +85,7 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Build instrumented application
-        run: VITE_COVERAGE=true pnpm build
+        run: pnpm run build:instrument
 
       - name: Run E2E tests (coverage)
         run: xvfb-run --auto-servernum -- pnpm test:e2e

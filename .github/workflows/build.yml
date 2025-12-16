@@ -51,6 +51,10 @@ jobs:
       - name: Build App
         run: pnpm build
 
+      - name: Instrument renderer for E2E coverage (optional)
+        if: env.CI_INSTRUMENT == 'true'
+        run: pnpm run build:instrument
+
       - name: Package App
         # Skip signing for now on macOS/Windows to avoid errors without certs
         # On macOS, identity=null disables code signing

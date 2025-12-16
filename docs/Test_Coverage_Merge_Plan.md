@@ -71,7 +71,7 @@ coverage: {
 
 
 ### 3) Playwright でのカバレッジ収集（E2E）
-- E2E テスト実行中に `window.__coverage__` を `page.evaluate` で取得し、`.nyc_output` にユニーク名で保存する仕組みを追加する。
+- E2E テスト実行中に `window.__coverage__` を `page.evaluate` で取得し、`.nyc_output` にユニーク名で保存する仕組みを追加する。今回は `vite-plugin-istanbul` による dev 時の instrumentation に加え、本番ビルド後に `nyc instrument` でレンダラー出力を post-build で instrument する方式（post-build instrumentation）を採用する。
 
 推奨：共通ヘルパ `tests/e2e/helpers/collect-coverage.ts` を作る（または各 spec の afterAll で保存）。
 
