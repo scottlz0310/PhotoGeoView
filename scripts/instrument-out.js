@@ -45,6 +45,33 @@ async function run() {
 
   try {
     await instrumentDir(outRenderer, tmpRenderer, instrumenter)
+
+    // Adjust index.html in instrumented output to allow 'unsafe-eval' for coverage code
+    const indexPath = path.join(tmpRenderer, 'index.html')
+    try {
+      let indexHtml = await fs.readFile(indexPath, 'utf8')
+      // Ensure CSP allows 'unsafe-eval' for script-src so coverage instrumentation can run
+      if (/Content-Security-Policy/.test(indexHtml)) {
+        indexHtml = indexHtml.replace(/(<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*content=")([^"]+)("[^>]*>)/i, (m, p1, p2, p3) => {
+          // Add unsafe-eval and unsafe-inline to script-src
+          const newContent = p2.replace(/script-src\s+'self'([^;]*)/, (m2, p21) => {
+            if (/unsafe-eval/.test(p21)) return m2
+            return `script-src 'self' 'unsafe-eval' 'unsafe-inline'${p21 || ''}`
+          })
+          return p1 + newContent + p3
+        })
+        await fs.writeFile(indexPath, indexHtml, 'utf8')
+        console.log('Patched existing CSP in instrumented index.html to allow unsafe-eval for coverage')
+      } else {
+        // insert CSP meta tag into <head>
+        indexHtml = indexHtml.replace(/<head(.*?)>/i, (m) => `${m}\n  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' 'unsafe-inline';" />`)
+        await fs.writeFile(indexPath, indexHtml, 'utf8')
+        console.log('Inserted CSP meta tag in instrumented index.html to allow unsafe-eval for coverage')
+      }
+    } catch (e) {
+      // ignore if index.html not found
+      console.warn('Could not patch index.html for CSP:', (e && e.message) || e)
+    }
   } catch (err) {
     console.error('Instrumentation error:', err)
     process.exit(1)

@@ -107,3 +107,15 @@ jobs:
           name: nyc-output
           path: .nyc_output/
           retention-days: 7
+
+      - name: Merge coverage and generate HTML
+        run: pnpm run coverage:merge:local
+        if: always()
+
+      - name: Upload combined coverage report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: coverage-combined
+          path: coverage/combined/
+          retention-days: 30

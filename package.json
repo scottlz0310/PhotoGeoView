@@ -26,6 +26,7 @@
     "test:e2e:coverage": "pnpm run build:instrument && pnpm test:e2e",
     "coverage:report:e2e": "npx nyc report --temp-dir .nyc_output --report-dir coverage/e2e --reporter=html",
     "coverage:merge": "npx nyc merge .nyc_output coverage/merged.json && npx nyc report --temp-dir coverage/merged.json --report-dir coverage/combined --reporter=html",
+    "coverage:merge:local": "node ./scripts/merge-report.js",
     "package": "electron-builder",
     "prepare": "lefthook install"
   },
