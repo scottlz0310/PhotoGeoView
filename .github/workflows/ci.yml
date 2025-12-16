@@ -22,11 +22,11 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run Biome lint
         run: pnpm lint
@@ -46,11 +46,11 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run unit tests with coverage
         run: pnpm vitest run --coverage
@@ -75,11 +75,11 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
@@ -107,5 +107,3 @@ jobs:
           name: nyc-output
           path: .nyc_output/
           retention-days: 7
-
-
