@@ -1,6 +1,7 @@
 import * as path from 'node:path'
 import type { ElectronApplication } from '@playwright/test'
 import { _electron as electron, expect, type Page, test } from '@playwright/test'
+import { saveRendererCoverage } from './helpers/collect-coverage'
 
 let electronApp: ElectronApplication
 let page: Page
@@ -25,6 +26,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  await saveRendererCoverage(page)
   await electronApp.close()
 })
 

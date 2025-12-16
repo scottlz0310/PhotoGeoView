@@ -1,0 +1,5 @@
+{
+  "reporter": ["lcov", "html", "text"],
+  "exclude": ["**/tests/**", "**/*.d.ts", "src/main/**", "src/preload/**"],
+  "extension": [".ts", ".tsx", ".js", ".jsx"]
+}
