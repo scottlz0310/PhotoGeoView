@@ -1,7 +1,27 @@
 #!/usr/bin/env node
-const { spawn } = require('node:child_process')
 const path = require('node:path')
 const fs = require('node:fs/promises')
+const { createInstrumenter } = require('istanbul-lib-instrument')
+
+async function instrumentDir(src, dest, instrumenter) {
+  await fs.mkdir(dest, { recursive: true })
+  const entries = await fs.readdir(src, { withFileTypes: true })
+  for (const entry of entries) {
+    const sPath = path.join(src, entry.name)
+    const dPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      await instrumentDir(sPath, dPath, instrumenter)
+    } else if (entry.isFile()) {
+      if (path.extname(entry.name) === '.js') {
+        const code = await fs.readFile(sPath, 'utf8')
+        const instrumented = instrumenter.instrumentSync(code, sPath)
+        await fs.writeFile(dPath, instrumented, 'utf8')
+      } else {
+        await fs.copyFile(sPath, dPath)
+      }
+    }
+  }
+}
 
 async function run() {
   const repoRoot = path.join(__dirname, '..')
@@ -20,33 +40,31 @@ async function run() {
     process.exit(2)
   }
 
-  const nycBin = path.join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'nyc.cmd' : 'nyc')
+  console.log('Instrumenting JS files using istanbul-lib-instrument...')
+  const instrumenter = createInstrumenter({ esModules: true, produceSourceMap: false })
 
-  console.log('Running nyc instrument...')
-  const inst = spawn(nycBin, ['instrument', outRenderer, tmpRenderer], { stdio: 'inherit' })
+  try {
+    await instrumentDir(outRenderer, tmpRenderer, instrumenter)
+  } catch (err) {
+    console.error('Instrumentation error:', err)
+    process.exit(1)
+  }
 
-  inst.on('close', async (code) => {
-    if (code !== 0) {
-      console.error('nyc instrument failed with code', code)
-      process.exit(code)
-    }
-
-    try {
-      // Backup original just in case
-      const backup = path.join(repoRoot, 'out-backup-renderer')
-      await fs.rm(backup, { recursive: true, force: true }).catch(() => {})
-      await fs.rename(outRenderer, backup)
-      await fs.rename(tmpRenderer, outRenderer)
-      // cleanup
-      await fs.rm(backup, { recursive: true, force: true }).catch(() => {})
-      await fs.rm(tmpRoot, { recursive: true, force: true }).catch(() => {})
-      console.log('Instrumentation complete: out/renderer replaced with instrumented files')
-      process.exit(0)
-    } catch (err) {
-      console.error('Failed to replace renderer with instrumented files:', err)
-      process.exit(3)
-    }
-  })
+  try {
+    // Backup original just in case
+    const backup = path.join(repoRoot, 'out-backup-renderer')
+    await fs.rm(backup, { recursive: true, force: true }).catch(() => {})
+    await fs.rename(outRenderer, backup)
+    await fs.rename(tmpRenderer, outRenderer)
+    // cleanup
+    await fs.rm(backup, { recursive: true, force: true }).catch(() => {})
+    await fs.rm(tmpRoot, { recursive: true, force: true }).catch(() => {})
+    console.log('Instrumentation complete: out/renderer replaced with instrumented files')
+    process.exit(0)
+  } catch (err) {
+    console.error('Failed to replace renderer with instrumented files:', err)
+    process.exit(3)
+  }
 }
 
 run().catch((err) => {
