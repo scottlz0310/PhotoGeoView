@@ -71,7 +71,8 @@ coverage: {
 
 
 ### 3) Playwright でのカバレッジ収集（E2E）
-- E2E テスト実行中に `window.__coverage__` を `page.evaluate` で取得し、`.nyc_output` にユニーク名で保存する仕組みを追加する。今回は `vite-plugin-istanbul` による dev 時の instrumentation に加え、本番ビルド後に `nyc instrument` でレンダラー出力を post-build で instrument する方式（post-build instrumentation）を採用する。
+- E2E テスト実行中に `window.__coverage__` を `page.evaluate` で取得し、`.nyc_output` にユニーク名で保存する仕組みを追加する。
+- **レンダラーはビルド時に `vite-plugin-istanbul` で instrument** し、E2E はその instrument 済みビルドを起動して計測する（post-build instrumentation は不要）。
 
 推奨：共通ヘルパ `tests/e2e/helpers/collect-coverage.ts` を作る（または各 spec の afterAll で保存）。
 
@@ -99,9 +100,8 @@ export async function saveRendererCoverage(page: any) {
 "scripts": {
   "test:unit": "vitest run --coverage",
   "test:e2e": "playwright test",
-  "test:e2e:coverage": "VITE_COVERAGE=true pnpm build && VITE_COVERAGE=true playwright test",
-  "coverage:report:e2e": "npx nyc report --temp-dir .nyc_output --report-dir coverage/e2e --reporter=html",
-  "coverage:merge": "npx nyc merge .nyc_output coverage/merged.json && npx nyc report --temp-dir coverage/merged.json --report-dir coverage/combined --reporter=html"
+  "test:e2e:coverage": "cross-env VITE_COVERAGE=true pnpm build && pnpm test:e2e",
+  "coverage:merge": "node ./scripts/merge-report.js"
 }
 ```
 
@@ -145,7 +145,7 @@ export async function saveRendererCoverage(page: any) {
    - `VITE_COVERAGE=true pnpm build`
    - `pnpm test:e2e`（または `pnpm test:e2e:coverage`）
 4. E2E 実行後に `.nyc_output` に JSON ファイルが生成されていることを確認
-5. `pnpm coverage:merge` を実行して `coverage/combined` を確認
+5. `pnpm coverage:merge` を実行してターミナルに Summary が出ることを確認（`coverage/merged.json` も生成）
 
 ---
 

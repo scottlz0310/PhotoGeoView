@@ -28,6 +28,7 @@ Thumbs.db
 coverage/
 .nyc_output/
 *-output.txt
+.pwtest-cache/
 
 # Misc
 *.tsbuildinfo
