@@ -170,10 +170,15 @@ function App() {
         </header>
 
         <main className="flex-1 overflow-hidden p-4">
-          <Group id="main-layout" key={layoutPreset} orientation="horizontal" className="h-full">
+          <Group
+            id="main-layout"
+            key={layoutPreset}
+            orientation="horizontal"
+            className="h-full gap-4"
+          >
             {/* Left Panel: File Browser and Thumbnail Grid */}
             <Panel id="left-panel" defaultSize={layoutSizes.left} minSize={15}>
-              <Group id="left-group" orientation="vertical" className="h-full">
+              <Group id="left-group" orientation="vertical" className="h-full gap-4">
                 {/* Top: File Browser */}
                 {panelVisibility.fileBrowser && (
                   <Panel
@@ -232,7 +237,7 @@ function App() {
 
             {/* Right Panel: Image Preview and Map */}
             <Panel id="right-panel" defaultSize={layoutSizes.right} minSize={30}>
-              <Group id="right-group" orientation="vertical" className="h-full">
+              <Group id="right-group" orientation="vertical" className="h-full gap-4">
                 {/* Top: Image Preview */}
                 {panelVisibility.imagePreview && (
                   <Panel
