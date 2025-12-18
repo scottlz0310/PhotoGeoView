@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import i18n from 'i18next'
 import { Camera } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import { Group, Panel, Separator } from 'react-resizable-panels'
 
 function App() {
   const {
@@ -170,68 +170,110 @@ function App() {
         </header>
 
         <main className="flex-1 overflow-hidden p-4">
-          <PanelGroup key={layoutPreset} direction="horizontal" className="h-full gap-4">
+          <Group
+            id="main-layout"
+            key={layoutPreset}
+            orientation="horizontal"
+            className="h-full gap-4"
+          >
             {/* Left Panel: File Browser and Thumbnail Grid */}
-            <Panel defaultSize={layoutSizes.left} minSize={15}>
-              <PanelGroup direction="vertical" className="gap-4">
+            <Panel id="left-panel" defaultSize={layoutSizes.left} minSize={15}>
+              <Group id="left-group" orientation="vertical" className="h-full gap-4">
                 {/* Top: File Browser */}
                 {panelVisibility.fileBrowser && (
-                  <>
-                    <Panel defaultSize={40} minSize={20} collapsible collapsedSize={5}>
-                      <FileBrowser />
-                    </Panel>
-                    <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
-                  </>
+                  <Panel
+                    id="file-browser-panel"
+                    defaultSize={40}
+                    minSize={20}
+                    collapsible
+                    collapsedSize={5}
+                  >
+                    <FileBrowser />
+                  </Panel>
+                )}
+
+                {/* Separator only if both panels are visible */}
+                {panelVisibility.fileBrowser && panelVisibility.thumbnailGrid && (
+                  <Separator
+                    id="left-separator"
+                    className="h-1 bg-border hover:bg-primary transition-colors"
+                  />
                 )}
 
                 {/* Bottom: Thumbnail Grid */}
                 {panelVisibility.thumbnailGrid && (
-                  <Panel defaultSize={60} minSize={30} collapsible collapsedSize={5}>
+                  <Panel
+                    id="thumbnail-panel"
+                    defaultSize={60}
+                    minSize={30}
+                    collapsible
+                    collapsedSize={5}
+                  >
                     <ThumbnailGrid files={files} currentPath={currentPath} />
                   </Panel>
                 )}
-              </PanelGroup>
+              </Group>
             </Panel>
 
-            <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+            <Separator
+              id="main-separator-1"
+              className="w-1 bg-border hover:bg-primary transition-colors"
+            />
 
             {/* Middle Panel: EXIF Info */}
             {panelVisibility.exifPanel && (
-              <>
-                <Panel defaultSize={20} minSize={15} collapsible collapsedSize={3}>
-                  <ExifPanel filePath={previewFile} />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
-              </>
+              <Panel id="exif-panel" defaultSize={20} minSize={15} collapsible collapsedSize={3}>
+                <ExifPanel filePath={previewFile} />
+              </Panel>
+            )}
+
+            {/* Separator between EXIF and Right panels, only if EXIF is visible */}
+            {panelVisibility.exifPanel && (
+              <Separator
+                id="main-separator-2"
+                className="w-1 bg-border hover:bg-primary transition-colors"
+              />
             )}
 
             {/* Right Panel: Image Preview and Map */}
-            <Panel defaultSize={layoutSizes.right} minSize={30}>
-              <PanelGroup direction="vertical" className="gap-4">
+            <Panel id="right-panel" defaultSize={layoutSizes.right} minSize={30}>
+              <Group id="right-group" orientation="vertical" className="h-full gap-4">
                 {/* Top: Image Preview */}
                 {panelVisibility.imagePreview && (
-                  <>
-                    <Panel
-                      defaultSize={layoutSizes.preview}
-                      minSize={20}
-                      collapsible
-                      collapsedSize={5}
-                    >
-                      <ImagePreview filePath={previewFile} />
-                    </Panel>
-                    <PanelResizeHandle className="h-1 bg-border hover:bg-primary transition-colors" />
-                  </>
+                  <Panel
+                    id="image-preview-panel"
+                    defaultSize={layoutSizes.preview}
+                    minSize={20}
+                    collapsible
+                    collapsedSize={5}
+                  >
+                    <ImagePreview filePath={previewFile} />
+                  </Panel>
+                )}
+
+                {/* Separator only if both panels are visible */}
+                {panelVisibility.imagePreview && panelVisibility.mapView && (
+                  <Separator
+                    id="right-separator"
+                    className="h-1 bg-border hover:bg-primary transition-colors"
+                  />
                 )}
 
                 {/* Bottom: Map */}
                 {panelVisibility.mapView && (
-                  <Panel defaultSize={layoutSizes.map} minSize={20} collapsible collapsedSize={5}>
+                  <Panel
+                    id="map-panel"
+                    defaultSize={layoutSizes.map}
+                    minSize={20}
+                    collapsible
+                    collapsedSize={5}
+                  >
                     <PhotoMap exifData={exifData} filePath={previewFile} />
                   </Panel>
                 )}
-              </PanelGroup>
+              </Group>
             </Panel>
-          </PanelGroup>
+          </Group>
         </main>
 
         <StatusBar filePath={previewFile} />
