@@ -366,7 +366,7 @@ describe('MenuBar', () => {
       renderWithProviders(<MenuBar />)
 
       // Simulate update available event
-      const updateInfo = { version: '2.2.0' }
+      const updateInfo = { version: '2.2.1' }
       mockUpdateCallbacks.onUpdateAvailable?.(updateInfo)
 
       await vi.waitFor(() => {

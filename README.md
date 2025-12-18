@@ -1,4 +1,4 @@
-# PhotoGeoView 2.2.0
+# PhotoGeoView 2.2.1
 
 > 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
 
@@ -18,10 +18,9 @@
 - 🔒 Type-safe development with TypeScript
 - 🤖 AI-friendly codebase for efficient development
 
-## 🆕 What's New in 2.2.0
+## 🆕 What's New in 2.2.1
 
-- **Windows Icons**: Fixed transparent ICO generation and taskbar/window icon display
-- **Packaging**: Auto-generates `build/icon.ico` from `assets/icon.png` during `pnpm package`
+- **Auto Update (Windows)**: Fixed update download link mismatch by aligning installer filename with `latest.yml`
 
 See [CHANGELOG.md](./CHANGELOG.md) for full details.
 
