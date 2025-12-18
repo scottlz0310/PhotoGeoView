@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import i18n from 'i18next'
 import { Camera } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
-import { Panel, Group, Separator } from 'react-resizable-panels'
+import { Group, Panel, Separator } from 'react-resizable-panels'
 
 function App() {
   const {

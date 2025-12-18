@@ -4,7 +4,9 @@ import type { Page } from '@playwright/test'
 
 export async function saveRendererCoverage(page: Page) {
   try {
-    const coverage = await page.evaluate(() => (globalThis as any).__coverage__)
+    const coverage = await page.evaluate(
+      () => (globalThis as unknown as { __coverage__?: unknown }).__coverage__
+    )
     if (!coverage) {
       if (process.env.VITE_COVERAGE === 'true') {
         // eslint-disable-next-line no-console
