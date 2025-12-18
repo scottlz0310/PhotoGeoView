@@ -1,6 +1,9 @@
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import istanbul from 'vite-plugin-istanbul'
+
+const isCoverage = process.env.VITE_COVERAGE === 'true'
 
 export default defineConfig({
   main: {
@@ -23,6 +26,7 @@ export default defineConfig({
   },
   renderer: {
     build: {
+      sourcemap: isCoverage,
       rollupOptions: {
         input: {
           index: resolve('src/renderer/index.html'),
@@ -36,6 +40,17 @@ export default defineConfig({
         '@': resolve('src'),
       },
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      istanbul({
+        include: 'src/renderer/src/**',
+        exclude: ['node_modules', 'tests/**', '**/*.test.*'],
+        extension: ['.ts', '.tsx', '.js', '.jsx'],
+        requireEnv: true,
+        forceBuildInstrument: true,
+        cypress: false,
+        checkProd: false,
+      }),
+    ],
   },
 })

@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
@@ -92,8 +92,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

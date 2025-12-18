@@ -2,19 +2,19 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'package.json'
-      - 'electron.vite.config.ts'
-      - 'src/**'
-      - '.github/workflows/build.yml'
+      - "package.json"
+      - "electron.vite.config.ts"
+      - "src/**"
+      - ".github/workflows/build.yml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'package.json'
-      - 'electron.vite.config.ts'
-      - 'src/**'
-      - '.github/workflows/build.yml'
+      - "package.json"
+      - "electron.vite.config.ts"
+      - "src/**"
+      - ".github/workflows/build.yml"
 
 permissions:
   contents: read
@@ -39,8 +39,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

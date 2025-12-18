@@ -22,8 +22,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -46,22 +46,14 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Run unit tests with coverage
         run: pnpm vitest run --coverage
-
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 30
 
   e2e:
     name: E2E Tests
@@ -75,8 +67,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '24.12.0'
-          cache: 'pnpm'
+          node-version: "24.12.0"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -84,11 +76,8 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
 
-      - name: Build application
-        run: pnpm build
-
-      - name: Run E2E tests
-        run: xvfb-run --auto-servernum -- pnpm test:e2e
+      - name: Run E2E tests (coverage)
+        run: xvfb-run --auto-servernum -- pnpm run test:e2e:coverage
         env:
           ELECTRON_DISABLE_SANDBOX: 1
 
@@ -100,4 +89,22 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      - name: Upload coverage data (.nyc_output)
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: nyc-output
+          path: .nyc_output/
+          retention-days: 7
 
+      - name: Merge coverage and print summary
+        run: pnpm run coverage:merge
+        if: always()
+
+      - name: Upload merged coverage json
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: coverage-merged
+          path: coverage/merged.json
+          retention-days: 30

@@ -11,9 +11,10 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     exclude: ['node_modules/**', 'out/**', 'dist/**', 'tests/e2e/**'],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/renderer/src/**/*.ts', 'src/renderer/src/**/*.tsx', 'src/types/**/*.ts'],
+      provider: 'istanbul',
+      reporter: ['text-summary', 'json'],
+      reportsDirectory: './coverage/vitest',
+      include: ['src/renderer/src/**/*.{ts,tsx}', 'src/types/**/*.ts'],
       exclude: [
         'node_modules/**',
         'out/**',
