@@ -199,8 +199,8 @@ importers:
         specifier: ^20.0.11
         version: 20.0.11
       istanbul-lib-instrument:
-        specifier: ^5.2.1
-        version: 5.2.1
+        specifier: ^6.0.3
+        version: 6.0.3
       nyc:
         specifier: ^17.1.0
         version: 17.1.0
@@ -2776,10 +2776,6 @@ packages:
 
   istanbul-lib-hook@3.0.0:
     resolution: {integrity: sha512-Pt/uge1Q9s+5VAZ+pCo16TYMWPBIl+oaNIjgLQxcX0itS6ueeaA+pEfThZpH8WxhFgCiEb8sAJY6MdUKgiIWaQ==}
-    engines: {node: '>=8'}
-
-  istanbul-lib-instrument@5.2.1:
-    resolution: {integrity: sha512-pzqtp31nLv/XFOzXGuvhCb8qhjmTVo5vjVk19XE4CRlSWz0KoeJ3bw9XsA7nOp9YBf4qHjwBxkDzKcME/J29Yg==}
     engines: {node: '>=8'}
 
   istanbul-lib-instrument@6.0.3:
@@ -6716,16 +6712,6 @@ snapshots:
   istanbul-lib-hook@3.0.0:
     dependencies:
       append-transform: 2.0.0
-
-  istanbul-lib-instrument@5.2.1:
-    dependencies:
-      '@babel/core': 7.28.5
-      '@babel/parser': 7.28.5
-      '@istanbuljs/schema': 0.1.3
-      istanbul-lib-coverage: 3.2.2
-      semver: 6.3.1
-    transitivePeerDependencies:
-      - supports-color
 
   istanbul-lib-instrument@6.0.3:
     dependencies:
