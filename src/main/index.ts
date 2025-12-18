@@ -51,9 +51,28 @@ protocol.registerSchemesAsPrivileged([
   },
 ])
 
+function getAppIconPath(): string | undefined {
+  const isWindows = process.platform === 'win32'
+  const fileName = isWindows ? 'icon.ico' : 'icon.png'
+
+  // Packaged app: icons are copied to the resources root via electron-builder extraResources.
+  const packagedPath = join(process.resourcesPath, fileName)
+  if (!is.dev && existsSync(packagedPath)) return packagedPath
+
+  // Dev: prefer build outputs (if generated), otherwise fall back to the source PNG.
+  const devBuildPath = join(process.cwd(), 'build', fileName)
+  if (existsSync(devBuildPath)) return devBuildPath
+
+  const devSourcePath = join(process.cwd(), 'assets', 'icon.png')
+  if (existsSync(devSourcePath)) return devSourcePath
+
+  return undefined
+}
+
 function createWindow(): void {
   const store = getStore()
   const bounds = store.get('windowBounds')
+  const icon = getAppIconPath()
 
   // Create splash window
   const splashWindow = new BrowserWindow({
@@ -63,6 +82,7 @@ function createWindow(): void {
     alwaysOnTop: true,
     transparent: true,
     resizable: false,
+    icon,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -84,6 +104,7 @@ function createWindow(): void {
     y: bounds.y,
     show: false,
     autoHideMenuBar: true,
+    icon,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -268,7 +289,7 @@ function registerLocalFileProtocol(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.photogeoview')
+  electronApp.setAppUserModelId('com.photogeoview.app')
 
   // Register custom protocol for local file access
   registerLocalFileProtocol()

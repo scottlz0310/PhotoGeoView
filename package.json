@@ -14,6 +14,7 @@
     "dev:wsl": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev --host",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "generate:icons": "node ./scripts/generate-icons.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -24,7 +25,7 @@
     "test:e2e": "cross-env PWTEST_CACHE_DIR=.pwtest-cache playwright test -c playwright.config.mjs",
     "test:e2e:coverage": "cross-env VITE_COVERAGE=true pnpm build && cross-env VITE_COVERAGE=true PWTEST_CACHE_DIR=.pwtest-cache pnpm test:e2e",
     "coverage:merge": "node ./scripts/merge-report.js",
-    "package": "electron-builder",
+    "package": "pnpm generate:icons && electron-builder",
     "prepare": "lefthook install"
   },
   "build": {
@@ -36,6 +37,16 @@
     "directories": {
       "output": "dist"
     },
+    "extraResources": [
+      {
+        "from": "build/icon.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "assets/icon.png",
+        "to": "icon.png"
+      }
+    ],
     "files": [
       "out/**/*"
     ],
@@ -76,7 +87,8 @@
       }
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "mac": {
       "target": "dmg"
@@ -161,6 +173,7 @@
     "happy-dom": "^20.0.11",
     "istanbul-lib-instrument": "^6.0.3",
     "nyc": "^17.1.0",
+    "png-to-ico": "^2.1.8",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
