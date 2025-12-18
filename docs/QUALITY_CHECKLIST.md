@@ -65,7 +65,7 @@
   - [x] electron: 33.4.11 → 39.2.1 (ASAR Integrity Bypass修正)
   - [x] electron-vite: 2.3.0 → 4.0.1 (esbuild脆弱性修正)
   - [x] vite: 6.4.1 → 7.2.2 (esbuild脆弱性修正)
-  - [x] vitest: 2.1.9 → 4.0.9 (esbuild脆弱性修正)
+  - [x] vitest: 2.1.9 → 4.0.16 (esbuild脆弱性修正)
 - [x] 自動依存関係更新 (Renovate導入済み)
 - [ ] CI/CDにセキュリティスキャン統合
 
