@@ -55,15 +55,24 @@ jobs:
         run: pnpm build
 
       - name: Package (Windows)
-        run: pnpm package --win --publish always
+        run: pnpm package --win --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
 
       - name: List output files
-        run: dir dist
+        run: Get-ChildItem -Path dist -Recurse
         shell: pwsh
         if: always()
+
+      - name: Upload artifacts (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ github.ref_name }}
+          path: |
+            dist/*.exe
+            dist/*.exe.blockmap
+            dist/latest.yml
+          if-no-files-found: error
 
   build-unix:
     name: Build on ${{ matrix.os }}
@@ -103,16 +112,26 @@ jobs:
       - name: Package and Publish
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac --config.mac.identity=null --publish always
+            pnpm package --mac --config.mac.identity=null --publish never
           else
-            pnpm package --linux --config.mac.identity=null --publish always
+            pnpm package --linux --config.mac.identity=null --publish never
           fi
         shell: bash
         env:
           DEBUG: electron-builder
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List output files
         run: ls -R dist || echo "dist directory not found"
         if: always()
+
+      - name: Upload artifacts (${{ matrix.platform }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-${{ github.ref_name }}
+          path: |
+            dist/*.dmg
+            dist/*.dmg.blockmap
+            dist/*.AppImage
+            dist/*.AppImage.blockmap
+            dist/*.yml
+          if-no-files-found: error
