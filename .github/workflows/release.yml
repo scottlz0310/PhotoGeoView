@@ -57,13 +57,25 @@ jobs:
       - name: Generate icons
         run: pnpm generate:icons
 
+      - name: Print tool versions
+        run: |
+          node --version
+          pnpm --version
+          pnpm exec electron-builder --version
+
       - name: Package (Windows)
         run: pnpm exec electron-builder --win nsis --publish never
         env:
-          DEBUG: electron-builder,electron-builder:*
+          DEBUG: electron-builder
+          ELECTRON_BUILDER_LOG_LEVEL: debug
 
       - name: List output files
         run: Get-ChildItem -Path dist -Recurse
+        shell: pwsh
+        if: always()
+
+      - name: Find installers (Windows)
+        run: Get-ChildItem -Path dist -Recurse -Filter *.exe
         shell: pwsh
         if: always()
 
@@ -115,6 +127,12 @@ jobs:
       - name: Generate icons
         run: pnpm generate:icons
 
+      - name: Print tool versions
+        run: |
+          node --version
+          pnpm --version
+          pnpm exec electron-builder --version
+
       - name: Package and Publish
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
@@ -124,10 +142,16 @@ jobs:
           fi
         shell: bash
         env:
-          DEBUG: electron-builder,electron-builder:*
+          DEBUG: electron-builder
+          ELECTRON_BUILDER_LOG_LEVEL: debug
 
       - name: List output files
         run: ls -R dist || echo "dist directory not found"
+        if: always()
+
+      - name: Find installers (Unix)
+        run: |
+          find dist -name "*.dmg" -o -name "*.AppImage"
         if: always()
 
       - name: Upload artifacts (${{ matrix.platform }})
