@@ -59,13 +59,13 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false" # macOS 未署名で作る
           DEBUG: electron-builder
         run: |
+          # Use -c option to override target from command line
           if [ "$RUNNER_OS" = "Windows" ]; then
-            # Explicitly specify nsis target to ensure installer is built
-            pnpm exec electron-builder --win nsis --publish never
+            pnpm exec electron-builder --win -c.win.target=nsis --publish never
           elif [ "$RUNNER_OS" = "macOS" ]; then
-            pnpm exec electron-builder --mac dmg --publish never
+            pnpm exec electron-builder --mac -c.mac.target=dmg --publish never
           else
-            pnpm exec electron-builder --linux AppImage --publish never
+            pnpm exec electron-builder --linux -c.linux.target=AppImage --publish never
           fi
 
       # 出力一覧を OS ごとに
