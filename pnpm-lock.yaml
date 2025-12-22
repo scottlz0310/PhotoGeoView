@@ -102,8 +102,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(leaflet@1.9.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-resizable-panels:
-        specifier: ^4.0.14
-        version: 4.0.14(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^4.0.15
+        version: 4.0.15(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-zoom-pan-pinch:
         specifier: ^3.7.0
         version: 3.7.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -3572,8 +3572,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.0.14:
-    resolution: {integrity: sha512-507w2CtETmntAIzU+eAnCjw1ogxIB7XRvVPPU/FkPAyg7hKRuU/o3Q2tRyUfKAPbPEQZB4QIBx+GynZBjo48eQ==}
+  react-resizable-panels@4.0.15:
+    resolution: {integrity: sha512-+ygM/EI2h4Qc/cl2fasQ2qwOgNfpQwXLNTU5PqhhPerliX+wnbf7ejcqran7lz3BqABzjddf0pJ3j3G/+A0v9Q==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -7602,7 +7602,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.7
 
-  react-resizable-panels@4.0.14(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-resizable-panels@4.0.15(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
