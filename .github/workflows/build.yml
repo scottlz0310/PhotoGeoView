@@ -57,13 +57,15 @@ jobs:
         shell: bash
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false" # macOS 未署名で作る
+          DEBUG: electron-builder
         run: |
           if [ "$RUNNER_OS" = "Windows" ]; then
-            pnpm exec electron-builder "--" "--win" "--publish" "never"
+            # Explicitly specify nsis target to ensure installer is built
+            pnpm exec electron-builder --win nsis --publish never
           elif [ "$RUNNER_OS" = "macOS" ]; then
-            pnpm exec electron-builder --mac --x64 --publish=never
+            pnpm exec electron-builder --mac dmg --publish never
           else
-            pnpm exec electron-builder --linux --publish=never
+            pnpm exec electron-builder --linux AppImage --publish never
           fi
 
       # 出力一覧を OS ごとに
