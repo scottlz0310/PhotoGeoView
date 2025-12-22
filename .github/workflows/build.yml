@@ -112,11 +112,31 @@ jobs:
       - name: Build Docker image
         run: docker build --progress=plain -t photogeoview-builder .
 
+      - name: Verify icon files exist before build
+        run: |
+          echo "Checking if icon files are in repository..."
+          ls -la build/icon.* || echo "ERROR: Icon files not found in repository!"
+
       - name: Run build in Docker
         id: docker-build
         run: |
+          echo "Starting Docker container build..."
           docker run --name photogeoview-build photogeoview-builder 2>&1 | tee docker-build.log
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "Docker container exited with code: $EXIT_CODE"
+
+          # Check if build succeeded
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "ERROR: Docker build failed with exit code $EXIT_CODE"
+            exit 1
+          fi
+
+      - name: Verify icon files in Docker container
+        if: always()
+        run: |
+          echo "Checking if icon files exist in Docker container..."
+          docker exec photogeoview-build ls -la /app/build/ || echo "Container not running or build/ not found"
 
       - name: Show Docker logs on failure
         if: failure() || steps.docker-build.outputs.exit_code != '0'
@@ -128,9 +148,12 @@ jobs:
 
       - name: Extract build artifacts
         run: |
+          echo "Extracting artifacts from Docker container..."
           docker cp photogeoview-build:/app/dist ./dist || {
             echo "Failed to extract artifacts. Checking container state..."
             docker inspect photogeoview-build || true
+            echo "Checking what's in the container..."
+            docker exec photogeoview-build ls -laR /app/ || docker run --rm photogeoview-builder ls -laR /app/ || true
             exit 1
           }
 

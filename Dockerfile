@@ -44,6 +44,12 @@ RUN mkdir -p node_modules/@img/sharp-win32-x64 node_modules/@img/sharp-libvips-w
 # Copy the rest of the source code
 COPY . .
 
+# Verify that icon files were copied (they should be in the repository)
+RUN ls -la build/icon.ico build/icon.png || { \
+    echo "ERROR: Icon files not found! They should be committed to the repository."; \
+    exit 1; \
+}
+
 # Build the application (typescript, etc.)
 RUN pnpm build
 
@@ -55,4 +61,5 @@ RUN pnpm build
 ENV USE_HARD_LINKS=false
 
 # Default command: package for Windows NSIS installer
-CMD ["npx", "electron-builder", "-w", "nsis", "--publish", "never"]
+# Use shell form to properly propagate exit codes
+CMD npx electron-builder -w nsis --publish never
