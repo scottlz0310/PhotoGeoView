@@ -2,19 +2,21 @@ name: Build
 
 on:
   push:
-    branches: [main]
-    paths:
-      - "package.json"
-      - "electron.vite.config.ts"
-      - "src/**"
-      - ".github/workflows/build.yml"
+    branches: [main, "claude/**"]
+    # DEBUG: Temporarily disabled paths filter to trigger on all pushes
+    # paths:
+    #   - "package.json"
+    #   - "electron.vite.config.ts"
+    #   - "src/**"
+    #   - ".github/workflows/build.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "package.json"
-      - "electron.vite.config.ts"
-      - "src/**"
-      - ".github/workflows/build.yml"
+    # DEBUG: Temporarily disabled paths filter to trigger on all PRs
+    # paths:
+    #   - "package.json"
+    #   - "electron.vite.config.ts"
+    #   - "src/**"
+    #   - ".github/workflows/build.yml"
 
 permissions:
   contents: read
