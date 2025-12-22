@@ -47,6 +47,9 @@ COPY . .
 # Build the application (typescript, etc.)
 RUN pnpm build
 
+# Generate icons (required for electron-builder)
+RUN pnpm generate:icons
+
 # Set environment to force Windows cross-compilation
 ENV USE_HARD_LINKS=false
 
