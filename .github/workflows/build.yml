@@ -56,14 +56,14 @@ jobs:
       - name: Package App
         # Skip signing for now on macOS/Windows to avoid errors without certs
         # On macOS, identity=null disables code signing
-        # Explicitly specify targets to generate installers (not just unpacked dir)
+        # Target types (nsis, dmg, AppImage) are configured in package.json build section
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            pnpm package --win nsis --config.mac.identity=null --publish never
+            pnpm package --win --config.mac.identity=null --publish never
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac dmg --config.mac.identity=null --publish never
+            pnpm package --mac --config.mac.identity=null --publish never
           else
-            pnpm package --linux AppImage --config.mac.identity=null --publish never
+            pnpm package --linux --config.mac.identity=null --publish never
           fi
         shell: bash
         env:
