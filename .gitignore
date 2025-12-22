@@ -177,6 +177,8 @@ artifacts/
 bower_components
 build/
 build/Release
+!build/icon.ico
+!build/icon.png
 buildNumber.properties
 coverage.xml
 cython_debug/
