@@ -25,7 +25,7 @@
     "test:e2e": "cross-env PWTEST_CACHE_DIR=.pwtest-cache playwright test -c playwright.config.mjs",
     "test:e2e:coverage": "cross-env VITE_COVERAGE=true pnpm build && cross-env VITE_COVERAGE=true PWTEST_CACHE_DIR=.pwtest-cache pnpm test:e2e",
     "coverage:merge": "node ./scripts/merge-report.js",
-    "package": "pnpm generate:icons && electron-builder",
+    "package": "electron-builder",
     "prepare": "lefthook install"
   },
   "build": {
