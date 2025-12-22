@@ -47,8 +47,9 @@ COPY . .
 # Build the application (typescript, etc.)
 RUN pnpm build
 
-# Generate icons (required for electron-builder)
-RUN pnpm generate:icons
+# Note: Icon files (build/icon.ico, build/icon.png) are already committed
+# to the repository and copied via COPY . ., so no need to regenerate them.
+# This avoids sharp native module build issues in Docker.
 
 # Set environment to force Windows cross-compilation
 ENV USE_HARD_LINKS=false

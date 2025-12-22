@@ -15,3 +15,5 @@ Thumbs.db
 .env.local
 cache
 build-cache
+# Note: Do NOT ignore build/ directory - it contains pre-built icon files
+# !build/
