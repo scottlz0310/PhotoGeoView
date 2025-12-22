@@ -54,25 +54,33 @@ jobs:
         run: pnpm build
 
       - name: Package App
-        # Skip signing for now on macOS/Windows to avoid errors without certs
-        # On macOS, identity=null disables code signing
-        # Target types (nsis, dmg, AppImage) are configured in package.json build section
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            pnpm package --win --config.mac.identity=null --publish never
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac --config.mac.identity=null --publish never
-          else
-            pnpm package --linux --config.mac.identity=null --publish never
-          fi
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEBUG: electron-builder
+          CSC_IDENTITY_AUTO_DISCOVERY: "false" # macOS 未署名で作る
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            pnpm exec electron-builder --win --x64 --publish=never
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            pnpm exec electron-builder --mac --x64 --publish=never
+          else
+            pnpm exec electron-builder --linux --publish=never
+          fi
 
-      - name: List build output
-        run: ls -laR dist || echo "dist directory not found"
+      # 出力一覧を OS ごとに
+      - name: List build output (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          Get-ChildItem -LiteralPath dist -Recurse -Force -ErrorAction SilentlyContinue
+          if (!(Test-Path -LiteralPath dist)) { Write-Host "dist directory not found" }
 
+      - name: List build output (*nix)
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          ls -lahR dist || echo "dist directory not found"
+
+      # アップロードは dist を継続利用
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
         with:
