@@ -48,6 +48,8 @@ const linuxPackager = new LinuxPackager(packager);
 const helper = new LinuxTargetHelper(linuxPackager);
 const target = new AppImageTarget("appimage", linuxPackager, helper, distDir);
 
+target.executable = "PhotoGeoView";
+
 console.log("building AppImage...");
 await target.build(unpackedDir, Arch.x64);
 console.log("AppImage done.");
