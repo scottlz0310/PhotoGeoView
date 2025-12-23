@@ -52,7 +52,10 @@
       }
     ],
     "files": [
-      "out/**/*"
+      "out/**/*",
+      "out/main/**/*",
+      "out/preload/**/*",
+      "out/renderer/**/*"
     ],
     "fileAssociations": [
       {
