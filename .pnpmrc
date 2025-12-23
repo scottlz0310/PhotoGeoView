@@ -3,3 +3,10 @@ auto-install-peers=true
 onlyBuiltDependencies[]=sharp
 onlyBuiltDependencies[]=exifreader
 ignore-scripts=false
+
+# Cross-platform support for native modules (sharp)
+supportedArchitectures.os=win32
+supportedArchitectures.os=darwin
+supportedArchitectures.os=linux
+supportedArchitectures.cpu=x64
+supportedArchitectures.cpu=arm64
