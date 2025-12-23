@@ -27,6 +27,7 @@
     "coverage:merge": "node ./scripts/merge-report.js",
     "package": "electron-builder",
     "package:appimage": "node ./scripts/build-appimage.mjs",
+    "package:mac": "node ./scripts/build-mac.mjs",
     "postinstall": "electron-builder install-app-deps",
     "prepare": "lefthook install"
   },

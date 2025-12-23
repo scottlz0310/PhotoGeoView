@@ -64,7 +64,7 @@ jobs:
           if [ "$RUNNER_OS" = "Windows" ]; then
             npx electron-builder --win --publish never
           elif [ "$RUNNER_OS" = "macOS" ]; then
-            npx electron-builder --mac --publish never
+            pnpm package:mac
           else
             pnpm package:appimage
           fi
