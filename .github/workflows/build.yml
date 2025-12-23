@@ -65,7 +65,7 @@ jobs:
           elif [ "$RUNNER_OS" = "macOS" ]; then
             npx electron-builder --mac --publish never
           else
-            npx electron-builder --linux --publish never
+            pnpm package:appimage
           fi
 
       # 出力一覧を OS ごとに

@@ -126,6 +126,7 @@ PhotoGeoView/
 | `pnpm test:ui` | Run tests with UI |
 | `pnpm test:e2e` | Run E2E tests |
 | `pnpm package` | Package app for distribution |
+| `pnpm package:appimage` | Build Linux AppImage (WSL/Ubuntu) |
 
 ### Building for Windows
 
@@ -148,6 +149,14 @@ pnpm package -- --win --publish never
 3. Build with normal PowerShell
 
 ## 🔧 Troubleshooting
+
+### Build Linux AppImage (WSL/Ubuntu)
+
+```bash
+pnpm package:appimage
+```
+
+This outputs `dist/*.AppImage`. On WSL, ensure `npm` points to Linux (`which npm` should be `/usr/bin/npm`) to avoid path issues.
 
 ### Sharp Module Error
 

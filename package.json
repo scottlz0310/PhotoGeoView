@@ -26,6 +26,7 @@
     "test:e2e:coverage": "cross-env VITE_COVERAGE=true pnpm build && cross-env VITE_COVERAGE=true PWTEST_CACHE_DIR=.pwtest-cache pnpm test:e2e",
     "coverage:merge": "node ./scripts/merge-report.js",
     "package": "electron-builder",
+    "package:appimage": "node ./scripts/build-appimage.mjs",
     "postinstall": "electron-builder install-app-deps",
     "prepare": "lefthook install"
   },
