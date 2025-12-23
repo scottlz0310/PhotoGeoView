@@ -32,8 +32,9 @@
   "build": {
     "appId": "com.photogeoview.app",
     "productName": "PhotoGeoView",
+    "asar": true,
     "asarUnpack": [
-      "node_modules/sharp/**/*"
+      "node_modules/sharp/**"
     ],
     "directories": {
       "output": "dist"
