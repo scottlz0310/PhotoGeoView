@@ -54,15 +54,19 @@ jobs:
       - name: Build App
         run: pnpm build
 
-      - name: Package App
+      - name: Package App (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          pnpm package -- --win nsis --publish never
+
+      - name: Package App (macOS/Linux)
+        if: ${{ runner.os != 'Windows' }}
         shell: bash
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false" # macOS 未署名で作る
         run: |
-          # Use the package scripts to keep packaging consistent per OS
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            pnpm package -- --win nsis --publish never
-          elif [ "$RUNNER_OS" = "macOS" ]; then
+          if [ "$RUNNER_OS" = "macOS" ]; then
             pnpm package:mac
           else
             pnpm package:appimage
