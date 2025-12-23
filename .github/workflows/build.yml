@@ -58,16 +58,25 @@ jobs:
         shell: bash
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false" # macOS 未署名で作る
-          DEBUG: electron-builder
         run: |
-          # Use npx to run electron-builder directly
+          # Use the package scripts to keep packaging consistent per OS
           if [ "$RUNNER_OS" = "Windows" ]; then
-            npx electron-builder --win --publish never
+            pnpm package -- --win nsis --publish never
           elif [ "$RUNNER_OS" = "macOS" ]; then
             pnpm package:mac
           else
             pnpm package:appimage
           fi
+
+      - name: Verify Windows installer
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem -LiteralPath dist -Filter *.exe -Recurse -ErrorAction SilentlyContinue
+          if (-not $installer) {
+            Write-Error "NSIS installer (.exe) not found in dist."
+            exit 1
+          }
 
       # 出力一覧を OS ごとに
       - name: List build output (Windows)
