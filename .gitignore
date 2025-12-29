@@ -240,3 +240,10 @@ docker-compose.override.yml
 
 # Auto-generated entries from templates
 .pyrightcache/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Archive (旧Electron版)
+archive/
