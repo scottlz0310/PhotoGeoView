@@ -83,9 +83,11 @@
 - [x] Lefthook動作確認 <!-- 2025-12-29完了 -->
   - [x] pre-commit, pre-pushフックの動作確認
   - [x] テストファイルがない場合のスキップ設定
-- [ ] CI/CD設定の更新
-  - [ ] GitHub ActionsワークフローをTauri向けに更新
-  - [ ] archiveディレクトリを除外
+- [x] CI/CD設定の更新 <!-- 2025-12-29完了 -->
+  - [x] ci.yml: Tauri対応、archive除外、テスト条件分岐
+  - [x] build.yml: Tauri Action使用、マルチプラットフォームビルド
+  - [x] release.yml: タグベースリリース、自動GitHub Release作成
+  - [x] archiveディレクトリを除外
 
 ---
 
