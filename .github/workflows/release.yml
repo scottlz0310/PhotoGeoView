@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,84 +14,56 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create-release.outputs.id }}
+      release_upload_url: ${{ steps.create-release.outputs.upload_url }}
+      release_body: "${{ steps.tag.outputs.message }}"
     steps:
       - uses: actions/checkout@v6
+
+      - name: Get version
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Get tag message
+        id: tag
+        run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+          echo "message<<EOF" >> $GITHUB_OUTPUT
+          echo "$(git tag -l --format='%(contents)' ${{ steps.get_version.outputs.version }})" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        id: create_release
+        id: create-release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: ${{ steps.get_version.outputs.version }}
+          body: ${{ steps.tag.outputs.message }}
           draft: false
           prerelease: false
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-windows:
-    name: Build Windows Installer
+  build-release:
+    name: Build & Release on ${{ matrix.settings.platform }}
     needs: create-release
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.26.2
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24.12.0"
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build App
-        run: pnpm build
-
-      - name: Package (Windows)
-        run: pnpm package --win --publish never
-
-      - name: List output files
-        run: dir dist
-        shell: pwsh
-        if: always()
-
-      - name: Upload to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            dist/*.exe
-            dist/*.exe.blockmap
-            dist/latest.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-unix:
-    name: Build on ${{ matrix.os }}
-    needs: create-release
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.settings.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-latest
-            platform: mac
-            artifact_ext: dmg
-          - os: ubuntu-latest
-            platform: linux
-            artifact_ext: AppImage
+        settings:
+          - platform: linux
+            os: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+          - platform: windows
+            os: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+          - platform: macos
+            os: macos-latest
+            rust_target: x86_64-apple-darwin
 
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
@@ -101,25 +74,42 @@ jobs:
           node-version: "24.12.0"
           cache: "pnpm"
 
-      - name: Install dependencies
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.settings.rust_target }}
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.settings.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build App
-        run: pnpm build
-
-      - name: Package and Publish
-        run: |
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            pnpm package --mac --config.mac.identity=null --publish always
-          else
-            pnpm package --linux --config.mac.identity=null --publish always
-          fi
-        shell: bash
+      - name: Build and Release
+        uses: tauri-apps/tauri-action@v0
         env:
-          DEBUG: electron-builder
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: List output files
-        run: ls -R dist || echo "dist directory not found"
-        if: always()
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "PhotoGeoView ${{ github.ref_name }}"
+          releaseBody: ${{ needs.create-release.outputs.release_body }}
+          releaseDraft: false
+          prerelease: false
+          tauriScript: pnpm tauri
