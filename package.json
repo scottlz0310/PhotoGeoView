@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "tauri dev",
     "dev:vite": "vite",
+    "dev:debug": "./scripts/dev-debug.sh",
     "build": "tsc && vite build && tauri build",
     "build:vite": "tsc && vite build",
     "preview": "vite preview",
@@ -22,6 +23,9 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:unit": "vitest run --coverage",
+    "logs:clean": "./scripts/logs-clean.sh",
+    "logs:view": "./scripts/logs-view.sh",
+    "logs:watch": "./scripts/logs-watch.sh",
     "prepare": "lefthook install",
     "tauri": "tauri"
   },
