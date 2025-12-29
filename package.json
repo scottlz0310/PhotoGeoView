@@ -1,8 +1,8 @@
 {
   "name": "photogeoview",
-  "version": "2.2.1",
-  "description": "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。",
-  "main": "./out/main/index.js",
+  "version": "3.0.0",
+  "description": "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Tauri・Rust・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。",
+  "type": "module",
   "author": "PhotoGeoView Team",
   "repository": {
     "type": "git",
@@ -10,11 +10,10 @@
   },
   "license": "MIT",
   "scripts": {
-    "dev": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev",
-    "dev:wsl": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev --host",
-    "build": "electron-vite build",
-    "preview": "electron-vite preview",
-    "generate:icons": "node ./scripts/generate-icons.mjs",
+    "dev": "tauri dev",
+    "build": "tsc && vite build && tauri build",
+    "build:vite": "tsc && vite build",
+    "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -22,11 +21,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:unit": "vitest run --coverage",
-    "test:e2e": "cross-env PWTEST_CACHE_DIR=.pwtest-cache playwright test -c playwright.config.mjs",
-    "test:e2e:coverage": "cross-env VITE_COVERAGE=true pnpm build && cross-env VITE_COVERAGE=true PWTEST_CACHE_DIR=.pwtest-cache pnpm test:e2e",
-    "coverage:merge": "node ./scripts/merge-report.js",
-    "package": "pnpm generate:icons && electron-builder",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "tauri": "tauri"
   },
   "build": {
     "appId": "com.photogeoview.app",
@@ -155,6 +151,8 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query-devtools": "^5.91.2",
+    "@tauri-apps/api": "^2.9.1",
+    "@tauri-apps/cli": "^2.9.6",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
