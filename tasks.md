@@ -11,32 +11,41 @@
 
 ### 1.1 プロジェクト初期化
 
-- [ ] Tauriプロジェクト初期化 (`pnpm create tauri-app`)
-- [ ] Git管理下に追加
-- [ ] package.jsonの基本設定
-  - [ ] プロジェクト名・バージョン更新
-  - [ ] スクリプト定義 (dev, build, test等)
-- [ ] Rust依存関係の追加 (Cargo.toml)
-  - [ ] serde, serde_json
-  - [ ] tauri-plugin-dialog
-  - [ ] tauri-plugin-fs (必要に応じて)
+- [x] Tauriプロジェクト初期化 (`pnpm create tauri-app`) <!-- 2025-12-29完了 -->
+- [x] Git管理下に追加 <!-- 2025-12-29完了 -->
+- [x] package.jsonの基本設定 <!-- 2025-12-29完了 -->
+  - [x] プロジェクト名・バージョン更新
+  - [x] スクリプト定義 (dev, build, test等)
+- [x] Rust依存関係の追加 (Cargo.toml) <!-- 2025-12-29完了 -->
+  - [x] serde, serde_json
+  - [x] tauri-plugin-dialog
+  - [x] tauri-plugin-fs
+  - [x] image, kamadak-exif (画像・EXIF処理)
+  - [x] thiserror, anyhow (エラーハンドリング)
+  - [x] rayon, tokio (並列・非同期処理)
 
 ### 1.2 開発環境セットアップ
 
-- [ ] TypeScript設定 (tsconfig.json)
-  - [ ] 厳格な型チェック有効化（claude.md 7.3参照）
+- [x] TypeScript設定 (tsconfig.json) <!-- 2025-12-29完了 -->
+  - [x] 厳格な型チェック有効化（claude.md 7.3準拠）
 - [ ] Biome設定 (biome.json) - Electron版から流用
 - [ ] Lefthook設定 (lefthook.yml) - Electron版から流用
   - **注**: 現在lefthookはアンインストール済み。プロジェクト設定と品質ルールが固まったら再インストール
-- [ ] .gitignore更新
-  - [ ] archiveディレクトリをテスト対象から除外
+- [x] .gitignore更新 <!-- 2025-12-29完了 -->
+  - [x] archiveディレクトリを除外
+  - [x] Tauriビルド出力を除外 (src-tauri/target/, src-tauri/gen/)
 - [ ] VSCode設定 (.vscode/settings.json)
   - [ ] Rust Analyzer
   - [ ] Biome拡張機能
 
 ### 1.3 基本的なUI構造
 
-- [ ] Vite + React + TypeScript環境確認
+- [x] Vite + React + TypeScript環境確認 <!-- 2025-12-29完了 -->
+  - [x] vite.config.ts作成
+  - [x] index.html作成
+  - [x] src/main.tsx, src/App.tsx作成
+  - [x] TypeScriptコンパイル成功確認
+  - [x] Viteビルド成功確認
 - [ ] TailwindCSS v4セットアップ
   - [ ] postcss.config.cjs
   - [ ] tailwind.config.js
@@ -48,9 +57,9 @@
 
 ### 1.4 Tauri Command通信テスト
 
-- [ ] Hello World Command実装 (Rust側)
-- [ ] フロントエンドからCommand呼び出しテスト
-- [ ] エラーハンドリング確認
+- [x] Hello World Command実装 (Rust側) <!-- 2025-12-29完了 -->
+- [x] フロントエンドからCommand呼び出しテスト <!-- 2025-12-29完了 -->
+- [x] エラーハンドリング確認 <!-- 2025-12-29完了 -->
 
 ### 1.5 品質ツールの再有効化
 

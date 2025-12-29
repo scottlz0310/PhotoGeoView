@@ -9,6 +9,10 @@ dist/
 out/
 *.log
 
+# TypeScript compiled output in src (we use .ts/.tsx only)
+src/**/*.js
+src/**/*.jsx
+
 # IDEs
 .vscode/*
 !.vscode/extensions.json

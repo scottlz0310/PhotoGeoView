@@ -1,34 +1,39 @@
-import { useState } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { Group, Panel, Separator } from 'react-resizable-panels'
+import { MapView } from './components/MapView'
+import { PhotoDetail } from './components/PhotoDetail'
+import { PhotoList } from './components/PhotoList'
 
 function App(): React.ReactElement {
-  const [greeting, setGreeting] = useState<string>('')
-
-  async function greet(): Promise<void> {
-    try {
-      const result = await invoke<string>('greet', { name: 'PhotoGeoView' })
-      setGreeting(result)
-    } catch (error) {
-      console.error('Failed to invoke command:', error)
-      setGreeting('Error: Failed to invoke command')
-    }
-  }
-
   return (
-    <div className="container">
-      <h1>PhotoGeoView v3.0.0</h1>
-      <p>Tauri + React + TypeScript</p>
+    <div className="flex h-screen w-full flex-col bg-background">
+      <header className="border-b border-border bg-card px-4 py-3">
+        <h1 className="text-xl font-bold text-card-foreground">
+          PhotoGeoView <span className="text-sm font-normal text-muted-foreground">v3.0.0</span>
+        </h1>
+      </header>
 
-      <div className="card">
-        <button type="button" onClick={() => void greet()}>
-          Greet
-        </button>
-        {greeting && <p>{greeting}</p>}
-      </div>
+      <main className="flex-1 overflow-hidden">
+        <Group orientation="horizontal">
+          {/* Left Panel - Photo List */}
+          <Panel defaultSize={20} minSize={15} maxSize={40}>
+            <PhotoList />
+          </Panel>
 
-      <p className="info">
-        📍 写真に埋め込まれた位置情報を地図上に見える化
-      </p>
+          <Separator className="w-1 bg-border transition-colors hover:bg-primary" />
+
+          {/* Center Panel - Map View */}
+          <Panel defaultSize={50} minSize={30}>
+            <MapView />
+          </Panel>
+
+          <Separator className="w-1 bg-border transition-colors hover:bg-primary" />
+
+          {/* Right Panel - Photo Detail */}
+          <Panel defaultSize={30} minSize={20} maxSize={50}>
+            <PhotoDetail />
+          </Panel>
+        </Group>
+      </main>
     </div>
   )
 }
