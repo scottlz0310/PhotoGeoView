@@ -89,6 +89,29 @@
   - [x] release.yml: タグベースリリース、自動GitHub Release作成
   - [x] archiveディレクトリを除外
 
+### 1.6 デバッグ環境と安定起動確認
+
+- [x] デバッグスクリプトの作成 <!-- 2025-12-30完了 -->
+  - [x] dev-debug.sh: claude.md 7.5準拠の6ステップ自動化
+  - [x] logs-clean.sh, logs-view.sh, logs-watch.sh: ログ管理
+  - [x] scripts/README.md: 包括的なドキュメント
+  - [x] package.json: dev:debug, logs:* コマンド追加
+- [x] Tauri開発依存関係のインストール (WSL) <!-- 2025-12-30完了 -->
+  - [x] libwebkit2gtk-4.1-dev (Ubuntu 24.10対応)
+  - [x] libgtk-3-dev, libssl-dev等
+- [x] tauri-plugin-log v2 API修正 <!-- 2025-12-30完了 -->
+  - [x] use tauri::Manager追加
+  - [x] ログターゲットをデフォルト設定に簡素化
+- [x] Git管理の最適化 <!-- 2025-12-30完了 -->
+  - [x] .claude/settings.local.jsonを.gitignoreに追加
+  - [x] ローカル設定ファイルの追跡を解除
+- [x] **Tauriアプリケーション安定起動確認** <!-- 2025-12-30完了 ✅ -->
+  - [x] pnpm dev でウィンドウ表示成功
+  - [x] ログシステム動作確認
+  - [x] WSLgでのGUI表示確認
+
+**Phase 1 完了** 🎉
+
 ---
 
 ## Phase 2: コア機能実装
