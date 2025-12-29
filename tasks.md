@@ -28,15 +28,22 @@
 
 - [x] TypeScript設定 (tsconfig.json) <!-- 2025-12-29完了 -->
   - [x] 厳格な型チェック有効化（claude.md 7.3準拠）
-- [ ] Biome設定 (biome.json) - Electron版から流用
-- [ ] Lefthook設定 (lefthook.yml) - Electron版から流用
-  - **注**: 現在lefthookはアンインストール済み。プロジェクト設定と品質ルールが固まったら再インストール
+- [x] Biome設定 (biome.json) <!-- 2025-12-29完了 -->
+  - [x] 厳格なリンティングルール設定 (noExplicitAny: error等)
+  - [x] ファイル命名規則の強制
+  - [x] Biome v2.3.10にマイグレーション
+- [x] Lefthook設定 (lefthook.yml) <!-- 2025-12-29完了 -->
+  - [x] pre-commitフック: Biome lint + typecheck
+  - [x] pre-pushフック: テストカバレッジ (テストファイル存在時のみ)
 - [x] .gitignore更新 <!-- 2025-12-29完了 -->
   - [x] archiveディレクトリを除外
   - [x] Tauriビルド出力を除外 (src-tauri/target/, src-tauri/gen/)
-- [ ] VSCode設定 (.vscode/settings.json)
-  - [ ] Rust Analyzer
-  - [ ] Biome拡張機能
+  - [x] TypeScriptコンパイル出力を除外 (src/**/*.js, src/**/*.jsx)
+- [x] VSCode設定 (.vscode/settings.json) <!-- 2025-12-29完了 -->
+  - [x] Rust Analyzer
+  - [x] Biome拡張機能
+  - [x] Tailwind CSS IntelliSense
+  - [x] 推奨拡張機能リスト (.vscode/extensions.json)
 
 ### 1.3 基本的なUI構造
 
@@ -45,15 +52,19 @@
   - [x] index.html作成
   - [x] src/main.tsx, src/App.tsx作成
   - [x] TypeScriptコンパイル成功確認
-  - [x] Viteビルド成功確認
-- [ ] TailwindCSS v4セットアップ
-  - [ ] postcss.config.cjs
-  - [ ] tailwind.config.js
-- [ ] 3ペインレイアウト実装
-  - [ ] 左パネル (PhotoList)
-  - [ ] 中央パネル (MapView)
-  - [ ] 右パネル (PhotoDetail)
-- [ ] react-resizable-panelsでリサイズ可能にする
+  - [x] Viteビルド成功確認 (211.34 kB, gzip: 66.84 kB)
+- [x] TailwindCSS v4セットアップ <!-- 2025-12-29完了 -->
+  - [x] postcss.config.cjs
+  - [x] tailwind.config.js
+  - [x] CSS変数ベースのテーマシステム (ライト/ダークモード対応)
+  - [x] shadcn/ui互換のカラートークン
+- [x] 3ペインレイアウト実装 <!-- 2025-12-29完了 -->
+  - [x] 左パネル (PhotoList)
+  - [x] 中央パネル (MapView)
+  - [x] 右パネル (PhotoDetail)
+- [x] react-resizable-panelsでリサイズ可能にする <!-- 2025-12-29完了 -->
+  - [x] リサイズ可能なセパレーター
+  - [x] 最小/最大サイズ設定
 
 ### 1.4 Tauri Command通信テスト
 
@@ -65,12 +76,13 @@
 
 **前提条件**: プロジェクト設定ファイル（tsconfig.json, Cargo.toml, vitest.config.ts等）が整備され、品質ルールが固まっていること
 
-- [ ] テスト設定の更新
-  - [ ] vitest.config.tsでarchiveディレクトリを除外
-  - [ ] テストが正常に実行できることを確認
-- [ ] Lefthook再インストール
-  - [ ] `pnpm lefthook install`
-  - [ ] pre-commit, pre-pushフックの動作確認
+- [x] テスト設定の更新 <!-- 2025-12-29完了 -->
+  - [x] vitest.config.tsでarchiveディレクトリを除外
+  - [x] カバレッジ設定 (v8プロバイダー)
+  - [x] テストファイル検出パターン設定
+- [x] Lefthook動作確認 <!-- 2025-12-29完了 -->
+  - [x] pre-commit, pre-pushフックの動作確認
+  - [x] テストファイルがない場合のスキップ設定
 - [ ] CI/CD設定の更新
   - [ ] GitHub ActionsワークフローをTauri向けに更新
   - [ ] archiveディレクトリを除外
