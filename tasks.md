@@ -24,9 +24,12 @@
 ### 1.2 開発環境セットアップ
 
 - [ ] TypeScript設定 (tsconfig.json)
+  - [ ] 厳格な型チェック有効化（claude.md 7.3参照）
 - [ ] Biome設定 (biome.json) - Electron版から流用
 - [ ] Lefthook設定 (lefthook.yml) - Electron版から流用
+  - **注**: 現在lefthookはアンインストール済み。プロジェクト設定と品質ルールが固まったら再インストール
 - [ ] .gitignore更新
+  - [ ] archiveディレクトリをテスト対象から除外
 - [ ] VSCode設定 (.vscode/settings.json)
   - [ ] Rust Analyzer
   - [ ] Biome拡張機能
@@ -48,6 +51,20 @@
 - [ ] Hello World Command実装 (Rust側)
 - [ ] フロントエンドからCommand呼び出しテスト
 - [ ] エラーハンドリング確認
+
+### 1.5 品質ツールの再有効化
+
+**前提条件**: プロジェクト設定ファイル（tsconfig.json, Cargo.toml, vitest.config.ts等）が整備され、品質ルールが固まっていること
+
+- [ ] テスト設定の更新
+  - [ ] vitest.config.tsでarchiveディレクトリを除外
+  - [ ] テストが正常に実行できることを確認
+- [ ] Lefthook再インストール
+  - [ ] `pnpm lefthook install`
+  - [ ] pre-commit, pre-pushフックの動作確認
+- [ ] CI/CD設定の更新
+  - [ ] GitHub ActionsワークフローをTauri向けに更新
+  - [ ] archiveディレクトリを除外
 
 ---
 
