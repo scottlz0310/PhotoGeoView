@@ -13,23 +13,31 @@ function App(): React.ReactElement {
       </header>
 
       <main className="flex-1 overflow-hidden">
-        <Group orientation="horizontal">
+        <Group id="main-panel-group" orientation="horizontal" className="flex h-full w-full">
           {/* Left Panel - Photo List */}
-          <Panel defaultSize={20} minSize={15} maxSize={40}>
+          <Panel id="photo-list-panel" defaultSize={25} minSize={15} maxSize={40}>
             <PhotoList />
           </Panel>
 
-          <Separator className="w-1 bg-border transition-colors hover:bg-primary" />
+          <Separator
+            id="separator-1"
+            className="w-2 bg-border hover:bg-primary"
+            style={{ cursor: 'col-resize' }}
+          />
 
           {/* Center Panel - Map View */}
-          <Panel defaultSize={50} minSize={30}>
+          <Panel id="map-view-panel" defaultSize={45} minSize={30}>
             <MapView />
           </Panel>
 
-          <Separator className="w-1 bg-border transition-colors hover:bg-primary" />
+          <Separator
+            id="separator-2"
+            className="w-2 bg-border hover:bg-primary"
+            style={{ cursor: 'col-resize' }}
+          />
 
           {/* Right Panel - Photo Detail */}
-          <Panel defaultSize={30} minSize={20} maxSize={50}>
+          <Panel id="photo-detail-panel" defaultSize={30} minSize={20} maxSize={50}>
             <PhotoDetail />
           </Panel>
         </Group>
