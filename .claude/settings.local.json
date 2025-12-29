@@ -15,7 +15,8 @@
       "mcp__github__list_commits",
       "Bash(gh:*)",
       "mcp__github__get_release_by_tag",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
