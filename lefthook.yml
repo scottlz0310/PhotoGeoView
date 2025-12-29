@@ -13,4 +13,5 @@ pre-push:
   parallel: true
   commands:
     test-with-coverage:
+      glob: "src/**/*.{test,spec}.{ts,tsx}"
       run: pnpm vitest run --coverage
