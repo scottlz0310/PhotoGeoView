@@ -1,5 +1,6 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
 import type React from 'react'
+import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { usePhotoStore } from '@/stores/photoStore'
 
 export function PhotoDetail(): React.ReactElement {
@@ -27,60 +28,131 @@ export function PhotoDetail(): React.ReactElement {
         <p className="truncate text-sm text-muted-foreground">{selectedPhoto.filename}</p>
       </div>
 
-      {/* 画像プレビュー */}
-      <div className="flex-1 overflow-auto bg-muted/20 p-4">
-        <div className="flex h-full items-center justify-center">
-          <img
-            src={imageUrl}
-            alt={selectedPhoto.filename}
-            className="max-h-full max-w-full object-contain"
-          />
-        </div>
+      {/* 画像プレビュー（ズーム・パン対応） */}
+      <div className="flex-1 overflow-hidden bg-muted/20" style={{ position: 'relative' }}>
+        <TransformWrapper
+          initialScale={1}
+          minScale={0.1}
+          maxScale={10}
+          wheel={{ step: 0.1 }}
+          panning={{ disabled: false }}
+          doubleClick={{ disabled: false }}
+          centerOnInit={true}
+        >
+          {() => (
+            <TransformComponent
+              wrapperStyle={{
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+              }}
+              contentStyle={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <img
+                src={imageUrl}
+                alt={selectedPhoto.filename}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  pointerEvents: 'none',
+                }}
+              />
+            </TransformComponent>
+          )}
+        </TransformWrapper>
       </div>
 
-      {/* EXIF情報 */}
-      <div className="border-t border-border px-4 py-3">
-        <h3 className="mb-2 text-sm font-semibold text-card-foreground">EXIF Information</h3>
+      {/* EXIF情報（1行コンパクト表示） */}
+      <div className="group relative border-t border-border px-3 py-2">
         {selectedPhoto.exif ? (
-          <div className="space-y-1 text-xs text-muted-foreground">
-            {/* GPS情報 */}
-            {selectedPhoto.exif.gps && (
-              <div>
-                <span className="font-medium">📍 GPS:</span> {selectedPhoto.exif.gps.lat.toFixed(6)}
-                , {selectedPhoto.exif.gps.lng.toFixed(6)}
-              </div>
-            )}
+          <>
+            {/* 通常表示: 1行 */}
+            <div className="flex items-center gap-3 overflow-hidden text-xs text-muted-foreground">
+              {/* GPS有無 */}
+              {selectedPhoto.exif.gps && <span title="GPS情報あり">📍</span>}
 
-            {/* 撮影日時 */}
-            {selectedPhoto.exif.datetime && (
-              <div>
-                <span className="font-medium">📅 Date:</span>{' '}
-                {new Date(selectedPhoto.exif.datetime).toLocaleString()}
-              </div>
-            )}
+              {/* 撮影日時 */}
+              {selectedPhoto.exif.datetime && (
+                <span className="flex items-center gap-1">
+                  <span>📅</span>
+                  <span className="truncate">
+                    {new Date(selectedPhoto.exif.datetime).toLocaleString()}
+                  </span>
+                </span>
+              )}
 
-            {/* カメラ情報 */}
-            {selectedPhoto.exif.camera && (
-              <div>
-                <span className="font-medium">📷 Camera:</span> {selectedPhoto.exif.camera.make}{' '}
-                {selectedPhoto.exif.camera.model}
-              </div>
-            )}
+              {/* 画像サイズ */}
+              {selectedPhoto.exif.width && selectedPhoto.exif.height && (
+                <span className="flex items-center gap-1">
+                  <span>📐</span>
+                  <span>
+                    {selectedPhoto.exif.width}×{selectedPhoto.exif.height}
+                  </span>
+                </span>
+              )}
 
-            {/* 画像サイズ */}
-            {selectedPhoto.exif.width && selectedPhoto.exif.height && (
-              <div>
-                <span className="font-medium">📐 Size:</span> {selectedPhoto.exif.width} x{' '}
-                {selectedPhoto.exif.height}
-              </div>
-            )}
+              {/* カメラ情報（省略表示） */}
+              {selectedPhoto.exif.camera && (
+                <span className="flex items-center gap-1 truncate">
+                  <span>📷</span>
+                  <span className="truncate">{selectedPhoto.exif.camera.model}</span>
+                </span>
+              )}
 
-            {/* 撮影設定 */}
-            {(selectedPhoto.exif.iso ||
-              selectedPhoto.exif.aperture ||
-              selectedPhoto.exif.shutterSpeed ||
-              selectedPhoto.exif.focalLength) && (
-              <div className="mt-2 border-t border-border pt-2">
+              {/* その他の情報（省略） */}
+              {(selectedPhoto.exif.iso ||
+                selectedPhoto.exif.aperture ||
+                selectedPhoto.exif.shutterSpeed ||
+                selectedPhoto.exif.focalLength) && (
+                <span className="ml-auto text-muted-foreground/60">···</span>
+              )}
+            </div>
+
+            {/* ホバー時の詳細表示 */}
+            <div className="absolute bottom-full left-0 right-0 mb-1 hidden rounded border border-border bg-card p-3 shadow-lg group-hover:block">
+              <div className="space-y-1 text-xs">
+                {/* GPS情報 */}
+                {selectedPhoto.exif.gps && (
+                  <div>
+                    <span className="font-medium">📍 GPS:</span>{' '}
+                    {selectedPhoto.exif.gps.lat.toFixed(6)}, {selectedPhoto.exif.gps.lng.toFixed(6)}
+                  </div>
+                )}
+
+                {/* 撮影日時 */}
+                {selectedPhoto.exif.datetime && (
+                  <div>
+                    <span className="font-medium">📅 Date:</span>{' '}
+                    {new Date(selectedPhoto.exif.datetime).toLocaleString()}
+                  </div>
+                )}
+
+                {/* カメラ情報 */}
+                {selectedPhoto.exif.camera && (
+                  <div>
+                    <span className="font-medium">📷 Camera:</span> {selectedPhoto.exif.camera.make}{' '}
+                    {selectedPhoto.exif.camera.model}
+                  </div>
+                )}
+
+                {/* 画像サイズ */}
+                {selectedPhoto.exif.width && selectedPhoto.exif.height && (
+                  <div>
+                    <span className="font-medium">📐 Size:</span> {selectedPhoto.exif.width} ×{' '}
+                    {selectedPhoto.exif.height}
+                  </div>
+                )}
+
+                {/* 撮影設定 */}
                 {selectedPhoto.exif.iso && (
                   <div>
                     <span className="font-medium">ISO:</span> {selectedPhoto.exif.iso}
@@ -105,10 +177,10 @@ export function PhotoDetail(): React.ReactElement {
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          </>
         ) : (
-          <div className="text-xs text-muted-foreground">No EXIF data available</div>
+          <div className="text-xs text-muted-foreground">No EXIF data</div>
         )}
       </div>
     </div>

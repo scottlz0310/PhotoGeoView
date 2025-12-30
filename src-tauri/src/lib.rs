@@ -83,13 +83,26 @@ async fn get_photo_data(path: String) -> Result<PhotoData, String> {
     // EXIF情報を読み取る
     let exif = commands::read_exif(&path).ok();
 
+    // サムネイルを生成（失敗しても続行）
+    log::info!("サムネイル生成を開始: {}", path);
+    let thumbnail = match commands::generate_thumbnail(&path) {
+        Ok(thumb) => {
+            log::info!("サムネイル生成成功: 長さ={}", thumb.len());
+            Some(thumb)
+        }
+        Err(e) => {
+            log::error!("サムネイル生成失敗: {}", e);
+            None
+        }
+    };
+
     Ok(PhotoData {
         path: path.clone(),
         filename,
         file_size,
         modified_time,
         exif,
-        thumbnail: None, // サムネイルは後で生成
+        thumbnail,
     })
 }
 
@@ -98,12 +111,29 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
+            // ログファイルのクリーンアップ（起動時）
+            if let Ok(log_dir) = app.path().app_log_dir() {
+                if let Ok(entries) = std::fs::read_dir(&log_dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.extension().and_then(|s| s.to_str()) == Some("log") {
+                            // 古いログファイルを削除
+                            let _ = std::fs::remove_file(&path);
+                        }
+                    }
+                }
+            }
+
             #[cfg(debug_assertions)]
             {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Debug)
+                        .targets([
+                            tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir { file_name: Some("photogeoview".into()) }),
+                        ])
                         .build(),
                 )?;
 
@@ -118,6 +148,9 @@ pub fn run() {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
                         .level(log::LevelFilter::Info)
+                        .targets([
+                            tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir { file_name: Some("photogeoview".into()) }),
+                        ])
                         .build(),
                 )?;
             }

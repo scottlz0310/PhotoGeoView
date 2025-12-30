@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 import type { PhotoData, PhotoFilter } from '@/types/photo'
+import { useSettingsStore } from './settingsStore'
+
+export type ViewMode = 'list' | 'detail' | 'grid'
 
 interface PhotoState {
   // 写真データ
@@ -8,6 +11,9 @@ interface PhotoState {
 
   // フィルター
   filter: PhotoFilter
+
+  // ビューモード
+  viewMode: ViewMode
 
   // アクション
   addPhotos: (photos: PhotoData[]) => void
@@ -22,6 +28,11 @@ interface PhotoState {
 
   // フィルター済み写真取得
   getFilteredPhotos: () => PhotoData[]
+
+  // ビューモード操作
+  setViewMode: (mode: ViewMode) => void
+  // 設定から初期ビューモードを読み込む
+  initializeViewMode: () => void
 }
 
 const defaultFilter: PhotoFilter = {
@@ -35,6 +46,7 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
   photos: [],
   selectedPhoto: null,
   filter: defaultFilter,
+  viewMode: 'list',
 
   // 写真追加（重複なし）
   addPhotos: (newPhotos) =>
@@ -113,5 +125,23 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
 
       return true
     })
+  },
+
+  // ビューモード変更（設定にも保存）
+  setViewMode: (mode) => {
+    set({ viewMode: mode })
+    // 設定に保存
+    const settingsStore = useSettingsStore.getState()
+    settingsStore.updateSettings({
+      display: { ...settingsStore.settings.display, defaultViewMode: mode },
+    })
+  },
+
+  // 設定から初期ビューモードを読み込む
+  initializeViewMode: () => {
+    const settingsStore = useSettingsStore.getState()
+    if (settingsStore.isLoaded) {
+      set({ viewMode: settingsStore.settings.display.defaultViewMode })
+    }
   },
 }))

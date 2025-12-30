@@ -182,12 +182,18 @@
 
 - [x] 写真拡大表示コンポーネント (PhotoDetail) <!-- 2025-12-30完了 -->
   - [x] 画像ロード・表示
-  - [ ] ズーム・パン操作 (react-zoom-pan-pinch) <!-- Phase 3に移動 -->
+    - [x] Tauri Asset Protocolで画像アクセス
+    - [x] convertFileSrc()でローカルファイルパス変換
+  - [x] ズーム・パン操作 (react-zoom-pan-pinch) <!-- 2025-12-30完了 -->
+    - [x] マウスホイールでズーム
+    - [x] 左ドラッグでパン
+    - [x] ダブルクリックで拡大
 - [x] EXIF情報表示 <!-- 2025-12-30完了 -->
   - [x] GPS座標
   - [x] 撮影日時
   - [x] カメラ情報
   - [x] その他メタデータ (ISO, 絞り, シャッター速度, 焦点距離)
+  - [x] コンパクト1行表示（ホバーで詳細） <!-- 2025-12-30完了 -->
 
 **Phase 2 主要機能完了** 🎉 <!-- 2025-12-30完了 -->
 - 写真の読み込み、EXIF情報取得、地図表示の基本機能が動作確認済み
@@ -230,18 +236,33 @@
 
 ### 3.4 設定管理
 
-- [ ] 設定データ構造定義
-  ```typescript
-  interface AppSettings {
-    language: 'en' | 'ja';
-    theme: 'light' | 'dark' | 'system';
-    defaultMapTile: 'osm' | 'google' | 'satellite';
-  }
-  ```
-- [ ] 設定の永続化 (Rust側)
-  - [ ] 設定ファイル読み書き (JSON形式)
-  - [ ] Tauri Command: `get_settings()`, `save_settings()`
-- [ ] 設定ダイアログ実装
+- [x] 設定データ構造定義 <!-- 2025-12-30完了 -->
+  - [x] src/types/settings.ts作成
+  - [x] DisplaySettings (デフォルトビューモード、グリッド列数、EXIF表示)
+  - [x] MapSettings (ズームレベル、タイルレイヤー、クラスタリング)
+  - [x] UISettings (テーマ、言語、サイドバー幅)
+  - [x] デフォルト設定定義
+- [x] 設定の永続化 (tauri-plugin-store使用) <!-- 2025-12-30完了 -->
+  - [x] tauri-plugin-store v2セットアップ
+  - [x] 設定ファイル自動保存 (settings.json)
+  - [x] Zustand Storeで状態管理 (src/stores/settingsStore.ts)
+  - [x] 起動時の設定読み込み
+  - [x] 設定更新時の自動保存
+  - [x] Tauri 2.x capabilitiesシステムで権限設定
+- [x] 設定ダイアログ実装 <!-- 2025-12-30完了 -->
+  - [x] Settings.tsxコンポーネント作成
+  - [x] 表示設定セクション (ビューモード、グリッド列数、EXIF表示)
+  - [x] 地図設定セクション (ズーム、タイルレイヤー、クラスタリング)
+  - [x] UI設定セクション (テーマ、言語)
+  - [x] 保存/キャンセル/リセット機能
+  - [x] アクセシビリティ対応 (白半透明オーバーレイ + ブラー効果) <!-- 2025-12-30完了 -->
+- [x] photoStoreとの統合 <!-- 2025-12-30完了 -->
+  - [x] ビューモード変更時に設定に自動保存
+  - [x] 起動時に設定からビューモード復元
+
+**Phase 3.4 設定管理完了** 🎉 <!-- 2025-12-30完了 -->
+- 設定の永続化、UI、統合がすべて完了
+- 設定ファイル保存先: `%LOCALAPPDATA%\com.tauri.dev\photogeoview\settings.json`
 
 ---
 

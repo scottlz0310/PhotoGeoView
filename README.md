@@ -1,204 +1,225 @@
-# PhotoGeoView 2.2.1
+# PhotoGeoView v3.0.0 (Tauri版)
 
-> 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Electron・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
+> 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Tauri・Rust・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
 
-[![CI](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/scottlz0310/PhotoGeoView/actions/workflows/ci.yml)
-[![Electron](https://img.shields.io/badge/Electron-33+-blue.svg)](https://www.electronjs.org/)
+⚠️ **注意**: このブランチ (`tauri-rewrite`) はTauriへの移行版です。安定版のElectron版は[mainブランチ](https://github.com/scottlz0310/PhotoGeoView/tree/main)をご覧ください。
+
+[![Tauri](https://img.shields.io/badge/Tauri-2.9+-blue.svg)](https://tauri.app/)
+[![Rust](https://img.shields.io/badge/Rust-1.77+-orange.svg)](https://www.rust-lang.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF.svg)](https://vite.dev/)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF.svg)](https://vite.dev/)
 
 ## ✨ Features
 
-- 📸 Modern photo viewing and management
-- 🗺️ Interactive maps with GPS data visualization
-- 🎨 Beautiful, responsive UI with layout presets
-- 🌐 Internationalization (English / 日本語)
-- ⚡ Lightning-fast performance with Vite
-- 🔒 Type-safe development with TypeScript
-- 🤖 AI-friendly codebase for efficient development
+- 📸 写真の読み込みと表示（単一/複数ファイル対応）
+- 📍 EXIF情報の読み取り（GPS座標、撮影日時、カメラ情報等）
+- 🗺️ OpenStreetMapによる地図表示とマーカー配置
+- 🎨 3つのビューモード（リスト/詳細/グリッド表示）
+- ⚡ Rustによる高速なEXIF処理
+- 🔒 型安全な開発（TypeScript + Rust）
+- 🪟 軽量・高速なデスクトップアプリ（Tauri）
 
-## 🆕 What's New in 2.2.1
+## 🚧 開発状況
 
-- **Auto Update (Windows)**: Fixed update download link mismatch by aligning installer filename with `latest.yml`
+**Phase 2 完了** (2025-12-30)
+- ✅ ファイル選択機能
+- ✅ EXIF読み取り機能（Rust）
+- ✅ 状態管理（Zustand）
+- ✅ 地図表示（React Leaflet）
+- ✅ 写真詳細表示
+- ✅ ビューモード切り替え（リスト/詳細/グリッド）
 
-See [CHANGELOG.md](./CHANGELOG.md) for full details.
+**次のフェーズ**: サムネイル生成、国際化、テーマ、設定管理
 
 ## 🚀 Tech Stack
 
+### Backend (Rust)
+- **Tauri 2.9+** - 軽量・高速なデスクトップフレームワーク
+- **kamadak-exif 0.5** - EXIF読み取り
+- **image 0.25** - 画像処理（サムネイル生成）
+- **serde** - シリアライゼーション
+- **thiserror/anyhow** - エラーハンドリング
+- **chrono** - 日時処理
+
 ### Frontend
-- **Electron 33+** - Cross-platform desktop framework
-- **React 19** - Latest React with improved performance
-- **TypeScript 5.7+** - Type-safe development
-- **Vite 6** - Next-generation build tool (10x faster than Webpack)
-- **React Leaflet 4** - Interactive maps
-- **TailwindCSS v4** - Utility-first CSS
-- **shadcn/ui** - Beautiful React components
-- **Zustand** - Lightweight state management
-- **TanStack Query** - Data fetching & caching
-- **i18next** - Internationalization
-
-### Core Features
-
-- **sharp** - High-performance image processing
-- **exifreader** - EXIF metadata extraction
+- **React 19** - 最新React
+- **TypeScript 5.7+** - 型安全な開発
+- **Vite 7** - 次世代ビルドツール
+- **React Leaflet 5** - インタラクティブマップ
+- **TailwindCSS v4** - ユーティリティファーストCSS
+- **Zustand** - 軽量状態管理
 
 ### Development Tools
-
-- **electron-vite** - Vite integration for Electron
-- **Biome** - Fast linter & formatter (25x faster than ESLint/Prettier)
-- **Vitest** - Fast unit testing (5x faster than Jest)
-- **Playwright** - E2E testing
+- **Biome** - 高速リンター＆フォーマッター
+- **Lefthook** - Gitフック管理
+- **Vitest** - 高速ユニットテスト（予定）
 
 ## 📥 Download
 
-Latest release is available on [GitHub Releases](https://github.com/scottlz0310/PhotoGeoView/releases).
+⚠️ **開発中**: Tauri版は現在開発中です。ビルド済みバイナリは後日公開予定。
 
-- **Windows**: Download `.exe` installer
-- **macOS**: Download `.dmg` image
-- **Linux**: Download `.AppImage`
+安定版が必要な場合は、[Electron版（mainブランチ）](https://github.com/scottlz0310/PhotoGeoView/releases)をご利用ください。
 
 ## 📦 Development Setup
 
+### Prerequisites
+- **Node.js 20+** / **pnpm 9+**
+- **Rust 1.77+** (rustup推奨)
+- **Tauri Prerequisites**: [公式ドキュメント](https://tauri.app/start/prerequisites/)参照
+  - Windows: MSVC, WebView2
+  - macOS: Xcode Command Line Tools
+  - Linux: webkit2gtk, その他ライブラリ
+
+### セットアップ
+
 ```bash
-# Install dependencies
+# 依存関係のインストール
 pnpm install
 
-# Start development
+# 開発サーバー起動
 pnpm dev
 
-# Build for production
-pnpm build
+# フロントエンドのみビルド
+pnpm run build
 
-# Run tests
-pnpm test
+# 本番用ビルド（インストーラー作成）
+pnpm tauri build
 
-# Lint & format
-pnpm lint
-pnpm format
+# Rustのビルド確認
+cd src-tauri && cargo build
+
+# リント＆型チェック
+pnpm biome check src/
+pnpm typecheck
 ```
 
 ## 🏗️ Project Structure
 
 ```
 PhotoGeoView/
-├── src/
-│   ├── main/           # Electron main process
-│   ├── preload/        # Preload scripts (IPC bridge)
-│   └── renderer/       # React renderer process
-│       ├── components/ # React components
-│       ├── hooks/      # Custom React hooks
-│       ├── i18n/       # Internationalization
-│       ├── lib/        # Utilities
-│       └── stores/     # Zustand stores
-├── docs/               # Documentation
-├── tests/              # Test files
-├── electron.vite.config.ts  # Vite configuration
-├── tsconfig.json       # TypeScript configuration
-└── biome.json          # Biome configuration
+├── src/                    # フロントエンド（React）
+│   ├── components/         # Reactコンポーネント
+│   │   ├── MapView/       # 地図表示
+│   │   ├── PhotoDetail/   # 写真詳細
+│   │   └── PhotoList/     # 写真リスト（ビューモード切替）
+│   ├── stores/            # Zustand状態管理
+│   ├── types/             # TypeScript型定義
+│   └── main.tsx           # エントリーポイント
+├── src-tauri/             # バックエンド（Rust）
+│   ├── src/
+│   │   ├── commands/      # Tauri Commands（EXIF読み取り等）
+│   │   ├── models/        # データモデル
+│   │   ├── error.rs       # エラー型定義
+│   │   └── lib.rs         # メインロジック
+│   ├── Cargo.toml         # Rust依存関係
+│   └── tauri.conf.json    # Tauri設定
+├── docs/                  # ドキュメント
+│   └── TAURI_MIGRATION_PLAN.md  # 移行計画
+├── tasks.md               # タスク管理
+├── CLAUDE.md              # AI開発ガイドライン
+├── vite.config.ts         # Vite設定
+├── tsconfig.json          # TypeScript設定
+└── biome.json             # Biome設定
 ```
 
 ## 📊 Quality & Testing
 
 **Current Status:**
-- ✅ Test Coverage: 63%
-- ✅ Unit Tests: 316 passing
-- ✅ E2E Tests: 9 passing
-- ✅ CI/CD: All checks passing
+- ✅ Biome Lint: All checks passing
+- ✅ TypeScript: Strict mode enabled
+- ✅ Rust: All warnings addressed
+- ⏳ Unit Tests: 未実装（Phase 5予定）
+- ⏳ E2E Tests: 未実装（Phase 5予定）
 
 ## 🔧 Development
 
-### Prerequisites
-- Node.js 20+
-- pnpm 9+
+### 開発コマンド
 
-### Commands
-
-| Command | Description |
+| コマンド | 説明 |
 |---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm typecheck` | Run TypeScript type checking |
-| `pnpm lint` | Run Biome linter |
-| `pnpm lint:fix` | Fix linting issues |
-| `pnpm format` | Format code |
-| `pnpm test` | Run unit tests |
-| `pnpm test:ui` | Run tests with UI |
-| `pnpm test:e2e` | Run E2E tests |
-| `pnpm package` | Package app for distribution |
+| `pnpm dev` | 開発サーバー起動（Tauri + Vite） |
+| `pnpm dev:vite` | Viteのみ起動（フロントエンド開発用） |
+| `pnpm build` | フロントエンドビルド |
+| `pnpm tauri build` | 本番用ビルド（インストーラー作成） |
+| `pnpm typecheck` | TypeScript型チェック |
+| `pnpm biome check src/` | Biomeリンター実行 |
+| `pnpm biome check --write src/` | Biomeリンター＆自動修正 |
+| `cargo build` | Rustビルド（`src-tauri/`内で実行） |
+| `cargo test` | Rustテスト実行 |
 
-### Building for Windows
+### デバッグコマンド（WSL/Linux）
 
-**Important**: Building for Windows requires administrator privileges or Windows Developer Mode enabled.
+| コマンド | 説明 |
+|---------|-------------|
+| `pnpm dev:debug` | デバッグモード起動（ログクリア→ビルド→起動） |
+| `pnpm logs:clean` | ログファイル削除 |
+| `pnpm logs:view` | ログファイル表示 |
+| `pnpm logs:watch` | ログファイルをリアルタイム監視 |
 
-#### Option 1: Run as Administrator
+### ビルド
 
-1. Open PowerShell as Administrator
-2. Navigate to project directory
-3. Run build command:
-
+#### Windows
 ```powershell
-pnpm package -- --win --publish never
+pnpm tauri build
 ```
 
-#### Option 2: Enable Windows Developer Mode
+#### macOS / Linux
+```bash
+pnpm tauri build
+```
 
-1. Go to **Settings** → **Privacy & Security** → **For developers**
-2. Turn on **Developer Mode**
-3. Build with normal PowerShell
+**注意**:
+- 初回ビルドは依存関係のダウンロードで時間がかかります
+- `tauri.conf.json`でbundle identifierを変更してください（デフォルト値は使用不可）
 
 ## 🔧 Troubleshooting
 
-### Sharp Module Error
+### Tauriの前提条件エラー
 
-If you encounter the following error when launching the app:
+Tauriの開発には各プラットフォーム固有のツールが必要です：
 
-```
-Error: Could not load the "sharp" module using the win32-x64 runtime
-```
+- **Windows**: MSVC（Visual Studio Build Tools）、WebView2
+- **macOS**: Xcode Command Line Tools
+- **Linux**: webkit2gtk-4.1、その他開発ライブラリ
 
-This is caused by incomplete uninstallation leaving old files behind. Run the cleanup script before reinstalling:
+詳細は[Tauri公式ドキュメント](https://tauri.app/start/prerequisites/)を参照してください。
 
-```powershell
-.\scripts\cleanup-photogeoview.ps1
-```
+### WSLでのGUI表示
 
-To keep user data (settings, cache):
+WSL2環境でGUI表示するには、WSLg（Windows 11）またはX11サーバーが必要です。
 
-```powershell
-.\scripts\cleanup-photogeoview.ps1 -KeepUserData
-```
-
-For more troubleshooting information, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+詳細なトラブルシューティングは[docs/TAURI_MIGRATION_PLAN.md](docs/TAURI_MIGRATION_PLAN.md)を参照してください。
 
 ## 📖 Documentation
 
-### Migration from PySide6
+### Tauri移行について
 
-This project is a complete rewrite of the original PySide6-based PhotoGeoView with modern web technologies.
+このブランチは、Electron版（mainブランチ）からTauriへの移行版です。
 
-**Migration Documentation (Japanese):**
+**ドキュメント:**
+- **[TAURI_MIGRATION_PLAN.md](./docs/TAURI_MIGRATION_PLAN.md)** - Tauri移行計画・設計書
+- **[CLAUDE.md](./CLAUDE.md)** - AI開発ガイドライン
+- **[tasks.md](./tasks.md)** - タスク管理・進捗状況
 
-1. **[ANALYSIS_INDEX_jp.md](./docs/ANALYSIS_INDEX_jp.md)** - 移行分析の概要
-2. **[CODEBASE_ANALYSIS_jp.md](./docs/CODEBASE_ANALYSIS_jp.md)** - 詳細なコードベース分析
-3. **[MIGRATION_QUICK_START_jp.md](./docs/MIGRATION_QUICK_START_jp.md)** - クイックスタートガイド
+### なぜTauriへ移行？
 
-### Why the Migration?
-
-- **Type Safety**: TypeScript provides better AI-assisted development
-- **Performance**: 5-25x faster build/test/lint tools
-- **Modern Stack**: Latest React 19, Vite 6, all actively maintained
-- **Cross-Platform**: Native Chromium, no WebEngine complexity
-- **Developer Experience**: Hot reload, better debugging, modern tooling
+- **軽量**: バイナリサイズが大幅に削減（Electron版の1/10以下）
+- **高速**: Rustによる高速なバックエンド処理
+- **メモリ効率**: システムWebViewを使用し、メモリ使用量を削減
+- **セキュリティ**: Rustの安全性とTauriのセキュリティモデル
+- **型安全**: TypeScript（フロントエンド） + Rust（バックエンド）
+- **学習機会**: Rustの実践的な習得
 
 ## 🤝 Contributing
 
-We welcome contributions! This project is designed for AI-driven development with TypeScript, making it easy to:
+このプロジェクトは実験的・学習目的のプロジェクトです。AI支援開発を活用しています。
 
-- Add features with AI assistance
-- Refactor with confidence (type safety)
-- Test comprehensively (Vitest + Playwright)
-- Maintain code quality (Biome)
+開発に参加する際は、[CLAUDE.md](./CLAUDE.md)のガイドラインに従ってください：
+- 型安全性を最優先
+- 段階的実装（MVP優先）
+- ドキュメント重視
+- Biome lint準拠
 
 ## 📄 License
 
