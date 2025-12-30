@@ -160,7 +160,9 @@ export function PhotoList(): React.ReactElement {
 
   // 上位フォルダに移動
   const handleNavigateUp = async () => {
-    if (!currentPath) return
+    if (!currentPath) {
+      return
+    }
     try {
       // パス区切り文字で分割して親パスを生成
       const separator = currentPath.includes('\\') ? '\\' : '/'
@@ -175,7 +177,7 @@ export function PhotoList(): React.ReactElement {
         if (isWindowsDrive && parentParts.length === 1) {
           parentPath += separator // C: -> C:\
         } else if (currentPath.startsWith('/')) {
-          parentPath = '/' + parentPath // Unix absolute path
+          parentPath = `/${parentPath}` // Unix absolute path
         }
 
         await navigateToDirectory(parentPath)
@@ -190,7 +192,9 @@ export function PhotoList(): React.ReactElement {
 
   // フォルダ再読み込み
   const handleRefresh = async () => {
-    if (!currentPath) return
+    if (!currentPath) {
+      return
+    }
     setIsLoading(true)
     try {
       await navigateToDirectory(currentPath)

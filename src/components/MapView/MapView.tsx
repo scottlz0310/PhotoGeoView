@@ -16,7 +16,9 @@ L.Icon.Default.mergeOptions({
 // シャッター速度を分数表記に変換するヘルパー関数
 // 以前のオーバーレイ表示は削除済み
 function formatShutterSpeed(seconds: number): string {
-  if (seconds >= 1) return `${seconds}s`
+  if (seconds >= 1) {
+    return `${seconds}s`
+  }
   const denominator = Math.round(1 / seconds)
   return `1/${denominator}s`
 }
