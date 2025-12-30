@@ -25,7 +25,7 @@ tauri = { version = "2.9.5", features = ["protocol-asset", "unstable"] }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
-tauri-plugin-store = "2"
+tauri-plugin-store = "2.4.1"
 
 # エラーハンドリング
 thiserror = "2.0"
