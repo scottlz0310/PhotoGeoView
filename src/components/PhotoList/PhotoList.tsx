@@ -13,8 +13,8 @@ export function PhotoList(): React.ReactElement {
       if (filePath) {
         setSelectedFiles([filePath])
       }
-    } catch (error) {
-      console.error('Failed to open file:', error)
+    } catch (_error) {
+      // Failed to open file
     } finally {
       setIsLoading(false)
     }
@@ -27,8 +27,8 @@ export function PhotoList(): React.ReactElement {
       if (filePaths.length > 0) {
         setSelectedFiles(filePaths)
       }
-    } catch (error) {
-      console.error('Failed to open files:', error)
+    } catch (_error) {
+      // Failed to open files
     } finally {
       setIsLoading(false)
     }
