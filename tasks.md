@@ -118,90 +118,79 @@
 
 ### 2.1 ファイル選択機能
 
-- [ ] tauri-plugin-dialogセットアップ
-- [ ] ファイル選択ダイアログ実装
-  - [ ] 単一ファイル選択
-  - [ ] 複数ファイル選択
-  - [ ] フィルター設定 (.jpg, .jpeg, .png, .tiff, .webp)
-- [ ] ファイルパスをフロントエンドに返却
+- [x] tauri-plugin-dialogセットアップ <!-- 2025-12-30完了 -->
+- [x] ファイル選択ダイアログ実装 <!-- 2025-12-30完了 -->
+  - [x] 単一ファイル選択
+  - [x] 複数ファイル選択
+  - [x] フィルター設定 (.jpg, .jpeg, .png, .tiff, .webp)
+- [x] ファイルパスをフロントエンドに返却
 
 ### 2.2 EXIF読み取り機能 (Rust)
 
-- [ ] `kamadak-exif`クレート追加
-- [ ] EXIF読み取りモジュール作成 (src-tauri/src/commands/exif.rs)
-  - [ ] GPS緯度・経度取得
-  - [ ] 撮影日時取得
-  - [ ] カメラ情報取得
-- [ ] Tauri Command: `read_photo_exif(path: String)` 実装
-- [ ] エラーハンドリング (EXIF情報がない場合)
-- [ ] 複数ファイルの並列処理 (`rayon`)
+- [x] `kamadak-exif`クレート追加 <!-- 2025-12-30完了 -->
+- [x] EXIF読み取りモジュール作成 (src-tauri/src/commands/exif.rs) <!-- 2025-12-30完了 -->
+  - [x] GPS緯度・経度取得
+  - [x] 撮影日時取得
+  - [x] カメラ情報取得
+- [x] Tauri Command: `read_photo_exif(path: String)` 実装 <!-- 2025-12-30完了 -->
+- [x] エラーハンドリング (EXIF情報がない場合) <!-- 2025-12-30完了 -->
+- [ ] 複数ファイルの並列処理 (`rayon`) <!-- 後回し -->
 
 ### 2.3 データモデル定義
 
-- [ ] TypeScript型定義 (src/types/photo.ts)
-  ```typescript
-  interface PhotoData {
-    path: string;
-    filename: string;
-    gps?: { lat: number; lng: number };
-    datetime?: string;
-    camera?: { make: string; model: string };
-    thumbnail?: string; // Base64
-  }
-  ```
-- [ ] Rust構造体定義 (src-tauri/src/models/photo.rs)
-  ```rust
-  #[derive(Serialize, Deserialize)]
-  struct PhotoData { ... }
-  ```
+- [x] TypeScript型定義 (src/types/photo.ts) <!-- 2025-12-30完了 -->
+- [x] Rust構造体定義 (src-tauri/src/models/photo.rs) <!-- 2025-12-30完了 -->
 
 ### 2.4 状態管理 (Zustand)
 
-- [ ] Zustand Storeセットアップ
-- [ ] `usePhotoStore`実装
-  - [ ] `photos: PhotoData[]`
-  - [ ] `selectedPhoto: PhotoData | null`
-  - [ ] `addPhotos(photos: PhotoData[])`
-  - [ ] `selectPhoto(path: string)`
-  - [ ] `removePhoto(path: string)`
+- [x] Zustand Storeセットアップ <!-- 2025-12-30完了 -->
+- [x] `usePhotoStore`実装 <!-- 2025-12-30完了 -->
+  - [x] `photos: PhotoData[]`
+  - [x] `selectedPhoto: PhotoData | null`
+  - [x] `addPhotos(photos: PhotoData[])`
+  - [x] `selectPhoto(path: string)`
+  - [x] `removePhoto(path: string)`
 
 ### 2.5 地図表示 (React Leaflet)
 
-- [ ] React Leaflet v5インストール
-- [ ] 基本的な地図コンポーネント実装
-  - [ ] OpenStreetMapタイル表示
-  - [ ] 初期位置・ズームレベル設定
-- [ ] マーカー表示
-  - [ ] GPS情報からマーカー配置
-  - [ ] マーカークリックで写真選択
-- [ ] 地図タイル切替機能
-  - [ ] OpenStreetMap
+- [x] React Leaflet v5インストール <!-- 2025-12-30完了 -->
+- [x] 基本的な地図コンポーネント実装 <!-- 2025-12-30完了 -->
+  - [x] OpenStreetMapタイル表示
+  - [x] 初期位置・ズームレベル設定
+- [x] マーカー表示 <!-- 2025-12-30完了 -->
+  - [x] GPS情報からマーカー配置
+  - [x] マーカークリックで写真選択
+- [ ] 地図タイル切替機能 <!-- Phase 3に移動 -->
+  - [x] OpenStreetMap
   - [ ] Google Maps (APIキー必要)
   - [ ] Satellite
 
 ### 2.6 写真サムネイル一覧
 
-- [ ] サムネイル生成 (Rust)
-  - [ ] `image`クレート追加
+- [ ] サムネイル生成 (Rust) <!-- Phase 4に移動 -->
+  - [x] `image`クレート追加 <!-- Phase 1で完了 -->
   - [ ] Tauri Command: `generate_thumbnail(path: String)` 実装
   - [ ] リサイズ処理 (200x200px, Lanczos3)
   - [ ] Base64エンコードして返却
-- [ ] サムネイル一覧コンポーネント (PhotoList)
+- [ ] サムネイル一覧コンポーネント (PhotoList) <!-- Phase 4に移動 -->
   - [ ] 仮想スクロール対応 (@tanstack/react-virtual)
   - [ ] 遅延ローディング
-  - [ ] クリックで写真選択
+  - [x] クリックで写真選択 <!-- 2025-12-30完了 -->
   - [ ] 撮影日時でソート
 
 ### 2.7 写真詳細表示
 
-- [ ] 写真拡大表示コンポーネント (PhotoDetail)
-  - [ ] 画像ロード・表示
-  - [ ] ズーム・パン操作 (react-zoom-pan-pinch)
-- [ ] EXIF情報表示
-  - [ ] GPS座標
-  - [ ] 撮影日時
-  - [ ] カメラ情報
-  - [ ] その他メタデータ
+- [x] 写真拡大表示コンポーネント (PhotoDetail) <!-- 2025-12-30完了 -->
+  - [x] 画像ロード・表示
+  - [ ] ズーム・パン操作 (react-zoom-pan-pinch) <!-- Phase 3に移動 -->
+- [x] EXIF情報表示 <!-- 2025-12-30完了 -->
+  - [x] GPS座標
+  - [x] 撮影日時
+  - [x] カメラ情報
+  - [x] その他メタデータ (ISO, 絞り, シャッター速度, 焦点距離)
+
+**Phase 2 主要機能完了** 🎉 <!-- 2025-12-30完了 -->
+- 写真の読み込み、EXIF情報取得、地図表示の基本機能が動作確認済み
 
 ---
 

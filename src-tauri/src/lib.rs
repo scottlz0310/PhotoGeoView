@@ -1,6 +1,13 @@
 // Tauri Commandsをインポート
 use tauri::{command, Manager};
 
+// モジュール定義
+mod commands;
+mod error;
+mod models;
+
+use crate::models::{ExifData, PhotoData};
+
 /// Hello Worldコマンド（テスト用）
 #[command]
 fn greet(name: String) -> String {
@@ -39,6 +46,53 @@ async fn select_photo_files(app: tauri::AppHandle) -> Result<Vec<String>, String
         .collect())
 }
 
+/// 写真ファイルのEXIF情報を読み取る
+#[command]
+async fn read_photo_exif(path: String) -> Result<ExifData, String> {
+    commands::read_exif(&path).map_err(|e| e.to_string())
+}
+
+/// 写真ファイルの基本情報とEXIF情報を取得
+#[command]
+async fn get_photo_data(path: String) -> Result<PhotoData, String> {
+    use std::fs;
+
+    // ファイルの基本情報を取得
+    let file_path = std::path::Path::new(&path);
+    let metadata = fs::metadata(&path).map_err(|e| format!("ファイル情報の取得に失敗: {}", e))?;
+
+    let filename = file_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    let file_size = metadata.len();
+
+    let modified_time = metadata
+        .modified()
+        .ok()
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| {
+            chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
+                .map(|dt| dt.to_rfc3339())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default();
+
+    // EXIF情報を読み取る
+    let exif = commands::read_exif(&path).ok();
+
+    Ok(PhotoData {
+        path: path.clone(),
+        filename,
+        file_size,
+        modified_time,
+        exif,
+        thumbnail: None, // サムネイルは後で生成
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -73,7 +127,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             select_photo_file,
-            select_photo_files
+            select_photo_files,
+            read_photo_exif,
+            get_photo_data
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -21,7 +21,7 @@ function App(): React.ReactElement {
 
           <Separator
             id="separator-horizontal"
-            className="w-1 bg-border hover:bg-primary transition-colors"
+            className="w-[2px] bg-border/60 hover:bg-primary/80 transition-colors cursor-col-resize"
           />
 
           {/* Right Panel - Split vertically into Photo Preview (top) and Map (bottom) */}
@@ -34,7 +34,7 @@ function App(): React.ReactElement {
 
               <Separator
                 id="separator-vertical"
-                className="h-1 bg-border hover:bg-primary transition-colors"
+                className="h-[2px] bg-border/60 hover:bg-primary/80 transition-colors cursor-row-resize"
               />
 
               {/* Bottom: Map View */}
