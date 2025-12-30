@@ -46,6 +46,71 @@ async fn select_photo_files(app: tauri::AppHandle) -> Result<Vec<String>, String
         .collect())
 }
 
+/// フォルダ選択ダイアログを開く
+#[command]
+async fn select_photo_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let folder_path = app.dialog().file().blocking_pick_folder();
+
+    Ok(folder_path.and_then(|path| path.as_path().map(|p| p.to_string_lossy().to_string())))
+}
+
+/// フォルダ内の画像ファイルをスキャン
+#[command]
+async fn scan_folder_for_photos(
+    folder_path: String,
+    recursive: bool,
+) -> Result<Vec<String>, String> {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let supported_extensions = ["jpg", "jpeg", "png", "tiff", "tif", "webp"];
+    let mut image_paths = Vec::new();
+
+    fn scan_directory(
+        dir: &std::path::Path,
+        recursive: bool,
+        extensions: &[&str],
+        results: &mut Vec<String>,
+    ) -> std::io::Result<()> {
+        if !dir.is_dir() {
+            return Ok(());
+        }
+
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if path.is_file() {
+                if let Some(ext) = path.extension() {
+                    let ext_str = ext.to_string_lossy().to_lowercase();
+                    if extensions.contains(&ext_str.as_ref()) {
+                        if let Some(path_str) = path.to_str() {
+                            results.push(path_str.to_string());
+                        }
+                    }
+                }
+            } else if recursive && path.is_dir() {
+                scan_directory(&path, recursive, extensions, results)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    let folder = PathBuf::from(&folder_path);
+    scan_directory(&folder, recursive, &supported_extensions, &mut image_paths)
+        .map_err(|e| format!("フォルダのスキャンに失敗: {}", e))?;
+
+    log::info!(
+        "フォルダスキャン完了: {} 個の画像ファイルを検出",
+        image_paths.len()
+    );
+
+    Ok(image_paths)
+}
+
 /// 写真ファイルのEXIF情報を読み取る
 #[command]
 async fn read_photo_exif(path: String) -> Result<ExifData, String> {
@@ -161,6 +226,8 @@ pub fn run() {
             greet,
             select_photo_file,
             select_photo_files,
+            select_photo_folder,
+            scan_folder_for_photos,
             read_photo_exif,
             get_photo_data
         ])

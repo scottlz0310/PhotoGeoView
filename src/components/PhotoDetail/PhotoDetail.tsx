@@ -1,6 +1,9 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
+import { Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react'
 import type React from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePhotoStore } from '@/stores/photoStore'
 
 export function PhotoDetail(): React.ReactElement {
@@ -8,11 +11,8 @@ export function PhotoDetail(): React.ReactElement {
 
   if (!selectedPhoto) {
     return (
-      <div className="h-full w-full overflow-y-auto bg-card p-4">
-        <h2 className="mb-4 text-lg font-semibold text-card-foreground">Photo Details</h2>
-        <div className="text-sm text-muted-foreground">
-          Select a photo to view its details and EXIF information
-        </div>
+      <div className="flex h-full w-full items-center justify-center bg-card">
+        <p className="text-sm text-muted-foreground">写真が選択されていません</p>
       </div>
     )
   }
@@ -39,34 +39,111 @@ export function PhotoDetail(): React.ReactElement {
           doubleClick={{ disabled: false }}
           centerOnInit={true}
         >
-          {() => (
-            <TransformComponent
-              wrapperStyle={{
-                width: '100%',
-                height: '100%',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-              }}
-              contentStyle={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <img
-                src={imageUrl}
-                alt={selectedPhoto.filename}
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: 'contain',
-                  pointerEvents: 'none',
+          {({ zoomIn, zoomOut, resetTransform, centerView }) => (
+            <>
+              {/* ズーム操作ツールバー */}
+              <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => zoomIn(0.2)}
+                        className="h-8 w-8 shadow-md"
+                      >
+                        <ZoomIn className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>拡大 (マウスホイールでも可)</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => zoomOut(0.2)}
+                        className="h-8 w-8 shadow-md"
+                      >
+                        <ZoomOut className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>縮小</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => {
+                          resetTransform()
+                          centerView(1, 0)
+                        }}
+                        className="h-8 w-8 shadow-md"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>リセット (等倍・中央配置)</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => {
+                          resetTransform()
+                          centerView(1, 0)
+                        }}
+                        className="h-8 w-8 shadow-md"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>画面にフィット</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              <TransformComponent
+                wrapperStyle={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
                 }}
-              />
-            </TransformComponent>
+                contentStyle={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt={selectedPhoto.filename}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    pointerEvents: 'none',
+                  }}
+                />
+              </TransformComponent>
+            </>
           )}
         </TransformWrapper>
       </div>
@@ -160,20 +237,19 @@ export function PhotoDetail(): React.ReactElement {
                 )}
                 {selectedPhoto.exif.aperture && (
                   <div>
-                    <span className="font-medium">Aperture:</span> f/
-                    {selectedPhoto.exif.aperture.toFixed(1)}
+                    <span className="font-medium">絞り:</span> F/{selectedPhoto.exif.aperture}
                   </div>
                 )}
                 {selectedPhoto.exif.shutterSpeed && (
                   <div>
-                    <span className="font-medium">Shutter:</span> 1/
-                    {Math.round(1 / selectedPhoto.exif.shutterSpeed)}s
+                    <span className="font-medium">シャッター速度:</span>{' '}
+                    {selectedPhoto.exif.shutterSpeed}
                   </div>
                 )}
                 {selectedPhoto.exif.focalLength && (
                   <div>
-                    <span className="font-medium">Focal Length:</span>{' '}
-                    {selectedPhoto.exif.focalLength.toFixed(0)}mm
+                    <span className="font-medium">焦点距離:</span> {selectedPhoto.exif.focalLength}
+                    mm
                   </div>
                 )}
               </div>

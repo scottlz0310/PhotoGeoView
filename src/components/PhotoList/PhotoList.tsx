@@ -1,18 +1,26 @@
 import { invoke } from '@tauri-apps/api/core'
+import { File, Files, FolderOpen } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import { usePhotoStore, type ViewMode } from '@/stores/photoStore'
 import type { PhotoData } from '@/types/photo'
 
 export function PhotoList(): React.ReactElement {
   const { photos, selectedPhoto, viewMode, addPhotos, selectPhoto, setViewMode } = usePhotoStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [recursive, setRecursive] = useState(true)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loadingStatus, setLoadingStatus] = useState('')
 
   const handleOpenFile = async () => {
     setIsLoading(true)
+    setLoadingStatus('ファイルを選択中...')
     try {
       const filePath = await invoke<string | null>('select_photo_file')
       if (filePath) {
+        setLoadingStatus('写真データを読み込み中...')
         const photoData = await invoke<PhotoData>('get_photo_data', { path: filePath })
         addPhotos([photoData])
         selectPhoto(photoData.path)
@@ -21,17 +29,24 @@ export function PhotoList(): React.ReactElement {
       // エラーは無視（ユーザーがキャンセルした場合など）
     } finally {
       setIsLoading(false)
+      setLoadingStatus('')
+      setLoadingProgress(0)
     }
   }
 
   const handleOpenFiles = async () => {
     setIsLoading(true)
+    setLoadingStatus('ファイルを選択中...')
     try {
       const filePaths = await invoke<string[]>('select_photo_files')
       if (filePaths.length > 0) {
+        setLoadingStatus(`${filePaths.length}個の写真を読み込み中...`)
         // 並列で写真データを取得
-        const photoDataPromises = filePaths.map((path) =>
-          invoke<PhotoData>('get_photo_data', { path }),
+        const photoDataPromises = filePaths.map((path, index) =>
+          invoke<PhotoData>('get_photo_data', { path }).then((data) => {
+            setLoadingProgress(((index + 1) / filePaths.length) * 100)
+            return data
+          }),
         )
         const photosData = await Promise.all(photoDataPromises)
         addPhotos(photosData)
@@ -45,6 +60,50 @@ export function PhotoList(): React.ReactElement {
       // エラーは無視（ユーザーがキャンセルした場合など）
     } finally {
       setIsLoading(false)
+      setLoadingStatus('')
+      setLoadingProgress(0)
+    }
+  }
+
+  const handleOpenFolder = async () => {
+    setIsLoading(true)
+    setLoadingStatus('フォルダを選択中...')
+    try {
+      const folderPath = await invoke<string | null>('select_photo_folder')
+      if (folderPath) {
+        setLoadingStatus('フォルダをスキャン中...')
+        const filePaths = await invoke<string[]>('scan_folder_for_photos', {
+          folderPath,
+          recursive,
+        })
+
+        if (filePaths.length > 0) {
+          setLoadingStatus(`${filePaths.length}個の写真を読み込み中...`)
+          // 並列で写真データを取得
+          const photoDataPromises = filePaths.map((path, index) =>
+            invoke<PhotoData>('get_photo_data', { path }).then((data) => {
+              setLoadingProgress(((index + 1) / filePaths.length) * 100)
+              return data
+            }),
+          )
+          const photosData = await Promise.all(photoDataPromises)
+          addPhotos(photosData)
+          // 最初の写真を選択
+          const firstPhoto = photosData[0]
+          if (firstPhoto) {
+            selectPhoto(firstPhoto.path)
+          }
+        } else {
+          setLoadingStatus('画像ファイルが見つかりませんでした')
+          setTimeout(() => setLoadingStatus(''), 2000)
+        }
+      }
+    } catch (_error) {
+      // エラーは無視（ユーザーがキャンセルした場合など）
+    } finally {
+      setIsLoading(false)
+      setLoadingStatus('')
+      setLoadingProgress(0)
     }
   }
 
@@ -72,31 +131,66 @@ export function PhotoList(): React.ReactElement {
         </select>
       </div>
 
-      {/* File selection buttons */}
-      <div className="mb-4 flex gap-2">
-        <button
-          type="button"
-          onClick={handleOpenFile}
-          disabled={isLoading}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          Open Photo
-        </button>
-        <button
-          type="button"
-          onClick={handleOpenFiles}
-          disabled={isLoading}
-          className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          Open Photos
-        </button>
+      {/* File/Folder selection buttons */}
+      <div className="mb-4 space-y-3">
+        <div className="flex gap-2">
+          <Button onClick={handleOpenFile} disabled={isLoading} size="sm" className="flex-1">
+            <File className="mr-2 h-4 w-4" />
+            単一ファイル
+          </Button>
+          <Button onClick={handleOpenFiles} disabled={isLoading} size="sm" className="flex-1">
+            <Files className="mr-2 h-4 w-4" />
+            複数ファイル
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Button
+            onClick={handleOpenFolder}
+            disabled={isLoading}
+            variant="secondary"
+            size="sm"
+            className="w-full"
+          >
+            <FolderOpen className="mr-2 h-4 w-4" />
+            フォルダから開く
+          </Button>
+
+          {/* 再帰的スキャンオプション */}
+          <div className="flex items-center gap-2 px-1">
+            <input
+              type="checkbox"
+              id="recursive-scan"
+              checked={recursive}
+              onChange={(e) => setRecursive(e.target.checked)}
+              className="h-4 w-4 rounded border-border"
+              disabled={isLoading}
+            />
+            <label
+              htmlFor="recursive-scan"
+              className="text-xs text-muted-foreground cursor-pointer select-none"
+            >
+              サブフォルダも含める
+            </label>
+          </div>
+        </div>
+
+        {/* Loading indicator */}
+        {isLoading && (
+          <div className="space-y-2">
+            <Progress value={loadingProgress} className="h-2" />
+            <p className="text-xs text-muted-foreground text-center">{loadingStatus}</p>
+          </div>
+        )}
       </div>
 
       {/* コンテンツ表示エリア */}
       <div className="flex-1 overflow-y-auto">
         {photos.length === 0 ? (
           <div className="text-sm text-muted-foreground">
-            No photos loaded yet. Click &quot;Open Photo(s)&quot; to get started.
+            写真がまだ読み込まれていません。
+            <br />
+            上のボタンから写真やフォルダを開いてください。
           </div>
         ) : (
           <>
