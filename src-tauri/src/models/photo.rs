@@ -84,3 +84,31 @@ impl PhotoData {
             .is_some()
     }
 }
+
+/// ディレクトリエントリ（フォルダまたはファイル）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryEntry {
+    /// エントリの名前（ファイル名またはフォルダ名）
+    pub name: String,
+    /// エントリの絶対パス
+    pub path: String,
+    /// ディレクトリかどうか（true: フォルダ, false: ファイル）
+    pub is_directory: bool,
+    /// 最終更新日時（ISO 8601形式）
+    pub modified_time: String,
+    /// ファイルサイズ（バイト、ディレクトリの場合は0）
+    pub file_size: u64,
+}
+
+/// ディレクトリの内容
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DirectoryContent {
+    /// 現在のディレクトリパス
+    pub current_path: String,
+    /// 親ディレクトリパス（ルートディレクトリの場合はNone）
+    pub parent_path: Option<String>,
+    /// ディレクトリ内のエントリ一覧（フォルダとファイル）
+    pub entries: Vec<DirectoryEntry>,
+}

@@ -1,5 +1,6 @@
+import { invoke } from '@tauri-apps/api/core'
 import { create } from 'zustand'
-import type { PhotoData, PhotoFilter } from '@/types/photo'
+import type { DirectoryContent, DirectoryEntry, PhotoData, PhotoFilter } from '@/types/photo'
 import { useSettingsStore } from './settingsStore'
 
 export type ViewMode = 'list' | 'detail' | 'grid'
@@ -14,6 +15,10 @@ interface PhotoState {
 
   // ビューモード
   viewMode: ViewMode
+
+  // ナビゲーション
+  currentPath: string | null
+  directoryEntries: DirectoryEntry[]
 
   // アクション
   addPhotos: (photos: PhotoData[]) => void
@@ -33,6 +38,10 @@ interface PhotoState {
   setViewMode: (mode: ViewMode) => void
   // 設定から初期ビューモードを読み込む
   initializeViewMode: () => void
+
+  // ナビゲーション操作
+  navigateToDirectory: (path: string) => Promise<void>
+  clearNavigation: () => void
 }
 
 const defaultFilter: PhotoFilter = {
@@ -47,6 +56,8 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
   selectedPhoto: null,
   filter: defaultFilter,
   viewMode: 'list',
+  currentPath: null,
+  directoryEntries: [],
 
   // 写真追加（重複なし）
   addPhotos: (newPhotos) =>
@@ -143,5 +154,22 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
     if (settingsStore.isLoaded) {
       set({ viewMode: settingsStore.settings.display.defaultViewMode })
     }
+  },
+
+  // ディレクトリに移動
+  navigateToDirectory: async (path: string) => {
+    const content = await invoke<DirectoryContent>('read_directory', { path })
+    set({
+      currentPath: content.currentPath,
+      directoryEntries: content.entries,
+    })
+  },
+
+  // ナビゲーション状態をクリア
+  clearNavigation: () => {
+    set({
+      currentPath: null,
+      directoryEntries: [],
+    })
   },
 }))

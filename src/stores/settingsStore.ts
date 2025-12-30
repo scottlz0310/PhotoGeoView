@@ -38,6 +38,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const display = await store.get<AppSettings['display']>('display')
       const map = await store.get<AppSettings['map']>('map')
       const ui = await store.get<AppSettings['ui']>('ui')
+      const lastOpenedFolder = await store.get<string | null>('lastOpenedFolder')
       const version = await store.get<number>('version')
 
       // 読み込んだ設定をマージ（存在しない項目はデフォルト値を使用）
@@ -45,6 +46,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         display: display ?? DEFAULT_SETTINGS.display,
         map: map ?? DEFAULT_SETTINGS.map,
         ui: ui ?? DEFAULT_SETTINGS.ui,
+        lastOpenedFolder: lastOpenedFolder ?? DEFAULT_SETTINGS.lastOpenedFolder,
         version: version ?? DEFAULT_SETTINGS.version,
       }
 
@@ -74,6 +76,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await store.set('display', newSettings.display)
     await store.set('map', newSettings.map)
     await store.set('ui', newSettings.ui)
+    await store.set('lastOpenedFolder', newSettings.lastOpenedFolder)
     await store.set('version', newSettings.version)
     await store.save()
 

@@ -87,3 +87,31 @@ export interface MapSettings {
   /** 地図タイルの種類 */
   tileLayer: 'osm' | 'google' | 'satellite'
 }
+
+/**
+ * ディレクトリエントリ（フォルダまたはファイル）
+ */
+export interface DirectoryEntry {
+  /** エントリの名前（ファイル名またはフォルダ名） */
+  name: string
+  /** エントリの絶対パス */
+  path: string
+  /** ディレクトリかどうか（true: フォルダ, false: ファイル） */
+  isDirectory: boolean
+  /** 最終更新日時（ISO 8601形式） */
+  modifiedTime: string
+  /** ファイルサイズ（バイト、ディレクトリの場合は0） */
+  fileSize: number
+}
+
+/**
+ * ディレクトリの内容
+ */
+export interface DirectoryContent {
+  /** 現在のディレクトリパス */
+  currentPath: string
+  /** 親ディレクトリパス（ルートディレクトリの場合はnull） */
+  parentPath: string | null
+  /** ディレクトリ内のエントリ一覧（フォルダとファイル） */
+  entries: DirectoryEntry[]
+}

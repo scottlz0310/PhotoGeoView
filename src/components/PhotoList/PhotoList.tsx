@@ -1,18 +1,52 @@
 import { invoke } from '@tauri-apps/api/core'
-import { File, Files, FolderOpen } from 'lucide-react'
-import type React from 'react'
-import { useState } from 'react'
+import { File, Files, Folder, FolderOpen, Image } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { usePhotoStore, type ViewMode } from '@/stores/photoStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 import type { PhotoData } from '@/types/photo'
 
 export function PhotoList(): React.ReactElement {
-  const { photos, selectedPhoto, viewMode, addPhotos, selectPhoto, setViewMode } = usePhotoStore()
+  const {
+    photos,
+    selectedPhoto,
+    viewMode,
+    currentPath,
+    directoryEntries,
+    addPhotos,
+    selectPhoto,
+    setViewMode,
+    navigateToDirectory,
+  } = usePhotoStore()
+  const { settings, updateSettings } = useSettingsStore()
   const [isLoading, setIsLoading] = useState(false)
   const [recursive, setRecursive] = useState(true)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [loadingStatus, setLoadingStatus] = useState('')
+
+  // 起動時に前回開いたフォルダを自動的に開く
+  useEffect(() => {
+    const loadLastFolder = async () => {
+      if (settings.lastOpenedFolder && !currentPath) {
+        try {
+          await navigateToDirectory(settings.lastOpenedFolder)
+        } catch {
+          // フォルダが存在しない場合などはエラーを無視
+        }
+      }
+    }
+    loadLastFolder()
+  }, [settings.lastOpenedFolder, currentPath, navigateToDirectory])
 
   const handleOpenFile = async () => {
     setIsLoading(true)
@@ -71,39 +105,97 @@ export function PhotoList(): React.ReactElement {
     try {
       const folderPath = await invoke<string | null>('select_photo_folder')
       if (folderPath) {
-        setLoadingStatus('フォルダをスキャン中...')
-        const filePaths = await invoke<string[]>('scan_folder_for_photos', {
-          folderPath,
-          recursive,
+        setLoadingStatus('フォルダを読み込み中...')
+        // ナビゲーションモードに入る
+        await navigateToDirectory(folderPath)
+        // 設定に保存
+        updateSettings({ lastOpenedFolder: folderPath })
+        toast.success('フォルダを開きました', {
+          description: `${directoryEntries.length}件のアイテムが見つかりました`,
         })
-
-        if (filePaths.length > 0) {
-          setLoadingStatus(`${filePaths.length}個の写真を読み込み中...`)
-          // 並列で写真データを取得
-          const photoDataPromises = filePaths.map((path, index) =>
-            invoke<PhotoData>('get_photo_data', { path }).then((data) => {
-              setLoadingProgress(((index + 1) / filePaths.length) * 100)
-              return data
-            }),
-          )
-          const photosData = await Promise.all(photoDataPromises)
-          addPhotos(photosData)
-          // 最初の写真を選択
-          const firstPhoto = photosData[0]
-          if (firstPhoto) {
-            selectPhoto(firstPhoto.path)
-          }
-        } else {
-          setLoadingStatus('画像ファイルが見つかりませんでした')
-          setTimeout(() => setLoadingStatus(''), 2000)
-        }
       }
-    } catch (_error) {
-      // エラーは無視（ユーザーがキャンセルした場合など）
+    } catch (error) {
+      toast.error('フォルダの読み込みに失敗しました', {
+        description: String(error),
+      })
     } finally {
       setIsLoading(false)
       setLoadingStatus('')
       setLoadingProgress(0)
+    }
+  }
+
+  // パンくずリストのセグメント生成
+  const getBreadcrumbSegments = (path: string): Array<{ name: string; path: string }> => {
+    if (!path) {
+      return []
+    }
+
+    // Windowsのパスを分割（例: C:\Users\Photos -> ["C:\", "Users", "Photos"]）
+    const parts = path.split(/[\\/]/).filter(Boolean)
+    const segments: Array<{ name: string; path: string }> = []
+
+    let currentPath = ''
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i]
+      if (!part) {
+        continue // undefinedチェック
+      }
+
+      if (i === 0 && part.endsWith(':')) {
+        // Windowsのドライブレター（C:など）
+        currentPath = `${part}\\`
+        segments.push({ name: currentPath, path: currentPath })
+      } else {
+        currentPath = currentPath ? `${currentPath}\\${part}` : part
+        segments.push({ name: part, path: currentPath })
+      }
+    }
+
+    return segments
+  }
+
+  // パンくずリストをクリックして親フォルダに移動
+  const handleBreadcrumbClick = async (folderPath: string) => {
+    try {
+      await navigateToDirectory(folderPath)
+      // 設定に保存
+      updateSettings({ lastOpenedFolder: folderPath })
+    } catch (error) {
+      toast.error('フォルダを開けませんでした', {
+        description: String(error),
+      })
+    }
+  }
+
+  // フォルダをダブルクリックして移動
+  const handleFolderDoubleClick = async (folderPath: string) => {
+    try {
+      await navigateToDirectory(folderPath)
+      // 設定に保存
+      updateSettings({ lastOpenedFolder: folderPath })
+    } catch (error) {
+      toast.error('フォルダを開けませんでした', {
+        description: String(error),
+      })
+    }
+  }
+
+  // 画像ファイルをダブルクリックして読み込み
+  const handleFileDoubleClick = async (filePath: string) => {
+    setIsLoading(true)
+    setLoadingStatus('写真データを読み込み中...')
+    try {
+      const photoData = await invoke<PhotoData>('get_photo_data', { path: filePath })
+      addPhotos([photoData])
+      selectPhoto(photoData.path)
+    } catch (error) {
+      toast.error('写真の読み込みに失敗しました', {
+        description: String(error),
+      })
+    } finally {
+      setIsLoading(false)
+      setLoadingStatus('')
     }
   }
 
@@ -130,6 +222,33 @@ export function PhotoList(): React.ReactElement {
           <option value="grid">{viewModeLabels.grid}</option>
         </select>
       </div>
+
+      {/* パンくずリスト（フォルダナビゲーション） */}
+      {currentPath && (
+        <div className="mb-3 rounded border border-border bg-background p-2">
+          <Breadcrumb>
+            <BreadcrumbList>
+              {getBreadcrumbSegments(currentPath).map((segment, index, array) => (
+                <React.Fragment key={segment.path}>
+                  <BreadcrumbItem>
+                    {index === array.length - 1 ? (
+                      <BreadcrumbPage>{segment.name}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink
+                        onClick={() => handleBreadcrumbClick(segment.path)}
+                        className="cursor-pointer"
+                      >
+                        {segment.name}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                  {index < array.length - 1 && <BreadcrumbSeparator />}
+                </React.Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      )}
 
       {/* File/Folder selection buttons */}
       <div className="mb-4 space-y-3">
@@ -186,7 +305,45 @@ export function PhotoList(): React.ReactElement {
 
       {/* コンテンツ表示エリア */}
       <div className="flex-1 overflow-y-auto">
-        {photos.length === 0 ? (
+        {/* ナビゲーションモード: ディレクトリ内容を表示 */}
+        {currentPath && directoryEntries.length > 0 ? (
+          <div className="space-y-2">
+            {directoryEntries.map((entry) => (
+              <button
+                type="button"
+                key={entry.path}
+                onDoubleClick={() =>
+                  entry.isDirectory
+                    ? handleFolderDoubleClick(entry.path)
+                    : handleFileDoubleClick(entry.path)
+                }
+                className="w-full rounded p-2 text-left text-sm transition-colors bg-muted hover:bg-muted/80 flex items-center gap-2"
+              >
+                {/* アイコン */}
+                {entry.isDirectory ? (
+                  <Folder className="h-4 w-4 text-yellow-500" />
+                ) : (
+                  <Image className="h-4 w-4 text-blue-500" />
+                )}
+
+                {/* エントリ名 */}
+                <div className="flex-1">
+                  <div className="truncate font-medium">{entry.name}</div>
+                  {!entry.isDirectory && (
+                    <div className="text-xs opacity-60">
+                      {(entry.fileSize / 1024).toFixed(1)} KB
+                    </div>
+                  )}
+                </div>
+
+                {/* 最終更新日時 */}
+                <div className="text-xs opacity-60">
+                  {new Date(entry.modifiedTime).toLocaleDateString()}
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : photos.length === 0 ? (
           <div className="text-sm text-muted-foreground">
             写真がまだ読み込まれていません。
             <br />

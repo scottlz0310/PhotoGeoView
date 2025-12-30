@@ -1,3 +1,3 @@
 pub mod photo;
 
-pub use photo::{CameraInfo, ExifData, Gps, PhotoData};
+pub use photo::{CameraInfo, DirectoryContent, DirectoryEntry, ExifData, Gps, PhotoData};

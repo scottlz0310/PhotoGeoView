@@ -6,7 +6,7 @@ mod commands;
 mod error;
 mod models;
 
-use crate::models::{ExifData, PhotoData};
+use crate::models::{DirectoryContent, DirectoryEntry, ExifData, PhotoData};
 
 /// Hello Worldコマンド（テスト用）
 #[command]
@@ -171,6 +171,104 @@ async fn get_photo_data(path: String) -> Result<PhotoData, String> {
     })
 }
 
+/// ディレクトリの内容を読み取る（フォルダとファイルを両方取得）
+#[command]
+async fn read_directory(path: String) -> Result<DirectoryContent, String> {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let dir_path = PathBuf::from(&path);
+
+    // ディレクトリの存在確認
+    if !dir_path.is_dir() {
+        return Err(format!("指定されたパスはディレクトリではありません: {}", path));
+    }
+
+    // 親ディレクトリのパスを取得
+    let parent_path = dir_path
+        .parent()
+        .and_then(|p| p.to_str())
+        .map(|s| s.to_string());
+
+    let mut entries = Vec::new();
+    let supported_extensions = ["jpg", "jpeg", "png", "tiff", "tif", "webp"];
+
+    // ディレクトリの内容を読み取る
+    let read_result = fs::read_dir(&dir_path)
+        .map_err(|e| format!("ディレクトリの読み取りに失敗: {}", e))?;
+
+    for entry in read_result {
+        let entry = entry.map_err(|e| format!("エントリの読み取りに失敗: {}", e))?;
+        let entry_path = entry.path();
+        let metadata = entry
+            .metadata()
+            .map_err(|e| format!("メタデータの取得に失敗: {}", e))?;
+
+        let name = entry_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown")
+            .to_string();
+
+        let is_directory = entry_path.is_dir();
+
+        // ファイルの場合は画像ファイルのみをフィルタリング
+        if !is_directory {
+            if let Some(ext) = entry_path.extension() {
+                let ext_str = ext.to_string_lossy().to_lowercase();
+                if !supported_extensions.contains(&ext_str.as_ref()) {
+                    continue; // 画像ファイルでない場合はスキップ
+                }
+            } else {
+                continue; // 拡張子がない場合はスキップ
+            }
+        }
+
+        let file_size = if is_directory { 0 } else { metadata.len() };
+
+        let modified_time = metadata
+            .modified()
+            .ok()
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|d| {
+                chrono::DateTime::from_timestamp(d.as_secs() as i64, 0)
+                    .map(|dt| dt.to_rfc3339())
+                    .unwrap_or_default()
+            })
+            .unwrap_or_default();
+
+        entries.push(DirectoryEntry {
+            name,
+            path: entry_path.to_string_lossy().to_string(),
+            is_directory,
+            modified_time,
+            file_size,
+        });
+    }
+
+    // エントリをソート（フォルダを先に、その後ファイルを名前順）
+    entries.sort_by(|a, b| {
+        match (a.is_directory, b.is_directory) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+        }
+    });
+
+    log::info!(
+        "ディレクトリ読み取り完了: {} ({} フォルダ, {} ファイル)",
+        path,
+        entries.iter().filter(|e| e.is_directory).count(),
+        entries.iter().filter(|e| !e.is_directory).count()
+    );
+
+    Ok(DirectoryContent {
+        current_path: path,
+        parent_path,
+        entries,
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -229,7 +327,8 @@ pub fn run() {
             select_photo_folder,
             scan_folder_for_photos,
             read_photo_exif,
-            get_photo_data
+            get_photo_data,
+            read_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

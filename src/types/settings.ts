@@ -65,6 +65,8 @@ export interface AppSettings {
   map: MapSettings
   /** UI設定 */
   ui: UISettings
+  /** 前回開いたフォルダパス */
+  lastOpenedFolder: string | null
   /** 設定のバージョン（将来の互換性のため） */
   version: number
 }
@@ -88,5 +90,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     language: 'ja',
     sidebarWidth: 300,
   },
+  lastOpenedFolder: null,
   version: 1,
 }
