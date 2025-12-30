@@ -1,44 +1,37 @@
-import { resolve } from 'node:path'
-import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
     environment: 'happy-dom',
-    setupFiles: ['./tests/setup.ts'],
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-    exclude: ['node_modules/**', 'out/**', 'dist/**', 'tests/e2e/**'],
+    setupFiles: [],
     coverage: {
-      provider: 'istanbul',
-      reporter: ['text-summary', 'json'],
-      reportsDirectory: './coverage/vitest',
-      include: ['src/renderer/src/**/*.{ts,tsx}', 'src/types/**/*.ts'],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
-        'node_modules/**',
-        'out/**',
-        'dist/**',
-        'tests/**',
-        '**/*.d.ts',
+        'node_modules/',
+        'dist/',
+        'archive/',
+        'src-tauri/',
         '**/*.config.*',
-        '**/main.tsx',
-        'src/main/**',
-        'src/preload/**',
-        'src/renderer/src/components/ui/**', // Exclude shadcn/ui components (3rd party)
+        '**/.*',
+        '**/*.d.ts',
       ],
-      thresholds: {
-        lines: 20,
-        functions: 20,
-        branches: 20,
-        statements: 20,
-      },
     },
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/archive/**',
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
+    ],
   },
   resolve: {
     alias: {
-      '@renderer': resolve(__dirname, './src/renderer/src'),
-      '@': resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src'),
     },
   },
 })

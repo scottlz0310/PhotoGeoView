@@ -1,26 +1,45 @@
 {
-  "extends": "@electron-toolkit/tsconfig/tsconfig.json",
   "compilerOptions": {
+    // ターゲット環境
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "allowJs": true,
+    "noEmit": true,
+    "allowJs": false,
+
+    // 型安全性（claude.md 7.3準拠）
     "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+
+    // その他の設定
     "skipLibCheck": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vite/client"],
+
+    // パスエイリアス
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@main/*": ["./src/main/*"],
-      "@renderer/*": ["./src/renderer/src/*"],
-      "@preload/*": ["./src/preload/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "out", "dist"]
+  "exclude": ["node_modules", "dist", "archive", "src-tauri"]
 }

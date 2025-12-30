@@ -1,0 +1,46 @@
+[package]
+name = "photogeoview"
+version = "3.0.0"
+description = "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ"
+authors = ["PhotoGeoView Team"]
+license = "MIT"
+repository = "https://github.com/scottlz0310/PhotoGeoView"
+edition = "2021"
+rust-version = "1.77.2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.5.3", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.9.5", features = ["protocol-asset", "unstable"] }
+tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-store = "2"
+
+# エラーハンドリング
+thiserror = "2.0"
+anyhow = "1.0"
+
+# 画像処理
+image = "0.25"
+kamadak-exif = "0.5"
+base64 = "0.22"
+
+# 並列処理
+rayon = "1.10"
+
+# 非同期処理
+tokio = { version = "1.42", features = ["full"] }
+
+# 日時処理
+chrono = "0.4"

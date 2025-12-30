@@ -1,0 +1,440 @@
+# PhotoGeoView Tauri版 実装タスクリスト
+
+**作成日**: 2025-12-29
+**対象バージョン**: v3.0.0
+
+このファイルは実装時の目安となるタスクリストです。チェックボックスにチェックを入れながら進めてください。
+
+---
+
+## Phase 1: 基盤構築
+
+### 1.1 プロジェクト初期化
+
+- [x] Tauriプロジェクト初期化 (`pnpm create tauri-app`) <!-- 2025-12-29完了 -->
+- [x] Git管理下に追加 <!-- 2025-12-29完了 -->
+- [x] package.jsonの基本設定 <!-- 2025-12-29完了 -->
+  - [x] プロジェクト名・バージョン更新
+  - [x] スクリプト定義 (dev, build, test等)
+- [x] Rust依存関係の追加 (Cargo.toml) <!-- 2025-12-29完了 -->
+  - [x] serde, serde_json
+  - [x] tauri-plugin-dialog
+  - [x] tauri-plugin-fs
+  - [x] image, kamadak-exif (画像・EXIF処理)
+  - [x] thiserror, anyhow (エラーハンドリング)
+  - [x] rayon, tokio (並列・非同期処理)
+
+### 1.2 開発環境セットアップ
+
+- [x] TypeScript設定 (tsconfig.json) <!-- 2025-12-29完了 -->
+  - [x] 厳格な型チェック有効化（claude.md 7.3準拠）
+- [x] Biome設定 (biome.json) <!-- 2025-12-29完了 -->
+  - [x] 厳格なリンティングルール設定 (noExplicitAny: error等)
+  - [x] ファイル命名規則の強制
+  - [x] Biome v2.3.10にマイグレーション
+- [x] Lefthook設定 (lefthook.yml) <!-- 2025-12-29完了 -->
+  - [x] pre-commitフック: Biome lint + typecheck
+  - [x] pre-pushフック: テストカバレッジ (テストファイル存在時のみ)
+- [x] .gitignore更新 <!-- 2025-12-29完了 -->
+  - [x] archiveディレクトリを除外
+  - [x] Tauriビルド出力を除外 (src-tauri/target/, src-tauri/gen/)
+  - [x] TypeScriptコンパイル出力を除外 (src/**/*.js, src/**/*.jsx)
+- [x] VSCode設定 (.vscode/settings.json) <!-- 2025-12-29完了 -->
+  - [x] Rust Analyzer
+  - [x] Biome拡張機能
+  - [x] Tailwind CSS IntelliSense
+  - [x] 推奨拡張機能リスト (.vscode/extensions.json)
+
+### 1.3 基本的なUI構造
+
+- [x] Vite + React + TypeScript環境確認 <!-- 2025-12-29完了 -->
+  - [x] vite.config.ts作成
+  - [x] index.html作成
+  - [x] src/main.tsx, src/App.tsx作成
+  - [x] TypeScriptコンパイル成功確認
+  - [x] Viteビルド成功確認 (211.34 kB, gzip: 66.84 kB)
+- [x] TailwindCSS v4セットアップ <!-- 2025-12-29完了 -->
+  - [x] postcss.config.cjs
+  - [x] tailwind.config.js
+  - [x] CSS変数ベースのテーマシステム (ライト/ダークモード対応)
+  - [x] shadcn/ui互換のカラートークン
+- [x] 3ペインレイアウト実装 <!-- 2025-12-29完了 -->
+  - [x] 左パネル (PhotoList)
+  - [x] 中央パネル (MapView)
+  - [x] 右パネル (PhotoDetail)
+- [x] react-resizable-panelsでリサイズ可能にする <!-- 2025-12-29完了 -->
+  - [x] リサイズ可能なセパレーター
+  - [x] 最小/最大サイズ設定
+
+### 1.4 Tauri Command通信テスト
+
+- [x] Hello World Command実装 (Rust側) <!-- 2025-12-29完了 -->
+- [x] フロントエンドからCommand呼び出しテスト <!-- 2025-12-29完了 -->
+- [x] エラーハンドリング確認 <!-- 2025-12-29完了 -->
+
+### 1.5 品質ツールの再有効化
+
+**前提条件**: プロジェクト設定ファイル（tsconfig.json, Cargo.toml, vitest.config.ts等）が整備され、品質ルールが固まっていること
+
+- [x] テスト設定の更新 <!-- 2025-12-29完了 -->
+  - [x] vitest.config.tsでarchiveディレクトリを除外
+  - [x] カバレッジ設定 (v8プロバイダー)
+  - [x] テストファイル検出パターン設定
+- [x] Lefthook動作確認 <!-- 2025-12-29完了 -->
+  - [x] pre-commit, pre-pushフックの動作確認
+  - [x] テストファイルがない場合のスキップ設定
+- [x] CI/CD設定の更新 <!-- 2025-12-29完了 -->
+  - [x] ci.yml: Tauri対応、archive除外、テスト条件分岐
+  - [x] build.yml: Tauri Action使用、マルチプラットフォームビルド
+  - [x] release.yml: タグベースリリース、自動GitHub Release作成
+  - [x] archiveディレクトリを除外
+
+### 1.6 デバッグ環境と安定起動確認
+
+- [x] デバッグスクリプトの作成 <!-- 2025-12-30完了 -->
+  - [x] dev-debug.sh: claude.md 7.5準拠の6ステップ自動化
+  - [x] logs-clean.sh, logs-view.sh, logs-watch.sh: ログ管理
+  - [x] scripts/README.md: 包括的なドキュメント
+  - [x] package.json: dev:debug, logs:* コマンド追加
+- [x] Tauri開発依存関係のインストール (WSL) <!-- 2025-12-30完了 -->
+  - [x] libwebkit2gtk-4.1-dev (Ubuntu 24.10対応)
+  - [x] libgtk-3-dev, libssl-dev等
+- [x] tauri-plugin-log v2 API修正 <!-- 2025-12-30完了 -->
+  - [x] use tauri::Manager追加
+  - [x] ログターゲットをデフォルト設定に簡素化
+- [x] Git管理の最適化 <!-- 2025-12-30完了 -->
+  - [x] .claude/settings.local.jsonを.gitignoreに追加
+  - [x] ローカル設定ファイルの追跡を解除
+- [x] **Tauriアプリケーション安定起動確認** <!-- 2025-12-30完了 ✅ -->
+  - [x] pnpm dev でウィンドウ表示成功
+  - [x] ログシステム動作確認
+  - [x] WSLgでのGUI表示確認
+
+**Phase 1 完了** 🎉
+
+---
+
+## Phase 2: コア機能実装
+
+### 2.1 ファイル選択機能
+
+- [x] tauri-plugin-dialogセットアップ <!-- 2025-12-30完了 -->
+- [x] ファイル選択ダイアログ実装 <!-- 2025-12-30完了 -->
+  - [x] 単一ファイル選択
+  - [x] 複数ファイル選択
+  - [x] フィルター設定 (.jpg, .jpeg, .png, .tiff, .webp)
+- [x] ファイルパスをフロントエンドに返却
+- [x] フォルダ選択機能実装 <!-- 2025-12-30完了 -->
+  - [x] フォルダ選択ダイアログ
+  - [x] フォルダスキャン（再帰的探索対応）
+
+#### 2.1.1 フォルダナビゲーション機能 <!-- 2025-12-30開始 → 2025-12-30完了 -->
+
+- [x] パンくずリスト（Breadcrumb）実装 <!-- 2025-12-30完了 -->
+  - [x] shadcn/ui Breadcrumbコンポーネント追加
+  - [x] 現在のパス表示（例：C:\ > Users > Photos > Vacation）
+  - [x] セグメントクリックで親階層に移動
+- [x] フォルダ一覧表示機能 <!-- 2025-12-30完了 -->
+  - [x] TypeScript型定義追加（DirectoryEntry, DirectoryContent）
+  - [x] Rust側コマンド実装（read_directory）
+  - [x] サブフォルダと画像ファイルの混在表示
+  - [x] フォルダアイコン（📁）とファイルアイコン（🖼️将来的にはサムネイル）で区別
+- [x] フォルダ間移動機能 <!-- 2025-12-30完了 -->
+  - [x] photoStoreにナビゲーション状態追加（currentPath, directoryEntries）
+  - [x] フォルダダブルクリックで子階層に移動
+  - [x] 親階層への移動（Breadcrumbクリック）
+- [x] PhotoListコンポーネント統合 <!-- 2025-12-30完了 -->
+  - [x] Breadcrumb表示エリア追加
+  - [x] フォルダ/ファイル混在リスト表示
+  - [x] ナビゲーション機能とファイル読み込み機能の統合
+- [x] 前回開いたフォルダの永続化 <!-- 2025-12-30完了 -->
+  - [x] Settings型に`lastOpenedFolder`フィールド追加
+  - [x] フォルダ選択時に設定に保存
+  - [x] 起動時に自動的に前回のフォルダを開く
+
+### 2.2 EXIF読み取り機能 (Rust)
+
+- [x] `kamadak-exif`クレート追加 <!-- 2025-12-30完了 -->
+- [x] EXIF読み取りモジュール作成 (src-tauri/src/commands/exif.rs) <!-- 2025-12-30完了 -->
+  - [x] GPS緯度・経度取得
+  - [x] 撮影日時取得
+  - [x] カメラ情報取得
+- [x] Tauri Command: `read_photo_exif(path: String)` 実装 <!-- 2025-12-30完了 -->
+- [x] エラーハンドリング (EXIF情報がない場合) <!-- 2025-12-30完了 -->
+- [ ] 複数ファイルの並列処理 (`rayon`) <!-- 後回し -->
+
+### 2.3 データモデル定義
+
+- [x] TypeScript型定義 (src/types/photo.ts) <!-- 2025-12-30完了 -->
+- [x] Rust構造体定義 (src-tauri/src/models/photo.rs) <!-- 2025-12-30完了 -->
+
+### 2.4 状態管理 (Zustand)
+
+- [x] Zustand Storeセットアップ <!-- 2025-12-30完了 -->
+- [x] `usePhotoStore`実装 <!-- 2025-12-30完了 -->
+  - [x] `photos: PhotoData[]`
+  - [x] `selectedPhoto: PhotoData | null`
+  - [x] `addPhotos(photos: PhotoData[])`
+  - [x] `selectPhoto(path: string)`
+  - [x] `removePhoto(path: string)`
+
+### 2.5 地図表示 (React Leaflet)
+
+- [x] React Leaflet v5インストール <!-- 2025-12-30完了 -->
+- [x] 基本的な地図コンポーネント実装 <!-- 2025-12-30完了 -->
+  - [x] OpenStreetMapタイル表示
+  - [x] 初期位置・ズームレベル設定
+- [x] マーカー表示 <!-- 2025-12-30完了 -->
+  - [x] GPS情報からマーカー配置
+  - [x] マーカークリックで写真選択
+- [ ] 地図タイル切替機能 <!-- Phase 3に移動 -->
+  - [x] OpenStreetMap
+  - [ ] Google Maps (APIキー必要)
+  - [ ] Satellite
+
+### 2.6 写真サムネイル一覧
+
+- [ ] サムネイル生成 (Rust) <!-- Phase 4に移動 -->
+  - [x] `image`クレート追加 <!-- Phase 1で完了 -->
+  - [ ] Tauri Command: `generate_thumbnail(path: String)` 実装
+  - [ ] リサイズ処理 (200x200px, Lanczos3)
+  - [ ] Base64エンコードして返却
+- [ ] サムネイル一覧コンポーネント (PhotoList) <!-- Phase 4に移動 -->
+  - [ ] 仮想スクロール対応 (@tanstack/react-virtual)
+  - [ ] 遅延ローディング
+  - [x] クリックで写真選択 <!-- 2025-12-30完了 -->
+  - [ ] 撮影日時でソート
+
+### 2.7 写真詳細表示
+
+- [x] 写真拡大表示コンポーネント (PhotoDetail) <!-- 2025-12-30完了 -->
+  - [x] 画像ロード・表示
+    - [x] Tauri Asset Protocolで画像アクセス
+    - [x] convertFileSrc()でローカルファイルパス変換
+  - [x] ズーム・パン操作 (react-zoom-pan-pinch) <!-- 2025-12-30完了 -->
+    - [x] マウスホイールでズーム
+    - [x] 左ドラッグでパン
+    - [x] ダブルクリックで拡大
+- [x] EXIF情報表示 <!-- 2025-12-30完了 -->
+  - [x] GPS座標
+  - [x] 撮影日時
+  - [x] カメラ情報
+  - [x] その他メタデータ (ISO, 絞り, シャッター速度, 焦点距離)
+  - [x] コンパクト1行表示（ホバーで詳細） <!-- 2025-12-30完了 -->
+
+**Phase 2 主要機能完了** 🎉 <!-- 2025-12-30完了 -->
+- 写真の読み込み、EXIF情報取得、地図表示の基本機能が動作確認済み
+
+---
+
+## Phase 3: 既存資産の移植
+
+### 3.1 UIコンポーネント移植
+
+- [ ] shadcn/uiコンポーネントセットアップ
+  - [ ] Button
+  - [ ] Dialog
+  - [ ] DropdownMenu
+  - [ ] Tooltip
+  - [ ] Progress
+- [ ] Electron版から流用可能なコンポーネント移植
+  - [ ] レイアウトコンポーネント
+  - [ ] 設定ダイアログ
+  - [ ] アバウトダイアログ
+
+### 3.2 国際化 (i18n)
+
+- [ ] i18next + react-i18nextセットアップ
+- [ ] 翻訳ファイル移植
+  - [ ] src/i18n/locales/en.json (Electron版から流用)
+  - [ ] src/i18n/locales/ja.json (Electron版から流用)
+- [ ] 言語切替機能実装
+  - [ ] 設定ダイアログに言語選択
+  - [ ] Zustand Storeで言語状態管理
+
+### 3.3 テーマ (ダークモード/ライトモード)
+
+- [ ] next-themesセットアップ
+- [ ] テーマ切替機能実装
+  - [ ] システム設定に従う
+  - [ ] ライトモード
+  - [ ] ダークモード
+- [ ] TailwindCSSダークモードスタイル適用
+
+### 3.4 設定管理
+
+- [x] 設定データ構造定義 <!-- 2025-12-30完了 -->
+  - [x] src/types/settings.ts作成
+  - [x] DisplaySettings (デフォルトビューモード、グリッド列数、EXIF表示)
+  - [x] MapSettings (ズームレベル、タイルレイヤー、クラスタリング)
+  - [x] UISettings (テーマ、言語、サイドバー幅)
+  - [x] デフォルト設定定義
+- [x] 設定の永続化 (tauri-plugin-store使用) <!-- 2025-12-30完了 -->
+  - [x] tauri-plugin-store v2セットアップ
+  - [x] 設定ファイル自動保存 (settings.json)
+  - [x] Zustand Storeで状態管理 (src/stores/settingsStore.ts)
+  - [x] 起動時の設定読み込み
+  - [x] 設定更新時の自動保存
+  - [x] Tauri 2.x capabilitiesシステムで権限設定
+- [x] 設定ダイアログ実装 <!-- 2025-12-30完了 -->
+  - [x] Settings.tsxコンポーネント作成
+  - [x] 表示設定セクション (ビューモード、グリッド列数、EXIF表示)
+  - [x] 地図設定セクション (ズーム、タイルレイヤー、クラスタリング)
+  - [x] UI設定セクション (テーマ、言語)
+  - [x] 保存/キャンセル/リセット機能
+  - [x] アクセシビリティ対応 (白半透明オーバーレイ + ブラー効果) <!-- 2025-12-30完了 -->
+- [x] photoStoreとの統合 <!-- 2025-12-30完了 -->
+  - [x] ビューモード変更時に設定に自動保存
+  - [x] 起動時に設定からビューモード復元
+
+**Phase 3.4 設定管理完了** 🎉 <!-- 2025-12-30完了 -->
+- 設定の永続化、UI、統合がすべて完了
+- 設定ファイル保存先: `%LOCALAPPDATA%\com.tauri.dev\photogeoview\settings.json`
+
+---
+
+## Phase 4: 高度な機能
+
+### 4.1 フィルタリング機能
+
+- [ ] 日付範囲フィルター
+  - [ ] UI実装 (date-fns使用)
+  - [ ] フィルター適用ロジック
+- [ ] 位置範囲フィルター (地図上で範囲選択)
+  - [ ] 矩形選択ツール
+  - [ ] 範囲内の写真を抽出
+
+### 4.2 エクスポート機能
+
+- [ ] CSV形式エクスポート
+  - [ ] Rust側実装 (csv crate)
+  - [ ] Tauri Command: `export_to_csv(photos, path)`
+  - [ ] ファイル保存ダイアログ
+- [ ] KML形式エクスポート (Google Earth用)
+  - [ ] Rust側実装
+  - [ ] Tauri Command: `export_to_kml(photos, path)`
+
+### 4.3 パフォーマンス最適化
+
+- [ ] 大量ファイル処理の最適化
+  - [ ] プログレスバー表示
+  - [ ] Tauri Eventで進捗通知
+  - [ ] キャンセル機能
+- [ ] サムネイルキャッシュ
+  - [ ] ディスクキャッシュ (Rust側)
+  - [ ] メモリキャッシュ (フロントエンド側)
+- [ ] 仮想スクロールの最適化
+
+### 4.4 エラーハンドリング改善
+
+- [ ] Rust側エラー型統一 (thiserror, anyhow)
+- [ ] フロントエンドエラー表示 (sonner toast)
+- [ ] ログ出力 (tracing crate)
+
+---
+
+## Phase 5: 仕上げ
+
+### 5.1 テスト
+
+#### フロントエンド
+
+- [ ] Vitestセットアップ
+- [ ] ユニットテスト
+  - [ ] コンポーネントテスト (React Testing Library)
+  - [ ] カスタムフックテスト
+  - [ ] Zustand Storeテスト
+- [ ] E2Eテスト (Playwright + Tauri)
+  - [ ] 写真読み込みフロー
+  - [ ] 地図操作
+  - [ ] エクスポート
+
+#### バックエンド
+
+- [ ] Rustユニットテスト (`cargo test`)
+  - [ ] EXIF読み取りテスト
+  - [ ] 画像処理テスト
+  - [ ] エラーハンドリングテスト
+- [ ] カバレッジ計測 (tarpaulin)
+
+### 5.2 ビルド設定
+
+- [ ] Tauri設定最適化 (tauri.conf.json)
+  - [ ] アプリ名・バージョン
+  - [ ] アイコン設定
+  - [ ] ウィンドウ設定 (最小サイズ、デフォルトサイズ)
+  - [ ] メニュー定義
+  - [ ] ファイルアソシエーション設定
+- [ ] Windows用ビルド設定
+  - [ ] NSIS設定
+  - [ ] アイコン (icon.ico)
+- [ ] macOS用ビルド設定
+  - [ ] DMG設定
+  - [ ] アイコン (icon.icns)
+- [ ] Linux用ビルド設定
+  - [ ] AppImage設定
+
+### 5.3 CI/CDセットアップ
+
+- [ ] GitHub Actions設定
+  - [ ] .github/workflows/ci.yml (テスト・リント)
+  - [ ] .github/workflows/release.yml (ビルド・リリース)
+- [ ] クロスプラットフォームビルド確認
+  - [ ] Windows (x64)
+  - [ ] macOS (Intel + Apple Silicon)
+  - [ ] Linux (AppImage)
+
+### 5.4 ドキュメント整備
+
+- [ ] README.md更新
+  - [ ] Tauri版の説明
+  - [ ] インストール方法
+  - [ ] ビルド方法
+  - [ ] 開発方法
+- [ ] CHANGELOG.md作成
+- [ ] コントリビューションガイド (CONTRIBUTING.md)
+- [ ] ライセンス確認 (LICENSE)
+
+### 5.5 リリース準備
+
+- [ ] バージョン番号確定 (v3.0.0)
+- [ ] リリースノート作成
+- [ ] スクリーンショット・デモGIF作成
+- [ ] GitHub Release作成
+
+---
+
+## 追加タスク（優先度低）
+
+### オプション機能
+
+- [ ] ドラッグ&ドロップ対応
+- [ ] 最近開いたファイル一覧
+- [ ] EXIF情報の手動編集
+- [ ] マーカーのドラッグ移動
+- [ ] プラグインシステム
+
+### パフォーマンス
+
+- [ ] ベンチマークテスト (criterion)
+- [ ] メモリプロファイリング
+- [ ] 起動時間計測・最適化
+
+---
+
+## 完了基準
+
+すべてのPhase 1-5のタスクが完了し、以下の条件を満たすこと：
+
+- [ ] Windows/macOS/Linuxで正常にビルド可能
+- [ ] 100枚の写真を3秒以内に読み込み可能
+- [ ] 基本機能（ファイル選択、EXIF読み取り、地図表示、写真表示）が動作
+- [ ] テストカバレッジ: フロントエンド70%以上、バックエンド80%以上
+- [ ] ドキュメントが整備されている
+
+---
+
+**タスク進捗の記録方法**:
+- チェックボックスに `[x]` でチェック
+- 実装中のタスクには日付をコメント追記: `- [ ] タスク名 <!-- 2025-12-30開始 -->`
+- 完了時にもコメント追記: `- [x] タスク名 <!-- 2025-12-30完了 -->`

@@ -9,6 +9,10 @@ dist/
 out/
 *.log
 
+# TypeScript compiled output in src (we use .ts/.tsx only)
+src/**/*.js
+src/**/*.jsx
+
 # IDEs
 .vscode/*
 !.vscode/extensions.json
@@ -25,6 +29,9 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+
+# Claude Code local settings
+.claude/settings.local.json
 
 # Testing
 coverage/
@@ -193,8 +200,6 @@ hs_err_pid*
 htmlcov/
 jspm_packages/
 lerna-debug.log*
-lib/
-lib64/
 logs/
 nosetests.xml
 npm-debug.log*
@@ -240,3 +245,10 @@ docker-compose.override.yml
 
 # Auto-generated entries from templates
 .pyrightcache/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Archive (旧Electron版)
+archive/
