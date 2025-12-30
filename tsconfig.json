@@ -6,6 +6,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "noEmit": true,
     "allowJs": false,
 
     // 型安全性（claude.md 7.3準拠）

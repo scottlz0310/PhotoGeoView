@@ -41,5 +41,7 @@ export default defineConfig({
   // 最適化設定
   optimizeDeps: {
     include: ['react', 'react-dom', 'leaflet', 'react-leaflet'],
+    exclude: ['archive'],
+    entries: ['src/**/*.tsx', 'src/**/*.ts'], // エントリーポイントを明示的に指定
   },
 })

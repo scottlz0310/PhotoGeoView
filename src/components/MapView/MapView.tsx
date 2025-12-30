@@ -13,8 +13,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
+// シャッター速度を分数表記に変換するヘルパー関数
+// 以前のオーバーレイ表示は削除済み
+function formatShutterSpeed(seconds: number): string {
+  if (seconds >= 1) return `${seconds}s`
+  const denominator = Math.round(1 / seconds)
+  return `1/${denominator}s`
+}
+
 export function MapView(): React.ReactElement {
-  const { photos, selectedPhoto, selectPhoto } = usePhotoStore()
+  const { photos, selectPhoto } = usePhotoStore()
   const [mapKey, setMapKey] = useState(0)
 
   // GPS情報を持つ写真のみフィルタリング
@@ -107,15 +115,58 @@ export function MapView(): React.ReactElement {
               }}
             >
               <Popup>
-                <div className="text-sm">
-                  <div className="font-semibold">{photo.filename}</div>
-                  {photo.exif?.datetime && (
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(photo.exif.datetime).toLocaleString()}
+                <div className="text-sm min-w-[200px]">
+                  <div className="font-semibold mb-2">{photo.filename}</div>
+
+                  <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                    {photo.exif?.datetime && (
+                      <>
+                        <div className="text-muted-foreground font-medium">Date:</div>
+                        <div>{new Date(photo.exif.datetime).toLocaleString()}</div>
+                      </>
+                    )}
+
+                    {photo.exif?.camera && (
+                      <>
+                        <div className="text-muted-foreground font-medium">Camera:</div>
+                        <div>
+                          {photo.exif.camera.make} {photo.exif.camera.model}
+                        </div>
+                      </>
+                    )}
+
+                    {(photo.exif?.aperture || photo.exif?.shutterSpeed || photo.exif?.iso) && (
+                      <>
+                        <div className="text-muted-foreground font-medium">Settings:</div>
+                        <div>
+                          {photo.exif?.aperture && `f/${photo.exif.aperture} `}
+                          {photo.exif?.shutterSpeed &&
+                            `${formatShutterSpeed(photo.exif.shutterSpeed)} `}
+                          {photo.exif?.iso && `ISO${photo.exif.iso}`}
+                        </div>
+                      </>
+                    )}
+
+                    {photo.exif?.focalLength && (
+                      <>
+                        <div className="text-muted-foreground font-medium">Focal:</div>
+                        <div>{photo.exif.focalLength}mm</div>
+                      </>
+                    )}
+
+                    {photo.exif?.width && photo.exif?.height && (
+                      <>
+                        <div className="text-muted-foreground font-medium">Size:</div>
+                        <div>
+                          {photo.exif.width} x {photo.exif.height}
+                        </div>
+                      </>
+                    )}
+
+                    <div className="text-muted-foreground font-medium">Location:</div>
+                    <div>
+                      {gps.lat.toFixed(6)}, {gps.lng.toFixed(6)}
                     </div>
-                  )}
-                  <div className="mt-1 text-xs">
-                    📍 {gps.lat.toFixed(6)}, {gps.lng.toFixed(6)}
                   </div>
                 </div>
               </Popup>
@@ -123,16 +174,6 @@ export function MapView(): React.ReactElement {
           )
         })}
       </MapContainer>
-
-      {/* 選択中の写真情報 */}
-      {selectedPhoto?.exif?.gps && (
-        <div className="absolute bottom-4 left-4 z-[1000] rounded bg-card/90 p-2 text-xs shadow-lg backdrop-blur-sm">
-          <div className="font-semibold">{selectedPhoto.filename}</div>
-          <div className="text-muted-foreground">
-            📍 {selectedPhoto.exif.gps.lat.toFixed(6)}, {selectedPhoto.exif.gps.lng.toFixed(6)}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

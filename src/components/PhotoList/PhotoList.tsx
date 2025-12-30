@@ -1,5 +1,16 @@
 import { invoke } from '@tauri-apps/api/core'
-import { File, Files, Folder, FolderOpen, Image } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  Folder,
+  FolderOpen,
+  Grid,
+  Image,
+  LayoutList,
+  List,
+  RefreshCw,
+} from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -12,7 +23,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { usePhotoStore, type ViewMode } from '@/stores/photoStore'
+import { usePhotoStore } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import type { PhotoData } from '@/types/photo'
 
@@ -30,7 +41,6 @@ export function PhotoList(): React.ReactElement {
   } = usePhotoStore()
   const { settings, updateSettings } = useSettingsStore()
   const [isLoading, setIsLoading] = useState(false)
-  const [recursive, setRecursive] = useState(true)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [loadingStatus, setLoadingStatus] = useState('')
 
@@ -47,57 +57,6 @@ export function PhotoList(): React.ReactElement {
     }
     loadLastFolder()
   }, [settings.lastOpenedFolder, currentPath, navigateToDirectory])
-
-  const handleOpenFile = async () => {
-    setIsLoading(true)
-    setLoadingStatus('ファイルを選択中...')
-    try {
-      const filePath = await invoke<string | null>('select_photo_file')
-      if (filePath) {
-        setLoadingStatus('写真データを読み込み中...')
-        const photoData = await invoke<PhotoData>('get_photo_data', { path: filePath })
-        addPhotos([photoData])
-        selectPhoto(photoData.path)
-      }
-    } catch (_error) {
-      // エラーは無視（ユーザーがキャンセルした場合など）
-    } finally {
-      setIsLoading(false)
-      setLoadingStatus('')
-      setLoadingProgress(0)
-    }
-  }
-
-  const handleOpenFiles = async () => {
-    setIsLoading(true)
-    setLoadingStatus('ファイルを選択中...')
-    try {
-      const filePaths = await invoke<string[]>('select_photo_files')
-      if (filePaths.length > 0) {
-        setLoadingStatus(`${filePaths.length}個の写真を読み込み中...`)
-        // 並列で写真データを取得
-        const photoDataPromises = filePaths.map((path, index) =>
-          invoke<PhotoData>('get_photo_data', { path }).then((data) => {
-            setLoadingProgress(((index + 1) / filePaths.length) * 100)
-            return data
-          }),
-        )
-        const photosData = await Promise.all(photoDataPromises)
-        addPhotos(photosData)
-        // 最初の写真を選択
-        const firstPhoto = photosData[0]
-        if (firstPhoto) {
-          selectPhoto(firstPhoto.path)
-        }
-      }
-    } catch (_error) {
-      // エラーは無視（ユーザーがキャンセルした場合など）
-    } finally {
-      setIsLoading(false)
-      setLoadingStatus('')
-      setLoadingProgress(0)
-    }
-  }
 
   const handleOpenFolder = async () => {
     setIsLoading(true)
@@ -199,28 +158,153 @@ export function PhotoList(): React.ReactElement {
     }
   }
 
-  const viewModeLabels: Record<ViewMode, string> = {
-    list: 'リスト表示',
-    detail: '詳細表示',
-    grid: 'グリッド表示',
+  // 上位フォルダに移動
+  const handleNavigateUp = async () => {
+    if (!currentPath) return
+    try {
+      // パス区切り文字で分割して親パスを生成
+      const separator = currentPath.includes('\\') ? '\\' : '/'
+      const parts = currentPath.split(separator).filter(Boolean)
+      if (parts.length > 1) {
+        // ドライブレターの処理（Windows）
+        const firstPart = parts[0]
+        const isWindowsDrive = firstPart ? firstPart.endsWith(':') : false
+        const parentParts = parts.slice(0, -1)
+        let parentPath = parentParts.join(separator)
+
+        if (isWindowsDrive && parentParts.length === 1) {
+          parentPath += separator // C: -> C:\
+        } else if (currentPath.startsWith('/')) {
+          parentPath = '/' + parentPath // Unix absolute path
+        }
+
+        await navigateToDirectory(parentPath)
+        updateSettings({ lastOpenedFolder: parentPath })
+      }
+    } catch (error) {
+      toast.error('上位フォルダに移動できませんでした', {
+        description: String(error),
+      })
+    }
+  }
+
+  // フォルダ再読み込み
+  const handleRefresh = async () => {
+    if (!currentPath) return
+    setIsLoading(true)
+    try {
+      await navigateToDirectory(currentPath)
+      toast.success('フォルダを再読み込みしました')
+    } catch (error) {
+      toast.error('再読み込みに失敗しました', {
+        description: String(error),
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="flex h-full w-full flex-col bg-card p-4">
-      {/* ヘッダー */}
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-card-foreground">Photo List</h2>
+      {/* ヘッダー（ナビゲーション & ビュー切り替え） */}
+      <div className="mb-4 flex items-center justify-between gap-2">
+        {/* 左側: ナビゲーションボタン群 */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              /* TODO: 履歴戻る実装 */
+            }}
+            disabled={true /* TODO: 履歴状態と連携 */}
+            title="戻る"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              /* TODO: 履歴進む実装 */
+            }}
+            disabled={true /* TODO: 履歴状態と連携 */}
+            title="進む"
+          >
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleNavigateUp}
+            disabled={!currentPath || isLoading}
+            title="上位フォルダへ"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleRefresh}
+            disabled={!currentPath || isLoading}
+            title="再読み込み"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleOpenFolder}
+            disabled={isLoading}
+            title="フォルダを開く"
+          >
+            <FolderOpen className="h-4 w-4" />
+          </Button>
+        </div>
 
-        {/* ビューモード切り替えドロップダウン */}
-        <select
-          value={viewMode}
-          onChange={(e) => setViewMode(e.target.value as ViewMode)}
-          className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="list">{viewModeLabels.list}</option>
-          <option value="detail">{viewModeLabels.detail}</option>
-          <option value="grid">{viewModeLabels.grid}</option>
-        </select>
+        {/* 右側: ビューモード切り替えボタン */}
+        <div className="flex items-center rounded-md border border-border bg-background p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`rounded p-1.5 transition-colors ${
+              viewMode === 'list'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title="リスト表示"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('detail')}
+            className={`rounded p-1.5 transition-colors ${
+              viewMode === 'detail'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title="詳細表示"
+          >
+            <LayoutList className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('grid')}
+            className={`rounded p-1.5 transition-colors ${
+              viewMode === 'grid'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title="グリッド表示"
+          >
+            <Grid className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* パンくずリスト（フォルダナビゲーション） */}
@@ -250,58 +334,13 @@ export function PhotoList(): React.ReactElement {
         </div>
       )}
 
-      {/* File/Folder selection buttons */}
-      <div className="mb-4 space-y-3">
-        <div className="flex gap-2">
-          <Button onClick={handleOpenFile} disabled={isLoading} size="sm" className="flex-1">
-            <File className="mr-2 h-4 w-4" />
-            単一ファイル
-          </Button>
-          <Button onClick={handleOpenFiles} disabled={isLoading} size="sm" className="flex-1">
-            <Files className="mr-2 h-4 w-4" />
-            複数ファイル
-          </Button>
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="mb-4 space-y-2">
+          <Progress value={loadingProgress} className="h-2" />
+          <p className="text-xs text-muted-foreground text-center">{loadingStatus}</p>
         </div>
-
-        <div className="space-y-2">
-          <Button
-            onClick={handleOpenFolder}
-            disabled={isLoading}
-            variant="secondary"
-            size="sm"
-            className="w-full"
-          >
-            <FolderOpen className="mr-2 h-4 w-4" />
-            フォルダから開く
-          </Button>
-
-          {/* 再帰的スキャンオプション */}
-          <div className="flex items-center gap-2 px-1">
-            <input
-              type="checkbox"
-              id="recursive-scan"
-              checked={recursive}
-              onChange={(e) => setRecursive(e.target.checked)}
-              className="h-4 w-4 rounded border-border"
-              disabled={isLoading}
-            />
-            <label
-              htmlFor="recursive-scan"
-              className="text-xs text-muted-foreground cursor-pointer select-none"
-            >
-              サブフォルダも含める
-            </label>
-          </div>
-        </div>
-
-        {/* Loading indicator */}
-        {isLoading && (
-          <div className="space-y-2">
-            <Progress value={loadingProgress} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">{loadingStatus}</p>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* コンテンツ表示エリア */}
       <div className="flex-1 overflow-y-auto">

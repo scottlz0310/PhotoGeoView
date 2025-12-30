@@ -569,7 +569,7 @@ setPanelVisibility: (panelId: keyof AppState['panelVisibility'], visible: boolea
 #### ✅ 4.1.1 ユニットテスト (Vitest)
 - [x] Vitest設定ファイル作成 (vitest.config.ts)
 - [x] テストセットアップ (tests/setup.ts)
-- [x] ユーティリティ関数テスト (tests/unit/utils.test.ts)
+- [x] ユーティリティ関数テスト (src/lib/utils.test.ts)
 - [x] コンポーネントテスト（@testing-library/react）
 - [x] ストアテスト（Zustand）
 - [ ] カバレッジ >80% (現在70%)
