@@ -200,8 +200,6 @@ hs_err_pid*
 htmlcov/
 jspm_packages/
 lerna-debug.log*
-lib/
-lib64/
 logs/
 nosetests.xml
 npm-debug.log*
