@@ -12,69 +12,36 @@ function App(): React.ReactElement {
         </h1>
       </header>
 
-      <main className="flex-1 overflow-hidden">
-        <Group id="main-panel-group" orientation="horizontal" className="flex h-full w-full">
+      <main className="flex-1 overflow-hidden p-4">
+        <Group id="main-panel-group" orientation="horizontal" className="h-full gap-4">
           {/* Left Panel - Photo List */}
-          <Panel id="photo-list-panel" defaultSize={25} minSize={15} maxSize={40}>
+          <Panel id="photo-list-panel" defaultSize={30} minSize={20}>
             <PhotoList />
           </Panel>
 
           <Separator
-            id="separator-1"
-            className="relative flex w-2 items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 after:bg-border hover:bg-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[panel-group-direction=vertical]:h-2 data-[panel-group-direction=vertical]:w-full"
-          >
-            <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border">
-              <svg
-                className="h-2.5 w-2.5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-label="Resize handle"
-              >
-                <title>Resize handle</title>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </Separator>
+            id="separator-horizontal"
+            className="w-1 bg-border hover:bg-primary transition-colors"
+          />
 
-          {/* Center Panel - Map View */}
-          <Panel id="map-view-panel" defaultSize={45} minSize={25} maxSize={60}>
-            <MapView />
-          </Panel>
+          {/* Right Panel - Split vertically into Photo Preview (top) and Map (bottom) */}
+          <Panel id="right-panel" defaultSize={70} minSize={30}>
+            <Group id="right-panel-group" orientation="vertical" className="h-full gap-4">
+              {/* Top: Photo Preview */}
+              <Panel id="photo-detail-panel" defaultSize={60} minSize={20}>
+                <PhotoDetail />
+              </Panel>
 
-          <Separator
-            id="separator-2"
-            className="relative flex w-2 items-center justify-center bg-border after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 after:bg-border hover:bg-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[panel-group-direction=vertical]:h-2 data-[panel-group-direction=vertical]:w-full"
-          >
-            <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border">
-              <svg
-                className="h-2.5 w-2.5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-label="Resize handle"
-              >
-                <title>Resize handle</title>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </Separator>
+              <Separator
+                id="separator-vertical"
+                className="h-1 bg-border hover:bg-primary transition-colors"
+              />
 
-          {/* Right Panel - Photo Detail */}
-          <Panel id="photo-detail-panel" defaultSize={30} minSize={20} maxSize={50}>
-            <PhotoDetail />
+              {/* Bottom: Map View */}
+              <Panel id="map-view-panel" defaultSize={40} minSize={20}>
+                <MapView />
+              </Panel>
+            </Group>
           </Panel>
         </Group>
       </main>
