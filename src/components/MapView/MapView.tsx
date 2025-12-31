@@ -2,6 +2,7 @@ import type { LatLngExpression } from 'leaflet'
 import L from 'leaflet'
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { usePhotoStore } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -43,12 +44,14 @@ function MapUpdater() {
 }
 
 export function MapView(): React.ReactElement {
-  const { photos, selectPhoto } = usePhotoStore()
+  const { t } = useTranslation()
+  const { photos, selectPhoto, selectedPhoto } = usePhotoStore()
   const { settings } = useSettingsStore()
   const [mapKey, setMapKey] = useState(0)
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
   const hasMapboxToken = Boolean(mapboxToken)
   const showMapboxWarning = settings.map.tileLayer === 'satellite' && !hasMapboxToken
+  const showNoGpsWarning = selectedPhoto && !selectedPhoto.exif?.gps
 
   const tileConfig = useMemo(() => {
     if (settings.map.tileLayer === 'satellite' && hasMapboxToken) {
@@ -119,10 +122,8 @@ export function MapView(): React.ReactElement {
       <div className="relative h-full w-full bg-muted">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="mb-2 text-xl font-semibold text-foreground">Map View</h2>
-            <p className="text-sm text-muted-foreground">
-              Load photos with GPS data to see them on the map
-            </p>
+            <h2 className="mb-2 text-xl font-semibold text-foreground">{t('map.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('map.empty')}</p>
           </div>
         </div>
       </div>
@@ -133,7 +134,16 @@ export function MapView(): React.ReactElement {
     <div className="relative h-full w-full">
       {showMapboxWarning && (
         <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow">
-          Mapbox APIキーが未設定のため、OpenStreetMapを表示しています。
+          {t('map.mapboxWarning')}
+        </div>
+      )}
+      {showNoGpsWarning && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+          <div className="rounded-lg border border-border bg-card p-6 text-center shadow-lg">
+            <div className="mb-2 text-4xl">📍🚫</div>
+            <h3 className="mb-1 text-lg font-semibold text-foreground">{t('map.noGps')}</h3>
+            <p className="text-sm text-muted-foreground">{t('map.noGpsDesc')}</p>
+          </div>
         </div>
       )}
       <MapContainer
@@ -173,14 +183,18 @@ export function MapView(): React.ReactElement {
                   <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                     {photo.exif?.datetime && (
                       <>
-                        <div className="text-muted-foreground font-medium">Date:</div>
+                        <div className="text-muted-foreground font-medium">
+                          {t('detail.exif.datetime')}:
+                        </div>
                         <div>{new Date(photo.exif.datetime).toLocaleString()}</div>
                       </>
                     )}
 
                     {photo.exif?.camera && (
                       <>
-                        <div className="text-muted-foreground font-medium">Camera:</div>
+                        <div className="text-muted-foreground font-medium">
+                          {t('detail.exif.camera')}:
+                        </div>
                         <div>
                           {photo.exif.camera.make} {photo.exif.camera.model}
                         </div>
@@ -189,7 +203,9 @@ export function MapView(): React.ReactElement {
 
                     {(photo.exif?.aperture || photo.exif?.shutterSpeed || photo.exif?.iso) && (
                       <>
-                        <div className="text-muted-foreground font-medium">Settings:</div>
+                        <div className="text-muted-foreground font-medium">
+                          {t('detail.exif.settings')}:
+                        </div>
                         <div>
                           {photo.exif?.aperture && `f/${photo.exif.aperture} `}
                           {photo.exif?.shutterSpeed &&
@@ -201,21 +217,27 @@ export function MapView(): React.ReactElement {
 
                     {photo.exif?.focalLength && (
                       <>
-                        <div className="text-muted-foreground font-medium">Focal:</div>
+                        <div className="text-muted-foreground font-medium">
+                          {t('detail.exif.focalLength')}:
+                        </div>
                         <div>{photo.exif.focalLength}mm</div>
                       </>
                     )}
 
                     {photo.exif?.width && photo.exif?.height && (
                       <>
-                        <div className="text-muted-foreground font-medium">Size:</div>
+                        <div className="text-muted-foreground font-medium">
+                          {t('detail.exif.dimensions')}:
+                        </div>
                         <div>
                           {photo.exif.width} x {photo.exif.height}
                         </div>
                       </>
                     )}
 
-                    <div className="text-muted-foreground font-medium">Location:</div>
+                    <div className="text-muted-foreground font-medium">
+                      {t('detail.exif.location')}:
+                    </div>
                     <div>
                       {gps.lat.toFixed(6)}, {gps.lng.toFixed(6)}
                     </div>

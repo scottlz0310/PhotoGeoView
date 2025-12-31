@@ -1,18 +1,20 @@
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react'
 import type React from 'react'
+import { useTranslation } from 'react-i18next'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { usePhotoStore } from '@/stores/photoStore'
 
 export function PhotoDetail(): React.ReactElement {
+  const { t } = useTranslation()
   const { selectedPhoto } = usePhotoStore()
 
   if (!selectedPhoto) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-card">
-        <p className="text-sm text-muted-foreground">写真が選択されていません</p>
+        <p className="text-sm text-muted-foreground">{t('detail.noSelection')}</p>
       </div>
     )
   }
@@ -50,7 +52,7 @@ export function PhotoDetail(): React.ReactElement {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">
-                      <p>拡大 (マウスホイールでも可)</p>
+                      <p>{t('detail.zoomIn')}</p>
                     </TooltipContent>
                   </Tooltip>
 
@@ -66,7 +68,7 @@ export function PhotoDetail(): React.ReactElement {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">
-                      <p>縮小</p>
+                      <p>{t('detail.zoomOut')}</p>
                     </TooltipContent>
                   </Tooltip>
 
@@ -85,7 +87,7 @@ export function PhotoDetail(): React.ReactElement {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">
-                      <p>リセット (等倍・中央配置)</p>
+                      <p>{t('detail.reset')}</p>
                     </TooltipContent>
                   </Tooltip>
 
@@ -104,7 +106,7 @@ export function PhotoDetail(): React.ReactElement {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">
-                      <p>画面にフィット</p>
+                      <p>{t('detail.fit')}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

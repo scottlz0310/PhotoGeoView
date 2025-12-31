@@ -307,7 +307,7 @@ pub fn run() {
                 )?;
 
                 // ログファイルの場所を出力
-                if let Some(log_dir) = app.path().app_log_dir().ok() {
+                if let Ok(log_dir) = app.path().app_log_dir() {
                     log::info!("📝 ログファイル: {:?}", log_dir);
                 }
             }

@@ -2,6 +2,7 @@ use thiserror::Error;
 
 /// PhotoGeoViewのエラー型
 #[derive(Error, Debug)]
+#[allow(dead_code)]
 pub enum PhotoError {
     #[error("ファイルが見つかりません: {0}")]
     FileNotFound(String),

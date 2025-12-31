@@ -1,5 +1,6 @@
 import { getVersion as getAppVersion, getName, getTauriVersion } from '@tauri-apps/api/app'
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -48,6 +49,7 @@ const MAP_PROVIDERS = [
 ]
 
 export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.ReactElement {
+  const { t } = useTranslation()
   const [appName, setAppName] = useState(pkg.name ?? 'PhotoGeoView')
   const [appVersion, setAppVersion] = useState(pkg.version ?? '0.0.0')
   const [tauriVersion, setTauriVersion] = useState('unknown')
@@ -84,17 +86,17 @@ export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.R
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-card text-card-foreground border-border shadow-2xl">
         <DialogHeader>
-          <DialogTitle>About PhotoGeoView</DialogTitle>
-          <DialogDescription>バージョン情報と依存関係</DialogDescription>
+          <DialogTitle>{t('menu.about')}</DialogTitle>
+          <DialogDescription>{t('about.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           <section>
-            <h3 className="text-sm font-semibold text-foreground">アプリ情報</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('about.appInfo')}</h3>
             <dl className="mt-3 grid grid-cols-[140px_1fr] gap-x-3 gap-y-2 text-sm">
-              <dt className="text-muted-foreground">アプリ名</dt>
+              <dt className="text-muted-foreground">{t('about.appName')}</dt>
               <dd className="text-foreground">{appName}</dd>
-              <dt className="text-muted-foreground">アプリバージョン</dt>
+              <dt className="text-muted-foreground">{t('about.appVersion')}</dt>
               <dd className="text-foreground">{appVersion}</dd>
               <dt className="text-muted-foreground">Tauri</dt>
               <dd className="text-foreground">{tauriVersion}</dd>
@@ -108,7 +110,7 @@ export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.R
           </section>
 
           <section>
-            <h3 className="text-sm font-semibold text-foreground">主要依存関係</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('about.dependencies')}</h3>
             <dl className="mt-3 grid grid-cols-[200px_1fr] gap-x-3 gap-y-2 text-sm">
               {CORE_DEPENDENCIES.map((entry) => (
                 <React.Fragment key={entry.name}>
@@ -120,7 +122,7 @@ export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.R
           </section>
 
           <section>
-            <h3 className="text-sm font-semibold text-foreground">地図プロバイダー</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t('about.mapProviders')}</h3>
             <dl className="mt-3 grid grid-cols-[200px_1fr] gap-x-3 gap-y-2 text-sm">
               {MAP_PROVIDERS.map((entry) => (
                 <React.Fragment key={entry.name}>
@@ -129,15 +131,13 @@ export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.R
                 </React.Fragment>
               ))}
             </dl>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Google Mapsリンク形式: https://www.google.com/maps/@lat,lng,18z
-            </p>
+            <p className="mt-3 text-xs text-muted-foreground">{t('about.googleMapsHint')}</p>
           </section>
         </div>
 
         <DialogFooter className="mt-2">
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
-            閉じる
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

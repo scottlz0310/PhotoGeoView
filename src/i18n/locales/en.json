@@ -1,0 +1,130 @@
+{
+  "app": {
+    "title": "PhotoGeoView",
+    "subtitle": "Photo Geo-Tagging Application"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "reset": "Reset",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading...",
+    "ready": "Ready",
+    "folder": "Folder",
+    "error": "Error"
+  },
+  "menu": {
+    "file": "File",
+    "openFiles": "Open Photos",
+    "openFolder": "Open Folder",
+    "openLastFolder": "Open Last Folder",
+    "exit": "Exit",
+    "view": "View",
+    "reloadFolder": "Reload Folder",
+    "mapTiles": "Map Tiles",
+    "theme": "Theme",
+    "refresh": "Refresh",
+    "settings": "Settings",
+    "help": "Help",
+    "version": "Version Info",
+    "about": "About"
+  },
+  "photoList": {
+    "title": "Photos",
+    "empty": "No photos found",
+    "loading": "Loading photos...",
+    "viewMode": {
+      "list": "List",
+      "grid": "Grid",
+      "detail": "Detail"
+    },
+    "sort": {
+      "date": "Date",
+      "name": "Name",
+      "size": "Size"
+    },
+    "filter": {
+      "all": "All",
+      "hasGps": "Has GPS",
+      "noGps": "No GPS"
+    }
+  },
+  "map": {
+    "title": "Map",
+    "empty": "Load photos with GPS data to see them on the map",
+    "noGps": "No Location Data",
+    "noGpsDesc": "This photo does not contain GPS information.",
+    "mapboxWarning": "Mapbox API Token is missing. Falling back to OpenStreetMap.",
+    "layers": {
+      "osm": "OpenStreetMap",
+      "satellite": "Satellite",
+      "google": "Google Maps"
+    },
+    "clustering": "Clustering"
+  },
+  "detail": {
+    "title": "Detail",
+    "noSelection": "No photo selected",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "reset": "Reset",
+    "fit": "Fit to Screen",
+    "exif": {
+      "camera": "Camera",
+      "lens": "Lens",
+      "iso": "ISO",
+      "aperture": "Aperture",
+      "shutter": "Shutter",
+      "settings": "Settings",
+      "focalLength": "Focal Length",
+      "datetime": "Date/Time",
+      "gps": "GPS",
+      "location": "Location",
+      "dimensions": "Dimensions",
+      "fileSize": "File Size"
+    }
+  },
+  "about": {
+    "description": "Version info and dependencies",
+    "appInfo": "App Info",
+    "appName": "App Name",
+    "appVersion": "App Version",
+    "dependencies": "Core Dependencies",
+    "mapProviders": "Map Providers",
+    "googleMapsHint": "Google Maps Link Format: https://www.google.com/maps/@lat,lng,18z"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "display": "Display",
+      "map": "Map",
+      "ui": "UI"
+    },
+    "display": {
+      "defaultViewMode": "Default View Mode",
+      "gridColumns": "Grid Columns",
+      "showExif": "Show EXIF Info"
+    },
+    "map": {
+      "defaultZoom": "Default Zoom Level",
+      "tileLayer": "Tile Layer",
+      "enableClustering": "Enable Clustering"
+    },
+    "ui": {
+      "theme": "Theme",
+      "language": "Language",
+      "sidebarWidth": "Sidebar Width"
+    },
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "languages": {
+      "en": "English",
+      "ja": "Japanese"
+    }
+  }
+}

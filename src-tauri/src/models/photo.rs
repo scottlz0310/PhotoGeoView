@@ -60,6 +60,7 @@ pub struct PhotoData {
 
 impl PhotoData {
     /// ファイルパスから PhotoData を作成（EXIF情報とサムネイルは後から追加）
+    #[allow(dead_code)]
     pub fn new(path: String, filename: String, file_size: u64, modified_time: String) -> Self {
         Self {
             path,
@@ -72,11 +73,13 @@ impl PhotoData {
     }
 
     /// GPS情報を持っているかチェック
+    #[allow(dead_code)]
     pub fn has_gps(&self) -> bool {
         self.exif.as_ref().and_then(|e| e.gps.as_ref()).is_some()
     }
 
     /// 撮影日時を持っているかチェック
+    #[allow(dead_code)]
     pub fn has_datetime(&self) -> bool {
         self.exif
             .as_ref()

@@ -1,0 +1,130 @@
+{
+  "app": {
+    "title": "PhotoGeoView",
+    "subtitle": "写真位置情報ビューア"
+  },
+  "common": {
+    "cancel": "キャンセル",
+    "save": "保存",
+    "reset": "リセット",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "loading": "読み込み中...",
+    "ready": "準備完了",
+    "folder": "フォルダ",
+    "error": "エラー"
+  },
+  "menu": {
+    "file": "ファイル",
+    "openFiles": "写真を開く",
+    "openFolder": "フォルダを開く",
+    "openLastFolder": "最後に開いたフォルダ",
+    "exit": "終了",
+    "view": "表示",
+    "reloadFolder": "フォルダを再読み込み",
+    "mapTiles": "地図タイル",
+    "theme": "テーマ",
+    "refresh": "更新",
+    "settings": "設定",
+    "help": "ヘルプ",
+    "version": "バージョン情報",
+    "about": "PhotoGeoViewについて"
+  },
+  "photoList": {
+    "title": "写真一覧",
+    "empty": "写真が見つかりません",
+    "loading": "写真を読み込んでいます...",
+    "viewMode": {
+      "list": "リスト",
+      "grid": "グリッド",
+      "detail": "詳細"
+    },
+    "sort": {
+      "date": "撮影日時",
+      "name": "ファイル名",
+      "size": "サイズ"
+    },
+    "filter": {
+      "all": "すべて",
+      "hasGps": "GPSあり",
+      "noGps": "GPSなし"
+    }
+  },
+  "map": {
+    "title": "地図",
+    "empty": "GPS情報付きの写真を読み込むと地図上に表示されます",
+    "noGps": "位置情報なし",
+    "noGpsDesc": "この写真にはGPS情報が含まれていません。",
+    "mapboxWarning": "Mapbox APIキーが未設定のため、OpenStreetMapを表示しています。",
+    "layers": {
+      "osm": "OpenStreetMap",
+      "satellite": "衛星写真",
+      "google": "Google Maps"
+    },
+    "clustering": "クラスタリング"
+  },
+  "detail": {
+    "title": "詳細",
+    "noSelection": "写真が選択されていません",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "reset": "リセット",
+    "fit": "画面にフィット",
+    "exif": {
+      "camera": "カメラ",
+      "lens": "レンズ",
+      "iso": "ISO",
+      "aperture": "絞り",
+      "shutter": "シャッター速度",
+      "settings": "設定",
+      "focalLength": "焦点距離",
+      "datetime": "撮影日時",
+      "gps": "GPS",
+      "location": "位置情報",
+      "dimensions": "サイズ",
+      "fileSize": "ファイルサイズ"
+    }
+  },
+  "about": {
+    "description": "バージョン情報と依存関係",
+    "appInfo": "アプリ情報",
+    "appName": "アプリ名",
+    "appVersion": "アプリバージョン",
+    "dependencies": "主要依存関係",
+    "mapProviders": "地図プロバイダー",
+    "googleMapsHint": "Google Mapsリンク形式: https://www.google.com/maps/@lat,lng,18z"
+  },
+  "settings": {
+    "title": "設定",
+    "sections": {
+      "display": "表示設定",
+      "map": "地図設定",
+      "ui": "UI設定"
+    },
+    "display": {
+      "defaultViewMode": "デフォルト表示モード",
+      "gridColumns": "グリッド列数",
+      "showExif": "EXIF情報を表示"
+    },
+    "map": {
+      "defaultZoom": "デフォルトズームレベル",
+      "tileLayer": "地図タイル",
+      "enableClustering": "クラスタリングを有効化"
+    },
+    "ui": {
+      "theme": "テーマ",
+      "language": "言語",
+      "sidebarWidth": "サイドバー幅"
+    },
+    "themes": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "languages": {
+      "en": "英語",
+      "ja": "日本語"
+    }
+  }
+}

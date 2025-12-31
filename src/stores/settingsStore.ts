@@ -1,5 +1,6 @@
 import { Store } from '@tauri-apps/plugin-store'
 import { create } from 'zustand'
+import i18n from '@/i18n'
 import { type AppSettings, DEFAULT_SETTINGS } from '@/types/settings'
 
 interface SettingsState {
@@ -50,6 +51,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         version: version ?? DEFAULT_SETTINGS.version,
       }
 
+      // 言語設定を適用
+      if (loadedSettings.ui.language) {
+        i18n.changeLanguage(loadedSettings.ui.language)
+      }
+
       set({ settings: loadedSettings, isLoaded: true })
     } catch (_error) {
       // エラー時はデフォルト設定を使用
@@ -70,6 +76,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       display: { ...currentSettings.display, ...updates.display },
       map: { ...currentSettings.map, ...updates.map },
       ui: { ...currentSettings.ui, ...updates.ui },
+    }
+
+    // 言語設定が変更された場合は適用
+    if (newSettings.ui.language !== currentSettings.ui.language) {
+      i18n.changeLanguage(newSettings.ui.language)
     }
 
     // Store に保存

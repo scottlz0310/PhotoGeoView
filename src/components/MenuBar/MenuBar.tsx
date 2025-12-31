@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import type React from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ const menuTriggerClassName =
   'text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=open]:text-foreground'
 
 export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.ReactElement {
+  const { t } = useTranslation()
   const {
     viewMode,
     currentPath,
@@ -44,11 +46,13 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
   } = usePhotoStore()
   const { settings, updateSettings } = useSettingsStore()
   const hasMapboxToken = Boolean(import.meta.env.VITE_MAPBOX_TOKEN)
-  const satelliteLabel = hasMapboxToken ? '衛星画像 (Mapbox)' : '衛星画像 (Mapboxキー未設定)'
+  const satelliteLabel = hasMapboxToken
+    ? `${t('map.layers.satellite')} (Mapbox)`
+    : `${t('map.layers.satellite')} (Mapbox Token Missing)`
 
   const loadPhotos = async (paths: string[]) => {
     setIsLoading(true)
-    setLoadingStatus('写真データを読み込み中...')
+    setLoadingStatus(t('photoList.loading'))
     try {
       const results: PhotoData[] = []
       for (const path of paths) {
@@ -56,7 +60,7 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
           const photoData = await invoke<PhotoData>('get_photo_data', { path })
           results.push(photoData)
         } catch (error) {
-          toast.error('写真の読み込みに失敗しました', {
+          toast.error(t('common.error'), {
             description: String(error),
           })
         }
@@ -65,8 +69,8 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
         clearNavigation()
         addPhotos(results)
         selectPhoto(results[0]?.path ?? null)
-        toast.success('写真を読み込みました', {
-          description: `${results.length}件の写真を追加しました`,
+        toast.success(t('menu.openFiles'), {
+          description: `${results.length} photos added`,
         })
       }
     } finally {
@@ -77,14 +81,14 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
 
   const handleOpenFiles = async () => {
     setIsLoading(true)
-    setLoadingStatus('ファイルを選択中...')
+    setLoadingStatus(t('common.loading'))
     try {
       const filePaths = await invoke<string[]>('select_photo_files')
       if (filePaths.length > 0) {
         await loadPhotos(filePaths)
       }
     } catch (error) {
-      toast.error('ファイル選択に失敗しました', {
+      toast.error(t('common.error'), {
         description: String(error),
       })
     } finally {
@@ -95,13 +99,13 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
 
   const openFolder = async (folderPath: string) => {
     setIsLoading(true)
-    setLoadingStatus('フォルダを読み込み中...')
+    setLoadingStatus(t('common.loading'))
     try {
       await navigateToDirectory(folderPath)
       updateSettings({ lastOpenedFolder: folderPath })
-      toast.success('フォルダを開きました')
+      toast.success(t('menu.openFolder'))
     } catch (error) {
-      toast.error('フォルダの読み込みに失敗しました', {
+      toast.error(t('common.error'), {
         description: String(error),
       })
     } finally {
@@ -112,14 +116,14 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
 
   const handleOpenFolder = async () => {
     setIsLoading(true)
-    setLoadingStatus('フォルダを選択中...')
+    setLoadingStatus(t('common.loading'))
     try {
       const folderPath = await invoke<string | null>('select_photo_folder')
       if (folderPath) {
         await openFolder(folderPath)
       }
     } catch (error) {
-      toast.error('フォルダ選択に失敗しました', {
+      toast.error(t('common.error'), {
         description: String(error),
       })
     } finally {
@@ -151,8 +155,8 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
 
   const handleTileLayerChange = (value: string) => {
     if (value === 'satellite' && !hasMapboxToken) {
-      toast.error('Mapbox APIキーが設定されていません', {
-        description: '環境変数 VITE_MAPBOX_TOKEN を設定してください。',
+      toast.error('Mapbox API Token Missing', {
+        description: 'Please set VITE_MAPBOX_TOKEN environment variable.',
       })
       return
     }
@@ -172,33 +176,33 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className={menuTriggerClassName}>
-            ファイル
+            {t('menu.file')}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={handleOpenFiles} disabled={isLoading}>
-            写真を開く
+            {t('menu.openFiles')}
             <DropdownMenuShortcut>Ctrl+O</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleOpenFolder} disabled={isLoading}>
-            フォルダを開く
+            {t('menu.openFolder')}
             <DropdownMenuShortcut>Ctrl+Shift+O</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleOpenLastFolder}
             disabled={!settings.lastOpenedFolder || isLoading}
           >
-            最後に開いたフォルダ
+            {t('menu.openLastFolder')}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleExit}>終了</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleExit}>{t('menu.exit')}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className={menuTriggerClassName}>
-            表示
+            {t('menu.view')}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
@@ -210,27 +214,33 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
               }
             }}
           >
-            <DropdownMenuRadioItem value="list">リスト表示</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="detail">詳細表示</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="grid">グリッド表示</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="list">
+              {t('photoList.viewMode.list')}
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="detail">
+              {t('photoList.viewMode.detail')}
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="grid">
+              {t('photoList.viewMode.grid')}
+            </DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
           {currentPath && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigateToDirectory(currentPath)}>
-                フォルダを再読み込み
+                {t('menu.reloadFolder')}
               </DropdownMenuItem>
             </>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>地図タイル</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>{t('menu.mapTiles')}</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup
                 value={settings.map.tileLayer}
                 onValueChange={handleTileLayerChange}
               >
-                <DropdownMenuRadioItem value="osm">OpenStreetMap</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="osm">{t('map.layers.osm')}</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="satellite" disabled={!hasMapboxToken}>
                   {satelliteLabel}
                 </DropdownMenuRadioItem>
@@ -238,12 +248,18 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>テーマ</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>{t('menu.theme')}</DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup value={settings.ui.theme} onValueChange={handleThemeChange}>
-                <DropdownMenuRadioItem value="system">システム</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="light">ライト</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark">ダーク</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="system">
+                  {t('settings.themes.system')}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="light">
+                  {t('settings.themes.light')}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark">
+                  {t('settings.themes.dark')}
+                </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
@@ -252,7 +268,7 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
             checked={settings.display.showExifByDefault}
             onCheckedChange={(checked) => handleExifToggle(Boolean(checked))}
           >
-            EXIF情報を表示
+            {t('settings.display.showExif')}
           </DropdownMenuCheckboxItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -260,22 +276,22 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className={menuTriggerClassName}>
-            設定
+            {t('menu.settings')}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={onOpenSettings}>設定を開く</DropdownMenuItem>
+          <DropdownMenuItem onClick={onOpenSettings}>{t('menu.settings')}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className={menuTriggerClassName}>
-            ヘルプ
+            {t('menu.help')}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={onOpenAbout}>バージョン情報</DropdownMenuItem>
+          <DropdownMenuItem onClick={onOpenAbout}>{t('menu.version')}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

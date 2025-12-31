@@ -1,4 +1,5 @@
 import type React from 'react'
+import { useTranslation } from 'react-i18next'
 import { usePhotoStore } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 
@@ -12,6 +13,7 @@ function formatShutterSpeed(seconds: number): string {
 }
 
 export function StatusBar(): React.ReactElement {
+  const { t } = useTranslation()
   const selectedPhoto = usePhotoStore((state) => state.selectedPhoto)
   const loadingStatus = usePhotoStore((state) => state.loadingStatus)
   const showExifDetails = useSettingsStore((state) => state.settings.display.showExifByDefault)
@@ -96,7 +98,7 @@ export function StatusBar(): React.ReactElement {
               )}
             </>
           ) : (
-            <span>Ready</span>
+            <span>{t('common.ready')}</span>
           )}
         </div>
         <div className="flex items-center gap-4 flex-shrink-0">

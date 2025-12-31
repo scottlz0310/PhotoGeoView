@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   Breadcrumb,
@@ -34,7 +35,6 @@ const LIST_ROW_HEIGHT = {
 
 const GRID_ITEM_SIZE = 160
 const GRID_GAP = 8
-const PHOTO_LOADING_STATUS = '写真データを読み込み中...'
 
 const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) {
@@ -51,6 +51,7 @@ const formatFileSize = (bytes: number): string => {
 }
 
 export function PhotoList(): React.ReactElement {
+  const { t } = useTranslation()
   const {
     photos,
     selectedPhoto,
@@ -95,6 +96,8 @@ export function PhotoList(): React.ReactElement {
     overscan: 4,
   })
   const gridVirtualItems = gridVirtualizer.getVirtualItems()
+
+  const PHOTO_LOADING_STATUS = t('photoList.loading')
 
   // 起動時に前回開いたフォルダを自動的に開く
   useEffect(() => {
@@ -156,23 +159,23 @@ export function PhotoList(): React.ReactElement {
     if (!(selectedPhoto && isDirectoryView)) {
       return
     }
-    if (selectedEntryPath === selectedPhoto.path) {
-      return
-    }
+    // selectedEntryPathのチェックを削除し、selectedPhotoの変更のみに反応させる
+    // これにより、ユーザーがクリックしてselectedEntryPathを変更した直後に
+    // 古いselectedPhotoによってハイライトが戻されるのを防ぐ
     const exists = directoryEntries.some((entry) => entry.path === selectedPhoto.path)
     if (exists) {
       setSelectedEntryPath(selectedPhoto.path)
     }
-  }, [directoryEntries, isDirectoryView, selectedEntryPath, selectedPhoto, setSelectedEntryPath])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [directoryEntries, isDirectoryView, selectedPhoto, setSelectedEntryPath])
 
   useEffect(() => {
     if (isDirectoryView || !selectedPhoto) {
       return
     }
-    if (selectedEntryPath !== selectedPhoto.path) {
-      setSelectedEntryPath(selectedPhoto.path)
-    }
-  }, [isDirectoryView, selectedEntryPath, selectedPhoto, setSelectedEntryPath])
+    setSelectedEntryPath(selectedPhoto.path)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDirectoryView, selectedPhoto, setSelectedEntryPath])
 
   useEffect(() => {
     const layoutKey = `${viewMode}-${gridColumns}-${listCount}`
@@ -245,21 +248,21 @@ export function PhotoList(): React.ReactElement {
 
   const handleOpenFolder = async () => {
     setIsLoading(true)
-    setLoadingStatus('フォルダを選択中...')
+    setLoadingStatus(t('common.loading'))
     try {
       const folderPath = await invoke<string | null>('select_photo_folder')
       if (folderPath) {
-        setLoadingStatus('フォルダを読み込み中...')
+        setLoadingStatus(t('common.loading'))
         // ナビゲーションモードに入る
         await navigateToDirectory(folderPath)
         // 設定に保存
         updateSettings({ lastOpenedFolder: folderPath })
-        toast.success('フォルダを開きました', {
-          description: `${directoryEntries.length}件のアイテムが見つかりました`,
+        toast.success(t('menu.openFolder'), {
+          description: `${directoryEntries.length} items found`,
         })
       }
     } catch (error) {
-      toast.error('フォルダの読み込みに失敗しました', {
+      toast.error(t('common.error'), {
         description: String(error),
       })
     } finally {
@@ -269,11 +272,15 @@ export function PhotoList(): React.ReactElement {
   }
 
   const handleDirectoryEntryClick = (entry: DirectoryEntry) => {
+    setSelectedEntryPath(entry.path)
+
     if (!entry.isDirectory) {
-      setSelectedEntryPath(entry.path)
-      handleFileDoubleClick(entry.path)
+      handleFileSelect(entry.path)
       return
     }
+
+    // フォルダ選択時は、以前の選択状態をクリアするが、
+    // 読み込み中のフラグなどはリセットしないように注意
     selectionRequestIdRef.current += 1
     selectionLoadingRef.current = false
     const { loadingStatus } = usePhotoStore.getState()
@@ -282,7 +289,6 @@ export function PhotoList(): React.ReactElement {
       setLoadingStatus('')
     }
     selectPhoto(null)
-    setSelectedEntryPath(entry.path)
   }
 
   const handleDirectoryEntryDoubleClick = (entry: DirectoryEntry) => {
@@ -334,6 +340,17 @@ export function PhotoList(): React.ReactElement {
       }
       event.preventDefault()
       handleNavigateUp()
+      return
+    }
+
+    if (key === 'Enter') {
+      if (isDirectoryView && selectedEntryPath) {
+        const entry = directoryEntries.find((e) => e.path === selectedEntryPath)
+        if (entry?.isDirectory) {
+          event.preventDefault()
+          handleFolderDoubleClick(entry.path)
+        }
+      }
       return
     }
 
@@ -440,10 +457,11 @@ export function PhotoList(): React.ReactElement {
     }
   }
 
-  // 画像ファイルをダブルクリックして読み込み
-  const handleFileDoubleClick = async (filePath: string) => {
+  // 画像ファイルを選択して読み込み
+  const handleFileSelect = async (filePath: string) => {
     const requestId = selectionRequestIdRef.current + 1
     selectionRequestIdRef.current = requestId
+
     const cachedPhoto = photos.find((photo) => photo.path === filePath)
     if (cachedPhoto) {
       selectionLoadingRef.current = false
@@ -455,9 +473,11 @@ export function PhotoList(): React.ReactElement {
       selectPhoto(cachedPhoto.path)
       return
     }
+
     selectionLoadingRef.current = true
     setIsLoading(true)
     setLoadingStatus(PHOTO_LOADING_STATUS)
+
     try {
       const photoData = await invoke<PhotoData>('get_photo_data', { path: filePath })
       if (selectionRequestIdRef.current !== requestId) {
@@ -467,7 +487,7 @@ export function PhotoList(): React.ReactElement {
       selectPhoto(photoData.path)
     } catch (error) {
       if (selectionRequestIdRef.current === requestId) {
-        toast.error('写真の読み込みに失敗しました', {
+        toast.error(t('common.error'), {
           description: String(error),
         })
       }
@@ -509,7 +529,7 @@ export function PhotoList(): React.ReactElement {
         updateSettings({ lastOpenedFolder: parentPath })
       }
     } catch (error) {
-      toast.error('上位フォルダに移動できませんでした', {
+      toast.error(t('common.error'), {
         description: String(error),
       })
     }
@@ -521,12 +541,12 @@ export function PhotoList(): React.ReactElement {
       return
     }
     setIsLoading(true)
-    setLoadingStatus('フォルダを再読み込み中...')
+    setLoadingStatus(t('common.loading'))
     try {
       await navigateToDirectory(currentPath)
-      toast.success('フォルダを再読み込みしました')
+      toast.success(t('menu.refresh'))
     } catch (error) {
-      toast.error('再読み込みに失敗しました', {
+      toast.error(t('common.error'), {
         description: String(error),
       })
     } finally {
@@ -549,7 +569,7 @@ export function PhotoList(): React.ReactElement {
               /* TODO: 履歴戻る実装 */
             }}
             disabled={true /* TODO: 履歴状態と連携 */}
-            title="戻る"
+            title={t('common.back')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -561,7 +581,7 @@ export function PhotoList(): React.ReactElement {
               /* TODO: 履歴進む実装 */
             }}
             disabled={true /* TODO: 履歴状態と連携 */}
-            title="進む"
+            title={t('common.next')}
           >
             <ArrowRight className="h-4 w-4" />
           </Button>
@@ -571,7 +591,7 @@ export function PhotoList(): React.ReactElement {
             className="h-8 w-8"
             onClick={handleNavigateUp}
             disabled={!currentPath || isLoading}
-            title="上位フォルダへ"
+            title={t('common.back')}
           >
             <ArrowUp className="h-4 w-4" />
           </Button>
@@ -581,7 +601,7 @@ export function PhotoList(): React.ReactElement {
             className="h-8 w-8"
             onClick={handleRefresh}
             disabled={!currentPath || isLoading}
-            title="再読み込み"
+            title={t('menu.refresh')}
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
@@ -591,7 +611,7 @@ export function PhotoList(): React.ReactElement {
             className="h-8 w-8"
             onClick={handleOpenFolder}
             disabled={isLoading}
-            title="フォルダを開く"
+            title={t('menu.openFolder')}
           >
             <FolderOpen className="h-4 w-4" />
           </Button>
@@ -607,7 +627,7 @@ export function PhotoList(): React.ReactElement {
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
-            title="リスト表示"
+            title={t('photoList.viewMode.list')}
           >
             <List className="h-4 w-4" />
           </button>
@@ -619,7 +639,7 @@ export function PhotoList(): React.ReactElement {
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
-            title="詳細表示"
+            title={t('photoList.viewMode.detail')}
           >
             <LayoutList className="h-4 w-4" />
           </button>
@@ -631,7 +651,7 @@ export function PhotoList(): React.ReactElement {
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
             }`}
-            title="グリッド表示"
+            title={t('photoList.viewMode.grid')}
           >
             <Grid className="h-4 w-4" />
           </button>
@@ -672,13 +692,11 @@ export function PhotoList(): React.ReactElement {
         tabIndex={0}
         onKeyDown={handleKeyDown}
         role="listbox"
-        aria-label="写真一覧"
+        aria-label={t('photoList.title')}
       >
         {isDirectoryView ? (
           directoryEntries.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              このフォルダには画像ファイルがありません。
-            </div>
+            <div className="text-sm text-muted-foreground">{t('photoList.empty')}</div>
           ) : viewMode === 'grid' ? (
             <div className="relative w-full" style={{ height: gridVirtualizer.getTotalSize() }}>
               {gridVirtualItems.map((row) => {
@@ -782,7 +800,7 @@ export function PhotoList(): React.ReactElement {
                           {entry.name}
                         </div>
                         {entry.isDirectory ? (
-                          <div className="mt-1 text-xs opacity-60">フォルダ</div>
+                          <div className="mt-1 text-xs opacity-60">{t('common.folder')}</div>
                         ) : (
                           <div className="mt-1 text-xs opacity-60">
                             {formatFileSize(entry.fileSize)}
@@ -805,11 +823,7 @@ export function PhotoList(): React.ReactElement {
             </div>
           )
         ) : photos.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            写真がまだ読み込まれていません。
-            <br />
-            上のボタンから写真やフォルダを開いてください。
-          </div>
+          <div className="text-sm text-muted-foreground">{t('photoList.empty')}</div>
         ) : viewMode === 'grid' ? (
           <div className="relative w-full" style={{ height: gridVirtualizer.getTotalSize() }}>
             {gridVirtualItems.map((row) => {
