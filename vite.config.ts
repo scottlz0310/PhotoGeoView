@@ -1,10 +1,28 @@
+import { execSync } from 'child_process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
+const buildTime = new Date().toISOString()
+const gitSha = (() => {
+  const envSha = process.env.VITE_GIT_SHA ?? process.env.GIT_SHA
+  if (envSha) {
+    return envSha
+  }
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'unknown'
+  }
+})()
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_BUILD_TIME': JSON.stringify(buildTime),
+    'import.meta.env.VITE_GIT_SHA': JSON.stringify(gitSha),
+  },
 
   // パスエイリアス
   resolve: {

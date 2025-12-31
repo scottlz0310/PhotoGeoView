@@ -1,6 +1,8 @@
 import { Camera } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
+import { AboutDialog } from './components/About/AboutDialog'
 import { MapView } from './components/MapView'
 import { PhotoDetail } from './components/PhotoDetail'
 import { PhotoList } from './components/PhotoList'
@@ -10,9 +12,11 @@ import { usePhotoStore } from './stores/photoStore'
 import { useSettingsStore } from './stores/settingsStore'
 
 function App(): React.ReactElement {
-  const { loadSettings, isLoaded } = useSettingsStore()
+  const { loadSettings, isLoaded, settings } = useSettingsStore()
   const { initializeViewMode } = usePhotoStore()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isAboutOpen, setIsAboutOpen] = useState(false)
+  const { setTheme } = useTheme()
 
   // アプリ起動時に設定を読み込む
   useEffect(() => {
@@ -25,6 +29,12 @@ function App(): React.ReactElement {
       initializeViewMode()
     }
   }, [isLoaded, initializeViewMode])
+
+  useEffect(() => {
+    if (isLoaded) {
+      setTheme(settings.ui.theme)
+    }
+  }, [isLoaded, setTheme, settings.ui.theme])
 
   return (
     <div className="flex h-screen w-full flex-col bg-background">
@@ -61,6 +71,7 @@ function App(): React.ReactElement {
             </button>
             <button
               type="button"
+              onClick={() => setIsAboutOpen(true)}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               ヘルプ
@@ -71,6 +82,7 @@ function App(): React.ReactElement {
 
       {/* 設定ダイアログ */}
       <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <AboutDialog isOpen={isAboutOpen} onOpenChange={setIsAboutOpen} />
 
       <main className="flex-1 overflow-hidden p-4">
         <Group id="main-panel-group" orientation="horizontal" className="h-full gap-4">

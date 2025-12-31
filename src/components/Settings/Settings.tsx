@@ -1,5 +1,14 @@
+import { ChevronDown } from 'lucide-react'
 import type React from 'react'
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { ViewMode } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import type { Language, Theme, TileLayerType } from '@/types/settings'
@@ -7,6 +16,67 @@ import type { Language, Theme, TileLayerType } from '@/types/settings'
 interface SettingsProps {
   isOpen: boolean
   onClose: () => void
+}
+
+interface SelectOption<T extends string> {
+  value: T
+  label: string
+}
+
+interface SelectFieldProps<T extends string> {
+  id: string
+  label: string
+  value: T
+  options: SelectOption<T>[]
+  onChange: (value: T) => void
+}
+
+function SelectField<T extends string>({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: SelectFieldProps<T>): React.ReactElement {
+  const labelId = `${id}-label`
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? value
+
+  return (
+    <div>
+      <label id={labelId} htmlFor={id} className="mb-1 block text-sm font-medium text-foreground">
+        {label}
+      </label>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            className="w-full justify-between"
+            aria-labelledby={labelId}
+          >
+            <span className="truncate">{selectedLabel}</span>
+            <ChevronDown className="h-4 w-4 opacity-70" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          style={{ width: 'var(--radix-dropdown-menu-trigger-width)' }}
+        >
+          <DropdownMenuRadioGroup
+            value={value}
+            onValueChange={(nextValue) => onChange(nextValue as T)}
+          >
+            {options.map((option) => (
+              <DropdownMenuRadioItem key={option.value} value={option.value}>
+                {option.label}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
 }
 
 export function Settings({ isOpen, onClose }: SettingsProps): React.ReactElement | null {
@@ -61,10 +131,8 @@ export function Settings({ isOpen, onClose }: SettingsProps): React.ReactElement
   return (
     // biome-ignore lint/a11y/useSemanticElements: Overlay backdrop must be a div for proper full-screen styling
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md"
       style={{
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(12px)',
         // biome-ignore lint/style/useNamingConvention: WebKit prefix required for browser compatibility
         WebkitBackdropFilter: 'blur(12px)',
       }}
@@ -75,12 +143,7 @@ export function Settings({ isOpen, onClose }: SettingsProps): React.ReactElement
       aria-label="設定を閉じる"
     >
       <div
-        className="w-full max-w-2xl rounded-xl p-6"
-        style={{
-          background: '#ffffff',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-        }}
+        className="w-full max-w-2xl rounded-xl p-6 bg-card text-card-foreground border border-border shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         role="dialog"
@@ -108,33 +171,26 @@ export function Settings({ isOpen, onClose }: SettingsProps): React.ReactElement
             <h3 className="mb-3 text-lg font-semibold text-card-foreground">表示設定</h3>
             <div className="space-y-3">
               {/* デフォルトビューモード */}
-              <div>
-                <label
-                  htmlFor="default-view-mode"
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
-                  デフォルトビューモード
-                </label>
-                <select
-                  id="default-view-mode"
-                  value={localSettings.display.defaultViewMode}
-                  onChange={(e) => {
-                    setLocalSettings({
-                      ...localSettings,
-                      display: {
-                        ...localSettings.display,
-                        defaultViewMode: e.target.value as ViewMode,
-                      },
-                    })
-                    setHasChanges(true)
-                  }}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground"
-                >
-                  <option value="list">リスト表示</option>
-                  <option value="detail">詳細表示</option>
-                  <option value="grid">グリッド表示</option>
-                </select>
-              </div>
+              <SelectField<ViewMode>
+                id="default-view-mode"
+                label="デフォルトビューモード"
+                value={localSettings.display.defaultViewMode}
+                options={[
+                  { value: 'list', label: 'リスト表示' },
+                  { value: 'detail', label: '詳細表示' },
+                  { value: 'grid', label: 'グリッド表示' },
+                ]}
+                onChange={(value) => {
+                  setLocalSettings({
+                    ...localSettings,
+                    display: {
+                      ...localSettings.display,
+                      defaultViewMode: value,
+                    },
+                  })
+                  setHasChanges(true)
+                }}
+              />
 
               {/* グリッド列数 */}
               <div>
@@ -222,32 +278,25 @@ export function Settings({ isOpen, onClose }: SettingsProps): React.ReactElement
               </div>
 
               {/* タイルレイヤー */}
-              <div>
-                <label
-                  htmlFor="tile-layer"
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
-                  地図タイルレイヤー
-                </label>
-                <select
-                  id="tile-layer"
-                  value={localSettings.map.tileLayer}
-                  onChange={(e) => {
-                    setLocalSettings({
-                      ...localSettings,
-                      map: {
-                        ...localSettings.map,
-                        tileLayer: e.target.value as TileLayerType,
-                      },
-                    })
-                    setHasChanges(true)
-                  }}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground"
-                >
-                  <option value="osm">OpenStreetMap</option>
-                  <option value="satellite">衛星画像</option>
-                </select>
-              </div>
+              <SelectField<TileLayerType>
+                id="tile-layer"
+                label="地図タイルレイヤー"
+                value={localSettings.map.tileLayer}
+                options={[
+                  { value: 'osm', label: 'OpenStreetMap' },
+                  { value: 'satellite', label: '衛星画像' },
+                ]}
+                onChange={(value) => {
+                  setLocalSettings({
+                    ...localSettings,
+                    map: {
+                      ...localSettings.map,
+                      tileLayer: value,
+                    },
+                  })
+                  setHasChanges(true)
+                }}
+              />
 
               {/* クラスタリング */}
               <div className="flex items-center">
@@ -279,58 +328,47 @@ export function Settings({ isOpen, onClose }: SettingsProps): React.ReactElement
             <h3 className="mb-3 text-lg font-semibold text-card-foreground">UI設定</h3>
             <div className="space-y-3">
               {/* テーマ */}
-              <div>
-                <label htmlFor="theme" className="mb-1 block text-sm font-medium text-foreground">
-                  テーマ
-                </label>
-                <select
-                  id="theme"
-                  value={localSettings.ui.theme}
-                  onChange={(e) => {
-                    setLocalSettings({
-                      ...localSettings,
-                      ui: {
-                        ...localSettings.ui,
-                        theme: e.target.value as Theme,
-                      },
-                    })
-                    setHasChanges(true)
-                  }}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground"
-                >
-                  <option value="light">ライト</option>
-                  <option value="dark">ダーク</option>
-                  <option value="system">システムに従う</option>
-                </select>
-              </div>
+              <SelectField<Theme>
+                id="theme"
+                label="テーマ"
+                value={localSettings.ui.theme}
+                options={[
+                  { value: 'light', label: 'ライト' },
+                  { value: 'dark', label: 'ダーク' },
+                  { value: 'system', label: 'システムに従う' },
+                ]}
+                onChange={(value) => {
+                  setLocalSettings({
+                    ...localSettings,
+                    ui: {
+                      ...localSettings.ui,
+                      theme: value,
+                    },
+                  })
+                  setHasChanges(true)
+                }}
+              />
 
               {/* 言語 */}
-              <div>
-                <label
-                  htmlFor="language"
-                  className="mb-1 block text-sm font-medium text-foreground"
-                >
-                  言語
-                </label>
-                <select
-                  id="language"
-                  value={localSettings.ui.language}
-                  onChange={(e) => {
-                    setLocalSettings({
-                      ...localSettings,
-                      ui: {
-                        ...localSettings.ui,
-                        language: e.target.value as Language,
-                      },
-                    })
-                    setHasChanges(true)
-                  }}
-                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm text-foreground"
-                >
-                  <option value="ja">日本語</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
+              <SelectField<Language>
+                id="language"
+                label="言語"
+                value={localSettings.ui.language}
+                options={[
+                  { value: 'ja', label: '日本語' },
+                  { value: 'en', label: 'English' },
+                ]}
+                onChange={(value) => {
+                  setLocalSettings({
+                    ...localSettings,
+                    ui: {
+                      ...localSettings.ui,
+                      language: value,
+                    },
+                  })
+                  setHasChanges(true)
+                }}
+              />
             </div>
           </section>
         </div>

@@ -69,6 +69,7 @@ export function PhotoList(): React.ReactElement {
   const [entryThumbnails, setEntryThumbnails] = useState<Record<string, string>>({})
   const pendingThumbnails = useRef<Set<string>>(new Set())
   const [gridWidth, setGridWidth] = useState(0)
+  const [activeEntryPath, setActiveEntryPath] = useState<string | null>(null)
   const isDirectoryView = Boolean(currentPath)
   const listItems = isDirectoryView ? directoryEntries : photos
   const listCount = listItems.length
@@ -123,11 +124,31 @@ export function PhotoList(): React.ReactElement {
   useEffect(() => {
     setEntryThumbnails({})
     pendingThumbnails.current.clear()
+    if (currentPath === null) {
+      return
+    }
   }, [currentPath])
 
   useEffect(() => {
-    listVirtualizer.measure()
-    gridVirtualizer.measure()
+    if (!isDirectoryView || directoryEntries.length === 0) {
+      setActiveEntryPath(null)
+      return
+    }
+    if (activeEntryPath) {
+      const exists = directoryEntries.some((entry) => entry.path === activeEntryPath)
+      if (exists) {
+        return
+      }
+    }
+    setActiveEntryPath(directoryEntries[0]?.path ?? null)
+  }, [activeEntryPath, directoryEntries, isDirectoryView])
+
+  useEffect(() => {
+    const layoutKey = `${viewMode}-${gridColumns}-${listCount}`
+    if (layoutKey) {
+      listVirtualizer.measure()
+      gridVirtualizer.measure()
+    }
   }, [gridColumns, listCount, listVirtualizer, gridVirtualizer, viewMode])
 
   useEffect(() => {
@@ -214,6 +235,111 @@ export function PhotoList(): React.ReactElement {
       setIsLoading(false)
       setLoadingStatus('')
     }
+  }
+
+  const handleDirectoryEntryClick = (entry: DirectoryEntry) => {
+    setActiveEntryPath(entry.path)
+    if (!entry.isDirectory) {
+      handleFileDoubleClick(entry.path)
+    }
+  }
+
+  const handleDirectoryEntryDoubleClick = (entry: DirectoryEntry) => {
+    setActiveEntryPath(entry.path)
+    if (entry.isDirectory) {
+      handleFolderDoubleClick(entry.path)
+    }
+  }
+
+  const scrollToIndex = (index: number) => {
+    if (viewMode === 'grid') {
+      const rowIndex = Math.floor(index / gridColumns)
+      gridVirtualizer.scrollToIndex(rowIndex)
+    } else {
+      listVirtualizer.scrollToIndex(index)
+    }
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return
+    }
+
+    if (listCount === 0) {
+      return
+    }
+
+    const key = event.key
+    const isGrid = viewMode === 'grid'
+    const maxIndex = listCount - 1
+    const currentIndex = (() => {
+      if (isDirectoryView) {
+        if (!activeEntryPath) {
+          return 0
+        }
+        const index = directoryEntries.findIndex((entry) => entry.path === activeEntryPath)
+        return index >= 0 ? index : 0
+      }
+      if (!selectedPhoto) {
+        return 0
+      }
+      const index = photos.findIndex((photo) => photo.path === selectedPhoto.path)
+      return index >= 0 ? index : 0
+    })()
+
+    if (key === 'Backspace') {
+      if (!isDirectoryView || isLoading) {
+        return
+      }
+      event.preventDefault()
+      handleNavigateUp()
+      return
+    }
+
+    let nextIndex = currentIndex
+    switch (key) {
+      case 'ArrowDown':
+        nextIndex = currentIndex + (isGrid ? gridColumns : 1)
+        break
+      case 'ArrowUp':
+        nextIndex = currentIndex - (isGrid ? gridColumns : 1)
+        break
+      case 'ArrowRight':
+        nextIndex = currentIndex + 1
+        break
+      case 'ArrowLeft':
+        nextIndex = currentIndex - 1
+        break
+      case 'Home':
+        nextIndex = 0
+        break
+      case 'End':
+        nextIndex = maxIndex
+        break
+      default:
+        return
+    }
+
+    nextIndex = Math.max(0, Math.min(maxIndex, nextIndex))
+    if (nextIndex === currentIndex) {
+      return
+    }
+
+    event.preventDefault()
+
+    if (isDirectoryView) {
+      const entry = directoryEntries[nextIndex]
+      if (entry) {
+        handleDirectoryEntryClick(entry)
+      }
+    } else {
+      const photo = photos[nextIndex]
+      if (photo) {
+        selectPhoto(photo.path)
+      }
+    }
+
+    scrollToIndex(nextIndex)
   }
 
   // パンくずリストのセグメント生成
@@ -473,7 +599,14 @@ export function PhotoList(): React.ReactElement {
       )}
 
       {/* コンテンツ表示エリア */}
-      <div className="flex-1 overflow-y-auto" ref={scrollParentRef}>
+      <div
+        className="flex-1 overflow-y-auto focus:outline-none"
+        ref={scrollParentRef}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        role="listbox"
+        aria-label="写真一覧"
+      >
         {isDirectoryView ? (
           directoryEntries.length === 0 ? (
             <div className="text-sm text-muted-foreground">
@@ -498,15 +631,18 @@ export function PhotoList(): React.ReactElement {
                     >
                       {rowItems.map((entry) => {
                         const thumbnail = entryThumbnails[entry.path]
+                        const isActive = entry.path === activeEntryPath
                         return (
                           <button
                             type="button"
                             key={entry.path}
-                            onClick={() => !entry.isDirectory && handleFileDoubleClick(entry.path)}
-                            onDoubleClick={() =>
-                              entry.isDirectory && handleFolderDoubleClick(entry.path)
-                            }
-                            className="rounded p-2 text-left transition-colors bg-muted hover:bg-muted/80 flex flex-col"
+                            onClick={() => handleDirectoryEntryClick(entry)}
+                            onDoubleClick={() => handleDirectoryEntryDoubleClick(entry)}
+                            className={`rounded p-2 text-left transition-colors flex flex-col ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted hover:bg-muted/80'
+                            }`}
                             style={{ height: GRID_ITEM_SIZE }}
                           >
                             <div className="flex-1 flex items-center justify-center bg-background/50 rounded mb-2 overflow-hidden">
@@ -540,6 +676,7 @@ export function PhotoList(): React.ReactElement {
                 }
                 const isDetail = viewMode === 'detail'
                 const thumbnail = entryThumbnails[entry.path]
+                const isActive = entry.path === activeEntryPath
                 return (
                   <div
                     key={entry.path}
@@ -548,9 +685,13 @@ export function PhotoList(): React.ReactElement {
                   >
                     <button
                       type="button"
-                      onClick={() => !entry.isDirectory && handleFileDoubleClick(entry.path)}
-                      onDoubleClick={() => entry.isDirectory && handleFolderDoubleClick(entry.path)}
-                      className={`w-full rounded p-2 text-left text-sm transition-colors bg-muted hover:bg-muted/80 flex items-center gap-3 overflow-hidden ${listRowClass}`}
+                      onClick={() => handleDirectoryEntryClick(entry)}
+                      onDoubleClick={() => handleDirectoryEntryDoubleClick(entry)}
+                      className={`w-full rounded p-2 text-left text-sm transition-colors flex items-center gap-3 overflow-hidden ${listRowClass} ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      }`}
                     >
                       <div
                         className={`flex items-center justify-center rounded bg-background/50 overflow-hidden ${
