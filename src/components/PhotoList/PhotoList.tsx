@@ -34,6 +34,7 @@ const LIST_ROW_HEIGHT = {
 
 const GRID_ITEM_SIZE = 160
 const GRID_GAP = 8
+const PHOTO_LOADING_STATUS = '写真データを読み込み中...'
 
 const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) {
@@ -53,12 +54,14 @@ export function PhotoList(): React.ReactElement {
   const {
     photos,
     selectedPhoto,
+    selectedEntryPath,
     viewMode,
     currentPath,
     directoryEntries,
     isLoading,
     addPhotos,
     selectPhoto,
+    setSelectedEntryPath,
     setViewMode,
     setIsLoading,
     setLoadingStatus,
@@ -69,7 +72,8 @@ export function PhotoList(): React.ReactElement {
   const [entryThumbnails, setEntryThumbnails] = useState<Record<string, string>>({})
   const pendingThumbnails = useRef<Set<string>>(new Set())
   const [gridWidth, setGridWidth] = useState(0)
-  const [activeEntryPath, setActiveEntryPath] = useState<string | null>(null)
+  const selectionRequestIdRef = useRef(0)
+  const selectionLoadingRef = useRef(false)
   const isDirectoryView = Boolean(currentPath)
   const listItems = isDirectoryView ? directoryEntries : photos
   const listCount = listItems.length
@@ -130,18 +134,45 @@ export function PhotoList(): React.ReactElement {
   }, [currentPath])
 
   useEffect(() => {
-    if (!isDirectoryView || directoryEntries.length === 0) {
-      setActiveEntryPath(null)
+    if (!isDirectoryView) {
       return
     }
-    if (activeEntryPath) {
-      const exists = directoryEntries.some((entry) => entry.path === activeEntryPath)
+    if (directoryEntries.length === 0) {
+      if (selectedEntryPath !== null) {
+        setSelectedEntryPath(null)
+      }
+      return
+    }
+    if (selectedEntryPath) {
+      const exists = directoryEntries.some((entry) => entry.path === selectedEntryPath)
       if (exists) {
         return
       }
     }
-    setActiveEntryPath(directoryEntries[0]?.path ?? null)
-  }, [activeEntryPath, directoryEntries, isDirectoryView])
+    setSelectedEntryPath(directoryEntries[0]?.path ?? null)
+  }, [directoryEntries, isDirectoryView, selectedEntryPath, setSelectedEntryPath])
+
+  useEffect(() => {
+    if (!(selectedPhoto && isDirectoryView)) {
+      return
+    }
+    if (selectedEntryPath === selectedPhoto.path) {
+      return
+    }
+    const exists = directoryEntries.some((entry) => entry.path === selectedPhoto.path)
+    if (exists) {
+      setSelectedEntryPath(selectedPhoto.path)
+    }
+  }, [directoryEntries, isDirectoryView, selectedEntryPath, selectedPhoto, setSelectedEntryPath])
+
+  useEffect(() => {
+    if (isDirectoryView || !selectedPhoto) {
+      return
+    }
+    if (selectedEntryPath !== selectedPhoto.path) {
+      setSelectedEntryPath(selectedPhoto.path)
+    }
+  }, [isDirectoryView, selectedEntryPath, selectedPhoto, setSelectedEntryPath])
 
   useEffect(() => {
     const layoutKey = `${viewMode}-${gridColumns}-${listCount}`
@@ -238,14 +269,24 @@ export function PhotoList(): React.ReactElement {
   }
 
   const handleDirectoryEntryClick = (entry: DirectoryEntry) => {
-    setActiveEntryPath(entry.path)
     if (!entry.isDirectory) {
+      setSelectedEntryPath(entry.path)
       handleFileDoubleClick(entry.path)
+      return
     }
+    selectionRequestIdRef.current += 1
+    selectionLoadingRef.current = false
+    const { loadingStatus } = usePhotoStore.getState()
+    if (loadingStatus === PHOTO_LOADING_STATUS) {
+      setIsLoading(false)
+      setLoadingStatus('')
+    }
+    selectPhoto(null)
+    setSelectedEntryPath(entry.path)
   }
 
   const handleDirectoryEntryDoubleClick = (entry: DirectoryEntry) => {
-    setActiveEntryPath(entry.path)
+    setSelectedEntryPath(entry.path)
     if (entry.isDirectory) {
       handleFolderDoubleClick(entry.path)
     }
@@ -274,16 +315,16 @@ export function PhotoList(): React.ReactElement {
     const maxIndex = listCount - 1
     const currentIndex = (() => {
       if (isDirectoryView) {
-        if (!activeEntryPath) {
+        if (!selectedEntryPath) {
           return 0
         }
-        const index = directoryEntries.findIndex((entry) => entry.path === activeEntryPath)
+        const index = directoryEntries.findIndex((entry) => entry.path === selectedEntryPath)
         return index >= 0 ? index : 0
       }
-      if (!selectedPhoto) {
+      if (!selectedEntryPath) {
         return 0
       }
-      const index = photos.findIndex((photo) => photo.path === selectedPhoto.path)
+      const index = photos.findIndex((photo) => photo.path === selectedEntryPath)
       return index >= 0 ? index : 0
     })()
 
@@ -335,6 +376,7 @@ export function PhotoList(): React.ReactElement {
     } else {
       const photo = photos[nextIndex]
       if (photo) {
+        setSelectedEntryPath(photo.path)
         selectPhoto(photo.path)
       }
     }
@@ -400,19 +442,44 @@ export function PhotoList(): React.ReactElement {
 
   // 画像ファイルをダブルクリックして読み込み
   const handleFileDoubleClick = async (filePath: string) => {
+    const requestId = selectionRequestIdRef.current + 1
+    selectionRequestIdRef.current = requestId
+    const cachedPhoto = photos.find((photo) => photo.path === filePath)
+    if (cachedPhoto) {
+      selectionLoadingRef.current = false
+      const { loadingStatus } = usePhotoStore.getState()
+      if (loadingStatus === PHOTO_LOADING_STATUS) {
+        setIsLoading(false)
+        setLoadingStatus('')
+      }
+      selectPhoto(cachedPhoto.path)
+      return
+    }
+    selectionLoadingRef.current = true
     setIsLoading(true)
-    setLoadingStatus('写真データを読み込み中...')
+    setLoadingStatus(PHOTO_LOADING_STATUS)
     try {
       const photoData = await invoke<PhotoData>('get_photo_data', { path: filePath })
+      if (selectionRequestIdRef.current !== requestId) {
+        return
+      }
       addPhotos([photoData])
       selectPhoto(photoData.path)
     } catch (error) {
-      toast.error('写真の読み込みに失敗しました', {
-        description: String(error),
-      })
+      if (selectionRequestIdRef.current === requestId) {
+        toast.error('写真の読み込みに失敗しました', {
+          description: String(error),
+        })
+      }
     } finally {
-      setIsLoading(false)
-      setLoadingStatus('')
+      if (selectionRequestIdRef.current === requestId && selectionLoadingRef.current) {
+        selectionLoadingRef.current = false
+        const { loadingStatus } = usePhotoStore.getState()
+        if (loadingStatus === PHOTO_LOADING_STATUS) {
+          setIsLoading(false)
+          setLoadingStatus('')
+        }
+      }
     }
   }
 
@@ -631,7 +698,7 @@ export function PhotoList(): React.ReactElement {
                     >
                       {rowItems.map((entry) => {
                         const thumbnail = entryThumbnails[entry.path]
-                        const isActive = entry.path === activeEntryPath
+                        const isActive = entry.path === selectedEntryPath
                         return (
                           <button
                             type="button"
@@ -676,7 +743,7 @@ export function PhotoList(): React.ReactElement {
                 }
                 const isDetail = viewMode === 'detail'
                 const thumbnail = entryThumbnails[entry.path]
-                const isActive = entry.path === activeEntryPath
+                const isActive = entry.path === selectedEntryPath
                 return (
                   <div
                     key={entry.path}
@@ -762,9 +829,12 @@ export function PhotoList(): React.ReactElement {
                       <button
                         type="button"
                         key={photo.path}
-                        onClick={() => selectPhoto(photo.path)}
+                        onClick={() => {
+                          setSelectedEntryPath(photo.path)
+                          selectPhoto(photo.path)
+                        }}
                         className={`rounded p-2 text-left transition-colors flex flex-col ${
-                          selectedPhoto?.path === photo.path
+                          selectedEntryPath === photo.path
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-muted hover:bg-muted/80'
                         }`}
@@ -805,9 +875,12 @@ export function PhotoList(): React.ReactElement {
                 >
                   <button
                     type="button"
-                    onClick={() => selectPhoto(photo.path)}
+                    onClick={() => {
+                      setSelectedEntryPath(photo.path)
+                      selectPhoto(photo.path)
+                    }}
                     className={`w-full rounded p-2 text-left text-sm transition-colors flex items-center gap-3 overflow-hidden ${listRowClass} ${
-                      selectedPhoto?.path === photo.path
+                      selectedEntryPath === photo.path
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted hover:bg-muted/80'
                     }`}

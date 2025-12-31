@@ -9,6 +9,7 @@ interface PhotoState {
   // 写真データ
   photos: PhotoData[]
   selectedPhoto: PhotoData | null
+  selectedEntryPath: string | null
 
   // フィルター
   filter: PhotoFilter
@@ -28,6 +29,7 @@ interface PhotoState {
   addPhotos: (photos: PhotoData[]) => void
   setPhotos: (photos: PhotoData[]) => void
   selectPhoto: (path: string | null) => void
+  setSelectedEntryPath: (path: string | null) => void
   removePhoto: (path: string) => void
   clearPhotos: () => void
 
@@ -62,6 +64,7 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
   // 初期状態
   photos: [],
   selectedPhoto: null,
+  selectedEntryPath: null,
   filter: defaultFilter,
   viewMode: 'list',
   currentPath: null,
@@ -74,7 +77,14 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
     set((state) => {
       const existingPaths = new Set(state.photos.map((p) => p.path))
       const uniquePhotos = newPhotos.filter((p) => !existingPaths.has(p.path))
-      return { photos: [...state.photos, ...uniquePhotos] }
+      let nextSelectedPhoto = state.selectedPhoto
+      if (state.selectedEntryPath) {
+        const matchedPhoto = uniquePhotos.find((photo) => photo.path === state.selectedEntryPath)
+        if (matchedPhoto) {
+          nextSelectedPhoto = matchedPhoto
+        }
+      }
+      return { photos: [...state.photos, ...uniquePhotos], selectedPhoto: nextSelectedPhoto }
     }),
 
   // 写真リスト置き換え
@@ -84,21 +94,24 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
   selectPhoto: (path) =>
     set((state) => {
       if (path === null) {
-        return { selectedPhoto: null }
+        return { selectedPhoto: null, selectedEntryPath: null }
       }
       const photo = state.photos.find((p) => p.path === path)
-      return { selectedPhoto: photo || null }
+      return { selectedPhoto: photo || null, selectedEntryPath: path }
     }),
+
+  setSelectedEntryPath: (path) => set({ selectedEntryPath: path }),
 
   // 写真削除
   removePhoto: (path) =>
     set((state) => ({
       photos: state.photos.filter((p) => p.path !== path),
       selectedPhoto: state.selectedPhoto?.path === path ? null : state.selectedPhoto,
+      selectedEntryPath: state.selectedEntryPath === path ? null : state.selectedEntryPath,
     })),
 
   // 全写真クリア
-  clearPhotos: () => set({ photos: [], selectedPhoto: null }),
+  clearPhotos: () => set({ photos: [], selectedPhoto: null, selectedEntryPath: null }),
 
   // フィルター設定
   setFilter: (partialFilter) =>
