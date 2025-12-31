@@ -20,6 +20,10 @@ interface PhotoState {
   currentPath: string | null
   directoryEntries: DirectoryEntry[]
 
+  // ローディング状態
+  isLoading: boolean
+  loadingStatus: string
+
   // アクション
   addPhotos: (photos: PhotoData[]) => void
   setPhotos: (photos: PhotoData[]) => void
@@ -42,6 +46,10 @@ interface PhotoState {
   // ナビゲーション操作
   navigateToDirectory: (path: string) => Promise<void>
   clearNavigation: () => void
+
+  // ローディング操作
+  setIsLoading: (isLoading: boolean) => void
+  setLoadingStatus: (status: string) => void
 }
 
 const defaultFilter: PhotoFilter = {
@@ -58,6 +66,8 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
   viewMode: 'list',
   currentPath: null,
   directoryEntries: [],
+  isLoading: false,
+  loadingStatus: '',
 
   // 写真追加（重複なし）
   addPhotos: (newPhotos) =>
@@ -172,4 +182,8 @@ export const usePhotoStore = create<PhotoState>((set, get) => ({
       directoryEntries: [],
     })
   },
+
+  // ローディング状態を更新
+  setIsLoading: (isLoading) => set({ isLoading }),
+  setLoadingStatus: (status) => set({ loadingStatus: status }),
 }))

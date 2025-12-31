@@ -11,7 +11,7 @@ import {
   List,
   RefreshCw,
 } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { toast } from 'sonner'
 import {
   Breadcrumb,
@@ -22,7 +22,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import { usePhotoStore } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import type { PhotoData } from '@/types/photo'
@@ -34,15 +33,15 @@ export function PhotoList(): React.ReactElement {
     viewMode,
     currentPath,
     directoryEntries,
+    isLoading,
     addPhotos,
     selectPhoto,
     setViewMode,
+    setIsLoading,
+    setLoadingStatus,
     navigateToDirectory,
   } = usePhotoStore()
   const { settings, updateSettings } = useSettingsStore()
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadingProgress, setLoadingProgress] = useState(0)
-  const [loadingStatus, setLoadingStatus] = useState('')
 
   // 起動時に前回開いたフォルダを自動的に開く
   useEffect(() => {
@@ -80,7 +79,6 @@ export function PhotoList(): React.ReactElement {
     } finally {
       setIsLoading(false)
       setLoadingStatus('')
-      setLoadingProgress(0)
     }
   }
 
@@ -196,6 +194,7 @@ export function PhotoList(): React.ReactElement {
       return
     }
     setIsLoading(true)
+    setLoadingStatus('フォルダを再読み込み中...')
     try {
       await navigateToDirectory(currentPath)
       toast.success('フォルダを再読み込みしました')
@@ -205,6 +204,7 @@ export function PhotoList(): React.ReactElement {
       })
     } finally {
       setIsLoading(false)
+      setLoadingStatus('')
     }
   }
 
@@ -338,14 +338,6 @@ export function PhotoList(): React.ReactElement {
         </div>
       )}
 
-      {/* Loading indicator */}
-      {isLoading && (
-        <div className="mb-4 space-y-2">
-          <Progress value={loadingProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground text-center">{loadingStatus}</p>
-        </div>
-      )}
-
       {/* コンテンツ表示エリア */}
       <div className="flex-1 overflow-y-auto">
         {/* ナビゲーションモード: ディレクトリ内容を表示 */}
@@ -355,11 +347,8 @@ export function PhotoList(): React.ReactElement {
               <button
                 type="button"
                 key={entry.path}
-                onDoubleClick={() =>
-                  entry.isDirectory
-                    ? handleFolderDoubleClick(entry.path)
-                    : handleFileDoubleClick(entry.path)
-                }
+                onClick={() => !entry.isDirectory && handleFileDoubleClick(entry.path)}
+                onDoubleClick={() => entry.isDirectory && handleFolderDoubleClick(entry.path)}
                 className="w-full rounded p-2 text-left text-sm transition-colors bg-muted hover:bg-muted/80 flex items-center gap-2"
               >
                 {/* アイコン */}

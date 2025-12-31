@@ -12,12 +12,15 @@ function formatShutterSpeed(seconds: number): string {
 
 export function StatusBar(): React.ReactElement {
   const selectedPhoto = usePhotoStore((state) => state.selectedPhoto)
+  const loadingStatus = usePhotoStore((state) => state.loadingStatus)
 
   return (
     <footer className="border-t bg-card px-4 py-1 text-xs text-muted-foreground">
       <div className="flex items-center justify-between h-6">
         <div className="flex items-center gap-4 overflow-hidden">
-          {selectedPhoto ? (
+          {loadingStatus ? (
+            <span className="font-medium text-foreground truncate">{loadingStatus}</span>
+          ) : selectedPhoto ? (
             <>
               <span className="font-medium text-foreground truncate max-w-[200px]">
                 {selectedPhoto.filename}

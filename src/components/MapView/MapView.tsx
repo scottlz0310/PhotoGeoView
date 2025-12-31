@@ -2,8 +2,9 @@ import type { LatLngExpression } from 'leaflet'
 import L from 'leaflet'
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { usePhotoStore } from '@/stores/photoStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 // Leafletのデフォルトアイコンを修正（Viteでの問題対応）
 delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl
@@ -21,6 +22,24 @@ function formatShutterSpeed(seconds: number): string {
   }
   const denominator = Math.round(1 / seconds)
   return `1/${denominator}s`
+}
+
+// 選択された写真に合わせて地図を移動させるコンポーネント
+function MapUpdater() {
+  const { selectedPhoto } = usePhotoStore()
+  const { settings } = useSettingsStore()
+  const map = useMap()
+
+  useEffect(() => {
+    if (selectedPhoto?.exif?.gps) {
+      const { lat, lng } = selectedPhoto.exif.gps
+      map.setView([lat, lng], settings.map.defaultZoom, {
+        animate: true,
+      })
+    }
+  }, [selectedPhoto, map, settings.map.defaultZoom])
+
+  return null
 }
 
 export function MapView(): React.ReactElement {
@@ -101,6 +120,8 @@ export function MapView(): React.ReactElement {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        <MapUpdater />
 
         {photosWithGps.map((photo) => {
           const gps = photo.exif?.gps
