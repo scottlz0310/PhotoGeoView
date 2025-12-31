@@ -1,5 +1,8 @@
 // Tauri Commandsをインポート
 use tauri::{command, Manager};
+use std::fs;
+use std::path::PathBuf;
+use std::io::Write;
 
 // モジュール定義
 mod commands;
@@ -281,6 +284,99 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .register_uri_scheme_protocol("osm-tile", |ctx, request| {
+            let app_handle = ctx.app_handle();
+            let path = request.uri().path();
+            // path format: /z/x/y.png
+            
+            let parts: Vec<&str> = path.trim_start_matches('/').split('/').collect();
+            if parts.len() != 3 {
+                return http::Response::builder()
+                    .status(http::StatusCode::BAD_REQUEST)
+                    .body(Vec::new())
+                    .unwrap();
+            }
+
+            let z = parts[0];
+            let x = parts[1];
+            let y_png = parts[2];
+            
+            // キャッシュディレクトリの取得
+            let cache_dir = match app_handle.path().app_cache_dir() {
+                Ok(dir) => dir,
+                Err(_) => return http::Response::builder()
+                    .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Vec::new())
+                    .unwrap(),
+            };
+
+            let tile_cache_dir = cache_dir.join("tiles").join(z).join(x);
+            let tile_path = tile_cache_dir.join(y_png);
+
+            // キャッシュがあれば返す
+            if tile_path.exists() {
+                if let Ok(data) = fs::read(&tile_path) {
+                    return http::Response::builder()
+                        .header("Content-Type", "image/png")
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(data)
+                        .unwrap();
+                }
+            }
+
+            // なければダウンロード
+            // OSMのURL構築 (サブドメインはランダムあるいは固定)
+            // ここでは a.tile.openstreetmap.org を使用
+            let url = format!("https://a.tile.openstreetmap.org/{}/{}/{}", z, x, y_png);
+            
+            let client = match reqwest::blocking::Client::builder()
+                .user_agent("PhotoGeoView/3.0.0")
+                .build() {
+                    Ok(c) => c,
+                    Err(_) => return http::Response::builder()
+                        .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+                        .body(Vec::new())
+                        .unwrap(),
+                };
+
+            let resp = match client.get(&url).send() {
+                Ok(r) => r,
+                Err(_) => return http::Response::builder()
+                    .status(http::StatusCode::BAD_GATEWAY)
+                    .body(Vec::new())
+                    .unwrap(),
+            };
+
+            if !resp.status().is_success() {
+                return http::Response::builder()
+                    .status(resp.status())
+                    .body(Vec::new())
+                    .unwrap();
+            }
+
+            let data = match resp.bytes() {
+                Ok(b) => b.to_vec(),
+                Err(_) => return http::Response::builder()
+                    .status(http::StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Vec::new())
+                    .unwrap(),
+            };
+
+            // キャッシュに保存
+            if let Err(e) = fs::create_dir_all(&tile_cache_dir) {
+                log::warn!("キャッシュディレクトリ作成失敗: {}", e);
+            } else {
+                if let Err(e) = fs::write(&tile_path, &data) {
+                    log::warn!("キャッシュ書き込み失敗: {}", e);
+                }
+            }
+
+            http::Response::builder()
+                .header("Content-Type", "image/png")
+                .header("Access-Control-Allow-Origin", "*")
+                .body(data)
+                .unwrap()
+        })
         .setup(|app| {
             // ログファイルのクリーンアップ（起動時）
             if let Ok(log_dir) = app.path().app_log_dir() {
