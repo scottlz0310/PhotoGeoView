@@ -51,11 +51,6 @@ importers:
         specifier: ^5.90.16
         version: 5.90.16(react@19.2.3)
       '@tanstack/react-virtual':
-        specifier: ^3.13.13
-        version: 3.13.13(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@tauri-apps/plugin-store':
-        specifier: ^2.4.1
-        version: 2.4.1
         specifier: ^3.13.14
         version: 3.13.14(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tauri-apps/plugin-store':
@@ -133,13 +128,6 @@ importers:
         version: 0.5.19(tailwindcss@4.1.18)
       '@tanstack/react-query-devtools':
         specifier: ^5.91.2
-        version: 5.91.2(@tanstack/react-query@5.90.15(react@19.2.3))(react@19.2.3)
-      '@tauri-apps/api':
-        specifier: ^2.9.1
-        version: 2.9.1
-      '@tauri-apps/cli':
-        specifier: ^2.9.6
-        version: 2.9.6
         version: 5.91.2(@tanstack/react-query@5.90.16(react@19.2.3))(react@19.2.3)
       '@tauri-apps/api':
         specifier: ^2.9.1
