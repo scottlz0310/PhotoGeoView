@@ -305,16 +305,6 @@
   - [ ] 矩形選択ツール
   - [ ] 範囲内の写真を抽出
 
-### 4.2 エクスポート機能
-
-- [ ] CSV形式エクスポート
-  - [ ] Rust側実装 (csv crate)
-  - [ ] Tauri Command: `export_to_csv(photos, path)`
-  - [ ] ファイル保存ダイアログ
-- [ ] KML形式エクスポート (Google Earth用)
-  - [ ] Rust側実装
-  - [ ] Tauri Command: `export_to_kml(photos, path)`
-
 ### 4.3 パフォーマンス最適化
 
 - [ ] 大量ファイル処理の最適化

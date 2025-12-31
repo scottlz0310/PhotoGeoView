@@ -44,7 +44,29 @@ function MapUpdater() {
 
 export function MapView(): React.ReactElement {
   const { photos, selectPhoto } = usePhotoStore()
+  const { settings } = useSettingsStore()
   const [mapKey, setMapKey] = useState(0)
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
+  const hasMapboxToken = Boolean(mapboxToken)
+  const showMapboxWarning = settings.map.tileLayer === 'satellite' && !hasMapboxToken
+
+  const tileConfig = useMemo(() => {
+    if (settings.map.tileLayer === 'satellite' && hasMapboxToken) {
+      return {
+        url: `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=${mapboxToken}`,
+        attribution:
+          '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }
+    }
+
+    return {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }
+  }, [hasMapboxToken, settings.map.tileLayer])
 
   // GPS情報を持つ写真のみフィルタリング
   const photosWithGps = useMemo(() => {
@@ -109,6 +131,11 @@ export function MapView(): React.ReactElement {
 
   return (
     <div className="relative h-full w-full">
+      {showMapboxWarning && (
+        <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow">
+          Mapbox APIキーが未設定のため、OpenStreetMapを表示しています。
+        </div>
+      )}
       <MapContainer
         key={mapKey}
         center={center}
@@ -117,8 +144,10 @@ export function MapView(): React.ReactElement {
         className="z-0"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          key={settings.map.tileLayer}
+          attribution={tileConfig.attribution}
+          url={tileConfig.url}
+          maxZoom={tileConfig.maxZoom}
         />
 
         <MapUpdater />

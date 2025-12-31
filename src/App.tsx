@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import { AboutDialog } from './components/About/AboutDialog'
 import { MapView } from './components/MapView'
+import { MenuBar } from './components/MenuBar/MenuBar'
 import { PhotoDetail } from './components/PhotoDetail'
 import { PhotoList } from './components/PhotoList'
 import { Settings } from './components/Settings/Settings'
@@ -49,34 +50,10 @@ function App(): React.ReactElement {
               <p className="text-sm text-muted-foreground">Photo Geo-Tagging Application</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ファイル
-            </button>
-            <button
-              type="button"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              表示
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsSettingsOpen(true)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              設定
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAboutOpen(true)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ヘルプ
-            </button>
-          </div>
+          <MenuBar
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenAbout={() => setIsAboutOpen(true)}
+          />
         </div>
       </header>
 
