@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "photogeoview",
-  "version": "0.1.0",
-  "identifier": "com.photogeoview.app",
+  "version": "3.0.0",
+  "identifier": "com.photogeoview.viewer",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",

@@ -29,91 +29,10 @@
     "prepare": "lefthook install",
     "tauri": "tauri"
   },
-  "build": {
-    "appId": "com.photogeoview.app",
-    "productName": "PhotoGeoView",
-    "asarUnpack": [
-      "node_modules/sharp/**/*"
-    ],
-    "directories": {
-      "output": "dist"
-    },
-    "extraResources": [
-      {
-        "from": "build/icon.ico",
-        "to": "icon.ico"
-      },
-      {
-        "from": "assets/icon.png",
-        "to": "icon.png"
-      }
-    ],
-    "files": [
-      "out/**/*"
-    ],
-    "fileAssociations": [
-      {
-        "ext": [
-          "jpg",
-          "jpeg"
-        ],
-        "name": "JPEG Image",
-        "description": "JPEG Image File",
-        "mimeType": "image/jpeg",
-        "role": "Viewer"
-      },
-      {
-        "ext": "png",
-        "name": "PNG Image",
-        "description": "PNG Image File",
-        "mimeType": "image/png",
-        "role": "Viewer"
-      },
-      {
-        "ext": [
-          "tif",
-          "tiff"
-        ],
-        "name": "TIFF Image",
-        "description": "TIFF Image File",
-        "mimeType": "image/tiff",
-        "role": "Viewer"
-      },
-      {
-        "ext": "webp",
-        "name": "WebP Image",
-        "description": "WebP Image File",
-        "mimeType": "image/webp",
-        "role": "Viewer"
-      }
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico",
-      "artifactName": "${productName}-Setup-${version}.${ext}"
-    },
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage",
-      "fileAssociations": []
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "scottlz0310",
-        "repo": "PhotoGeoView",
-        "releaseType": "release"
-      }
-    ]
-  },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -128,11 +47,10 @@
     "@tauri-apps/plugin-store": "^2.4.1",
     "@tanstack/react-query": "^5.90.16",
     "@tanstack/react-virtual": "^3.13.14",
+    "@tauri-apps/plugin-store": "^2.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "electron-store": "^11.0.2",
-    "electron-updater": "^6.6.2",
     "exifreader": "^4.33.1",
     "i18next": "^25.7.3",
     "leaflet": "^1.9.4",
@@ -144,7 +62,6 @@
     "react-leaflet": "^5.0.0",
     "react-resizable-panels": "^4.0.16",
     "react-zoom-pan-pinch": "^3.7.0",
-    "sharp": "^0.34.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.2.1",
@@ -152,8 +69,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.10",
-    "@electron-toolkit/eslint-config-ts": "^3.1.0",
-    "@electron-toolkit/tsconfig": "^2.0.0",
     "@evilmartians/lefthook": "^2.0.13",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
@@ -174,13 +89,9 @@
     "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.23",
     "cross-env": "^10.1.0",
-    "electron": "^39.2.7",
-    "electron-builder": "25.1.8",
-    "electron-vite": "^5.0.0",
     "happy-dom": "^20.0.11",
     "istanbul-lib-instrument": "^6.0.3",
     "nyc": "^17.1.0",
-    "png-to-ico": "^3.0.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",
@@ -193,8 +104,5 @@
     "overrides": {
       "glob": ">=13.0.0"
     }
-  },
-  "optionalDependencies": {
-    "@img/sharp-libvips-win32-x64": "^1.2.4"
   }
 }
