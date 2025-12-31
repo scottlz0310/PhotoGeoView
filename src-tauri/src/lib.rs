@@ -171,6 +171,12 @@ async fn get_photo_data(path: String) -> Result<PhotoData, String> {
     })
 }
 
+/// 写真ファイルのサムネイルを生成
+#[command]
+async fn generate_thumbnail(path: String) -> Result<String, String> {
+    commands::generate_thumbnail(&path).map_err(|e| e.to_string())
+}
+
 /// ディレクトリの内容を読み取る（フォルダとファイルを両方取得）
 #[command]
 async fn read_directory(path: String) -> Result<DirectoryContent, String> {
@@ -328,6 +334,7 @@ pub fn run() {
             scan_folder_for_photos,
             read_photo_exif,
             get_photo_data,
+            generate_thumbnail,
             read_directory
         ])
         .run(tauri::generate_context!())

@@ -1,3 +1,4 @@
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { invoke } from '@tauri-apps/api/core'
 import {
   ArrowLeft,
@@ -11,7 +12,7 @@ import {
   List,
   RefreshCw,
 } from 'lucide-react'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
   Breadcrumb,
@@ -24,7 +25,29 @@ import {
 import { Button } from '@/components/ui/button'
 import { usePhotoStore } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
-import type { PhotoData } from '@/types/photo'
+import type { DirectoryEntry, PhotoData } from '@/types/photo'
+
+const LIST_ROW_HEIGHT = {
+  list: 64,
+  detail: 112,
+}
+
+const GRID_ITEM_SIZE = 160
+const GRID_GAP = 8
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) {
+    return `${bytes} B`
+  }
+
+  const kb = bytes / 1024
+  if (kb < 1024) {
+    return `${kb.toFixed(1)} KB`
+  }
+
+  const mb = kb / 1024
+  return `${mb.toFixed(1)} MB`
+}
 
 export function PhotoList(): React.ReactElement {
   const {
@@ -42,6 +65,31 @@ export function PhotoList(): React.ReactElement {
     navigateToDirectory,
   } = usePhotoStore()
   const { settings, updateSettings } = useSettingsStore()
+  const scrollParentRef = useRef<HTMLDivElement | null>(null)
+  const [entryThumbnails, setEntryThumbnails] = useState<Record<string, string>>({})
+  const pendingThumbnails = useRef<Set<string>>(new Set())
+  const [gridWidth, setGridWidth] = useState(0)
+  const isDirectoryView = Boolean(currentPath)
+  const listItems = isDirectoryView ? directoryEntries : photos
+  const listCount = listItems.length
+  const listRowHeight = viewMode === 'detail' ? LIST_ROW_HEIGHT.detail : LIST_ROW_HEIGHT.list
+  const listRowClass = viewMode === 'detail' ? 'h-28' : 'h-16'
+  const listVirtualizer = useVirtualizer({
+    count: listCount,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => listRowHeight,
+    overscan: 6,
+  })
+  const listVirtualItems = listVirtualizer.getVirtualItems()
+  const gridColumns = Math.max(1, Math.floor((gridWidth + GRID_GAP) / (GRID_ITEM_SIZE + GRID_GAP)))
+  const gridRowCount = Math.ceil(listCount / gridColumns)
+  const gridVirtualizer = useVirtualizer({
+    count: gridRowCount,
+    getScrollElement: () => scrollParentRef.current,
+    estimateSize: () => GRID_ITEM_SIZE + GRID_GAP,
+    overscan: 4,
+  })
+  const gridVirtualItems = gridVirtualizer.getVirtualItems()
 
   // 起動時に前回開いたフォルダを自動的に開く
   useEffect(() => {
@@ -56,6 +104,92 @@ export function PhotoList(): React.ReactElement {
     }
     loadLastFolder()
   }, [settings.lastOpenedFolder, currentPath, navigateToDirectory])
+
+  useEffect(() => {
+    const element = scrollParentRef.current
+    if (!element) {
+      return
+    }
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) {
+        setGridWidth(entry.contentRect.width)
+      }
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    setEntryThumbnails({})
+    pendingThumbnails.current.clear()
+  }, [currentPath])
+
+  useEffect(() => {
+    listVirtualizer.measure()
+    gridVirtualizer.measure()
+  }, [gridColumns, listCount, listVirtualizer, gridVirtualizer, viewMode])
+
+  useEffect(() => {
+    if (!isDirectoryView) {
+      return
+    }
+
+    const visibleEntries: DirectoryEntry[] = []
+    if (viewMode === 'grid') {
+      for (const row of gridVirtualItems) {
+        const start = row.index * gridColumns
+        const end = Math.min(start + gridColumns, directoryEntries.length)
+        for (let i = start; i < end; i += 1) {
+          const entry = directoryEntries[i]
+          if (entry) {
+            visibleEntries.push(entry)
+          }
+        }
+      }
+    } else {
+      for (const row of listVirtualItems) {
+        const entry = directoryEntries[row.index]
+        if (entry) {
+          visibleEntries.push(entry)
+        }
+      }
+    }
+
+    for (const entry of visibleEntries) {
+      if (entry.isDirectory) {
+        continue
+      }
+      if (entryThumbnails[entry.path] || pendingThumbnails.current.has(entry.path)) {
+        continue
+      }
+
+      pendingThumbnails.current.add(entry.path)
+      invoke<string>('generate_thumbnail', { path: entry.path })
+        .then((thumbnail) => {
+          setEntryThumbnails((prev) => {
+            if (prev[entry.path]) {
+              return prev
+            }
+            return { ...prev, [entry.path]: thumbnail }
+          })
+        })
+        .catch(() => {
+          // サムネイル生成失敗時は静かに無視
+        })
+        .finally(() => {
+          pendingThumbnails.current.delete(entry.path)
+        })
+    }
+  }, [
+    directoryEntries,
+    entryThumbnails,
+    gridColumns,
+    gridVirtualItems,
+    isDirectoryView,
+    listVirtualItems,
+    viewMode,
+  ])
 
   const handleOpenFolder = async () => {
     setIsLoading(true)
@@ -339,152 +473,261 @@ export function PhotoList(): React.ReactElement {
       )}
 
       {/* コンテンツ表示エリア */}
-      <div className="flex-1 overflow-y-auto">
-        {/* ナビゲーションモード: ディレクトリ内容を表示 */}
-        {currentPath && directoryEntries.length > 0 ? (
-          <div className="space-y-2">
-            {directoryEntries.map((entry) => (
-              <button
-                type="button"
-                key={entry.path}
-                onClick={() => !entry.isDirectory && handleFileDoubleClick(entry.path)}
-                onDoubleClick={() => entry.isDirectory && handleFolderDoubleClick(entry.path)}
-                className="w-full rounded p-2 text-left text-sm transition-colors bg-muted hover:bg-muted/80 flex items-center gap-2"
-              >
-                {/* アイコン */}
-                {entry.isDirectory ? (
-                  <Folder className="h-4 w-4 text-yellow-500" />
-                ) : (
-                  <Image className="h-4 w-4 text-blue-500" />
-                )}
-
-                {/* エントリ名 */}
-                <div className="flex-1">
-                  <div className="truncate font-medium">{entry.name}</div>
-                  {!entry.isDirectory && (
-                    <div className="text-xs opacity-60">
-                      {(entry.fileSize / 1024).toFixed(1)} KB
+      <div className="flex-1 overflow-y-auto" ref={scrollParentRef}>
+        {isDirectoryView ? (
+          directoryEntries.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              このフォルダには画像ファイルがありません。
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="relative w-full" style={{ height: gridVirtualizer.getTotalSize() }}>
+              {gridVirtualItems.map((row) => {
+                const start = row.index * gridColumns
+                const rowItems = directoryEntries.slice(start, start + gridColumns)
+                return (
+                  <div
+                    key={row.key}
+                    className="absolute left-0 w-full"
+                    style={{ height: row.size, transform: `translateY(${row.start}px)` }}
+                  >
+                    <div
+                      className="grid gap-2"
+                      style={{
+                        gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))`,
+                      }}
+                    >
+                      {rowItems.map((entry) => {
+                        const thumbnail = entryThumbnails[entry.path]
+                        return (
+                          <button
+                            type="button"
+                            key={entry.path}
+                            onClick={() => !entry.isDirectory && handleFileDoubleClick(entry.path)}
+                            onDoubleClick={() =>
+                              entry.isDirectory && handleFolderDoubleClick(entry.path)
+                            }
+                            className="rounded p-2 text-left transition-colors bg-muted hover:bg-muted/80 flex flex-col"
+                            style={{ height: GRID_ITEM_SIZE }}
+                          >
+                            <div className="flex-1 flex items-center justify-center bg-background/50 rounded mb-2 overflow-hidden">
+                              {entry.isDirectory ? (
+                                <Folder className="h-6 w-6 text-yellow-500" />
+                              ) : thumbnail ? (
+                                <img
+                                  src={thumbnail}
+                                  alt={entry.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <Image className="h-6 w-6 text-blue-500" />
+                              )}
+                            </div>
+                            <div className="truncate text-xs font-medium">{entry.name}</div>
+                          </button>
+                        )
+                      })}
                     </div>
-                  )}
-                </div>
-
-                {/* 最終更新日時 */}
-                <div className="text-xs opacity-60">
-                  {new Date(entry.modifiedTime).toLocaleDateString()}
-                </div>
-              </button>
-            ))}
-          </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="relative w-full" style={{ height: listVirtualizer.getTotalSize() }}>
+              {listVirtualItems.map((row) => {
+                const entry = directoryEntries[row.index]
+                if (!entry) {
+                  return null
+                }
+                const isDetail = viewMode === 'detail'
+                const thumbnail = entryThumbnails[entry.path]
+                return (
+                  <div
+                    key={entry.path}
+                    className="absolute left-0 top-0 w-full"
+                    style={{ height: row.size, transform: `translateY(${row.start}px)` }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => !entry.isDirectory && handleFileDoubleClick(entry.path)}
+                      onDoubleClick={() => entry.isDirectory && handleFolderDoubleClick(entry.path)}
+                      className={`w-full rounded p-2 text-left text-sm transition-colors bg-muted hover:bg-muted/80 flex items-center gap-3 overflow-hidden ${listRowClass}`}
+                    >
+                      <div
+                        className={`flex items-center justify-center rounded bg-background/50 overflow-hidden ${
+                          isDetail ? 'h-12 w-12' : 'h-10 w-10'
+                        }`}
+                      >
+                        {entry.isDirectory ? (
+                          <Folder className="h-5 w-5 text-yellow-500" />
+                        ) : thumbnail ? (
+                          <img
+                            src={thumbnail}
+                            alt={entry.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Image className="h-5 w-5 text-blue-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`truncate ${isDetail ? 'font-semibold' : 'font-medium'}`}>
+                          {entry.name}
+                        </div>
+                        {entry.isDirectory ? (
+                          <div className="mt-1 text-xs opacity-60">フォルダ</div>
+                        ) : (
+                          <div className="mt-1 text-xs opacity-60">
+                            {formatFileSize(entry.fileSize)}
+                            {isDetail && ` • ${new Date(entry.modifiedTime).toLocaleString()}`}
+                          </div>
+                        )}
+                        {isDetail && (
+                          <div className="mt-1 truncate text-xs opacity-60">{entry.path}</div>
+                        )}
+                      </div>
+                      {!isDetail && (
+                        <div className="text-xs opacity-60">
+                          {new Date(entry.modifiedTime).toLocaleDateString()}
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )
         ) : photos.length === 0 ? (
           <div className="text-sm text-muted-foreground">
             写真がまだ読み込まれていません。
             <br />
             上のボタンから写真やフォルダを開いてください。
           </div>
+        ) : viewMode === 'grid' ? (
+          <div className="relative w-full" style={{ height: gridVirtualizer.getTotalSize() }}>
+            {gridVirtualItems.map((row) => {
+              const start = row.index * gridColumns
+              const rowItems = photos.slice(start, start + gridColumns)
+              return (
+                <div
+                  key={row.key}
+                  className="absolute left-0 w-full"
+                  style={{ height: row.size, transform: `translateY(${row.start}px)` }}
+                >
+                  <div
+                    className="grid gap-2"
+                    style={{ gridTemplateColumns: `repeat(${gridColumns}, minmax(0, 1fr))` }}
+                  >
+                    {rowItems.map((photo) => (
+                      <button
+                        type="button"
+                        key={photo.path}
+                        onClick={() => selectPhoto(photo.path)}
+                        className={`rounded p-2 text-left transition-colors flex flex-col ${
+                          selectedPhoto?.path === photo.path
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        }`}
+                        style={{ height: GRID_ITEM_SIZE }}
+                      >
+                        <div className="flex-1 flex items-center justify-center bg-background/50 rounded mb-2 overflow-hidden">
+                          {photo.thumbnail ? (
+                            <img
+                              src={photo.thumbnail}
+                              alt={photo.filename}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-3xl">🖼️</span>
+                          )}
+                        </div>
+                        <div className="truncate text-xs font-medium">{photo.filename}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
-          <>
-            {/* リスト表示 */}
-            {viewMode === 'list' && (
-              <div className="space-y-2">
-                {photos.map((photo) => (
+          <div className="relative w-full" style={{ height: listVirtualizer.getTotalSize() }}>
+            {listVirtualItems.map((row) => {
+              const photo = photos[row.index]
+              if (!photo) {
+                return null
+              }
+              const isDetail = viewMode === 'detail'
+              return (
+                <div
+                  key={photo.path}
+                  className="absolute left-0 top-0 w-full"
+                  style={{ height: row.size, transform: `translateY(${row.start}px)` }}
+                >
                   <button
                     type="button"
-                    key={photo.path}
                     onClick={() => selectPhoto(photo.path)}
-                    className={`w-full rounded p-2 text-left text-sm transition-colors ${
+                    className={`w-full rounded p-2 text-left text-sm transition-colors flex items-center gap-3 overflow-hidden ${listRowClass} ${
                       selectedPhoto?.path === photo.path
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted hover:bg-muted/80'
                     }`}
                   >
-                    <div className="truncate font-medium">{photo.filename}</div>
-                    <div className="mt-1 flex items-center gap-2 text-xs opacity-80">
-                      {photo.exif?.gps && <span>📍 GPS</span>}
-                      {photo.exif?.datetime && (
-                        <span>{new Date(photo.exif.datetime).toLocaleDateString()}</span>
+                    <div
+                      className={`flex items-center justify-center rounded bg-background/50 overflow-hidden ${
+                        isDetail ? 'h-12 w-12' : 'h-10 w-10'
+                      }`}
+                    >
+                      {photo.thumbnail ? (
+                        <img
+                          src={photo.thumbnail}
+                          alt={photo.filename}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Image className="h-5 w-5 text-blue-500" />
                       )}
                     </div>
-                    <div className="mt-1 truncate text-xs opacity-60">{photo.path}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* 詳細表示 */}
-            {viewMode === 'detail' && (
-              <div className="space-y-3">
-                {photos.map((photo) => (
-                  <button
-                    type="button"
-                    key={photo.path}
-                    onClick={() => selectPhoto(photo.path)}
-                    className={`w-full rounded p-3 text-left text-sm transition-colors ${
-                      selectedPhoto?.path === photo.path
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted hover:bg-muted/80'
-                    }`}
-                  >
-                    <div className="truncate font-semibold">{photo.filename}</div>
-                    <div className="mt-2 space-y-1 text-xs opacity-80">
-                      {photo.exif?.datetime && (
-                        <div>📅 {new Date(photo.exif.datetime).toLocaleString()}</div>
-                      )}
-                      {photo.exif?.gps && (
-                        <div>
-                          📍 {photo.exif.gps.lat.toFixed(6)}, {photo.exif.gps.lng.toFixed(6)}
-                        </div>
-                      )}
-                      {photo.exif?.camera && (
-                        <div>
-                          📷 {photo.exif.camera.make} {photo.exif.camera.model}
-                        </div>
-                      )}
-                      {photo.exif?.width && photo.exif?.height && (
-                        <div>
-                          📐 {photo.exif.width} x {photo.exif.height}
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-2 truncate text-xs opacity-60">{photo.path}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* グリッド表示 */}
-            {viewMode === 'grid' && (
-              <div className="grid grid-cols-2 gap-2">
-                {photos.map((photo) => (
-                  <button
-                    type="button"
-                    key={photo.path}
-                    onClick={() => selectPhoto(photo.path)}
-                    className={`aspect-square rounded p-2 text-left transition-colors ${
-                      selectedPhoto?.path === photo.path
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted hover:bg-muted/80'
-                    }`}
-                  >
-                    <div className="flex h-full flex-col">
-                      {/* サムネイル領域 */}
-                      <div className="flex-1 flex items-center justify-center bg-background/50 rounded mb-2 overflow-hidden">
-                        {photo.thumbnail ? (
-                          <img
-                            src={photo.thumbnail}
-                            alt={photo.filename}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-4xl">🖼️</span>
-                        )}
+                    <div className="flex-1 min-w-0">
+                      <div className={`truncate ${isDetail ? 'font-semibold' : 'font-medium'}`}>
+                        {photo.filename}
                       </div>
-                      <div className="truncate text-xs font-medium">{photo.filename}</div>
+                      {isDetail ? (
+                        <div className="mt-1 space-y-1 text-xs opacity-80">
+                          {photo.exif?.datetime && (
+                            <div>📅 {new Date(photo.exif.datetime).toLocaleString()}</div>
+                          )}
+                          {photo.exif?.gps && (
+                            <div>
+                              📍 {photo.exif.gps.lat.toFixed(6)}, {photo.exif.gps.lng.toFixed(6)}
+                            </div>
+                          )}
+                          {photo.exif?.camera && (
+                            <div>
+                              📷 {photo.exif.camera.make} {photo.exif.camera.model}
+                            </div>
+                          )}
+                          {photo.exif?.width && photo.exif?.height && (
+                            <div>
+                              📐 {photo.exif.width} x {photo.exif.height}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-1 flex items-center gap-2 text-xs opacity-80">
+                          {photo.exif?.gps && <span>📍 GPS</span>}
+                          {photo.exif?.datetime && (
+                            <span>{new Date(photo.exif.datetime).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      )}
+                      {isDetail && (
+                        <div className="mt-1 truncate text-xs opacity-60">{photo.path}</div>
+                      )}
                     </div>
                   </button>
-                ))}
-              </div>
-            )}
-          </>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </div>
