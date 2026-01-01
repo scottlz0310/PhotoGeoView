@@ -1,7 +1,7 @@
 {
   "name": "photogeoview",
   "version": "3.0.0",
-  "description": "📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Tauri・Rust・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。",
+  "description": "📍 写真の位置情報を地図上に可視化する高速なデスクトップアプリ (v3 Tauri版)。Rust + React + TypeScriptで完全リライト。",
   "type": "module",
   "author": "PhotoGeoView Team",
   "repository": {
