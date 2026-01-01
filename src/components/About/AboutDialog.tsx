@@ -53,6 +53,10 @@ export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.R
   const [appName, setAppName] = useState(pkg.name ?? 'PhotoGeoView')
   const [appVersion, setAppVersion] = useState(pkg.version ?? '0.0.0')
   const [tauriVersion, setTauriVersion] = useState('unknown')
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
+  const mapboxTokenStatus = mapboxToken
+    ? `${t('about.mapboxTokenSet')} (${mapboxToken.length})`
+    : t('about.mapboxTokenMissing')
 
   useEffect(() => {
     if (!isOpen) {
@@ -106,6 +110,8 @@ export function AboutDialog({ isOpen, onOpenChange }: AboutDialogProps): React.R
               <dd className="text-foreground">{BUILD_INFO.gitSha}</dd>
               <dt className="text-muted-foreground">WebView Origin</dt>
               <dd className="text-foreground">{origin}</dd>
+              <dt className="text-muted-foreground">{t('about.mapboxToken')}</dt>
+              <dd className="text-foreground">{mapboxTokenStatus}</dd>
             </dl>
           </section>
 

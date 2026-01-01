@@ -1,3 +1,4 @@
+import { open } from '@tauri-apps/plugin-shell'
 import type { LatLngExpression } from 'leaflet'
 import L from 'leaflet'
 import type React from 'react'
@@ -39,6 +40,14 @@ function GoogleMapsLink({
 }): React.ReactElement {
   const { t } = useTranslation()
   const url = buildGoogleMapsUrl(lat, lng, Math.round(zoom))
+  const handleOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    open(url).catch(() => {
+      if (typeof window !== 'undefined') {
+        window.open(url, '_blank', 'noreferrer')
+      }
+    })
+  }
 
   return (
     <a
@@ -46,6 +55,7 @@ function GoogleMapsLink({
       target="_blank"
       rel="noreferrer"
       className="mt-2 inline-flex text-xs text-primary hover:underline"
+      onClick={handleOpen}
     >
       {t('map.openGoogleMaps')}
     </a>
@@ -107,7 +117,7 @@ export function MapView(): React.ReactElement {
     }
 
     return {
-      url: 'osm-tile://{z}/{x}/{y}.png',
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,

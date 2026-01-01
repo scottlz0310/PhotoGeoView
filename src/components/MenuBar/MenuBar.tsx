@@ -1,6 +1,8 @@
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import type React from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -30,6 +32,18 @@ interface MenuBarProps {
 const menuTriggerClassName =
   'text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=open]:text-foreground'
 
+const menuEvents = {
+  openFiles: 'menu-open-files',
+  openFolder: 'menu-open-folder',
+  openLastFolder: 'menu-open-last-folder',
+  reloadFolder: 'menu-reload-folder',
+  viewList: 'menu-view-list',
+  viewDetail: 'menu-view-detail',
+  viewGrid: 'menu-view-grid',
+  openSettings: 'menu-open-settings',
+  openAbout: 'menu-open-about',
+} as const
+
 export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.ReactElement {
   const { t } = useTranslation()
   const {
@@ -50,36 +64,39 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
     ? `${t('map.layers.satellite')} (Mapbox)`
     : `${t('map.layers.satellite')} (Mapbox Token Missing)`
 
-  const loadPhotos = async (paths: string[]) => {
-    setIsLoading(true)
-    setLoadingStatus(t('photoList.loading'))
-    try {
-      const results: PhotoData[] = []
-      for (const path of paths) {
-        try {
-          const photoData = await invoke<PhotoData>('get_photo_data', { path })
-          results.push(photoData)
-        } catch (error) {
-          toast.error(t('common.error'), {
-            description: String(error),
+  const loadPhotos = useCallback(
+    async (paths: string[]) => {
+      setIsLoading(true)
+      setLoadingStatus(t('photoList.loading'))
+      try {
+        const results: PhotoData[] = []
+        for (const path of paths) {
+          try {
+            const photoData = await invoke<PhotoData>('get_photo_data', { path })
+            results.push(photoData)
+          } catch (error) {
+            toast.error(t('common.error'), {
+              description: String(error),
+            })
+          }
+        }
+        if (results.length > 0) {
+          clearNavigation()
+          addPhotos(results)
+          selectPhoto(results[0]?.path ?? null)
+          toast.success(t('menu.openFiles'), {
+            description: `${results.length} photos added`,
           })
         }
+      } finally {
+        setIsLoading(false)
+        setLoadingStatus('')
       }
-      if (results.length > 0) {
-        clearNavigation()
-        addPhotos(results)
-        selectPhoto(results[0]?.path ?? null)
-        toast.success(t('menu.openFiles'), {
-          description: `${results.length} photos added`,
-        })
-      }
-    } finally {
-      setIsLoading(false)
-      setLoadingStatus('')
-    }
-  }
+    },
+    [addPhotos, clearNavigation, selectPhoto, setIsLoading, setLoadingStatus, t],
+  )
 
-  const handleOpenFiles = async () => {
+  const handleOpenFiles = useCallback(async () => {
     setIsLoading(true)
     setLoadingStatus(t('common.loading'))
     try {
@@ -95,26 +112,29 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
       setIsLoading(false)
       setLoadingStatus('')
     }
-  }
+  }, [loadPhotos, setIsLoading, setLoadingStatus, t])
 
-  const openFolder = async (folderPath: string) => {
-    setIsLoading(true)
-    setLoadingStatus(t('common.loading'))
-    try {
-      await navigateToDirectory(folderPath)
-      updateSettings({ lastOpenedFolder: folderPath })
-      toast.success(t('menu.openFolder'))
-    } catch (error) {
-      toast.error(t('common.error'), {
-        description: String(error),
-      })
-    } finally {
-      setIsLoading(false)
-      setLoadingStatus('')
-    }
-  }
+  const openFolder = useCallback(
+    async (folderPath: string) => {
+      setIsLoading(true)
+      setLoadingStatus(t('common.loading'))
+      try {
+        await navigateToDirectory(folderPath)
+        updateSettings({ lastOpenedFolder: folderPath })
+        toast.success(t('menu.openFolder'))
+      } catch (error) {
+        toast.error(t('common.error'), {
+          description: String(error),
+        })
+      } finally {
+        setIsLoading(false)
+        setLoadingStatus('')
+      }
+    },
+    [navigateToDirectory, setIsLoading, setLoadingStatus, t, updateSettings],
+  )
 
-  const handleOpenFolder = async () => {
+  const handleOpenFolder = useCallback(async () => {
     setIsLoading(true)
     setLoadingStatus(t('common.loading'))
     try {
@@ -130,14 +150,25 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
       setIsLoading(false)
       setLoadingStatus('')
     }
-  }
+  }, [openFolder, setIsLoading, setLoadingStatus, t])
 
-  const handleOpenLastFolder = async () => {
+  const handleOpenLastFolder = useCallback(async () => {
     if (!settings.lastOpenedFolder) {
       return
     }
     await openFolder(settings.lastOpenedFolder)
-  }
+  }, [openFolder, settings.lastOpenedFolder])
+
+  const handleReloadFolder = useCallback(() => {
+    if (!currentPath) {
+      return
+    }
+    navigateToDirectory(currentPath).catch((error) => {
+      toast.error(t('common.error'), {
+        description: String(error),
+      })
+    })
+  }, [currentPath, navigateToDirectory, t])
 
   const handleExit = async () => {
     try {
@@ -170,6 +201,40 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
       display: { ...settings.display, showExifByDefault: checked },
     })
   }
+
+  useEffect(() => {
+    const unlisteners: Array<() => void> = []
+
+    const register = async () => {
+      unlisteners.push(await listen(menuEvents.openFiles, () => handleOpenFiles()))
+      unlisteners.push(await listen(menuEvents.openFolder, () => handleOpenFolder()))
+      unlisteners.push(await listen(menuEvents.openLastFolder, () => handleOpenLastFolder()))
+      unlisteners.push(await listen(menuEvents.reloadFolder, () => handleReloadFolder()))
+      unlisteners.push(await listen(menuEvents.viewList, () => setViewMode('list')))
+      unlisteners.push(await listen(menuEvents.viewDetail, () => setViewMode('detail')))
+      unlisteners.push(await listen(menuEvents.viewGrid, () => setViewMode('grid')))
+      unlisteners.push(await listen(menuEvents.openSettings, () => onOpenSettings()))
+      unlisteners.push(await listen(menuEvents.openAbout, () => onOpenAbout()))
+    }
+
+    register().catch((error) => {
+      console.error('Failed to register menu listeners.', error)
+    })
+
+    return () => {
+      for (const unlisten of unlisteners) {
+        unlisten()
+      }
+    }
+  }, [
+    handleOpenFiles,
+    handleOpenFolder,
+    handleOpenLastFolder,
+    handleReloadFolder,
+    onOpenAbout,
+    onOpenSettings,
+    setViewMode,
+  ])
 
   return (
     <div className="flex items-center gap-4">
@@ -227,7 +292,7 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
           {currentPath && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigateToDirectory(currentPath)}>
+              <DropdownMenuItem onClick={handleReloadFolder}>
                 {t('menu.reloadFolder')}
               </DropdownMenuItem>
             </>

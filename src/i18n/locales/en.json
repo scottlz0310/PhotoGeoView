@@ -94,7 +94,10 @@
     "appVersion": "App Version",
     "dependencies": "Core Dependencies",
     "mapProviders": "Map Providers",
-    "googleMapsHint": "Google Maps Link Format: https://www.google.com/maps/@lat,lng,18z"
+    "googleMapsHint": "Google Maps Link Format: https://www.google.com/maps/@lat,lng,18z",
+    "mapboxToken": "Mapbox Token",
+    "mapboxTokenSet": "Loaded",
+    "mapboxTokenMissing": "Not set"
   },
   "settings": {
     "title": "Settings",

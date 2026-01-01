@@ -26,6 +26,7 @@ tauri-plugin-log = "2.7.1"
 tauri-plugin-dialog = "2.4.2"
 tauri-plugin-fs = "2.4.4"
 tauri-plugin-store = "2.4.1"
+tauri-plugin-shell = "2.3.3"
 
 # エラーハンドリング
 thiserror = "2.0.17"
@@ -44,7 +45,5 @@ tokio = { version = "1.48.0", features = ["full"] }
 
 # 日時処理
 chrono = "0.4.42"
-reqwest = { version = "0.13.1", default-features = false, features = ["blocking", "native-tls"] }
 sha2 = "0.10.9"
 hex = "0.4.3"
-http = "1.4.0"

@@ -1,8 +1,7 @@
 // Tauri Commandsをインポート
-use tauri::{command, Manager};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
+use tauri::{command, Emitter, Manager, Runtime};
 use std::fs;
-use std::path::PathBuf;
-use std::io::Write;
 
 // モジュール定義
 mod commands;
@@ -10,6 +9,64 @@ mod error;
 mod models;
 
 use crate::models::{DirectoryContent, DirectoryEntry, ExifData, PhotoData};
+
+const MENU_OPEN_FILES: &str = "menu-open-files";
+const MENU_OPEN_FOLDER: &str = "menu-open-folder";
+const MENU_OPEN_LAST_FOLDER: &str = "menu-open-last-folder";
+const MENU_RELOAD_FOLDER: &str = "menu-reload-folder";
+const MENU_VIEW_LIST: &str = "menu-view-list";
+const MENU_VIEW_DETAIL: &str = "menu-view-detail";
+const MENU_VIEW_GRID: &str = "menu-view-grid";
+const MENU_OPEN_SETTINGS: &str = "menu-open-settings";
+const MENU_OPEN_ABOUT: &str = "menu-open-about";
+const MENU_EXIT: &str = "menu-exit";
+
+fn build_app_menu<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<Menu<R>> {
+    let menu = Menu::new(app)?;
+
+    let file_menu = Submenu::new(app, "File", true)?;
+    let open_files = MenuItem::with_id(app, MENU_OPEN_FILES, "Open Photos...", true, Some("CmdOrCtrl+O"))?;
+    let open_folder =
+        MenuItem::with_id(app, MENU_OPEN_FOLDER, "Open Folder...", true, Some("CmdOrCtrl+Shift+O"))?;
+    let open_last_folder =
+        MenuItem::with_id(app, MENU_OPEN_LAST_FOLDER, "Open Last Folder", true, None::<&str>)?;
+    let file_separator = PredefinedMenuItem::separator(app)?;
+    let open_settings =
+        MenuItem::with_id(app, MENU_OPEN_SETTINGS, "Settings...", true, Some("CmdOrCtrl+,"))?;
+    let file_separator_2 = PredefinedMenuItem::separator(app)?;
+    let exit_item = MenuItem::with_id(app, MENU_EXIT, "Exit", true, Some("CmdOrCtrl+Q"))?;
+
+    file_menu.append(&open_files)?;
+    file_menu.append(&open_folder)?;
+    file_menu.append(&open_last_folder)?;
+    file_menu.append(&file_separator)?;
+    file_menu.append(&open_settings)?;
+    file_menu.append(&file_separator_2)?;
+    file_menu.append(&exit_item)?;
+    menu.append(&file_menu)?;
+
+    let view_menu = Submenu::new(app, "View", true)?;
+    let reload_folder =
+        MenuItem::with_id(app, MENU_RELOAD_FOLDER, "Reload Folder", true, Some("CmdOrCtrl+R"))?;
+    let view_separator = PredefinedMenuItem::separator(app)?;
+    let view_list = MenuItem::with_id(app, MENU_VIEW_LIST, "List View", true, None::<&str>)?;
+    let view_detail = MenuItem::with_id(app, MENU_VIEW_DETAIL, "Detail View", true, None::<&str>)?;
+    let view_grid = MenuItem::with_id(app, MENU_VIEW_GRID, "Grid View", true, None::<&str>)?;
+
+    view_menu.append(&reload_folder)?;
+    view_menu.append(&view_separator)?;
+    view_menu.append(&view_list)?;
+    view_menu.append(&view_detail)?;
+    view_menu.append(&view_grid)?;
+    menu.append(&view_menu)?;
+
+    let help_menu = Submenu::new(app, "Help", true)?;
+    let about_item = MenuItem::with_id(app, MENU_OPEN_ABOUT, "About PhotoGeoView", true, None::<&str>)?;
+    help_menu.append(&about_item)?;
+    menu.append(&help_menu)?;
+
+    Ok(menu)
+}
 
 /// Hello Worldコマンド（テスト用）
 #[command]
@@ -284,100 +341,36 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .register_uri_scheme_protocol("osm-tile", |ctx, request| {
-            let app_handle = ctx.app_handle();
-            let path = request.uri().path();
-            // path format: /z/x/y.png
-            
-            let parts: Vec<&str> = path.trim_start_matches('/').split('/').collect();
-            if parts.len() != 3 {
-                return http::Response::builder()
-                    .status(http::StatusCode::BAD_REQUEST)
-                    .body(Vec::new())
-                    .unwrap();
-            }
-
-            let z = parts[0];
-            let x = parts[1];
-            let y_png = parts[2];
-            
-            // キャッシュディレクトリの取得
-            let cache_dir = match app_handle.path().app_cache_dir() {
-                Ok(dir) => dir,
-                Err(_) => return http::Response::builder()
-                    .status(http::StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Vec::new())
-                    .unwrap(),
-            };
-
-            let tile_cache_dir = cache_dir.join("tiles").join(z).join(x);
-            let tile_path = tile_cache_dir.join(y_png);
-
-            // キャッシュがあれば返す
-            if tile_path.exists() {
-                if let Ok(data) = fs::read(&tile_path) {
-                    return http::Response::builder()
-                        .header("Content-Type", "image/png")
-                        .header("Access-Control-Allow-Origin", "*")
-                        .body(data)
-                        .unwrap();
-                }
-            }
-
-            // なければダウンロード
-            // OSMのURL構築 (サブドメインはランダムあるいは固定)
-            // ここでは a.tile.openstreetmap.org を使用
-            let url = format!("https://a.tile.openstreetmap.org/{}/{}/{}", z, x, y_png);
-            
-            let client = match reqwest::blocking::Client::builder()
-                .user_agent("PhotoGeoView/3.0.0")
-                .build() {
-                    Ok(c) => c,
-                    Err(_) => return http::Response::builder()
-                        .status(http::StatusCode::INTERNAL_SERVER_ERROR)
-                        .body(Vec::new())
-                        .unwrap(),
-                };
-
-            let resp = match client.get(&url).send() {
-                Ok(r) => r,
-                Err(_) => return http::Response::builder()
-                    .status(http::StatusCode::BAD_GATEWAY)
-                    .body(Vec::new())
-                    .unwrap(),
-            };
-
-            if !resp.status().is_success() {
-                return http::Response::builder()
-                    .status(resp.status())
-                    .body(Vec::new())
-                    .unwrap();
-            }
-
-            let data = match resp.bytes() {
-                Ok(b) => b.to_vec(),
-                Err(_) => return http::Response::builder()
-                    .status(http::StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Vec::new())
-                    .unwrap(),
-            };
-
-            // キャッシュに保存
-            if let Err(e) = fs::create_dir_all(&tile_cache_dir) {
-                log::warn!("キャッシュディレクトリ作成失敗: {}", e);
-            } else {
-                if let Err(e) = fs::write(&tile_path, &data) {
-                    log::warn!("キャッシュ書き込み失敗: {}", e);
-                }
-            }
-
-            http::Response::builder()
-                .header("Content-Type", "image/png")
-                .header("Access-Control-Allow-Origin", "*")
-                .body(data)
-                .unwrap()
-        })
+        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
+            let handle = app.handle();
+            let menu = build_app_menu(handle)?;
+            handle.set_menu(menu)?;
+            handle.on_menu_event(|app_handle, event| {
+                let id = event.id().as_ref();
+                if id == MENU_EXIT {
+                    app_handle.exit(0);
+                    return;
+                }
+
+                let should_emit = matches!(
+                    id,
+                    MENU_OPEN_FILES
+                        | MENU_OPEN_FOLDER
+                        | MENU_OPEN_LAST_FOLDER
+                        | MENU_RELOAD_FOLDER
+                        | MENU_VIEW_LIST
+                        | MENU_VIEW_DETAIL
+                        | MENU_VIEW_GRID
+                        | MENU_OPEN_SETTINGS
+                        | MENU_OPEN_ABOUT
+                );
+
+                if should_emit {
+                    let _ = app_handle.emit(id, ());
+                }
+            });
+
             // ログファイルのクリーンアップ（起動時）
             if let Ok(log_dir) = app.path().app_log_dir() {
                 if let Ok(entries) = std::fs::read_dir(&log_dir) {

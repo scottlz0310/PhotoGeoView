@@ -94,7 +94,10 @@
     "appVersion": "アプリバージョン",
     "dependencies": "主要依存関係",
     "mapProviders": "地図プロバイダー",
-    "googleMapsHint": "Google Mapsリンク形式: https://www.google.com/maps/@lat,lng,18z"
+    "googleMapsHint": "Google Mapsリンク形式: https://www.google.com/maps/@lat,lng,18z",
+    "mapboxToken": "Mapboxトークン",
+    "mapboxTokenSet": "読み込み済み",
+    "mapboxTokenMissing": "未設定"
   },
   "settings": {
     "title": "設定",
