@@ -47,6 +47,30 @@ pnpm tauri dev
 pnpm check
 ```
 
+## デバッグとログ
+
+### ログの確認方法
+
+開発中は以下のコマンドでログを確認できます：
+
+```bash
+# ログファイルをリアルタイム監視
+pnpm logs:watch
+
+# ログファイルの内容を表示
+pnpm logs:view
+```
+
+ログファイルはOSごとの標準的なログディレクトリに出力されます：
+- **Windows**: `%LOCALAPPDATA%\com.tauri.dev\photogeoview\logs`
+- **macOS**: `~/Library/Logs/com.tauri.dev/photogeoview`
+- **Linux**: `$XDG_DATA_HOME/com.tauri.dev/photogeoview/logs`
+
+### 構造化ログ
+
+Rust側では `tracing` クレートを使用した構造化ログを導入しています。
+非同期処理の追跡やパフォーマンス分析のために、主要な関数には `#[tracing::instrument]` 属性が付与されています。
+
 ## プルリクエストのガイドライン
 
 1. **トピックブランチを作成する**: `main`ブランチから新しいブランチを作成してください。
@@ -72,6 +96,9 @@ pnpm check
 - **命名規則**: Rustの標準的な命名規則（snake_caseなど）に従ってください。
 - **エラーハンドリング**: `unwrap()`の使用は避け、適切なエラーハンドリングを行ってください。
 - **フォーマッター**: `cargo fmt`を使用してください。
+- **ログ出力**: `tracing`クレートを使用してください。
+  - `tracing::info!`, `tracing::error!` などを使用し、`println!`は避けてください。
+  - 関数には `#[tracing::instrument]` 属性を付与して、トレース可能にすることを推奨します。
 
 ### コミットフック
 
