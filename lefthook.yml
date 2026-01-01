@@ -4,6 +4,9 @@
 pre-commit:
   parallel: false
   commands:
+    install-deps:
+      glob: "{package.json,pnpm-lock.yaml}"
+      run: pnpm install && git add pnpm-lock.yaml
     biome-lint:
       run: pnpm biome check --write . && git add -u
     typecheck:
