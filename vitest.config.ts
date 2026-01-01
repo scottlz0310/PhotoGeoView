@@ -7,18 +7,19 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    root: process.cwd(),
     setupFiles: [],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
+      all: true,
+      include: ['src/**'],
       exclude: [
-        'node_modules/',
-        'dist/',
-        'archive/',
-        'src-tauri/',
-        '**/*.config.*',
-        '**/.*',
+        'node_modules/**',
+        'dist/**',
         '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.config.{ts,js}',
       ],
     },
     exclude: [
