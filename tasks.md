@@ -388,6 +388,8 @@
 - [x] GitHub Actions設定 <!-- 2025-12-31完了 -->
   - [x] .github/workflows/ci.yml (テスト・リント) <!-- 2025-12-31完了 -->
   - [x] .github/workflows/release.yml (ビルド・リリース) <!-- 2025-12-31完了 -->
+  - [x] CI修正: lockfile sync <!-- 2026-01-01完了 -->
+  - [ ] CIでのカバレッジ合算確認
 - [ ] クロスプラットフォームビルド確認
   - [ ] Windows (x64)
   - [ ] macOS (Intel + Apple Silicon)
