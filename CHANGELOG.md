@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-01-01
+
+### Major Changes
+- **Tauri Migration**: Completely rewrote the application using Tauri v2 and Rust for improved performance and smaller binary size.
+- **UI Overhaul**: Modernized UI using React 19, Tailwind CSS, and shadcn/ui.
+
+### Added
+- **High Performance**: Fast Exif parsing and thumbnail generation using Rust backend.
+- **Virtual Scrolling**: Efficient rendering of large photo collections.
+- **View Modes**: Added Grid, List, and Detail views.
+- **Map Integration**: Interactive map with OpenStreetMap and Satellite view support.
+- **Internationalization**: Full support for Japanese and English languages.
+- **Theme Support**: Dark and Light mode support.
+- **CI/CD**: Automated testing, coverage reporting, and cross-platform building using GitHub Actions.
+
+### Changed
+- Replaced Electron with Tauri.
+- Updated project structure for better maintainability.
+
 ## [2.2.1] - 2025-12-18
 
 ### Fixed
