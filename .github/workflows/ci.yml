@@ -4,15 +4,15 @@ on:
   push:
     branches: [main, tauri-rewrite]
     paths-ignore:
-      - 'archive/**'
-      - '**.md'
-      - '.vscode/**'
+      - "archive/**"
+      - "**.md"
+      - ".vscode/**"
   pull_request:
     branches: [main, tauri-rewrite]
     paths-ignore:
-      - 'archive/**'
-      - '**.md'
-      - '.vscode/**'
+      - "archive/**"
+      - "**.md"
+      - ".vscode/**"
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: pnpm/action-setup@v4
         with:
@@ -46,7 +46,7 @@ jobs:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: pnpm/action-setup@v4
         with:
@@ -80,7 +80,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: frontend
 
-
       - name: Skip tests (no test files found)
         if: steps.check-tests.outputs.has_tests == 'false'
         run: echo "No test files found, skipping tests"
@@ -89,7 +88,7 @@ jobs:
     name: Rust Unit Tests & Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -125,4 +124,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./src-tauri/cobertura.xml
           flags: rust
-
