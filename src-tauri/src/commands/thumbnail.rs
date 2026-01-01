@@ -1,6 +1,6 @@
 use crate::error::{PhotoError, Result};
 use base64::{engine::general_purpose, Engine as _};
-use image::ImageFormat;
+use image::{imageops::FilterType, ImageFormat};
 use std::io::Cursor;
 use std::path::Path;
 
@@ -27,8 +27,8 @@ pub fn generate_thumbnail(path: &str) -> Result<String> {
 
     log::debug!("画像サイズ: {}x{}", img.width(), img.height());
 
-    // アスペクト比を維持してリサイズ
-    let thumbnail = img.thumbnail(THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+    // アスペクト比を維持してLanczos3でリサイズ
+    let thumbnail = img.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, FilterType::Lanczos3);
 
     // JPEGとしてメモリにエンコード
     let mut buffer = Cursor::new(Vec::new());

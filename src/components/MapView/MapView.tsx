@@ -25,6 +25,33 @@ function formatShutterSpeed(seconds: number): string {
   return `1/${denominator}s`
 }
 
+const buildGoogleMapsUrl = (lat: number, lng: number, zoom: number): string =>
+  `https://www.google.com/maps/@${lat},${lng},${zoom}z`
+
+function GoogleMapsLink({
+  lat,
+  lng,
+  zoom,
+}: {
+  lat: number
+  lng: number
+  zoom: number
+}): React.ReactElement {
+  const { t } = useTranslation()
+  const url = buildGoogleMapsUrl(lat, lng, Math.round(zoom))
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="mt-2 inline-flex text-xs text-primary hover:underline"
+    >
+      {t('map.openGoogleMaps')}
+    </a>
+  )
+}
+
 // 選択された写真に合わせて地図を移動させるコンポーネント
 function MapUpdater() {
   const { selectedPhoto } = usePhotoStore()
@@ -43,11 +70,27 @@ function MapUpdater() {
   return null
 }
 
+function MapZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const updateZoom = () => onZoomChange(map.getZoom())
+    updateZoom()
+    map.on('zoomend', updateZoom)
+    return () => {
+      map.off('zoomend', updateZoom)
+    }
+  }, [map, onZoomChange])
+
+  return null
+}
+
 export function MapView(): React.ReactElement {
   const { t } = useTranslation()
   const { photos, selectPhoto, selectedPhoto } = usePhotoStore()
   const { settings } = useSettingsStore()
   const [mapKey, setMapKey] = useState(0)
+  const [mapZoom, setMapZoom] = useState(settings.map.defaultZoom)
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN
   const hasMapboxToken = Boolean(mapboxToken)
   const showMapboxWarning = settings.map.tileLayer === 'satellite' && !hasMapboxToken
@@ -117,6 +160,10 @@ export function MapView(): React.ReactElement {
     setMapKey((prev) => prev + 1)
   }, [])
 
+  useEffect(() => {
+    setMapZoom(zoom)
+  }, [zoom])
+
   if (photosWithGps.length === 0) {
     return (
       <div className="relative h-full w-full bg-muted">
@@ -161,6 +208,7 @@ export function MapView(): React.ReactElement {
         />
 
         <MapUpdater />
+        <MapZoomTracker onZoomChange={setMapZoom} />
 
         {photosWithGps.map((photo) => {
           const gps = photo.exif?.gps
@@ -242,6 +290,7 @@ export function MapView(): React.ReactElement {
                       {gps.lat.toFixed(6)}, {gps.lng.toFixed(6)}
                     </div>
                   </div>
+                  <GoogleMapsLink lat={gps.lat} lng={gps.lng} zoom={mapZoom} />
                 </div>
               </Popup>
             </Marker>

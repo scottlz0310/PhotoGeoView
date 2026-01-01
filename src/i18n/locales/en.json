@@ -57,6 +57,7 @@
     "noGps": "No Location Data",
     "noGpsDesc": "This photo does not contain GPS information.",
     "mapboxWarning": "Mapbox API Token is missing. Falling back to OpenStreetMap.",
+    "openGoogleMaps": "Open in Google Maps",
     "layers": {
       "osm": "OpenStreetMap",
       "satellite": "Satellite",

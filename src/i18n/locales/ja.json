@@ -57,6 +57,7 @@
     "noGps": "位置情報なし",
     "noGpsDesc": "この写真にはGPS情報が含まれていません。",
     "mapboxWarning": "Mapbox APIキーが未設定のため、OpenStreetMapを表示しています。",
+    "openGoogleMaps": "Google Mapsで開く",
     "layers": {
       "osm": "OpenStreetMap",
       "satellite": "衛星写真",
