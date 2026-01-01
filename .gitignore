@@ -38,6 +38,7 @@ coverage/
 .nyc_output/
 *-output.txt
 .pwtest-cache/
+test-results/
 
 # Misc
 *.tsbuildinfo
