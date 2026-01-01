@@ -10,6 +10,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF.svg)](https://vite.dev/)
 
+![PhotoGeoView Screenshot](assets/screenshot.png)
+
 ## ✨ Features
 
 - 📸 写真の読み込みと表示（単一/複数ファイル/フォルダ対応）
