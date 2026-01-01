@@ -13,7 +13,13 @@
     "loading": "Loading...",
     "ready": "Ready",
     "folder": "Folder",
-    "error": "Error"
+    "error": "Error",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "name": "Name",
+    "date": "Date"
   },
   "menu": {
     "file": "File",

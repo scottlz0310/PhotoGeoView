@@ -303,11 +303,25 @@ async fn read_directory(path: String) -> Result<DirectoryContent, String> {
             })
             .unwrap_or_default();
 
+        // EXIFから撮影日時を取得
+        let captured_time = if !is_directory {
+            if let Some(path_str) = entry_path.to_str() {
+                commands::read_exif(path_str)
+                    .ok()
+                    .and_then(|exif| exif.datetime)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
         entries.push(DirectoryEntry {
             name,
             path: entry_path.to_string_lossy().to_string(),
             is_directory,
             modified_time,
+            captured_time,
             file_size,
         });
     }

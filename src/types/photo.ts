@@ -100,6 +100,8 @@ export interface DirectoryEntry {
   isDirectory: boolean
   /** 最終更新日時（ISO 8601形式） */
   modifiedTime: string
+  /** 撮影日時（ISO 8601形式、存在しない場合はundefined） */
+  capturedTime?: string
   /** ファイルサイズ（バイト、ディレクトリの場合は0） */
   fileSize: number
 }

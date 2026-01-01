@@ -1,9 +1,15 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { invoke } from '@tauri-apps/api/core'
 import {
+  ArrowDownAZ,
+  ArrowDownWideNarrow,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  ArrowUpAZ,
+  ArrowUpWideNarrow,
+  Calendar,
+  FileText,
   Folder,
   FolderOpen,
   Grid,
@@ -12,7 +18,7 @@ import {
   List,
   RefreshCw,
 } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -24,6 +30,15 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { usePhotoStore } from '@/stores/photoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import type { DirectoryEntry, PhotoData } from '@/types/photo'
@@ -75,8 +90,61 @@ export function PhotoList(): React.ReactElement {
   const [gridWidth, setGridWidth] = useState(0)
   const selectionRequestIdRef = useRef(0)
   const selectionLoadingRef = useRef(false)
+  const [sortKey, setSortKey] = useState<'name' | 'date'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
   const isDirectoryView = Boolean(currentPath)
-  const listItems = isDirectoryView ? directoryEntries : photos
+
+  const sortedListItems = useMemo(() => {
+    const items = isDirectoryView ? [...directoryEntries] : [...photos]
+
+    return items.sort((a, b) => {
+      // ディレクトリ優先（directoryEntriesの場合）
+      if ('isDirectory' in a && 'isDirectory' in b) {
+        if (a.isDirectory !== b.isDirectory) {
+          return a.isDirectory ? -1 : 1
+        }
+      }
+
+      let comparison = 0
+      if (sortKey === 'name') {
+        const nameA = 'name' in a ? a.name : a.filename
+        const nameB = 'name' in b ? b.name : b.filename
+        comparison = nameA.localeCompare(nameB)
+      } else {
+        // date
+        const getDate = (item: PhotoData | DirectoryEntry) => {
+          if ('capturedTime' in item && item.capturedTime) {
+            return item.capturedTime
+          }
+          if ('exif' in item && item.exif?.datetime) {
+            return item.exif.datetime
+          }
+          if ('modifiedTime' in item) {
+            return item.modifiedTime
+          }
+          return ''
+        }
+        const dateA = getDate(a) || ''
+        const dateB = getDate(b) || ''
+        // 日付がない場合は後ろにする
+        if (!(dateA || dateB)) {
+          return 0
+        }
+        if (!dateA) {
+          return 1
+        }
+        if (!dateB) {
+          return -1
+        }
+        comparison = dateA.localeCompare(dateB)
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+  }, [directoryEntries, photos, isDirectoryView, sortKey, sortOrder])
+
+  const listItems = sortedListItems
   const listCount = listItems.length
   const listRowHeight = viewMode === 'detail' ? LIST_ROW_HEIGHT.detail : LIST_ROW_HEIGHT.list
   const listRowClass = viewMode === 'detail' ? 'h-28' : 'h-16'
@@ -617,44 +685,99 @@ export function PhotoList(): React.ReactElement {
           </Button>
         </div>
 
-        {/* 右側: ビューモード切り替えボタン */}
-        <div className="flex items-center rounded-md border border-border bg-background p-1">
-          <button
-            type="button"
-            onClick={() => setViewMode('list')}
-            className={`rounded p-1.5 transition-colors ${
-              viewMode === 'list'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-            title={t('photoList.viewMode.list')}
-          >
-            <List className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('detail')}
-            className={`rounded p-1.5 transition-colors ${
-              viewMode === 'detail'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-            title={t('photoList.viewMode.detail')}
-          >
-            <LayoutList className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('grid')}
-            className={`rounded p-1.5 transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-            title={t('photoList.viewMode.grid')}
-          >
-            <Grid className="h-4 w-4" />
-          </button>
+        {/* 右側: コントロール */}
+        <div className="flex items-center gap-2">
+          {/* ソートメニュー */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" title={t('common.sort')}>
+                {sortKey === 'date' ? (
+                  <Calendar className="h-4 w-4" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t('common.sortBy')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup
+                value={sortKey}
+                onValueChange={(v) => setSortKey(v as 'name' | 'date')}
+              >
+                <DropdownMenuRadioItem value="name">
+                  <FileText className="mr-2 h-4 w-4" />
+                  {t('common.name')}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="date">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {t('common.date')}
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup
+                value={sortOrder}
+                onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}
+              >
+                <DropdownMenuRadioItem value="asc">
+                  {sortKey === 'date' ? (
+                    <ArrowUpWideNarrow className="mr-2 h-4 w-4" />
+                  ) : (
+                    <ArrowUpAZ className="mr-2 h-4 w-4" />
+                  )}
+                  {t('common.ascending')}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="desc">
+                  {sortKey === 'date' ? (
+                    <ArrowDownWideNarrow className="mr-2 h-4 w-4" />
+                  ) : (
+                    <ArrowDownAZ className="mr-2 h-4 w-4" />
+                  )}
+                  {t('common.descending')}
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* ビューモード切り替えボタン */}
+          <div className="flex items-center rounded-md border border-border bg-background p-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`rounded p-1.5 transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title={t('photoList.viewMode.list')}
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('detail')}
+              className={`rounded p-1.5 transition-colors ${
+                viewMode === 'detail'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title={t('photoList.viewMode.detail')}
+            >
+              <LayoutList className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`rounded p-1.5 transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+              title={t('photoList.viewMode.grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -804,7 +927,12 @@ export function PhotoList(): React.ReactElement {
                         ) : (
                           <div className="mt-1 text-xs opacity-60">
                             {formatFileSize(entry.fileSize)}
-                            {isDetail && ` • ${new Date(entry.modifiedTime).toLocaleString()}`}
+                            {isDetail &&
+                              (entry.capturedTime ? (
+                                <> • 📷 {new Date(entry.capturedTime).toLocaleString()}</>
+                              ) : (
+                                <> • 🕒 {new Date(entry.modifiedTime).toLocaleString()}</>
+                              ))}
                           </div>
                         )}
                         {isDetail && (
@@ -813,7 +941,15 @@ export function PhotoList(): React.ReactElement {
                       </div>
                       {!isDetail && (
                         <div className="text-xs opacity-60">
-                          {new Date(entry.modifiedTime).toLocaleDateString()}
+                          {entry.capturedTime ? (
+                            <span title="撮影日時">
+                              📷 {new Date(entry.capturedTime).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span title="更新日時">
+                              🕒 {new Date(entry.modifiedTime).toLocaleDateString()}
+                            </span>
+                          )}
                         </div>
                       )}
                     </button>

@@ -13,7 +13,13 @@
     "loading": "読み込み中...",
     "ready": "準備完了",
     "folder": "フォルダ",
-    "error": "エラー"
+    "error": "エラー",
+    "sort": "並び替え",
+    "sortBy": "並び替え順",
+    "ascending": "昇順",
+    "descending": "降順",
+    "name": "名前",
+    "date": "日時"
   },
   "menu": {
     "file": "ファイル",

@@ -100,6 +100,8 @@ pub struct DirectoryEntry {
     pub is_directory: bool,
     /// 最終更新日時（ISO 8601形式）
     pub modified_time: String,
+    /// 撮影日時（ISO 8601形式、存在しない場合はNone）
+    pub captured_time: Option<String>,
     /// ファイルサイズ（バイト、ディレクトリの場合は0）
     pub file_size: u64,
 }

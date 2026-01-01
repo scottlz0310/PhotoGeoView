@@ -217,8 +217,8 @@ export function MenuBar({ onOpenSettings, onOpenAbout }: MenuBarProps): React.Re
       unlisteners.push(await listen(menuEvents.openAbout, () => onOpenAbout()))
     }
 
-    register().catch((error) => {
-      console.error('Failed to register menu listeners.', error)
+    register().catch((_error) => {
+      // メニュー登録エラーは無視
     })
 
     return () => {
