@@ -1,4 +1,25 @@
 import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
+
+test.afterEach(async ({ page }) => {
+  const coverage = await page.evaluate(() => (window as any).__coverage__);
+  if (coverage) {
+    const coveragePath = path.join(process.cwd(), '.nyc_output', `coverage-${Date.now()}.json`);
+    fs.mkdirSync(path.dirname(coveragePath), { recursive: true });
+    fs.writeFileSync(coveragePath, JSON.stringify(coverage));
+  }
+});
+
+test.beforeEach(async ({ page }) => {
+  const coverage = await page.evaluate(() => (window as any).__coverage__);
+  if (coverage) {
+    const coveragePath = path.join(process.cwd(), '.nyc_output', `coverage-${Date.now()}.json`);
+    fs.mkdirSync(path.dirname(coveragePath), { recursive: true });
+    fs.writeFileSync(coveragePath, JSON.stringify(coverage));
+  }
+});
+*/
 
 test.beforeEach(async ({ page }) => {
   // Mock Tauri API

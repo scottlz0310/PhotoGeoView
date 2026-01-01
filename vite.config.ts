@@ -1,6 +1,7 @@
 import { execSync } from 'child_process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import istanbul from 'vite-plugin-istanbul'
 import path from 'path'
 
 const buildTime = new Date().toISOString()
@@ -18,7 +19,15 @@ const gitSha = (() => {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    istanbul({
+      include: 'src/*',
+      exclude: ['node_modules', 'test/', 'e2e/'],
+      extension: ['.js', '.ts', '.tsx'],
+      requireEnv: true,
+    }),
+  ],
   define: {
     'import.meta.env.VITE_BUILD_TIME': JSON.stringify(buildTime),
     'import.meta.env.VITE_GIT_SHA': JSON.stringify(gitSha),
