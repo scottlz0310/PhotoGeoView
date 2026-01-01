@@ -22,7 +22,7 @@ jobs:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
@@ -46,7 +46,7 @@ jobs:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
@@ -76,3 +76,37 @@ jobs:
       - name: Skip tests (no test files found)
         if: steps.check-tests.outputs.has_tests == 'false'
         run: echo "No test files found, skipping tests"
+
+  test-rust:
+    name: Rust Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run Rust tests with coverage
+        run: |
+          cd src-tauri
+          cargo tarpaulin --out Xml --verbose
