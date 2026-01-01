@@ -2,8 +2,6 @@
 
 > 📍 写真に埋め込まれた位置情報を地図上に見える化するスタンドアロンアプリ。Tauri・Rust・TypeScript・Reactベースで、Exifデータを解析し地図上にプロット。
 
-⚠️ **注意**: このブランチ (`tauri-rewrite`) はTauriへの移行版です。安定版のElectron版は[mainブランチ](https://github.com/scottlz0310/PhotoGeoView/tree/main)をご覧ください。
-
 [![Tauri](https://img.shields.io/badge/Tauri-2.9+-blue.svg)](https://tauri.app/)
 [![Rust](https://img.shields.io/badge/Rust-1.77+-orange.svg)](https://www.rust-lang.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
@@ -66,9 +64,7 @@
 
 ## 📥 Download
 
-⚠️ **開発中**: Tauri版は現在開発中です。ビルド済みバイナリは後日公開予定。
-
-安定版が必要な場合は、[Electron版（mainブランチ）](https://github.com/scottlz0310/PhotoGeoView/releases)をご利用ください。
+[Release v3.0.0](https://github.com/scottlz0310/PhotoGeoView/releases/tag/v3.0.0)
 
 ## 📦 Development Setup
 
