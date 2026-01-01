@@ -6,6 +6,7 @@ use std::io::BufReader;
 use std::path::Path;
 
 /// EXIF情報を読み取る
+#[tracing::instrument]
 pub fn read_exif(path: &str) -> Result<ExifData> {
     let file_path = Path::new(path);
 

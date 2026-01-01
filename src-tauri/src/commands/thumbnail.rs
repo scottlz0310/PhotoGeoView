@@ -8,24 +8,25 @@ use std::path::Path;
 const THUMBNAIL_SIZE: u32 = 200;
 
 /// 画像ファイルからサムネイルを生成してBase64文字列として返す
+#[tracing::instrument]
 pub fn generate_thumbnail(path: &str) -> Result<String> {
-    log::debug!("サムネイル生成開始: {}", path);
+    tracing::debug!("サムネイル生成開始: {}", path);
     let file_path = Path::new(path);
 
     // ファイルの存在確認
     if !file_path.exists() {
-        log::error!("ファイルが見つかりません: {}", path);
+        tracing::error!("ファイルが見つかりません: {}", path);
         return Err(PhotoError::FileNotFound(path.to_string()));
     }
 
     // 画像を読み込む
-    log::debug!("画像を読み込み中: {}", path);
+    tracing::debug!("画像を読み込み中: {}", path);
     let img = image::open(file_path).map_err(|e| {
-        log::error!("画像の読み込みに失敗: {}", e);
+        tracing::error!("画像の読み込みに失敗: {}", e);
         PhotoError::ImageProcessError(format!("画像の読み込みに失敗: {}", e))
     })?;
 
-    log::debug!("画像サイズ: {}x{}", img.width(), img.height());
+    tracing::debug!("画像サイズ: {}x{}", img.width(), img.height());
 
     // アスペクト比を維持してLanczos3でリサイズ
     let thumbnail = img.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, FilterType::Lanczos3);
@@ -42,11 +43,11 @@ pub fn generate_thumbnail(path: &str) -> Result<String> {
     let base64_data = buffer.into_inner();
     let base64_string = general_purpose::STANDARD.encode(&base64_data);
 
-    log::debug!("サムネイル生成完了: サイズ={}バイト, Base64長={}", base64_data.len(), base64_string.len());
+    tracing::debug!("サムネイル生成完了: サイズ={}バイト, Base64長={}", base64_data.len(), base64_string.len());
 
     // Data URI形式で返す
     let data_uri = format!("data:image/jpeg;base64,{}", base64_string);
-    log::debug!("Data URI生成完了: 長さ={}", data_uri.len());
+    tracing::debug!("Data URI生成完了: 長さ={}", data_uri.len());
 
     Ok(data_uri)
 }

@@ -335,7 +335,7 @@
 
 - [x] Rust側エラー型統一 (thiserror, anyhow) <!-- 2025-12-31完了 -->
 - [x] フロントエンドエラー表示 (sonner toast) <!-- 2025-12-31完了 -->
-- [ ] ログ出力 (tracing crate)
+- [x] ログ出力 (tracing crate) <!-- 2026-01-01完了 -->
 
 ---
 

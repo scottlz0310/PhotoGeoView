@@ -1,7 +1,6 @@
 // Tauri Commandsをインポート
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{command, Emitter, Manager, Runtime};
-use std::fs;
 
 // モジュール定義
 mod commands;
@@ -70,12 +69,14 @@ fn build_app_menu<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<Menu<R
 
 /// Hello Worldコマンド（テスト用）
 #[command]
+#[tracing::instrument]
 fn greet(name: String) -> String {
     format!("Hello, {}! Welcome to PhotoGeoView.", name)
 }
 
 /// 単一ファイル選択ダイアログを開く
 #[command]
+#[tracing::instrument(skip(app))]
 async fn select_photo_file(app: tauri::AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
 
@@ -90,6 +91,7 @@ async fn select_photo_file(app: tauri::AppHandle) -> Result<Option<String>, Stri
 
 /// 複数ファイル選択ダイアログを開く
 #[command]
+#[tracing::instrument(skip(app))]
 async fn select_photo_files(app: tauri::AppHandle) -> Result<Vec<String>, String> {
     use tauri_plugin_dialog::DialogExt;
 
@@ -108,6 +110,7 @@ async fn select_photo_files(app: tauri::AppHandle) -> Result<Vec<String>, String
 
 /// フォルダ選択ダイアログを開く
 #[command]
+#[tracing::instrument(skip(app))]
 async fn select_photo_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
 
@@ -118,6 +121,7 @@ async fn select_photo_folder(app: tauri::AppHandle) -> Result<Option<String>, St
 
 /// フォルダ内の画像ファイルをスキャン
 #[command]
+#[tracing::instrument]
 async fn scan_folder_for_photos(
     folder_path: String,
     recursive: bool,
@@ -163,7 +167,7 @@ async fn scan_folder_for_photos(
     scan_directory(&folder, recursive, &supported_extensions, &mut image_paths)
         .map_err(|e| format!("フォルダのスキャンに失敗: {}", e))?;
 
-    log::info!(
+    tracing::info!(
         "フォルダスキャン完了: {} 個の画像ファイルを検出",
         image_paths.len()
     );
@@ -173,12 +177,14 @@ async fn scan_folder_for_photos(
 
 /// 写真ファイルのEXIF情報を読み取る
 #[command]
+#[tracing::instrument]
 async fn read_photo_exif(path: String) -> Result<ExifData, String> {
     commands::read_exif(&path).map_err(|e| e.to_string())
 }
 
 /// 写真ファイルの基本情報とEXIF情報を取得
 #[command]
+#[tracing::instrument]
 async fn get_photo_data(path: String) -> Result<PhotoData, String> {
     use std::fs;
 
@@ -209,14 +215,14 @@ async fn get_photo_data(path: String) -> Result<PhotoData, String> {
     let exif = commands::read_exif(&path).ok();
 
     // サムネイルを生成（失敗しても続行）
-    log::info!("サムネイル生成を開始: {}", path);
+    tracing::info!("サムネイル生成を開始: {}", path);
     let thumbnail = match commands::generate_thumbnail(&path) {
         Ok(thumb) => {
-            log::info!("サムネイル生成成功: 長さ={}", thumb.len());
+            tracing::info!("サムネイル生成成功: 長さ={}", thumb.len());
             Some(thumb)
         }
         Err(e) => {
-            log::error!("サムネイル生成失敗: {}", e);
+            tracing::error!("サムネイル生成失敗: {}", e);
             None
         }
     };
@@ -233,12 +239,14 @@ async fn get_photo_data(path: String) -> Result<PhotoData, String> {
 
 /// 写真ファイルのサムネイルを生成
 #[command]
+#[tracing::instrument]
 async fn generate_thumbnail(path: String) -> Result<String, String> {
     commands::generate_thumbnail(&path).map_err(|e| e.to_string())
 }
 
 /// ディレクトリの内容を読み取る（フォルダとファイルを両方取得）
 #[command]
+#[tracing::instrument]
 async fn read_directory(path: String) -> Result<DirectoryContent, String> {
     use std::fs;
     use std::path::PathBuf;
@@ -335,7 +343,7 @@ async fn read_directory(path: String) -> Result<DirectoryContent, String> {
         }
     });
 
-    log::info!(
+    tracing::info!(
         "ディレクトリ読み取り完了: {} ({} フォルダ, {} ファイル)",
         path,
         entries.iter().filter(|e| e.is_directory).count(),
@@ -411,7 +419,7 @@ pub fn run() {
 
                 // ログファイルの場所を出力
                 if let Ok(log_dir) = app.path().app_log_dir() {
-                    log::info!("📝 ログファイル: {:?}", log_dir);
+                    tracing::info!("📝 ログファイル: {:?}", log_dir);
                 }
             }
 
