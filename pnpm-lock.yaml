@@ -157,8 +157,8 @@ importers:
         specifier: ^1.9.21
         version: 1.9.21
       '@types/node':
-        specifier: ^24.10.4
-        version: 24.10.4
+        specifier: ^24.10.6
+        version: 24.10.6
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
@@ -167,7 +167,7 @@ importers:
         version: 19.2.3(@types/react@19.2.7)
       '@vitejs/plugin-react':
         specifier: ^5.1.2
-        version: 5.1.2(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))
+        version: 5.1.2(vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2))
       '@vitest/coverage-istanbul':
         specifier: ^4.0.16
         version: 4.0.16(vitest@4.0.16)
@@ -206,13 +206,13 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^7.3.1
-        version: 7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+        version: 7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2)
       vite-plugin-istanbul:
         specifier: ^7.2.1
-        version: 7.2.1(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))
+        version: 7.2.1(vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2))
       vitest:
         specifier: ^4.0.16
-        version: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
+        version: 4.0.16(@types/node@24.10.6)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
 
 packages:
 
@@ -1412,8 +1412,8 @@ packages:
   '@types/node@20.19.27':
     resolution: {integrity: sha512-N2clP5pJhB2YnZJ3PIHFk5RkygRX5WO/5f0WC08tp0wd+sv0rsJk3MqWn3CbNmT2J505a5336jaQj4ph1AdMug==}
 
-  '@types/node@24.10.4':
-    resolution: {integrity: sha512-vnDVpYPMzs4wunl27jHrfmwojOGKya0xyM3sH+UE5iv5uPS6vX7UIoh6m+vQc5LGBq52HBKPIn/zcSZVzeDEZg==}
+  '@types/node@24.10.6':
+    resolution: {integrity: sha512-B8h60xgJMR/xmgyX9fncRzEW9gCxoJjdenUhke2v1JGOd/V66KopmWrLPXi5oUI4VuiGK+d+HlXJjDRZMj21EQ==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -3608,7 +3608,7 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@24.10.4':
+  '@types/node@24.10.6':
     dependencies:
       undici-types: 7.16.0
 
@@ -3622,7 +3622,7 @@ snapshots:
 
   '@types/whatwg-mimetype@3.0.2': {}
 
-  '@vitejs/plugin-react@5.1.2(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))':
+  '@vitejs/plugin-react@5.1.2(vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2))':
     dependencies:
       '@babel/core': 7.28.5
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.5)
@@ -3630,7 +3630,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.53
       '@types/babel__core': 7.20.5
       react-refresh: 0.18.0
-      vite: 7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+      vite: 7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -3647,7 +3647,7 @@ snapshots:
       magicast: 0.5.1
       obug: 2.1.1
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
+      vitest: 4.0.16(@types/node@24.10.6)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -3664,7 +3664,7 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
+      vitest: 4.0.16(@types/node@24.10.6)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -3677,13 +3677,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.16(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))':
+  '@vitest/mocker@4.0.16(vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2))':
     dependencies:
       '@vitest/spy': 4.0.16
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+      vite: 7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2)
 
   '@vitest/pretty-format@4.0.16':
     dependencies:
@@ -3711,7 +3711,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
+      vitest: 4.0.16(@types/node@24.10.6)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
 
   '@vitest/utils@4.0.16':
     dependencies:
@@ -4595,7 +4595,7 @@ snapshots:
 
   uuid@8.3.2: {}
 
-  vite-plugin-istanbul@7.2.1(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)):
+  vite-plugin-istanbul@7.2.1(vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2)):
     dependencies:
       '@babel/generator': 7.28.5
       '@istanbuljs/load-nyc-config': 1.1.0
@@ -4605,11 +4605,11 @@ snapshots:
       picocolors: 1.1.1
       source-map: 0.7.6
       test-exclude: 7.0.1
-      vite: 7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+      vite: 7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2)
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2):
+  vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2):
     dependencies:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.3)
@@ -4618,15 +4618,15 @@ snapshots:
       rollup: 4.54.0
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 24.10.4
+      '@types/node': 24.10.6
       fsevents: 2.3.3
       jiti: 2.6.1
       lightningcss: 1.30.2
 
-  vitest@4.0.16(@types/node@24.10.4)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2):
+  vitest@4.0.16(@types/node@24.10.6)(@vitest/ui@4.0.16)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2):
     dependencies:
       '@vitest/expect': 4.0.16
-      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2))
+      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2))
       '@vitest/pretty-format': 4.0.16
       '@vitest/runner': 4.0.16
       '@vitest/snapshot': 4.0.16
@@ -4643,10 +4643,10 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)
+      vite: 7.3.1(@types/node@24.10.6)(jiti@2.6.1)(lightningcss@1.30.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 24.10.4
+      '@types/node': 24.10.6
       '@vitest/ui': 4.0.16(vitest@4.0.16)
       happy-dom: 20.0.11
     transitivePeerDependencies:
