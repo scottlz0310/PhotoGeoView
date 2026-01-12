@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.11",
-    "@evilmartians/lefthook": "^2.0.13",
+    "@evilmartians/lefthook": "^2.0.14",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.18",
