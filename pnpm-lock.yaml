@@ -121,8 +121,8 @@ importers:
         specifier: ^2.3.11
         version: 2.3.11
       '@evilmartians/lefthook':
-        specifier: ^2.0.13
-        version: 2.0.13
+        specifier: ^2.0.14
+        version: 2.0.14
       '@istanbuljs/nyc-config-typescript':
         specifier: ^1.0.2
         version: 1.0.2(nyc@17.1.0)
@@ -548,8 +548,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@evilmartians/lefthook@2.0.13':
-    resolution: {integrity: sha512-Kpsd8NNQw4PrxP41OqwvM0oAP8y70Fslir7uU9fUBdl6JcGGpKlFNlFj87/5OJO95VHxKm8rFvg5mbkv4cCTFw==}
+  '@evilmartians/lefthook@2.0.14':
+    resolution: {integrity: sha512-PWpzGztfN2/vJrNBvGEVbB+cER1OEumh4emilzzRznHooY12nKLeIzddqg6ltKwH9a7CM91rGmqZp/JY/97FmA==}
     cpu: [x64, arm64, ia32]
     os: [darwin, linux, win32]
     hasBin: true
@@ -2868,7 +2868,7 @@ snapshots:
   '@esbuild/win32-x64@0.27.2':
     optional: true
 
-  '@evilmartians/lefthook@2.0.13': {}
+  '@evilmartians/lefthook@2.0.14': {}
 
   '@floating-ui/core@1.7.3':
     dependencies:
