@@ -94,7 +94,7 @@
     "@vitest/ui": "^4.0.17",
     "autoprefixer": "^10.4.23",
     "cross-env": "^10.1.0",
-    "happy-dom": "^20.3.0",
+    "happy-dom": "^20.3.1",
     "istanbul-lib-instrument": "^6.0.3",
     "nyc": "^17.1.0",
     "postcss": "^8.5.6",
