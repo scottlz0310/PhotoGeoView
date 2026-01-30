@@ -78,7 +78,7 @@
     "@playwright/test": "^1.58.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
-    "@tanstack/react-query-devtools": "^5.91.2",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "@tauri-apps/api": "^2.9.1",
     "@tauri-apps/cli": "^2.9.6",
     "@testing-library/jest-dom": "^6.9.1",
