@@ -55,7 +55,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "exifreader": "^4.36.1",
-    "i18next": "^25.8.0",
+    "i18next": "^25.8.1",
     "i18next-browser-languagedetector": "^8.2.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
@@ -72,7 +72,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.13",
+    "@biomejs/biome": "^2.3.14",
     "@evilmartians/lefthook": "^2.0.16",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@playwright/test": "^1.58.1",
@@ -107,7 +107,7 @@
   },
   "pnpm": {
     "overrides": {
-      "glob": ">=13.0.0"
+      "glob": ">=13.0.1"
     }
   }
 }
