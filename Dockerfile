@@ -1,7 +1,7 @@
 # Dockerfile for building Electron app with electron-builder
 # Cross-compile Windows installer on Linux using Wine
 
-FROM node:24.13.0-bookworm-slim
+FROM node:24.13.1-bookworm-slim
 
 # Install system dependencies (Wine for Windows builds)
 # python3 is required by electron-builder 26+ for native module rebuilding
