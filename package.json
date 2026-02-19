@@ -54,7 +54,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "exifreader": "^4.36.1",
+    "exifreader": "^4.36.2",
     "i18next": "^25.8.11",
     "i18next-browser-languagedetector": "^8.2.1",
     "leaflet": "^1.9.4",
