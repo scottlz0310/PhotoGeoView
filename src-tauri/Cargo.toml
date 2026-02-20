@@ -30,7 +30,7 @@ tauri-plugin-shell = "2.3.5"
 
 # エラーハンドリング
 thiserror = "2.0.18"
-anyhow = "1.0.101"
+anyhow = "1.0.102"
 
 # 画像処理
 image = "0.25.9"
