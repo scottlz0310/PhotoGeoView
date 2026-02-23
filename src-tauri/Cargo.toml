@@ -44,7 +44,7 @@ rayon = "1.11.0"
 tokio = { version = "1.49.0", features = ["full"] }
 
 # 日時処理
-chrono = "0.4.43"
+chrono = "0.4.44"
 sha2 = "0.10.9"
 hex = "0.4.3"
 tracing = { version = "0.1.44", features = ["log"] }
