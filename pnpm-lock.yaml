@@ -185,7 +185,7 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
       happy-dom:
-        specifier: ^20.6.5
+        specifier: ^20.7.0
         version: 20.7.0
       istanbul-lib-instrument:
         specifier: ^6.0.3
