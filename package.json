@@ -72,7 +72,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.4",
+    "@biomejs/biome": "^2.4.5",
     "@evilmartians/lefthook": "^2.1.2",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@playwright/test": "^1.58.2",
