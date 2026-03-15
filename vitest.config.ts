@@ -13,7 +13,7 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text', 'json', 'html', 'lcov'],
       all: true,
-      include: ['src/**'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'node_modules/**',
         'dist/**',

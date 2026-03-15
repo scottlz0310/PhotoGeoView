@@ -53,10 +53,10 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'map-vendor': ['leaflet', 'react-leaflet'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+        manualChunks: (id) => {
+          if (id.includes('react-dom') || id.includes('/react/')) return 'react-vendor'
+          if (id.includes('leaflet') || id.includes('react-leaflet')) return 'map-vendor'
+          if (id.includes('@radix-ui/react-dialog') || id.includes('@radix-ui/react-dropdown-menu')) return 'ui-vendor'
         },
       },
     },
