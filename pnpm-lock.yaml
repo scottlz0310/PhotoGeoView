@@ -49,7 +49,7 @@ importers:
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-query':
-        specifier: ^5.94.5
+        specifier: ^5.95.0
         version: 5.95.0(react@19.2.4)
       '@tanstack/react-virtual':
         specifier: ^3.13.23
@@ -137,7 +137,7 @@ importers:
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.2.2)
       '@tanstack/react-query-devtools':
-        specifier: ^5.94.5
+        specifier: ^5.95.0
         version: 5.95.0(@tanstack/react-query@5.95.0(react@19.2.4))(react@19.2.4)
       '@tauri-apps/api':
         specifier: 2.10.1
