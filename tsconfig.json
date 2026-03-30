@@ -35,7 +35,6 @@
     "types": ["vite/client"],
 
     // パスエイリアス
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
