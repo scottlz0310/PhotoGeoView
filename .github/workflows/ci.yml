@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: steps.check-tests.outputs.has_tests == 'true'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: frontend
@@ -119,7 +119,7 @@ jobs:
           cargo tarpaulin --out Xml --verbose
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./src-tauri/cobertura.xml
