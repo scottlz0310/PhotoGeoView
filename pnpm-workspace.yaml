@@ -7,3 +7,7 @@ onlyBuiltDependencies:
   - esbuild
   - exifreader
   - sharp
+
+overrides:
+  glob: '>=13.0.6'
+  minimatch: '>=10.2.5'
