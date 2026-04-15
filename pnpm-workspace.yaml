@@ -3,10 +3,19 @@ packages:
 
 onlyBuiltDependencies:
   - '@biomejs/biome'
+  - '@evilmartians/lefthook'
   - electron
   - esbuild
   - exifreader
   - sharp
+
+allowBuilds:
+  '@biomejs/biome': true
+  '@evilmartians/lefthook': true
+  electron: true
+  esbuild: true
+  exifreader: true
+  sharp: true
 
 overrides:
   glob: '>=13.0.6'
